@@ -1,0 +1,20 @@
+/**
+ * @file tsconfig.json
+ * @description This file defines the TypeScript configuration for the frontend of the application,
+ * including references to specific configurations for application and Node.js development.
+ */
+
+
+
+ 
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.node.json"
+    }
+  ]
+}

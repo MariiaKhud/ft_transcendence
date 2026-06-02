@@ -1,3 +1,5 @@
+/// <reference types="node" />
+
 /**
  * @file seed.ts
  * @description This file contains the database seeding script for the application. It populates the database
