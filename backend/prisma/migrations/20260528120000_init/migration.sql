@@ -1,3 +1,12 @@
+/**
+ * @file migration.sql
+ * @description This file contains the SQL commands for initializing the database schema for the application.
+ * It creates the necessary tables, types, and constraints to support the application's features such as user
+ * management, articles, comments, likes, follows, friendships, messages, notifications, badges, and user badges.
+ * The migration ensures that the database is set up correctly to handle the relationships and data integrity
+ * required by the application.
+ */
+
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TYPE "Role" AS ENUM ('USER', 'MODERATOR', 'ADMIN');
