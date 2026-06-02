@@ -1,0 +1,262 @@
+// prisma/schema.prisma
+// Run `npx prisma migrate dev --name init` to apply this to your database.
+// Run `npx prisma generate` after any change to regenerate the client.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────
+
+enum Role {
+  USER
+  MODERATOR
+  ADMIN
+}
+
+enum Category {
+  PROGRAMMING
+  CAREER
+  STUDY_NOTES
+  PROJECTS
+  LIFE
+  OPINION
+}
+
+enum NotificationType {
+  FOLLOWED
+  COMMENT
+  LIKE
+  CONTENT_REMOVED
+  FRIEND_REQUEST
+  FRIEND_ACCEPTED
+}
+
+enum FriendStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+}
+
+// ─────────────────────────────────────────────
+// Users
+// ─────────────────────────────────────────────
+
+model User {
+  id                       String           @id @default(uuid())
+  email                    String           @unique
+  username                 String           @unique
+  passwordHash             String           @map("password_hash")
+  displayName              String?          @map("display_name")
+  avatarUrl                String?          @map("avatar_url")
+  bio                      String?
+  role                     Role             @default(USER)
+
+  // Gamification
+  xp                       Int              @default(0)
+  level                    Int              @default(1)
+
+  // Online status
+  isOnline                 Boolean          @default(false) @map("is_online")
+  lastSeenAt               DateTime         @default(now()) @map("last_seen_at")
+
+  createdAt                DateTime         @default(now()) @map("created_at")
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+
+  // Relations — Person 1 builds these
+  articles                 Article[]
+  comments                 Comment[]
+  articleLikes             ArticleLike[]
+  notifications            Notification[]
+  userBadges               UserBadge[]
+
+  // Follow system (one-directional) — Person 3 builds these
+  followers                Follow[]         @relation("following")
+  following                Follow[]         @relation("follower")
+
+  // Friends system (mutual) — Person 3 builds these
+  friendRequestsSent       Friendship[]     @relation("requester")
+  friendRequestsReceived   Friendship[]     @relation("addressee")
+
+  // Chat — Person 3 builds these
+  sentMessages             Message[]        @relation("sender")
+  receivedMessages         Message[]        @relation("receiver")
+
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// Articles — Person 2 owns this
+// ─────────────────────────────────────────────
+
+model Article {
+  id                       String           @id @default(uuid())
+  authorId                 String           @map("author_id")
+  title                    String
+  content                  String
+  category                 Category
+  likeCount                Int              @default(0) @map("like_count")
+
+  // Soft removal
+  isRemoved                Boolean          @default(false) @map("is_removed")
+  removedReason            String?          @map("removed_reason")
+  removedAt                DateTime?        @map("removed_at")
+
+  createdAt                DateTime         @default(now()) @map("created_at")
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+
+  author                   User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments                 Comment[]
+  likes                    ArticleLike[]
+
+  @@map("articles")
+}
+
+// ─────────────────────────────────────────────
+// Comments — Person 2 owns this
+// ─────────────────────────────────────────────
+
+model Comment {
+  id                       String           @id @default(uuid())
+  articleId                String           @map("article_id")
+  authorId                 String           @map("author_id")
+  content                  String
+
+  isRemoved                Boolean          @default(false) @map("is_removed")
+  removedReason            String?          @map("removed_reason")
+  removedAt                DateTime?        @map("removed_at")
+
+  createdAt                DateTime         @default(now()) @map("created_at")
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+
+  article                  Article          @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  author                   User             @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("comments")
+}
+
+// ─────────────────────────────────────────────
+// Likes — Person 2 owns this
+// ─────────────────────────────────────────────
+
+model ArticleLike {
+  id                       String           @id @default(uuid())
+  userId                   String           @map("user_id")
+  articleId                String           @map("article_id")
+  createdAt                DateTime         @default(now()) @map("created_at")
+
+  user                     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  article                  Article          @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, articleId])
+  @@map("article_likes")
+}
+
+// ─────────────────────────────────────────────
+// Follows — Person 3 owns this
+// ─────────────────────────────────────────────
+
+model Follow {
+  id                       String           @id @default(uuid())
+  followerId               String           @map("follower_id")
+  followingId              String           @map("following_id")
+  createdAt                DateTime         @default(now()) @map("created_at")
+
+  follower                 User             @relation("follower", fields: [followerId], references: [id], onDelete: Cascade)
+  following                User             @relation("following", fields: [followingId], references: [id], onDelete: Cascade)
+
+  @@unique([followerId, followingId])
+  @@map("follows")
+}
+
+// ─────────────────────────────────────────────
+// Friendships — Person 3 owns this
+// ─────────────────────────────────────────────
+
+model Friendship {
+  id                       String           @id @default(uuid())
+  requesterId              String           @map("requester_id")
+  addresseeId              String           @map("addressee_id")
+  status                   FriendStatus     @default(PENDING)
+  createdAt                DateTime         @default(now()) @map("created_at")
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+
+  requester                User             @relation("requester", fields: [requesterId], references: [id], onDelete: Cascade)
+  addressee                User             @relation("addressee", fields: [addresseeId], references: [id], onDelete: Cascade)
+
+  @@unique([requesterId, addresseeId])
+  @@map("friendships")
+}
+
+// ─────────────────────────────────────────────
+// Chat messages — Person 3 owns this
+// ─────────────────────────────────────────────
+
+model Message {
+  id                       String           @id @default(uuid())
+  senderId                 String           @map("sender_id")
+  receiverId               String           @map("receiver_id")
+  content                  String
+  isRead                   Boolean          @default(false) @map("is_read")
+  createdAt                DateTime         @default(now()) @map("created_at")
+
+  sender                   User             @relation("sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver                 User             @relation("receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+// ─────────────────────────────────────────────
+// Notifications — Person 3 owns this
+// ─────────────────────────────────────────────
+
+model Notification {
+  id                       String             @id @default(uuid())
+  userId                   String             @map("user_id")
+  type                     NotificationType
+  message                  String
+  refId                    String?            @map("ref_id")
+  isRead                   Boolean            @default(false) @map("is_read")
+  createdAt                DateTime           @default(now()) @map("created_at")
+
+  user                     User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+// ─────────────────────────────────────────────
+// Gamification — Person 4 owns this
+// ─────────────────────────────────────────────
+
+model Badge {
+  id                       String           @id @default(uuid())
+  name                     String           @unique
+  description              String
+  icon                     String
+  xpReward                 Int              @default(0) @map("xp_reward")
+  createdAt                DateTime         @default(now()) @map("created_at")
+
+  userBadges               UserBadge[]
+
+  @@map("badges")
+}
+
+model UserBadge {
+  id                       String           @id @default(uuid())
+  userId                   String           @map("user_id")
+  badgeId                  String           @map("badge_id")
+  earnedAt                 DateTime         @default(now()) @map("earned_at")
+
+  user                     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  badge                    Badge            @relation(fields: [badgeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeId])
+  @@map("user_badges")
+}
