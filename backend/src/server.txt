@@ -1,0 +1,3 @@
+npm install    →  installed all dependencies listed in package.json
+npm run build  →  ran the TypeScript compiler (tsc)
+npm start      →  launched your server
