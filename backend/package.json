@@ -4,6 +4,9 @@
   "description": "Express backend for ft_transcendence platform",
   "main": "dist/server.js",
   "type": "module",
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "build": "tsc",

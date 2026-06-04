@@ -25,6 +25,155 @@ async function main() {
 
   const passwordHash = await bcrypt.hash('password123', 10)
 
+  {
+    await prisma.userBadge.deleteMany()
+    await prisma.badge.deleteMany()
+    await prisma.notification.deleteMany()
+    await prisma.message.deleteMany()
+    await prisma.friendship.deleteMany()
+    await prisma.follow.deleteMany()
+    await prisma.articleLike.deleteMany()
+    await prisma.comment.deleteMany()
+    await prisma.article.deleteMany()
+    await prisma.user.deleteMany()
+
+    const aliceSeed = await prisma.user.create({
+      data: {
+        email: 'alice@example.com',
+        username: 'alice',
+        passwordHash,
+        displayName: 'Alice',
+        bio: 'Frontend developer and coffee enthusiast.',
+        role: Role.USER,
+        xp: 120,
+        level: 2,
+      },
+    })
+
+    const bobSeed = await prisma.user.create({
+      data: {
+        email: 'bob@example.com',
+        username: 'bob',
+        passwordHash,
+        displayName: 'Bob',
+        bio: 'Backend engineer. Loves Postgres.',
+        role: Role.MODERATOR,
+        xp: 80,
+        level: 1,
+      },
+    })
+
+    const adminSeed = await prisma.user.create({
+      data: {
+        email: 'admin@example.com',
+        username: 'admin',
+        passwordHash,
+        displayName: 'Admin',
+        bio: 'System administrator.',
+        role: Role.ADMIN,
+        xp: 500,
+        level: 6,
+      },
+    })
+
+    const seedArticle1 = await prisma.article.create({
+      data: {
+        id: 'seed-article-1',
+        authorId: aliceSeed.id,
+        title: 'Getting started with Prisma and PostgreSQL',
+        content: '# Getting started\n\nPrisma makes database access easy and type-safe...',
+        category: Category.PROGRAMMING,
+        likeCount: 1,
+      },
+    })
+
+    const seedArticle2 = await prisma.article.create({
+      data: {
+        id: 'seed-article-2',
+        authorId: bobSeed.id,
+        title: 'My journey learning TypeScript',
+        content: '# TypeScript journey\n\nI started using TypeScript six months ago...',
+        category: Category.CAREER,
+        likeCount: 1,
+      },
+    })
+
+    const seedArticle3 = await prisma.article.create({
+      data: {
+        id: 'seed-article-3',
+        authorId: aliceSeed.id,
+        title: 'Study notes: Docker fundamentals',
+        content: '# Docker fundamentals\n\nA container is a lightweight runtime...',
+        category: Category.STUDY_NOTES,
+        likeCount: 0,
+      },
+    })
+
+    const seedArticle4 = await prisma.article.create({
+      data: {
+        id: 'seed-article-4',
+        authorId: adminSeed.id,
+        title: 'Project planning with Docker Compose',
+        content: '# Docker Compose\n\nCompose helps keep the whole stack reproducible...',
+        category: Category.PROJECTS,
+        likeCount: 0,
+      },
+    })
+
+    const seedArticle5 = await prisma.article.create({
+      data: {
+        id: 'seed-article-5',
+        authorId: bobSeed.id,
+        title: 'Life as a developer: routines and balance',
+        content: '# Developer routines\n\nA simple routine keeps me productive and sane...',
+        category: Category.LIFE,
+        likeCount: 0,
+      },
+    })
+
+    await prisma.comment.createMany({
+      data: [
+        {
+          id: 'seed-comment-1',
+          articleId: seedArticle1.id,
+          authorId: bobSeed.id,
+          content: 'Great intro! Prisma really changed how I work with databases.',
+        },
+        {
+          id: 'seed-comment-2',
+          articleId: seedArticle2.id,
+          authorId: adminSeed.id,
+          content: 'This is a good summary of the TypeScript learning curve.',
+        },
+        {
+          id: 'seed-comment-3',
+          articleId: seedArticle4.id,
+          authorId: aliceSeed.id,
+          content: 'Compose is the right choice for keeping the stack simple locally.',
+        },
+      ],
+    })
+
+    await prisma.articleLike.createMany({
+      data: [
+        { id: 'seed-like-1', userId: bobSeed.id, articleId: seedArticle1.id },
+        { id: 'seed-like-2', userId: adminSeed.id, articleId: seedArticle2.id },
+      ],
+    })
+
+    await prisma.friendship.create({
+      data: {
+        id: 'seed-friendship-1',
+        requesterId: aliceSeed.id,
+        addresseeId: bobSeed.id,
+        status: FriendStatus.ACCEPTED,
+      },
+    })
+
+    console.log('✅ Seed dataset created')
+    return
+  }
+
   const alice = await prisma.user.upsert({
     where: { email: 'alice@example.com' },
     update: {},
