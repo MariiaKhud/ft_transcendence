@@ -29,6 +29,7 @@ import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
 import { errorHandler } from './middleware/errorHandler.js'
+import authRoutes from './routes/authRoutes.js'
 
 dotenv.config()
 
@@ -74,7 +75,7 @@ app.get('/health', (_req, res) => {
 // ─────────────────────────────────────────────
 
 // TODO: Wire up route modules here
-// app.use('/api/auth', authRoutes)
+app.use('/api/auth', authRoutes)                       // Authentication routes (register, login, logout, etc.)
 // app.use('/api/articles', articleRoutes)
 // app.use('/api/users', userRoutes)
 // app.use('/api/comments', commentRoutes)

@@ -1,15 +1,4 @@
-/**
- * @file errorHandler.ts
- * @description This file defines the AppError class for custom error handling and the errorHandler middleware function
- * for centralized error management in the Express application. It also includes an asyncHandler function to wrap
- * asynchronous route handlers and catch errors without needing try-catch blocks in each handler.
- */
-
-
-
-
-// Importing necessary types from Express for type annotations in the middleware functions
-import type { Express, Request, Response, NextFunction } from 'express'
+import type { Express, Request, Response, NextFunction } from 'express' // For type annotations in Express middleware functions
 
 
 /**
@@ -57,14 +46,14 @@ export const errorHandler = (err: Error | AppError, _req: Request, res: Response
 }
 
 /**
- * @brief asyncHandler is a utility function that wraps asynchronous route handlers in Express.
+ * @brief handleAsyncErrors is a utility function that wraps asynchronous route handlers in Express.
  * It allows developers to write asynchronous code without needing to use try-catch blocks in each
  * handler. If an error is thrown in the asynchronous function, it will be caught and passed to the
  * next middleware (error handler).
- * @function asyncHandler
+ * @function handleAsyncErrors
  * @param {Function} fn - The asynchronous function (route handler) to be wrapped.
  * @returns {Function} A new function that wraps the original function and handles errors.
  */
-export const asyncHandler = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
+export const handleAsyncErrors = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next)
   }
