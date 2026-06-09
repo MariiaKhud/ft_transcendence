@@ -18,7 +18,27 @@ const AUTH_COOKIE_NAME = 'auth_token'
 const AUTH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 
 /**
+ * @brief getJwtSecret is a helper function that retrieves the JWT secret key from environment variables. It checks if the secret is defined and throws an AppError
+ * if it is missing, indicating a server misconfiguration. This function ensures that the application has a valid secret key for signing and verifying JWT tokens,
+ * which is crucial for the security of the authentication system.
+ * @function getJwtSecret
+ * @returns {string} The JWT secret key retrieved from environment variables.
+ * @throws {AppError} Throws an AppError with a 500 status code if the JWT secret is missing from environment variables, indicating a server misconfiguration.
+ */
+const getJwtSecret = () => {
+  const jwtSecret = process.env.JWT_SECRET
+
+  if (!jwtSecret) {
+    throw new AppError(500, 'Server misconfiguration: JWT secret is missing')
+  }
+
+  return jwtSecret
+}
+
+/**
  * @brief publicUserSelect is a Prisma select object that defines which fields of the User model should be included
+ * when querying for public user information. This helps in controlling the exposure of sensitive user data.
+ * @constant {Prisma.UserSelect} publicUserSelect - The Prisma select object for public user fields.
  */
 const publicUserSelect: Prisma.UserSelect = {
   id: true,
@@ -38,22 +58,47 @@ const publicUserSelect: Prisma.UserSelect = {
 
 /**
  * @brief signAuthToken is a helper function that creates a signed JWT token containing the user's ID and role.
- * It uses the secret key defined in the environment variables and sets an expiration time of 7 days.
- * If the JWT secret is not configured, it throws an AppError with a 500 status code indicating server misconfiguration.
+ * The token is signed using a secret key and has an expiration time of 7 days. This token will be used for authenticating
+ * subsequent requests from the client.
  * @function signAuthToken
  * @param {string} userId - The unique identifier of the user for whom the token is being created.
  * @param {string} role - The role of the user (e.g., 'user', 'admin') to be included in the token payload.
- * @returns {string} A signed JWT token that can be used for authenticating subsequent requests from the client.
- * @throws {AppError} Throws an AppError with a 500 status code if the JWT secret is missing from the environment configuration.
+ * @returns {string} A signed JWT token that can be sent to the client for authentication purposes.
  */
 const signAuthToken = (userId: string, role: string) => {
-  const jwtSecret = process.env.JWT_SECRET
+  return jwt.sign({ userId, role }, getJwtSecret(), { expiresIn: '7d' })
+}
 
-  if (!jwtSecret) {
-    throw new AppError(500, 'Server misconfiguration: JWT secret is missing')
+/**
+ * @brief verifyAuthToken is a helper function that verifies the provided JWT token and extracts the user ID from it.
+ * It checks if the token is valid and not expired, and ensures that the payload contains a valid userId. If the token
+ * is invalid or expired, it throws an AppError with a 401 status code indicating that authentication is required.
+ * @function verifyAuthToken
+ * @param {string} token - The JWT token to be verified, typically extracted from the authentication cookie in incoming requests.
+ * @returns {string} The user ID extracted from the token payload if the token is valid.
+ * @throws {AppError} Throws an AppError with a 401 status code if the token is invalid, expired, or does not contain a valid userId.
+ */
+const verifyAuthToken = (token: string) => {
+  try {
+    const decoded = jwt.verify(token, getJwtSecret())
+
+    if (typeof decoded === 'string') {
+      throw new AppError(401, 'Invalid or expired session')
+    }
+
+    const payload = decoded as { userId?: unknown }
+    if (typeof payload.userId !== 'string') {
+      throw new AppError(401, 'Invalid or expired session')
+    }
+
+    return payload.userId
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw error
+    }
+
+    throw new AppError(401, 'Invalid or expired session')
   }
-
-  return jwt.sign({ userId, role }, jwtSecret, { expiresIn: '7d' })
 }
 
 /**
@@ -271,9 +316,39 @@ const logoutHandler = (_req: Request, res: Response) => {
   res.status(200).json({ success: true, message: 'Logged out successfully' })
 }
 
+/**
+ * @brief meHandler is the route handler for the endpoint that retrieves the currently authenticated user's information. It checks for the presence of the authentication
+ * token in the cookies, verifies it, and if valid, retrieves the user's data from the database and responds with it. If the token is missing, invalid, or expired,
+ * it throws an AppError with a 401 status code indicating that authentication is required.
+ * @function meHandler
+ * @param {Request} req - The Express Request object containing the cookies with the authentication token.
+ * @param {Response} res - The Express Response object used to send the response back to the client.
+ * @throws {AppError} Throws an AppError with a 401 status code if authentication is required (token missing/invalid/expired) or other errors as they occur.
+ */
+const meHandler = async (req: Request, res: Response) => {
+  const token = req.cookies?.[AUTH_COOKIE_NAME]
+
+  if (typeof token !== 'string' || token.length === 0) {
+    throw new AppError(401, 'Authentication required')
+  }
+
+  const userId = verifyAuthToken(token)
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: publicUserSelect,
+  })
+
+  if (!user) {
+    throw new AppError(401, 'Invalid or expired session')
+  }
+
+  res.status(200).json({ success: true, data: user })
+}
+
 router.post('/register', handleAsyncErrors(registerHandler))
 router.post('/login', handleAsyncErrors(loginHandler))
 router.post('/logout', logoutHandler)
+router.get('/me', handleAsyncErrors(meHandler))
 
 export default router
 
