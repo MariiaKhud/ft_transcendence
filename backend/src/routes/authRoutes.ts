@@ -464,4 +464,5 @@ router.post('/login', handleAsyncErrors(loginHandler))
 router.post('/logout', handleAsyncErrors(logoutHandler))
 router.get('/me', handleAsyncErrors(meHandler))
 
+export { verifyAuthToken }
 export default router
