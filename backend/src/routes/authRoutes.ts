@@ -68,77 +68,81 @@ const validateRegisterInput = (body: unknown) => {
 }
 
 /**
- * @route POST /api/auth/register
- * @desc Register a new user with email, username, password, and optional displayName. Validates input, checks for existing users,
- * hashes the password, and creates a new user in the database. Responds with the created user data (excluding password hash)
- * on success.
- * @access Public
- * @returns {Object} JSON response containing success status and created user data (id, email, username, displayName, avatarUrl,
- * bio, role, xp, level, isOnline, lastSeenAt, createdAt, updatedAt).
- * @throws {AppError} Throws AppError with appropriate status codes and messages for validation failures or if email/username
- * is already taken.
+ * @brief registerHandler is the route handler for the user registration endpoint. It validates the input, checks for existing users with
+ * the same email or username, hashes the password, and creates a new user in the database. It responds with the created user data (excluding
+ * the password hash) and a success status. If any validation or database operation fails, it throws an AppError with an appropriate status
+ * code and message.
+ * @function registerHandler
+ * @param {Request} req - The Express Request object containing the registration data in the body.
+ * @param {Response} res - The Express Response object used to send the response back to the client.
+ * @throws {AppError} Throws an AppError with a 400 status code for validation errors, 409 for conflicts (email/username already taken),
+ * or other errors as they occur.
  */
-router.post('/register', handleAsyncErrors(async (req: Request, res: Response) => {
-    const { email, username, password, displayName } = validateRegisterInput(req.body)
+const registerHandler = async (req: Request, res: Response) => {
+  const registerInput = validateRegisterInput(req.body) // Validate the input for registration, ensuring required fields are present and properly formatted.
+  const { email, username, password, displayName } = registerInput // Destructure the validated input for easier access in the subsequent code.
 
-	// Check for existing users with the same email or username in parallel to optimize performance
-    const [existingEmailUser, existingUsernameUser] = await Promise.all([
-      prisma.user.findUnique({ where: { email }, select: { id: true } }),
-      prisma.user.findUnique({ where: { username }, select: { id: true } }),
-    ])
+  // Check for existing users with the same email or username in parallel to optimize performance
+  const [existingEmailUser, existingUsernameUser] = await Promise.all([
+    prisma.user.findUnique({ where: { email }, select: { id: true } }),
+    prisma.user.findUnique({ where: { username }, select: { id: true } }),
+  ])
 
-    if (existingEmailUser) {
-      throw new AppError(409, 'Email already taken')
+  if (existingEmailUser) {
+    throw new AppError(409, 'Email already taken')
+  }
+
+  if (existingUsernameUser) {
+    throw new AppError(409, 'Username already taken')
+  }
+
+  // Hash the password using bcrypt with a salt round of 10, which is a good balance between security and performance
+  const passwordHash = await bcrypt.hash(password, 10)
+
+  // Create the new user in the database with the provided email, username, hashed password, and optional displayName.
+  try {
+    const user = await prisma.user.create({
+      data: {
+        email,
+        username,
+        passwordHash,
+        displayName,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        displayName: true,
+        avatarUrl: true,
+        bio: true,
+        role: true,
+        xp: true,
+        level: true,
+        isOnline: true,
+        lastSeenAt: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    })
+
+    // Respond with the created user data (excluding password hash) and a success status of true
+    res.status(201).json({ success: true, data: user })
+  } catch (error) {
+    // Handle unique constraint violation errors from Prisma (e.g., if another user was created with the same email/username
+    // between the checks and creation)
+    // P2002 is the Prisma error code for unique constraint violations
+    if (typeof error === 'object' && error !== null && 'code' in error &&
+      (error as { code?: string }).code === 'P2002') {
+      throw new AppError(409, 'Email or username already taken')
     }
 
-    if (existingUsernameUser) {
-      throw new AppError(409, 'Username already taken')
-    }
+    throw error
+  }
+}
 
-	// Hash the password using bcrypt with a salt round of 10, which is a good balance between security and performance
-    const passwordHash = await bcrypt.hash(password, 10)
-
-	// Create the new user in the database with the provided email, username, hashed password, and optional displayName.
-    try {
-      const user = await prisma.user.create({
-        data: {
-          email,
-          username,
-          passwordHash,
-          displayName,
-        },
-        select: {
-          id: true,
-          email: true,
-          username: true,
-          displayName: true,
-          avatarUrl: true,
-          bio: true,
-          role: true,
-          xp: true,
-          level: true,
-          isOnline: true,
-          lastSeenAt: true,
-          createdAt: true,
-          updatedAt: true,
-        },
-      })
-
-	  // Respond with the created user data (excluding password hash) and a success status of true
-      res.status(201).json({success: true, data: user,})
-    } catch (error) {
-	  // Handle unique constraint violation errors from Prisma (e.g., if another user was created with the same email/username
-	  // between the checks and creation)
-	  // P2002 is the Prisma error code for unique constraint violations
-      if (typeof error === 'object' && error !== null && 'code' in error &&
-        (error as { code?: string }).code === 'P2002') {
-        throw new AppError(409, 'Email or username already taken')
-      }
-
-      throw error
-    }
-  })
-)
+// Register the route handler for POST /register, wrapping it with handleAsyncErrors to ensure any errors are properly caught
+// and passed to the error handling middleware
+router.post('/register', handleAsyncErrors(registerHandler))
 
 // Additional authentication routes (e.g., login, logout, password reset) would be implemented here following similar patterns
 // of input validation, error handling, and response formatting.
