@@ -254,11 +254,27 @@ const loginHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: publicUser })
 }
 
+/**
+ * @brief logoutHandler is the route handler for the user logout endpoint. It clears the authentication cookie from the client's browser, effectively logging the user out.
+ * It responds with a success message indicating that the logout was successful. This endpoint does not require any input validation since it simply clears the cookie.
+ * @function logoutHandler
+ * @param {Request} _req - The Express Request object (not used in this handler).
+ * @param {Response} res - The Express Response object used to send the response back to the client.
+ */
+const logoutHandler = (_req: Request, res: Response) => {
+  res.clearCookie(AUTH_COOKIE_NAME, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  })
+
+  res.status(200).json({ success: true, message: 'Logged out successfully' })
+}
+
 router.post('/register', handleAsyncErrors(registerHandler))
 router.post('/login', handleAsyncErrors(loginHandler))
+router.post('/logout', logoutHandler)
 
-// Additional authentication routes (e.g., login, logout, password reset) would be implemented here following similar patterns
-// of input validation, error handling, and response formatting.
 export default router
 
 
