@@ -15,7 +15,8 @@
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset",
     "lint": "eslint src --ext .ts",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:auth": "bash scripts/test-auth-flow.sh"
   },
   "keywords": [
     "express",

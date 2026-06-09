@@ -10,32 +10,43 @@
 
 
 
-/**
- * @brief express is the web framework used to create the server and define routes.
- * @brief cors is used to enable Cross-Origin Resource Sharing, allowing the frontend to communicate
- * with the backend.
- * @brief cookie-parser is used to parse cookies from incoming requests, which is essential for
- * handling sessions and authentication.
- * @brief helmet is used to set various HTTP headers for security purposes, helping to protect the
- * application from common vulnerabilities.
- * @brief dotenv is used to load environment variables from a .env file, allowing for configuration
- * of the server without hardcoding values in the codebase.
- * @brief errorHandler is a custom middleware for handling errors in a centralized manner, providing
- * consistent error responses across the application.
- */
-import express from 'express'
-import cors from 'cors'
-import cookieParser from 'cookie-parser'
-import helmet from 'helmet'
-import dotenv from 'dotenv'
-import { errorHandler } from './middleware/errorHandler.js'
-import authRoutes from './routes/authRoutes.js'
+import express from 'express'                                // For creating the Express application and defining routes and middleware
+import cors from 'cors'                                      // For enabling Cross-Origin Resource Sharing (CORS) in the Express application, allowing the frontend to make requests to the backend from a different origin
+import cookieParser from 'cookie-parser'                     // For parsing cookies in incoming requests, allowing the server to read and manipulate cookies for authentication and other purposes
+import helmet from 'helmet'                                  // For setting various HTTP headers for security in the Express application
+import dotenv from 'dotenv'                                  // For loading environment variables from a .env file into process.env, allowing for configuration of the application through environment variables
+import { errorHandler } from './middleware/errorHandler.js'  // Importing the errorHandler middleware for centralized error handling in the Express application
+import authRoutes from './routes/authRoutes.js'              // Importing the authentication routes for handling user registration, login, logout, and other auth-related endpoints. This is a placeholder for where the actual auth routes will be defined and implemented.
 
 dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3000
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://localhost'
+
+function handleHealthCheck(_req: express.Request, res: express.Response) {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+}
+
+function handleNotFound(_req: express.Request, res: express.Response) {
+  res.status(404).json({
+    success: false,
+    error: 'Route not found',
+  })
+}
+
+function handleServerStart() {
+  console.log(`✅ Server running on http://localhost:${PORT}`)
+  console.log(`🌐 CORS origin: ${FRONTEND_URL}`)
+}
+
+function handleGracefulShutdown() {
+  console.log('\n🛑 Shutting down gracefully...')
+  server.close(function () {
+    console.log('✅ Server closed')
+    process.exit(0)
+  })
+}
 
 // ─────────────────────────────────────────────
 // Security Middleware
@@ -50,7 +61,7 @@ app.use(
     origin: FRONTEND_URL,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
   })
 )
 
@@ -66,9 +77,7 @@ app.use(cookieParser())
 // Health Check
 // ─────────────────────────────────────────────
 
-app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
-})
+app.get('/health', handleHealthCheck)
 
 // ─────────────────────────────────────────────
 // API Routes
@@ -88,12 +97,7 @@ app.use('/api/auth', authRoutes)                       // Authentication routes 
 // 404 Handler
 // ─────────────────────────────────────────────
 
-app.use((_req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'Route not found',
-  })
-})
+app.use(handleNotFound)
 
 // ─────────────────────────────────────────────
 // Error Handler (must be last)
@@ -105,26 +109,11 @@ app.use(errorHandler)
 // Start Server
 // ─────────────────────────────────────────────
 
-const server = app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`)
-  console.log(`🌐 CORS origin: ${FRONTEND_URL}`)
-})
+const server = app.listen(PORT, handleServerStart)
 
 // Graceful shutdown
-process.on('SIGINT', () => {
-  console.log('\n🛑 Shutting down gracefully...')
-  server.close(() => {
-    console.log('✅ Server closed')
-    process.exit(0)
-  })
-})
+process.on('SIGINT', handleGracefulShutdown)
 
-process.on('SIGTERM', () => {
-  console.log('\n🛑 Shutting down gracefully...')
-  server.close(() => {
-    console.log('✅ Server closed')
-    process.exit(0)
-  })
-})
+process.on('SIGTERM', handleGracefulShutdown)
 
 export default app

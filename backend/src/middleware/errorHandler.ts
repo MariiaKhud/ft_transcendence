@@ -29,7 +29,7 @@ export class AppError extends Error {
  * @param {Response} res - The Express Response object used to send the error response.
  * @param {NextFunction} _next - The Express NextFunction (not used in this middleware).
  */
-export const errorHandler = (err: Error | AppError, _req: Request, res: Response, _next: NextFunction) => {
+export function errorHandler(err: Error | AppError, _req: Request, res: Response, _next: NextFunction) {
   console.error('Error:', err)
 
   if (err instanceof AppError) {
@@ -54,6 +54,8 @@ export const errorHandler = (err: Error | AppError, _req: Request, res: Response
  * @param {Function} fn - The asynchronous function (route handler) to be wrapped.
  * @returns {Function} A new function that wraps the original function and handles errors.
  */
-export const handleAsyncErrors = (fn: Function) => (req: Request, res: Response, next: NextFunction) => {
+export function handleAsyncErrors(fn: Function) {
+  return function (req: Request, res: Response, next: NextFunction) {
     Promise.resolve(fn(req, res, next)).catch(next)
   }
+}

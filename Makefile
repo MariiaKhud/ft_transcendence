@@ -1,5 +1,10 @@
 .PHONY: up down logs migrate seed help
 
+CYAN := \033[0;34m
+GREEN := \033[0;32m
+YELLOW := \033[0;33m
+RESET := \033[0m
+
 help:
 	@echo "Available commands:"
 	@echo "  make up       - Start all services with Docker"
@@ -9,7 +14,9 @@ help:
 	@echo "  make seed     - Seed database with test data"
 
 up:
+	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"
 	docker compose up --build
+	@printf "$(GREEN)Docker Compose finished.$(RESET)\n"
 
 down:
 	docker compose down
