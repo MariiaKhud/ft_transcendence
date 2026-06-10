@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';   // For type annotations in Express middleware functions
-import { AppError } from './errorHandler';                   // Importing the AppError class for throwing custom errors with specific status codes and messages
-import { verifyAuthToken } from '../routes/authRoutes';      // Importing the verifyAuthToken function from the authRoutes module, which is used to verify the JWT token and extract user information for authentication purposes
+import { AppError } from './error.middleware.js';                   // Importing the AppError class for throwing custom errors with specific status codes and messages
+import { verifyAuthToken } from '../routes/auth.routes.js';      // Importing the verifyAuthToken function from the authRoutes module, which is used to verify the JWT token and extract user information for authentication purposes
+
+type AuthRole = 'USER' | 'MODERATOR' | 'ADMIN';              // Defining a TypeScript type for user roles, which can be one of 'USER', 'MODERATOR', or 'ADMIN'. This will be used to enforce role-based access control in the application.
 
 // Extending the Express Request interface to include a user property that will hold the authenticated user's information (userId and csrfToken) after successful authentication.
 // This allows route handlers to access the authenticated user's details through req.user.
@@ -9,6 +11,7 @@ declare global {
     interface Request {
       user?: {
         userId: string;
+        role: AuthRole;
         csrfToken: string;
       };
     }
@@ -39,6 +42,7 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
 	// Attach the user information (userId and csrfToken) to the req.user property for use in subsequent route handlers
     req.user = {
       userId: decoded.userId,
+      role: decoded.role,
       csrfToken: decoded.csrfToken,
     };
     next(); // Pass control to the next middleware or route handler

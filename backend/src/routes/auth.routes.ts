@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs'                                                // 
 import jwt from 'jsonwebtoken'                                               // For creating signed authentication tokens
 import type { Prisma } from '@prisma/client'                                 // For strongly-typed Prisma select objects
 import { prisma } from '../lib/prisma.js'                                    // Prisma client instance for database operations
-import { AppError, handleAsyncErrors } from '../middleware/errorHandler.js'  // Custom error class and async handler utility for error handling in routes
+import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'  // Custom error class and async handler utility for error handling in routes
 
 // Creating a new router instance for authentication routes
 const router = Router()
@@ -19,6 +19,8 @@ const AUTH_COOKIE_NAME = 'auth_token'
 const AUTH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 const CSRF_COOKIE_NAME = 'csrf_token'
 const CSRF_HEADER_NAME = 'x-csrf-token'
+const VALID_AUTH_ROLES = ['USER', 'MODERATOR', 'ADMIN'] as const  // Defining valid authentication roles as a constant array for type safety and validation purposes
+type AuthRole = typeof VALID_AUTH_ROLES[number]                   // Defining a TypeScript type for user roles based on the VALID_AUTH_ROLES array, which can be 'USER', 'MODERATOR', or 'ADMIN'. This type will be used to enforce role-based access control in the application.
 
 /**
  * @brief normalizeEmail is a helper function that takes an email string as input, trims any leading or trailing whitespace, and converts it to lowercase. This normalization
@@ -174,13 +176,14 @@ function signAuthToken(userId: string, role: string, csrfToken: string) {
 }
 
 /**
- * @brief verifyAuthToken is a helper function that verifies the authenticity and validity of a JWT token. It checks if the token is valid, not expired,
- * and contains the expected payload structure. If the token is valid, it returns the decoded user ID and CSRF token from the payload. If the token is
- * invalid or expired, it throws an AppError with a 401 status code.
+ * @brief verifyAuthToken is a helper function that verifies the provided JWT authentication token using the secret key. It checks if the token is valid and
+ * not expired, and extracts the user information (userId, role, and csrfToken) from the token payload. If the token is missing, invalid, or expired, it throws
+ * an AppError with a 401 status code indicating that authentication is required. This function is used in protected routes to ensure that the user has a valid
+ * session and to retrieve their information for authorization checks.
  * @function verifyAuthToken
- * @param {string} token - The JWT token to be verified, typically extracted from the authentication cookie.
- * @returns {Object} An object containing the userId and csrfToken extracted from the decoded token payload if verification is successful.
- * @throws {AppError} Throws an AppError with a 401 status code if the token is invalid, expired, or does not contain the expected payload structure.
+ * @param {string} token - The JWT authentication token to be verified.
+ * @returns {Object} An object containing the userId, role, and csrfToken extracted from the token payload if the token is valid.
+ * @throws {AppError} Throws an AppError with a 401 status code if the token is missing, invalid, or expired.
  */
 function verifyAuthToken(token: string) {
   try {
@@ -190,13 +193,18 @@ function verifyAuthToken(token: string) {
       throw new AppError(401, 'Invalid or expired session')
     }
 
-    const payload = decoded as { userId?: unknown; csrfToken?: unknown }
+    const payload = decoded as { userId?: unknown; role?: unknown; csrfToken?: unknown }
     if (typeof payload.userId !== 'string' || typeof payload.csrfToken !== 'string') {
+      throw new AppError(401, 'Invalid or expired session')
+    }
+
+    if (typeof payload.role !== 'string' || !VALID_AUTH_ROLES.includes(payload.role as AuthRole)) {
       throw new AppError(401, 'Invalid or expired session')
     }
 
     return {
       userId: payload.userId,
+      role: payload.role as AuthRole,
       csrfToken: payload.csrfToken,
     }
   } catch (error) {
