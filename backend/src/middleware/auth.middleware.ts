@@ -35,6 +35,8 @@ function authMiddleware(req: Request, res: Response, next: NextFunction): void {
 
   try {
     const decoded = verifyAuthToken(token);
+
+	// Attach the user information (userId and csrfToken) to the req.user property for use in subsequent route handlers
     req.user = {
       userId: decoded.userId,
       csrfToken: decoded.csrfToken,
