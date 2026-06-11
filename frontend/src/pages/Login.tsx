@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'                // Importing useState and FormEvent type from React for managing component state and typing form events
-import { useNavigate } from 'react-router-dom'                  // Importing useNavigate from react-router-dom for programmatic navigation after successful login
+import { Link, useNavigate } from 'react-router-dom'            // Importing Link and useNavigate from react-router-dom for navigation
 import { Button } from '@/components/ui/button'                 // Importing a Button component from the local UI components for consistent styling of buttons across the application
 import { useAuthStore, type AuthUser } from '@/store/authStore' // Importing the useAuthStore hook and AuthUser type from the local authStore for managing authentication state and typing the user object
 
@@ -240,6 +240,13 @@ export function Login() {
         <Button className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 py-3 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50" type="submit" disabled={isSubmitting}>
           {isSubmitting ? 'Signing in...' : 'Sign In'}
         </Button>
+
+        <p className="text-center text-sm text-slate-600">
+          Don't have an account?{' '}
+          <Link to="/register" className="font-semibold text-purple-700 hover:text-purple-900">
+            Register
+          </Link>
+        </p>
       </form>
     </section>
   )
