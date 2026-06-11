@@ -5,77 +5,78 @@
 ## Project Overview
 
 **ft_transcendence** is a team project where users can:
-- 📝 Publish and read articles
-- 💬 Comment and like articles  
-- 👥 Add friends and follow authors
-- 💬 Chat with friends
-- 🎖️ Earn badges and climb the leaderboard
-- 🛡️ Admin dashboard for moderation
-
----
+- Publish and read articles
+- Comment and like articles
+- Add friends and follow authors
+- Chat with friends
+- Earn badges and climb the leaderboard
+- Use an admin dashboard for moderation
 
 ## Tech Stack
 
-| Component | Technology                                    |
-|-----------|-----------------------------------------------|
-| Frontend  | React + TypeScript + Tailwind CSS + shadcn/ui |
-| Backend   | Node.js + Express + TypeScript                |
-| Database  | PostgreSQL + Prisma ORM                       |
-| Server    | Docker + Docker Compose + nginx (HTTPS)       |
-
----
+| Component | Technology                              |
+|-----------|-----------------------------------------|
+| Frontend  | React + TypeScript + Tailwind CSS       |
+| Backend   | Node.js + Express + TypeScript          |
+| Database  | PostgreSQL + Prisma ORM                 |
+| Server    | Docker + Docker Compose + Nginx (HTTPS) |
 
 ## Setup Instructions
 
 ### Prerequisites
-- Docker & Docker Compose installed
 - Git
-- Node.js 18+ (for local development without Docker)
+- Docker Engine + Docker Compose
 
-### 1. Clone the repository
+### 1. Clone
+
 ```bash
-git clone <repo-url>
+git clone <your-repository-url>
 cd ft_transcendence
 ```
 
-### 2. Create `.env` file
+### 2. Configure environment
+
 ```bash
 cp .env.example .env
 ```
-Then edit `.env` and fill in your values.
+
+Then edit `.env`.
+
+Important for Docker: use `postgres` as DB host, not `localhost`.
+
+```env
+DATABASE_URL=postgresql://transcendence:transcendence@postgres:5432/transcendence
+JWT_SECRET=change-this-to-a-long-random-secret
+BACKEND_PORT=3000
+FRONTEND_PORT=5173
+NODE_ENV=development
+UPLOAD_PATH=./uploads
+```
 
 ### 3. Start the project
+
 ```bash
 make up
 ```
 
-This command:
-- Builds Docker images for frontend, backend, and database
-- Starts all services
-- Runs database migrations
-- Seeds test data
+### 4. Open the app
 
-### 4. Access the app
-- Frontend: https://localhost
-- Backend API: https://localhost/api
-
----
+- https://localhost:8443
+- http://localhost:8080 (redirects to HTTPS)
 
 ## Available Commands
 
 ```bash
-make up        # Start all services with Docker
-make down      # Stop all services
-make logs      # Show live logs from all services
-make migrate   # Run Prisma migrations
-make seed      # Seed database with test data
+make up        # build and run all services
+make down      # stop all services
+make logs      # stream logs
+make migrate   # run prisma migrations in backend container
+make seed      # seed database in backend container
 ```
-
----
 
 ## Project Structure
 
-```
+```text
 ft_transcendence/
 ├── frontend/           # React app
 ├── backend/            # Express API
@@ -85,43 +86,49 @@ ft_transcendence/
 └── docker-compose.yml  # Docker orchestration
 ```
 
----
-
 ## Team
 
-| Person   | Role                 | Features                              |
-|----------|----------------------|---------------------------------------|
-| Person 1 | Auth & Users         | Sign up, login, profiles, avatars     |
-| Person 2 | Articles & Feed      | Articles, comments, likes, search     |
-| Person 3 | Social Layer         | Friends, chat, notifications, follows |
-| Person 4 | Gamification & Admin | Badges, leaderboard, moderation       |
-
----
+| Person   | Role                 | Features                                |
+|----------|----------------------|-----------------------------------------|
+| Person 1 | Auth & Users         | Sign up, login, profiles, avatars       |
+| Person 2 | Articles & Feed      | Articles, comments, likes, search       |
+| Person 3 | Social Layer         | Friends, chat, notifications, follows   |
+| Person 4 | Gamification & Admin | Badges, leaderboard, moderation         |
 
 ## Features
 
-### Core Features
-- ✅ User authentication (JWT + HttpOnly cookies)
-- ✅ Article publishing (Markdown support)
-- ✅ Comments and likes
-- ✅ Friend system (mutual)
-- ✅ Follow system (one-directional)
-- ✅ Direct messaging
-- ✅ Notifications
-- ✅ Gamification (badges, XP, leaderboard)
-- ✅ Moderation dashboard
-- ✅ PWA (installable app)
+- User authentication (JWT + HttpOnly cookies)
+- Article publishing
+- Comments and likes
+- Friend and follow systems
+- Direct messaging
+- Notifications
+- Gamification (badges, XP, leaderboard)
+- Moderation dashboard
 
----
+## Service Map (Docker)
+
+| Service     | Internal Port | Host Port (default) |
+|-------------|--------------:|--------------------:|
+| postgres    | 5432          | not exposed         |
+| backend     | 3000          | 3000                |
+| frontend    | 5173          | 5173                |
+| nginx http  | 80            | 8080                |
+| nginx https | 443           | 8443                |
+
+## Troubleshooting (Quick)
+
+- Port conflicts: change host ports in `.env` (`BACKEND_PORT`, `FRONTEND_PORT`, `NGINX_HTTP_PORT`, `NGINX_HTTPS_PORT`).
+- TLS warning in browser: expected with local self-signed certs.
+- DB connection errors: verify `DATABASE_URL` uses host `postgres` (not `localhost`) when running in Docker.
+
+Rebuild cleanly:
+
+```bash
+make down
+docker compose up --build
+```
 
 ## Getting Help
 
-See the documentation in each folder:
-- `frontend/README.md` — frontend setup
-- `backend/README.md` — backend setup
-
----
-
-## License
-
-School project for Codam (42 Network)
+- Backend API docs: `backend/README.md`

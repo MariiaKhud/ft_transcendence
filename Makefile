@@ -16,7 +16,7 @@ help:
 up:
 	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"
 	docker compose up --build
-	@printf "$(GREEN)Docker Compose finished.$(RESET)\n"
+	@printf "$(YELLOW)Docker Compose finished.$(RESET)\n"
 
 down:
 	docker compose down

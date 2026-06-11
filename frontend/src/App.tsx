@@ -21,21 +21,45 @@ import { Link, Outlet } from 'react-router-dom'   // Importing Link and Outlet c
  */
 export default function App() {
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
-      <header className="border-b bg-white/80 backdrop-blur">
+    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      {/* Decorative gradient blob */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-40 top-20 h-80 w-80 rounded-full bg-gradient-to-br from-pink-200/20 via-purple-200/20 to-blue-200/20 blur-3xl" />
+        <div className="absolute -left-40 bottom-20 h-80 w-80 rounded-full bg-gradient-to-br from-blue-200/20 via-cyan-200/20 to-pink-200/20 blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 h-96 w-96 rounded-full bg-gradient-to-br from-purple-200/10 to-pink-200/10 blur-3xl" />
+      </div>
+
+      {/* Scattered decorative dots */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <svg className="h-full w-full" viewBox="0 0 1200 800" preserveAspectRatio="none">
+          <circle cx="100" cy="150" r="3" fill="#c084fc" opacity="0.3" />
+          <circle cx="1100" cy="200" r="2" fill="#ec4899" opacity="0.3" />
+          <circle cx="300" cy="600" r="2.5" fill="#06b6d4" opacity="0.25" />
+          <circle cx="900" cy="700" r="2" fill="#a78bfa" opacity="0.3" />
+          <circle cx="600" cy="100" r="1.5" fill="#f472b6" opacity="0.2" />
+          <circle cx="150" cy="500" r="2" fill="#60a5fa" opacity="0.25" />
+          <circle cx="1050" cy="650" r="2.5" fill="#c084fc" opacity="0.2" />
+          <circle cx="700" cy="300" r="1" fill="#22d3ee" opacity="0.3" />
+          <circle cx="400" cy="400" r="2" fill="#f97316" opacity="0.15" />
+          <circle cx="1000" cy="100" r="1.5" fill="#a855f7" opacity="0.25" />
+        </svg>
+      </div>
+
+      <header className="relative z-10 border-b border-white/20 bg-white/10 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
-          <Link to="/" className="text-lg font-semibold tracking-tight text-slate-900">
-            ft_transcendence
+          <Link to="/" className="text-xl font-semibold tracking-tight text-slate-900">
+            Codamium
           </Link>
           <Link
             to="/login"
-            className="rounded-md bg-slate-900 px-3 py-1.5 text-sm font-medium text-white"
+            className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-sm font-medium text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
           >
             Login
           </Link>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl px-6 py-10">
+
+      <main className="relative z-10 mx-auto w-full max-w-6xl px-6 py-20">
         <Outlet />
       </main>
     </div>
