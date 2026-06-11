@@ -6,12 +6,12 @@ YELLOW := \033[0;33m
 RESET := \033[0m
 
 help:
-	@echo "Available commands:"
-	@echo "  make up       - Start all services with Docker"
-	@echo "  make down     - Stop all services"
-	@echo "  make logs     - Show live logs from all services"
-	@echo "  make migrate  - Run Prisma migrations"
-	@echo "  make seed     - Seed database with test data"
+	@printf "$(CYAN)Available commands:$(RESET)\n"
+	@printf "  $(GREEN)make up$(RESET)       - Start all services with Docker\n"
+	@printf "  $(GREEN)make down$(RESET)     - Stop all services\n"
+	@printf "  $(GREEN)make logs$(RESET)     - Show live logs from all services\n"
+	@printf "  $(GREEN)make migrate$(RESET)  - Run Prisma migrations\n"
+	@printf "  $(GREEN)make seed$(RESET)     - Seed database with test data\n"
 
 up:
 	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"

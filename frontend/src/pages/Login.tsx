@@ -1,25 +1,45 @@
-import { useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button } from '@/components/ui/button'
-import { useAuthStore, type AuthUser } from '@/store/authStore'
+import { useState, type FormEvent } from 'react'                // Importing useState and FormEvent type from React for managing component state and typing form events
+import { useNavigate } from 'react-router-dom'                  // Importing useNavigate from react-router-dom for programmatic navigation after successful login
+import { Button } from '@/components/ui/button'                 // Importing a Button component from the local UI components for consistent styling of buttons across the application
+import { useAuthStore, type AuthUser } from '@/store/authStore' // Importing the useAuthStore hook and AuthUser type from the local authStore for managing authentication state and typing the user object
 
+// Defining a TypeScript interface for the expected response from the login API, which includes a success boolean, an optional data object of type AuthUser,
+// and an optional error message string
 interface LoginResponse {
   success: boolean
   data?: AuthUser
   error?: string
 }
 
+/**
+ * @brief A utility function to validate email addresses using a regular expression. It checks if the provided email string matches the common pattern for valid emailaddresses.
+ * @function validateEmail
+ * @param {string} email - The email address to validate.
+ * @returns {boolean} True if the email is valid, false otherwise. 
+ */
 function validateEmail(email: string) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
 
+/**
+ * @brief The Login component is a React functional component that renders a login form for users to enter their email and password. It manages the form state using
+ * useState hooks, validates the input fields, and handles form submission by making a POST request to the login API endpoint. If the login is successful, it updates
+ * the authentication state using the useAuthStore hook and navigates the user to the feed page. If there are any validation errors or API errors, it displays
+ * appropriate error messages to the user.
+ * @function Login
+ * @returns {JSX.Element} The rendered Login component with a form for user authentication.
+ */
 export function Login() {
-  const navigate = useNavigate()
-  const setUser = useAuthStore(function selectSetUser(state) {
+  const navigate = useNavigate() // Using the useNavigate hook from react-router-dom to programmatically navigate to different routes after successful login
+
+  // Accessing the setUser function from the authentication store to update the user information upon successful login
+  const setUser = useAuthStore(
+	function selectSetUser(state) {
     return state.setUser
   })
 
+  // State variables for managing form input values, error messages, and submission status
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [emailError, setEmailError] = useState('')
@@ -27,12 +47,15 @@ export function Login() {
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Function to clear all error messages before validating or submitting the form
   function clearErrors() {
     setEmailError('')
     setPasswordError('')
     setFormError('')
   }
 
+  // Function to validate the email and password fields, setting appropriate error messages if validation fails.
+  // It checks if the email is not empty and follows a valid email format, and if the password is not empty. It returns a boolean indicating whether the fields are valid.
   function validateFields(): boolean {
     let isValid = true
     const trimmedEmail = email.trim()
@@ -53,6 +76,7 @@ export function Login() {
     return isValid
   }
 
+  // Function to apply API error messages to the appropriate form fields
   function applyApiError(message: string) {
     const lowerMessage = message.toLowerCase()
 
@@ -75,14 +99,22 @@ export function Login() {
     setFormError(message)
   }
 
+  // Asynchronous function to handle form submission, which prevents the default form behavior, validates the fields, and if valid, sends a POST request to the login
+  // API endpoint. It handles the API response, updating the authentication state and navigating to the feed page on success, or applying error messages on failure.
+  // It also manages the submission state to provide feedback to the user.
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+
+	// Preventing the default form submission behavior to handle it with custom logic
     event.preventDefault()
+
+	// Clearing any existing error messages before validating the form fields
     clearErrors()
 
     if (!validateFields()) {
       return
     }
 
+	// Wrapping the API call in a try-catch block to handle any network or server errors that may occur during the login process
     try {
       setIsSubmitting(true)
       const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
@@ -98,13 +130,17 @@ export function Login() {
         }),
       })
 
+	  // Parsing the JSON response from the API and typing it as LoginResponse to ensure we have the expected structure for success, data, and error properties
       const payload = (await response.json()) as LoginResponse
 
+	  // Checking if the response is not OK, or if the success property is false, or if the data is missing. If any of these conditions are true, it applies the error message
+	  // from the API
       if (!response.ok || !payload.success || !payload.data) {
         applyApiError(payload.error ?? 'Login failed')
         return
       }
 
+	  // If the login is successful, it updates the authentication state with the user data from the API response and navigates the user to the feed page
       setUser(payload.data)
       navigate('/feed', { replace: true })
     } catch {
