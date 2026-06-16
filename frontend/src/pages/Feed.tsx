@@ -9,7 +9,7 @@ import { useAuthStore } from '@/store/authStore'  // Importing the useAuthStore 
  */
 export function Feed() {
   const user = useAuthStore(function selectUser(state) {
-    return state.user
+    return state.currentUser
   })
 
   return (

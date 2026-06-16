@@ -10,16 +10,20 @@
 
 
 import { Link, Outlet } from 'react-router-dom'   // Importing Link and Outlet components from react-router-dom for navigation and rendering matched child routes in the application
+import { useAuth } from '@/hooks/useAuth'         // Importing a custom hook useAuth from the local hooks directory, which is likely used to manage authentication state and provide authentication-related functionality throughout the application
 
 /**
- * @brief The App component serves as the root component for the React frontend application, defining the overall layout and structure of the app. It includes
- * a header with navigation links to the home page and login page, and a main content area where different pages and components will be rendered based on the
- * defined routes. The Outlet component from react-router-dom is used to render the matched child routes, allowing for nested routing and dynamic content
- * rendering based on the URL. The App component also applies Tailwind CSS classes for styling the layout and appearance of the application.
+ * @brief The App component is the root component of the React frontend application, responsible for rendering the overall layout, including the header and main content area.
+ * It uses the useAuth hook to manage authentication state and conditionally render user information and navigation links based on whether a user is logged in or not.
+ * The component also includes decorative elements such as gradient blobs and scattered dots to enhance the visual appeal of the application. The Outlet component from
+ * react-router-dom is used to render matched child routes, allowing for dynamic content rendering based on the current URL.
  * @function App
- * @returns {JSX.Element} The rendered App component containing the header and main content area with routing capabilities.
+ * @returns {JSX.Element} The rendered App component, which includes the header, main content area, and decorative elements, along with authentication state management and
+ * routing functionality.
  */
 export default function App() {
+  const { currentUser, isLoading, logout } = useAuth({ restoreOnMount: true }) // Using the useAuth hook to access the current user's authentication state, loading status, and logout function. The restoreOnMount option is set to true to restore the authentication state when the component mounts.
+
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       {/* Decorative gradient blob */}
@@ -50,12 +54,33 @@ export default function App() {
           <Link to="/" className="text-xl font-semibold tracking-tight text-slate-900">
             Codamium
           </Link>
-          <Link
-            to="/login"
-            className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-sm font-medium text-white shadow-lg transition-all hover:shadow-xl hover:scale-105"
-          >
-            Login
-          </Link>
+          <div className="flex items-center gap-3">
+            {isLoading ? <span className="text-sm font-medium text-slate-700">Checking session...</span> : null}
+
+            {currentUser ? (
+              <>
+                <span className="inline-flex items-center rounded-full border border-fuchsia-300/60 bg-gradient-to-r from-fuchsia-100 to-purple-100 px-3 py-1 text-sm font-semibold text-fuchsia-800 shadow-sm">
+                  {currentUser.displayName ?? currentUser.username}
+                </span>
+                <button
+                  type="button"
+                  onClick={function onLogoutClick() {
+                    void logout()
+                  }}
+                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link
+                to="/login"
+                className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+              >
+                Login
+              </Link>
+            )}
+          </div>
         </div>
       </header>
 

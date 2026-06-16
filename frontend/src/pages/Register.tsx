@@ -69,6 +69,7 @@ export function Register() {
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   // clearErrors is a helper function that resets all error messages to an empty string. It is called before validating the form fields or submitting the form
   // to ensure that previous error messages do not persist.
@@ -310,7 +311,7 @@ export function Register() {
             <input
               id="confirmPassword"
               name="confirmPassword"
-              type={showPassword ? 'text' : 'password'}
+              type={showConfirmPassword ? 'text' : 'password'}
               autoComplete="new-password"
               value={confirmPassword}
               onChange={function onConfirmPasswordChange(event) {
@@ -322,12 +323,12 @@ export function Register() {
             <button
               type="button"
               onClick={function onTogglePasswordVisibility() {
-                setShowPassword(!showPassword)
+                setShowConfirmPassword(!showConfirmPassword)
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-700 hover:text-purple-900"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
             >
-              {showPassword ? (
+              {showConfirmPassword ? (
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"

@@ -24,32 +24,123 @@ export interface AuthUser {
   updatedAt: string
 }
 
-// Defining a TypeScript interface for the authentication state, which includes the user object (of type AuthUser or null), an isAuthenticated boolean to indicate if the user is logged in,
+export interface LoginCredentials {
+  email: string
+  password: string
+}
+
+interface ApiResponse<TData> {
+  success: boolean
+  data?: TData
+  error?: string
+}
+
+function getApiBaseUrl() {
+  return (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
+}
+
+function getCookie(name: string) {
+  if (typeof document === 'undefined') {
+    return undefined
+  }
+
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const match = document.cookie.match(new RegExp(`(?:^|; )${escapedName}=([^;]*)`))
+  return match ? decodeURIComponent(match[1]) : undefined
+}
+
 interface AuthState {
-  user: AuthUser | null
-  isAuthenticated: boolean
-  setUser: (user: AuthUser) => void
-  clearUser: () => void
+  currentUser: AuthUser | null
+  isLoading: boolean
+  login: (credentials: LoginCredentials) => Promise<AuthUser>
+  logout: () => Promise<void>
+  restoreSession: () => Promise<void>
 }
 
 /**
- * @brief useAuthStore is a custom hook created using the zustand library that provides a global state store for managing authentication in the React application.
- * It defines the initial state of the authentication, which includes a user object (initially null) and an isAuthenticated boolean (initially false).
- * It also provides two functions: setUser to update the user information and set isAuthenticated to true when a user logs in, and clearUser to reset the user information
- * and set isAuthenticated to false when a user logs out. This store can be accessed from any component in the application to manage and access the authentication state
- * without prop drilling.
+ * @brief The useAuthStore is a Zustand store that manages the authentication state of the user in the React application. It provides properties to store the current
+ * authenticated user and loading status, as well as functions to handle user login, logout, and session restoration. The store interacts with the backend API to perform
+ * authentication-related operations and updates the state accordingly based on the API responses.
  * @function useAuthStore
- * @returns {AuthState} The authentication state, including the user information, authentication status, and functions to update and clear the user data.
+ * @returns {AuthState} The authentication state store containing the current user, loading status, and authentication functions for login, logout, and session restoration.
  */
 export const useAuthStore = create<AuthState>(function authStore(set) {
   return {
-    user: null,
-    isAuthenticated: false,
-    setUser: function setUser(user) {
-      set({ user, isAuthenticated: true })
+    currentUser: null,
+    isLoading: false,
+    login: async function login(credentials) {
+      set({ isLoading: true })
+
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/api/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            email: credentials.email.trim(),
+            password: credentials.password,
+          }),
+        })
+
+        const payload = (await response.json()) as ApiResponse<AuthUser>
+        if (!response.ok || !payload.success || !payload.data) {
+          throw new Error(payload.error ?? 'Login failed')
+        }
+
+        set({ currentUser: payload.data })
+        return payload.data
+      } finally {
+        set({ isLoading: false })
+      }
     },
-    clearUser: function clearUser() {
-      set({ user: null, isAuthenticated: false })
+    logout: async function logout() {
+      set({ isLoading: true })
+
+      try {
+        const csrfToken = getCookie('csrf_token')
+        const headers: Record<string, string> = {}
+
+        if (csrfToken) {
+          headers['x-csrf-token'] = csrfToken
+        }
+
+        await fetch(`${getApiBaseUrl()}/api/auth/logout`, {
+          method: 'POST',
+          headers,
+          credentials: 'include',
+        })
+      } finally {
+        set({ currentUser: null, isLoading: false })
+      }
+    },
+    restoreSession: async function restoreSession() {
+      set({ isLoading: true })
+
+      try {
+        const response = await fetch(`${getApiBaseUrl()}/api/auth/me`, {
+          method: 'GET',
+          credentials: 'include',
+        })
+
+        if (!response.ok) {
+          set({ currentUser: null })
+          return
+        }
+
+        const payload = (await response.json()) as ApiResponse<AuthUser>
+        if (!payload.success || !payload.data) {
+          set({ currentUser: null })
+          return
+        }
+
+        set({ currentUser: payload.data })
+      } catch {
+        set({ currentUser: null })
+      } finally {
+        set({ isLoading: false })
+      }
     },
   }
 })

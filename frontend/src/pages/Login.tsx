@@ -1,15 +1,7 @@
 import { useState, type FormEvent } from 'react'                // Importing useState and FormEvent type from React for managing component state and typing form events
 import { Link, useNavigate } from 'react-router-dom'            // Importing Link and useNavigate from react-router-dom for navigation
 import { Button } from '@/components/ui/button'                 // Importing a Button component from the local UI components for consistent styling of buttons across the application
-import { useAuthStore, type AuthUser } from '@/store/authStore' // Importing the useAuthStore hook and AuthUser type from the local authStore for managing authentication state and typing the user object
-
-// Defining a TypeScript interface for the expected response from the login API, which includes a success boolean, an optional data object of type AuthUser,
-// and an optional error message string
-interface LoginResponse {
-  success: boolean
-  data?: AuthUser
-  error?: string
-}
+import { useAuth } from '@/hooks/useAuth'                       // Importing a custom hook useAuth from the local hooks directory, which is likely used to manage authentication state and provide authentication-related functionality throughout the application
 
 /**
  * @brief A utility function to validate email addresses using a regular expression. It checks if the provided email string matches the common pattern for valid emailaddresses.
@@ -33,11 +25,7 @@ function validateEmail(email: string) {
 export function Login() {
   const navigate = useNavigate() // Using the useNavigate hook from react-router-dom to programmatically navigate to different routes after successful login
 
-  // Accessing the setUser function from the authentication store to update the user information upon successful login
-  const setUser = useAuthStore(
-	function selectSetUser(state) {
-    return state.setUser
-  })
+  const { login, isLoading } = useAuth()
 
   // State variables for managing form input values, error messages, and submission status
   const [email, setEmail] = useState('')
@@ -45,7 +33,6 @@ export function Login() {
   const [emailError, setEmailError] = useState('')
   const [passwordError, setPasswordError] = useState('')
   const [formError, setFormError] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
   // Function to clear all error messages before validating or submitting the form
@@ -117,37 +104,18 @@ export function Login() {
 
 	// Wrapping the API call in a try-catch block to handle any network or server errors that may occur during the login process
     try {
-      setIsSubmitting(true)
-      const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
-      const response = await fetch(`${apiBaseUrl}/api/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({
-          email: email.trim(),
-          password,
-        }),
+      await login({
+        email,
+        password,
       })
-
-	  // Parsing the JSON response from the API and typing it as LoginResponse to ensure we have the expected structure for success, data, and error properties
-      const payload = (await response.json()) as LoginResponse
-
-	  // Checking if the response is not OK, or if the success property is false, or if the data is missing. If any of these conditions are true, it applies the error message
-	  // from the API
-      if (!response.ok || !payload.success || !payload.data) {
-        applyApiError(payload.error ?? 'Login failed')
+      navigate('/feed', { replace: true })
+    } catch (error) {
+      if (error instanceof Error) {
+        applyApiError(error.message)
         return
       }
 
-	  // If the login is successful, it updates the authentication state with the user data from the API response and navigates the user to the feed page
-      setUser(payload.data)
-      navigate('/feed', { replace: true })
-    } catch {
       setFormError('Unable to connect to the server')
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -237,8 +205,8 @@ export function Login() {
 
         {formError.length > 0 ? <p className="rounded-lg bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600 border border-red-200/50">{formError}</p> : null}
 
-        <Button className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 py-3 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50" type="submit" disabled={isSubmitting}>
-          {isSubmitting ? 'Signing in...' : 'Sign In'}
+        <Button className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 py-3 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50" type="submit" disabled={isLoading}>
+          {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
 
         <p className="text-center text-sm text-slate-600">
