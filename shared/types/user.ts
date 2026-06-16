@@ -119,3 +119,33 @@ export interface AuthResponse {
   user: AuthUser
   accessToken: string
 }
+
+/**
+ * @brief Represents a badge shown on a user's public profile.
+ * @interface PublicUserBadge
+ * @property {string} id - The unique identifier of the badge.
+ * @property {string} name - The badge display name.
+ * @property {string} icon - The badge icon asset or emoji.
+ */
+export interface PublicUserBadge {
+  id: string
+  name: string
+  icon: string
+}
+
+/**
+ * @brief Represents the public profile payload returned by GET /api/users/:username.
+ * @interface PublicUserProfile
+ */
+export interface PublicUserProfile {
+  displayName: string | null
+  username: string
+  avatarUrl: string | null
+  bio: string | null
+  followerCount: number
+  followingCount: number
+  articleCount: number
+  badges: PublicUserBadge[]
+  level: number
+  xp: number
+}

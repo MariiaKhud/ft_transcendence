@@ -16,7 +16,8 @@ import cookieParser from 'cookie-parser'                     // For parsing cook
 import helmet from 'helmet'                                  // For setting various HTTP headers for security in the Express application
 import dotenv from 'dotenv'                                  // For loading environment variables from a .env file into process.env, allowing for configuration of the application through environment variables
 import { errorHandler } from './middleware/error.middleware.js'  // Importing the errorHandler middleware for centralized error handling in the Express application
-import authRoutes from './routes/auth.routes.js'              // Importing the authentication routes for handling user registration, login, logout, and other auth-related endpoints. This is a placeholder for where the actual auth routes will be defined and implemented.
+import authRoutes from './routes/auth.routes.js'             // Importing the authentication routes for handling user registration, login, logout, and other auth-related endpoints. This is a placeholder for where the actual auth routes will be defined and implemented.
+import userRoutes from './routes/users.routes.js'            // Importing the user routes for handling user-related endpoints such as profile management, user listing, etc. This is a placeholder for where the actual user routes will be defined and implemented.
 
 dotenv.config()
 
@@ -86,7 +87,7 @@ app.get('/health', handleHealthCheck)
 // TODO: Wire up route modules here
 app.use('/api/auth', authRoutes)                       // Authentication routes (register, login, logout, etc.)
 // app.use('/api/articles', articleRoutes)
-// app.use('/api/users', userRoutes)
+app.use('/api/users', userRoutes)                      // User routes (profile management, user listing, etc.)
 // app.use('/api/comments', commentRoutes)
 // app.use('/api/friends', friendshipRoutes)
 // app.use('/api/messages', messageRoutes)
