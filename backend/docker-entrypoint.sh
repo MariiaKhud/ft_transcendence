@@ -22,4 +22,8 @@ while [ "$attempt" -le "$max_attempts" ]; do
   sleep 3
 done
 
+if [ "$NODE_ENV" = "development" ]; then
+  exec npm run dev
+fi
+
 exec npm run start
