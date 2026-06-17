@@ -20,8 +20,8 @@ const ROLE_RANK: Record<AuthRole, number> = {
  * @returns {Function} A middleware function that checks the user's role against the required role and either allows access or throws an error.
  * @throws {AppError} Throws an AppError with a 401 status code if the user is not authenticated, or a 403 status code if the user does not have sufficient privileges.
  */
-function requireRole(minimumRole: AuthRole) {
-  return function roleMiddleware(req: Request, _res: Response, next: NextFunction): void {
+const requireRole = (minimumRole: AuthRole) => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
 
     // Step 1: the user must be authenticated first.
     if (!req.user) {

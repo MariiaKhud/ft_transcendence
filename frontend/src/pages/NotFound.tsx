@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'  // For the Button component fro
  * @function NotFound
  * @returns {JSX.Element} The rendered NotFound component, which includes a message about the 404 error and a button to navigate back to the home page.
  */
-export function NotFound() {
+export const NotFound = () => {
   return (
     <section className="mx-auto grid w-full max-w-xl gap-8 text-center">
       <div className="space-y-4">

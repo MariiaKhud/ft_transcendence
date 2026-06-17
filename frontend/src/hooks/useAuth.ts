@@ -15,31 +15,31 @@ interface UseAuthOptions {
  * @param {UseAuthOptions} options - Optional configuration for the useAuth hook, allowing for session restoration on mount.
  * @returns {Object} An object containing the current user, loading status, authentication status, and functions for login, logout, and session restoration.
  */
-export function useAuth(options: UseAuthOptions = {}) {
-  const currentUser = useAuthStore(function selectCurrentUser(state) {
+export const useAuth = (options: UseAuthOptions = {}) => {
+  const currentUser = useAuthStore((state) => {
     return state.currentUser
   })
 
-  const isLoading = useAuthStore(function selectIsLoading(state) {
+  const isLoading = useAuthStore((state) => {
     return state.isLoading
   })
 
-  const login = useAuthStore(function selectLogin(state) {
+  const login = useAuthStore((state) => {
     return state.login
   })
 
-  const logout = useAuthStore(function selectLogout(state) {
+  const logout = useAuthStore((state) => {
     return state.logout
   })
 
-  const restoreSession = useAuthStore(function selectRestoreSession(state) {
+  const restoreSession = useAuthStore((state) => {
     return state.restoreSession
   })
 
   // Using useEffect to restore the authentication session when the component mounts, if the restoreOnMount option is set to true.
   // This ensures that the user's authentication state is maintained across page reloads or when navigating back to the app.
   useEffect(
-    function restoreOnMountEffect() {
+    () => {
       if (!options.restoreOnMount) {
         return
       }

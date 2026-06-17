@@ -16,7 +16,7 @@ import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
-async function main() {
+const main = async () => {
   console.log('🌱 Seeding database...')
 
   // ─────────────────────────────────────────────

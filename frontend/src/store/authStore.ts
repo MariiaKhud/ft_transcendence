@@ -35,11 +35,11 @@ interface ApiResponse<TData> {
   error?: string
 }
 
-function getApiBaseUrl() {
+const getApiBaseUrl = () => {
   return (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
 }
 
-function getCookie(name: string) {
+const getCookie = (name: string) => {
   if (typeof document === 'undefined') {
     return undefined
   }
@@ -64,11 +64,11 @@ interface AuthState {
  * @function useAuthStore
  * @returns {AuthState} The authentication state store containing the current user, loading status, and authentication functions for login, logout, and session restoration.
  */
-export const useAuthStore = create<AuthState>(function authStore(set) {
+export const useAuthStore = create<AuthState>((set) => {
   return {
     currentUser: null,
     isLoading: false,
-    login: async function login(credentials) {
+    login: async (credentials) => {
       set({ isLoading: true })
 
       try {
@@ -95,7 +95,7 @@ export const useAuthStore = create<AuthState>(function authStore(set) {
         set({ isLoading: false })
       }
     },
-    logout: async function logout() {
+    logout: async () => {
       set({ isLoading: true })
 
       try {
@@ -115,7 +115,7 @@ export const useAuthStore = create<AuthState>(function authStore(set) {
         set({ currentUser: null, isLoading: false })
       }
     },
-    restoreSession: async function restoreSession() {
+    restoreSession: async () => {
       set({ isLoading: true })
 
       try {

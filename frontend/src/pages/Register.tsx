@@ -24,7 +24,7 @@ interface RegisterResponse {
  * @returns {boolean} Returns true if the email is valid, otherwise returns false.
  * @function validateEmail
  */
-function validateEmail(email: string) {
+const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
@@ -37,7 +37,7 @@ function validateEmail(email: string) {
  * @returns {boolean} Returns true if the username is valid, otherwise returns false.
  * @function validateUsername
  */
-function validateUsername(username: string) {
+const validateUsername = (username: string) => {
   const usernameRegex = /^[a-zA-Z0-9_]{3,20}$/
   return usernameRegex.test(username)
 }
@@ -50,7 +50,7 @@ function validateUsername(username: string) {
  * @function Register
  * @returns {JSX.Element} The JSX element representing the registration page, including a form for user input and error handling.
  */
-export function Register() {
+export const Register = () => {
 
   // Using the useNavigate hook to get a navigate function that can be used to programmatically navigate to different routes in the application, such as redirecting
   // the user to the login page after successful registration.
@@ -73,7 +73,7 @@ export function Register() {
 
   // clearErrors is a helper function that resets all error messages to an empty string. It is called before validating the form fields or submitting the form
   // to ensure that previous error messages do not persist.
-  function clearErrors() {
+  const clearErrors = () => {
     setEmailError('')
     setUsernameError('')
     setPasswordError('')
@@ -84,7 +84,7 @@ export function Register() {
   // validateFields is a function that checks the validity of the form inputs. It ensures that the email is in a valid format, the username meets the specified criteria,
   // the password is of an acceptable length, and that the confirm password field matches the password. If any validation fails, it sets the appropriate error messages
   // and returns false to indicate that the form is not valid for submission.
-  function validateFields() {
+  const validateFields = () => {
     let isValid = true
     const trimmedEmail = email.trim()
     const trimmedUsername = username.trim()
@@ -126,7 +126,7 @@ export function Register() {
 
   // applyApiError is a helper function that maps API error messages to the corresponding form fields. It checks the error message for keywords
   // like "email", "username", or "password" and sets the appropriate error state. If no specific field is mentioned, it sets a general form error.
-  function applyApiError(message: string) {
+  const applyApiError = (message: string) => {
     const lowerMessage = message.toLowerCase()
 
     if (lowerMessage.includes('email')) {
@@ -150,7 +150,7 @@ export function Register() {
   // handleSubmit is an asynchronous function that handles the form submission event. It prevents the default form submission behavior,
   // clears any existing error messages, validates the form fields, and sends a POST request to the registration API endpoint. If the registration
   // is successful, it navigates the user to the login page. If there are any errors, it applies the appropriate error messages.
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 	// Prevent the default form submission behavior to handle it with JavaScript
     event.preventDefault()
 	// Clear any existing error messages before validating the form fields or submitting the form
@@ -218,7 +218,7 @@ export function Register() {
             type="email"
             autoComplete="email"
             value={email}
-            onChange={function onEmailChange(event) {
+            onChange={(event) => {
               setEmail(event.target.value)
             }}
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
@@ -237,7 +237,7 @@ export function Register() {
             type="text"
             autoComplete="username"
             value={username}
-            onChange={function onUsernameChange(event) {
+            onChange={(event) => {
               setUsername(event.target.value)
             }}
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
@@ -257,7 +257,7 @@ export function Register() {
               type={showPassword ? 'text' : 'password'}
               autoComplete="new-password"
               value={password}
-              onChange={function onPasswordChange(event) {
+              onChange={(event) => {
                 setPassword(event.target.value)
               }}
               className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 pr-20 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
@@ -265,7 +265,7 @@ export function Register() {
             />
             <button
               type="button"
-              onClick={function onTogglePasswordVisibility() {
+              onClick={() => {
                 setShowPassword(!showPassword)
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-700 hover:text-purple-900"
@@ -314,7 +314,7 @@ export function Register() {
               type={showConfirmPassword ? 'text' : 'password'}
               autoComplete="new-password"
               value={confirmPassword}
-              onChange={function onConfirmPasswordChange(event) {
+              onChange={(event) => {
                 setConfirmPassword(event.target.value)
               }}
               className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 pr-20 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
@@ -322,7 +322,7 @@ export function Register() {
             />
             <button
               type="button"
-              onClick={function onTogglePasswordVisibility() {
+              onClick={() => {
                 setShowConfirmPassword(!showConfirmPassword)
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-700 hover:text-purple-900"

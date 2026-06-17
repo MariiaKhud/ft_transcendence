@@ -42,7 +42,7 @@ const buttonVariants = cva(
  * @param {object} props - The props for the Button component, including variant, size, className, and asChild.
  * @returns {JSX.Element} The rendered Button component with the appropriate styles and behavior based on the provided props. 
  */
-function Button({
+const Button = ({
   className,
   variant,
   size,
@@ -51,7 +51,7 @@ function Button({
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
-  }) {
+  }) => {
   const Comp = asChild ? Slot : 'button'
 
   return <Comp className={cn(buttonVariants({ variant, size, className }))} {...props} />

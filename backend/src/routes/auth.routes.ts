@@ -29,7 +29,7 @@ type AuthRole = typeof VALID_AUTH_ROLES[number]                   // Defining a 
  * @param {string} email - The email string to be normalized.
  * @returns {string} The normalized email string, trimmed and converted to lowercase.
  */
-function normalizeEmail(email: string) {
+const normalizeEmail = (email: string) => {
   return email.trim().toLowerCase()
 }
 
@@ -41,7 +41,7 @@ function normalizeEmail(email: string) {
  * @param {string} password - The password string to be validated for length.
  * @throws {AppError} Throws an AppError with a 400 status code if the password is shorter than 8 characters or longer than 72 characters.
  */
-function validatePasswordLength(password: string) {
+const validatePasswordLength = (password: string) => {
   // 72 characters is the maximum length for bcrypt hashing, so we enforce that limit here
   if (password.length < 8 || password.length > 72) {
     throw new AppError(400, 'Validation failed: password must be between 8 and 72 characters')
@@ -56,7 +56,7 @@ function validatePasswordLength(password: string) {
  * @param {Request} req - The Express Request object containing the cookies from which the authentication token will be read.
  * @returns {string} The authentication token extracted from the cookies if it is valid.
  */
-function readAuthTokenFromCookie(req: Request) {
+const readAuthTokenFromCookie = (req: Request) => {
   const token = req.cookies?.[AUTH_COOKIE_NAME]
 
   if (typeof token !== 'string' || token.length === 0) {
@@ -75,7 +75,7 @@ function readAuthTokenFromCookie(req: Request) {
  * @param {string} authToken - The JWT authentication token to be set in the auth cookie.
  * @param {string} csrfToken - The CSRF token to be set in the CSRF cookie for CSRF protection.
  */
-function setAuthCookies(res: Response, authToken: string, csrfToken: string) {
+const setAuthCookies = (res: Response, authToken: string, csrfToken: string) => {
   res.cookie(AUTH_COOKIE_NAME, authToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -98,7 +98,7 @@ function setAuthCookies(res: Response, authToken: string, csrfToken: string) {
  * @function clearAuthCookies
  * @param {Response} res - The Express Response object used to clear the cookies.
  */
-function clearAuthCookies(res: Response) {
+const clearAuthCookies = (res: Response) => {
   res.clearCookie(AUTH_COOKIE_NAME, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
@@ -120,7 +120,7 @@ function clearAuthCookies(res: Response) {
  * @returns {string} The JWT secret key retrieved from environment variables.
  * @throws {AppError} Throws an AppError with a 500 status code if the JWT secret is missing from environment variables, indicating a server misconfiguration.
  */
-function getJwtSecret() {
+const getJwtSecret = () => {
   const jwtSecret = process.env.JWT_SECRET
 
   if (!jwtSecret) {
@@ -158,7 +158,7 @@ const publicUserSelect: Prisma.UserSelect = {
  * @function generateCsrfToken
  * @returns {string} A randomly generated CSRF token in hexadecimal format.
  */
-function generateCsrfToken() {
+const generateCsrfToken = () => {
   return randomBytes(32).toString('hex')
 }
 
@@ -171,7 +171,7 @@ function generateCsrfToken() {
  * @param {string} csrfToken - The CSRF token to be included in the JWT payload for CSRF protection.
  * @returns {string} A signed JWT token that can be sent to the client for authentication purposes.
  */
-function signAuthToken(userId: string, role: string, csrfToken: string) {
+const signAuthToken = (userId: string, role: string, csrfToken: string) => {
   return jwt.sign({ userId, role, csrfToken }, getJwtSecret(), { expiresIn: '7d' })
 }
 
@@ -185,7 +185,7 @@ function signAuthToken(userId: string, role: string, csrfToken: string) {
  * @returns {Object} An object containing the userId, role, and csrfToken extracted from the token payload if the token is valid.
  * @throws {AppError} Throws an AppError with a 401 status code if the token is missing, invalid, or expired.
  */
-function verifyAuthToken(token: string) {
+const verifyAuthToken = (token: string) => {
   try {
     const decoded = jwt.verify(token, getJwtSecret())
 
@@ -225,7 +225,7 @@ function verifyAuthToken(token: string) {
  * @returns {Object} An object containing the validated and normalized email, username, password, and optional displayName.
  * @throws {AppError} Throws an AppError with a 400 status code if validation fails for any of the required fields or formats.
  */
-function validateRegisterInput(body: unknown) {
+const validateRegisterInput = (body: unknown) => {
   const payload = body as {
     email?: unknown
     username?: unknown
@@ -276,7 +276,7 @@ function validateRegisterInput(body: unknown) {
  * @returns {Object} An object containing the validated and normalized email and password.
  * @throws {AppError} Throws an AppError with a 400 status code if validation fails for any of the required fields or formats.
  */
-function validateLoginInput(body: unknown) {
+const validateLoginInput = (body: unknown) => {
   const payload = body as {
     email?: unknown
     password?: unknown
@@ -307,7 +307,7 @@ function validateLoginInput(body: unknown) {
  * @param {Response} res - The Express Response object used to send the response back to the client.
  * @throws {AppError} Throws an AppError with a 400 status code for validation errors, 409 for conflicts (email/username taken), or other errors as they occur.
  */
-async function registerHandler(req: Request, res: Response) {
+const registerHandler = async (req: Request, res: Response) => {
   const registerInput = validateRegisterInput(req.body) // Validate the input for registration, ensuring required fields are present and properly formatted.
   const { email, username, password, displayName } = registerInput // Destructure the validated input for easier access in the subsequent code.
 
@@ -365,7 +365,7 @@ async function registerHandler(req: Request, res: Response) {
  * @param {Response} res - The Express Response object used to send the response back to the client.
  * @throws {AppError} Throws an AppError with a 400 status code for validation errors, 401 for invalid credentials, or other errors as they occur.
  */
-async function loginHandler(req: Request, res: Response) {
+const loginHandler = async (req: Request, res: Response) => {
   const { email, password } = validateLoginInput(req.body)
 
   // Find the user by email and select the necessary fields for authentication and response.
@@ -407,7 +407,7 @@ async function loginHandler(req: Request, res: Response) {
  * @param {string} tokenCsrf - The CSRF token extracted from the JWT payload, which should match the tokens in the cookie and header.
  * @throws {AppError} Throws an AppError with a 403 status code if CSRF validation fails due to missing or mismatched tokens.
  */
-function validateCsrfToken(req: Request, tokenCsrf: string) {
+const validateCsrfToken = (req: Request, tokenCsrf: string) => {
   const csrfCookie = req.cookies?.[CSRF_COOKIE_NAME]
   const csrfHeader = req.header(CSRF_HEADER_NAME)
 
@@ -430,7 +430,7 @@ function validateCsrfToken(req: Request, tokenCsrf: string) {
  * @throws {AppError} Throws an AppError with a 401 status code if authentication is required (token missing/invalid) or 403 for CSRF validation failure, or other errors
  * as they occur.
  */
-async function logoutHandler(req: Request, res: Response) {
+const logoutHandler = async (req: Request, res: Response) => {
   const token = readAuthTokenFromCookie(req)
 
   // Validate CSRF token before allowing logout to prevent CSRF attacks that could log the user out without their intention.
@@ -451,7 +451,7 @@ async function logoutHandler(req: Request, res: Response) {
  * @param {Response} res - The Express Response object used to send the response back to the client.
  * @throws {AppError} Throws an AppError with a 401 status code if authentication is required (token missing/invalid/expired) or other errors as they occur.
  */
-async function meHandler(req: Request, res: Response) {
+const meHandler = async (req: Request, res: Response) => {
   const token = readAuthTokenFromCookie(req)
 
   const { userId } = verifyAuthToken(token)

@@ -32,7 +32,7 @@ interface PublicProfile {
  * @returns {string} - The validated and trimmed username.
  * @throws {AppError} - Throws an AppError with status code 400 if the username format is invalid.
  */
-function validateUsernameParam(usernameParam: string) {
+const validateUsernameParam = (usernameParam: string) => {
   const username = usernameParam.trim()
 
   if (!USERNAME_REGEX.test(username)) {
@@ -47,7 +47,7 @@ function validateUsernameParam(usernameParam: string) {
  * @param {Request} req - The Express request object.
  * @param {Response} res - The Express response object.
  */
-async function getPublicProfileHandler(req: Request, res: Response) {
+const getPublicProfileHandler = async (req: Request, res: Response) => {
   const username = validateUsernameParam(req.params.username)
 
   // Query the database for the user with the specified username, selecting relevant fields for the public profile, including counts of followers and following,
@@ -103,7 +103,7 @@ async function getPublicProfileHandler(req: Request, res: Response) {
     followerCount: user._count.followers,
     followingCount: user._count.following,
     articleCount,
-    badges: user.userBadges.map(function mapUserBadge(entry) {
+    badges: user.userBadges.map((entry) => {
       return {
         id: entry.badge.id,
         name: entry.badge.name,

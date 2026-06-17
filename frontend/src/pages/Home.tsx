@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'    // For the Button component f
  * @function Home
  * @returns {JSX.Element} The JSX element representing the home page, including a hero section and call-to-action buttons.
  */
-export function Home() {
+export const Home = () => {
   return (
     <section className="grid gap-12 text-center">
       {/* Hero headline */}

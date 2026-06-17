@@ -7,8 +7,8 @@ import { useAuthStore } from '@/store/authStore'  // Importing the useAuthStore 
  * @function Feed
  * @returns {JSX.Element} The JSX element representing the feed page, including a welcome message and a placeholder for the feed content.
  */
-export function Feed() {
-  const user = useAuthStore(function selectUser(state) {
+export const Feed = () => {
+  const user = useAuthStore((state) => {
     return state.currentUser
   })
 

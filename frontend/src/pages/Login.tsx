@@ -9,7 +9,7 @@ import { useAuth } from '@/hooks/useAuth'                       // Importing a c
  * @param {string} email - The email address to validate.
  * @returns {boolean} True if the email is valid, false otherwise. 
  */
-function validateEmail(email: string) {
+const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
@@ -22,7 +22,7 @@ function validateEmail(email: string) {
  * @function Login
  * @returns {JSX.Element} The rendered Login component with a form for user authentication.
  */
-export function Login() {
+export const Login = () => {
   const navigate = useNavigate() // Using the useNavigate hook from react-router-dom to programmatically navigate to different routes after successful login
 
   const { login, isLoading } = useAuth()
@@ -36,7 +36,7 @@ export function Login() {
   const [showPassword, setShowPassword] = useState(false)
 
   // Function to clear all error messages before validating or submitting the form
-  function clearErrors() {
+  const clearErrors = () => {
     setEmailError('')
     setPasswordError('')
     setFormError('')
@@ -44,7 +44,7 @@ export function Login() {
 
   // Function to validate the email and password fields, setting appropriate error messages if validation fails.
   // It checks if the email is not empty and follows a valid email format, and if the password is not empty. It returns a boolean indicating whether the fields are valid.
-  function validateFields(): boolean {
+  const validateFields = (): boolean => {
     let isValid = true
     const trimmedEmail = email.trim()
 
@@ -65,7 +65,7 @@ export function Login() {
   }
 
   // Function to apply API error messages to the appropriate form fields
-  function applyApiError(message: string) {
+  const applyApiError = (message: string) => {
     const lowerMessage = message.toLowerCase()
 
     if (lowerMessage.includes('email')) {
@@ -90,7 +90,7 @@ export function Login() {
   // Asynchronous function to handle form submission, which prevents the default form behavior, validates the fields, and if valid, sends a POST request to the login
   // API endpoint. It handles the API response, updating the authentication state and navigating to the feed page on success, or applying error messages on failure.
   // It also manages the submission state to provide feedback to the user.
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
 
 	// Preventing the default form submission behavior to handle it with custom logic
     event.preventDefault()
@@ -137,7 +137,7 @@ export function Login() {
             type="email"
             autoComplete="email"
             value={email}
-            onChange={function onEmailChange(event) {
+            onChange={(event) => {
               setEmail(event.target.value)
             }}
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
@@ -157,7 +157,7 @@ export function Login() {
               type={showPassword ? 'text' : 'password'}
               autoComplete="current-password"
               value={password}
-              onChange={function onPasswordChange(event) {
+              onChange={(event) => {
                 setPassword(event.target.value)
               }}
               className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 pr-20 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
@@ -165,7 +165,7 @@ export function Login() {
             />
             <button
               type="button"
-              onClick={function onTogglePasswordVisibility() {
+              onClick={() => {
                 setShowPassword(!showPassword)
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-700 hover:text-purple-900"

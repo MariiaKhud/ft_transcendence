@@ -21,7 +21,7 @@ import { useAuth } from '@/hooks/useAuth'         // Importing a custom hook use
  * @returns {JSX.Element} The rendered App component, which includes the header, main content area, and decorative elements, along with authentication state management and
  * routing functionality.
  */
-export default function App() {
+const App = () => {
   const { currentUser, isLoading, logout } = useAuth({ restoreOnMount: true }) // Using the useAuth hook to access the current user's authentication state, loading status, and logout function. The restoreOnMount option is set to true to restore the authentication state when the component mounts.
 
   return (
@@ -64,7 +64,7 @@ export default function App() {
                 </span>
                 <button
                   type="button"
-                  onClick={function onLogoutClick() {
+                  onClick={() => {
                     void logout()
                   }}
                   className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
@@ -90,3 +90,5 @@ export default function App() {
     </div>
   )
 }
+
+export default App

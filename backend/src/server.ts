@@ -25,25 +25,25 @@ const app = express()
 const PORT = process.env.PORT || 3000
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://localhost'
 
-function handleHealthCheck(_req: express.Request, res: express.Response) {
+const handleHealthCheck = (_req: express.Request, res: express.Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 }
 
-function handleNotFound(_req: express.Request, res: express.Response) {
+const handleNotFound = (_req: express.Request, res: express.Response) => {
   res.status(404).json({
     success: false,
     error: 'Route not found',
   })
 }
 
-function handleServerStart() {
+const handleServerStart = () => {
   console.log(`✅ Server running on http://localhost:${PORT}`)
   console.log(`🌐 CORS origin: ${FRONTEND_URL}`)
 }
 
-function handleGracefulShutdown() {
+const handleGracefulShutdown = () => {
   console.log('\n🛑 Shutting down gracefully...')
-  server.close(function () {
+  server.close(() => {
     console.log('✅ Server closed')
     process.exit(0)
   })
