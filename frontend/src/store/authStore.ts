@@ -1,4 +1,5 @@
 import { create } from 'zustand'     // Importing the create function from the zustand library to create a global state store for authentication in the React application
+import { getApiBaseUrl, readJson, type ApiResponse } from '@/lib/api'
 
 // zustand is a small, fast, and scalable state management solution for React applications. It allows you to create a global store that can be accessed and updated from
 // any component in the application without the need for prop drilling or complex state management patterns. In this case, we are using zustand to manage the authentication
@@ -27,16 +28,6 @@ export interface AuthUser {
 export interface LoginCredentials {
   email: string
   password: string
-}
-
-interface ApiResponse<TData> {
-  success: boolean
-  data?: TData
-  error?: string
-}
-
-const getApiBaseUrl = () => {
-  return (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
 }
 
 const getCookie = (name: string) => {
@@ -84,7 +75,7 @@ export const useAuthStore = create<AuthState>((set) => {
           }),
         })
 
-        const payload = (await response.json()) as ApiResponse<AuthUser>
+        const payload = await readJson<ApiResponse<AuthUser>>(response)
         if (!response.ok || !payload.success || !payload.data) {
           throw new Error(payload.error ?? 'Login failed')
         }
@@ -129,7 +120,7 @@ export const useAuthStore = create<AuthState>((set) => {
           return
         }
 
-        const payload = (await response.json()) as ApiResponse<AuthUser>
+        const payload = await readJson<ApiResponse<AuthUser>>(response)
         if (!payload.success || !payload.data) {
           set({ currentUser: null })
           return

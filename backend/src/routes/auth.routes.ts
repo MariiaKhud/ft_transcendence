@@ -19,8 +19,8 @@ const AUTH_COOKIE_NAME = 'auth_token'
 const AUTH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000
 const CSRF_COOKIE_NAME = 'csrf_token'
 const CSRF_HEADER_NAME = 'x-csrf-token'
-const VALID_AUTH_ROLES = ['USER', 'MODERATOR', 'ADMIN'] as const  // Defining valid authentication roles as a constant array for type safety and validation purposes
-type AuthRole = typeof VALID_AUTH_ROLES[number]                   // Defining a TypeScript type for user roles based on the VALID_AUTH_ROLES array, which can be 'USER', 'MODERATOR', or 'ADMIN'. This type will be used to enforce role-based access control in the application.
+type AuthRole = 'USER' | 'MODERATOR' | 'ADMIN'                    // Defining a TypeScript type for user roles, which can be 'USER', 'MODERATOR', or 'ADMIN'. This type will be used to enforce role-based access control in the application.
+const VALID_AUTH_ROLES: readonly AuthRole[] = ['USER', 'MODERATOR', 'ADMIN']  // Defining valid authentication roles as a typed constant array for validation purposes
 
 /**
  * @brief normalizeEmail is a helper function that takes an email string as input, trims any leading or trailing whitespace, and converts it to lowercase. This normalization
@@ -31,6 +31,18 @@ type AuthRole = typeof VALID_AUTH_ROLES[number]                   // Defining a 
  */
 const normalizeEmail = (email: string) => {
   return email.trim().toLowerCase()
+}
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null
+}
+
+const isAuthRole = (role: string): role is AuthRole => {
+  return VALID_AUTH_ROLES.some((validRole) => validRole === role)
+}
+
+const isPrismaUniqueConstraintError = (error: unknown) => {
+  return isRecord(error) && error.code === 'P2002'
 }
 
 /**
@@ -189,23 +201,23 @@ const verifyAuthToken = (token: string) => {
   try {
     const decoded = jwt.verify(token, getJwtSecret())
 
-    if (typeof decoded === 'string') {
+    if (!isRecord(decoded)) {
       throw new AppError(401, 'Invalid or expired session')
     }
 
-    const payload = decoded as { userId?: unknown; role?: unknown; csrfToken?: unknown }
-    if (typeof payload.userId !== 'string' || typeof payload.csrfToken !== 'string') {
+    const { userId, role, csrfToken } = decoded
+    if (typeof userId !== 'string' || typeof csrfToken !== 'string') {
       throw new AppError(401, 'Invalid or expired session')
     }
 
-    if (typeof payload.role !== 'string' || !VALID_AUTH_ROLES.includes(payload.role as AuthRole)) {
+    if (typeof role !== 'string' || !isAuthRole(role)) {
       throw new AppError(401, 'Invalid or expired session')
     }
 
     return {
-      userId: payload.userId,
-      role: payload.role as AuthRole,
-      csrfToken: payload.csrfToken,
+      userId,
+      role,
+      csrfToken,
     }
   } catch (error) {
     if (error instanceof AppError) {
@@ -226,24 +238,21 @@ const verifyAuthToken = (token: string) => {
  * @throws {AppError} Throws an AppError with a 400 status code if validation fails for any of the required fields or formats.
  */
 const validateRegisterInput = (body: unknown) => {
-  const payload = body as {
-    email?: unknown
-    username?: unknown
-    password?: unknown
-    displayName?: unknown
+  if (!isRecord(body)) {
+    throw new AppError(400, 'Validation failed: email, username, and password are required')
   }
 
   // Check if email, username, and password are present and of type string
-  if (typeof payload?.email !== 'string' ||
-    typeof payload?.username !== 'string' ||
-    typeof payload?.password !== 'string') {
+  if (typeof body.email !== 'string' ||
+    typeof body.username !== 'string' ||
+    typeof body.password !== 'string') {
     throw new AppError(400, 'Validation failed: email, username, and password are required')
   }
 
   // Trim and normalize email and username, and keep password as is for hashing
-  const email = normalizeEmail(payload.email)
-  const username = payload.username.trim()
-  const password = payload.password
+  const email = normalizeEmail(body.email)
+  const username = body.username.trim()
+  const password = body.password
 
   // Validate email format, username format, and password length
   if (!EMAIL_REGEX.test(email)) {
@@ -260,8 +269,8 @@ const validateRegisterInput = (body: unknown) => {
 
   // Optional displayName field is validated if provided, trimming whitespace and allowing it to be undefined if empty
   let displayName: string | undefined
-  if (typeof payload.displayName === 'string') {
-    const trimmedDisplayName = payload.displayName.trim()
+  if (typeof body.displayName === 'string') {
+    const trimmedDisplayName = body.displayName.trim()
     displayName = trimmedDisplayName.length > 0 ? trimmedDisplayName : undefined
   }
 
@@ -277,17 +286,16 @@ const validateRegisterInput = (body: unknown) => {
  * @throws {AppError} Throws an AppError with a 400 status code if validation fails for any of the required fields or formats.
  */
 const validateLoginInput = (body: unknown) => {
-  const payload = body as {
-    email?: unknown
-    password?: unknown
-  }
-
-  if (typeof payload?.email !== 'string' || typeof payload?.password !== 'string') {
+  if (!isRecord(body)) {
     throw new AppError(400, 'Validation failed: email and password are required')
   }
 
-  const email = normalizeEmail(payload.email)
-  const password = payload.password
+  if (typeof body.email !== 'string' || typeof body.password !== 'string') {
+    throw new AppError(400, 'Validation failed: email and password are required')
+  }
+
+  const email = normalizeEmail(body.email)
+  const password = body.password
 
   if (!EMAIL_REGEX.test(email)) {
     throw new AppError(400, 'Validation failed: invalid email format')
@@ -346,8 +354,7 @@ const registerHandler = async (req: Request, res: Response) => {
     // Handle unique constraint violation errors from Prisma (e.g., if another user was created with the same email/username
     // between the checks and creation)
     // P2002 is the Prisma error code for unique constraint violations
-    if (typeof error === 'object' && error !== null && 'code' in error &&
-      (error as { code?: string }).code === 'P2002') {
+    if (isPrismaUniqueConstraintError(error)) {
       throw new AppError(409, 'Email or username already taken')
     }
 

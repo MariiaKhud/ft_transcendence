@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'      // Importing necessary hooks and types from React for managing state and handling form events in the Register component
 import { Link, useNavigate } from 'react-router-dom'  // Importing Link and useNavigate from react-router-dom for navigation between routes in the React application. Link is used to create navigational links, while useNavigate is a hook that provides a function to programmatically navigate to different routes.
 import { Button } from '@/components/ui/button'       // Importing the Button component from the local UI components, which is likely a styled button component used for consistent styling across the application. In this case, it is used to create buttons for submitting the registration form and navigating to the login page.
+import { getApiBaseUrl, readJson, type ApiResponse } from '@/lib/api'
 
 /**
  * @brief The Register component represents the registration page of the application, which allows new users to create an account by providing their email,
@@ -10,12 +11,6 @@ import { Button } from '@/components/ui/button'       // Importing the Button co
  * @function Register
  * @returns {JSX.Element} The JSX element representing the registration page, including a form for user input and error handling.
  */
-interface RegisterResponse {
-  success: boolean
-  data?: unknown
-  error?: string
-}
-
 /**
  * @brief validateEmail is a helper function that uses a regular expression to validate the format of an email address. It checks if the provided email string
  * matches the pattern of a typical email address, which includes characters before and after an "@" symbol, and a domain with a period. This function is used in
@@ -161,10 +156,10 @@ export const Register = () => {
       return
     }
 
-	// Try to submit the registration data to the API endpoint. If successful, navigate to the login page. If there are errors, apply the appropriate error messages.
+    // Try to submit the registration data to the API endpoint. If successful, navigate to the login page. If there are errors, apply the appropriate error messages.
     try {
       setIsSubmitting(true)
-      const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? ''
+      const apiBaseUrl = getApiBaseUrl()
       const response = await fetch(`${apiBaseUrl}/api/auth/register`, {
         method: 'POST',
         headers: {
@@ -179,7 +174,7 @@ export const Register = () => {
       })
 
 	  // Parse the response from the API as JSON and check if the registration was successful. If not, apply the error message returned by the API.
-      const payload = (await response.json()) as RegisterResponse
+      const payload = await readJson<ApiResponse>(response)
 
 	  // If the response is not OK or the payload indicates failure, apply the error message from the API or a default message
       if (!response.ok || !payload.success) {
