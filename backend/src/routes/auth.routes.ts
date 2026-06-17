@@ -22,13 +22,6 @@ const CSRF_HEADER_NAME = 'x-csrf-token'
 type AuthRole = 'USER' | 'MODERATOR' | 'ADMIN'                    // Defining a TypeScript type for user roles, which can be 'USER', 'MODERATOR', or 'ADMIN'. This type will be used to enforce role-based access control in the application.
 const VALID_AUTH_ROLES: readonly AuthRole[] = ['USER', 'MODERATOR', 'ADMIN']  // Defining valid authentication roles as a typed constant array for validation purposes
 
-/**
- * @brief normalizeEmail is a helper function that takes an email string as input, trims any leading or trailing whitespace, and converts it to lowercase. This normalization
- * ensures that email comparisons are case-insensitive and do not consider extraneous whitespace, which is important for consistent user identification and authentication.
- * @function normalizeEmail
- * @param {string} email - The email string to be normalized.
- * @returns {string} The normalized email string, trimmed and converted to lowercase.
- */
 const normalizeEmail = (email: string) => {
   return email.trim().toLowerCase()
 }
@@ -45,14 +38,6 @@ const isPrismaUniqueConstraintError = (error: unknown) => {
   return isRecord(error) && error.code === 'P2002'
 }
 
-/**
- * @brief validatePasswordLength is a helper function that checks if the provided password meets the length requirements. It ensures that the password is
- * at least 8 characters long and does not exceed 72 characters (the maximum length for bcrypt hashing). If the password does not meet these requirements,
- * it throws an AppError with a 400 status code indicating that validation failed.
- * @function validatePasswordLength
- * @param {string} password - The password string to be validated for length.
- * @throws {AppError} Throws an AppError with a 400 status code if the password is shorter than 8 characters or longer than 72 characters.
- */
 const validatePasswordLength = (password: string) => {
   // 72 characters is the maximum length for bcrypt hashing, so we enforce that limit here
   if (password.length < 8 || password.length > 72) {
@@ -60,14 +45,6 @@ const validatePasswordLength = (password: string) => {
   }
 }
 
-/**
- * @brief readAuthTokenFromCookie is a helper function that reads the authentication token from the cookies in the incoming request. It checks if the token is present and
- * is a non-empty string. If the token is missing or invalid, it throws an AppError with a 401 status code indicating that authentication is required. This function is
- * used in protected routes to ensure that the user has a valid session before allowing access to the route's functionality.
- * @function readAuthTokenFromCookie
- * @param {Request} req - The Express Request object containing the cookies from which the authentication token will be read.
- * @returns {string} The authentication token extracted from the cookies if it is valid.
- */
 const readAuthTokenFromCookie = (req: Request) => {
   const token = req.cookies?.[AUTH_COOKIE_NAME]
 
@@ -78,15 +55,6 @@ const readAuthTokenFromCookie = (req: Request) => {
   return token
 }
 
-/**
- * @brief setAuthCookies is a helper function that sets the authentication and CSRF cookies in the response. It configures the cookies with appropriate options for security,
- * such as httpOnly, secure, sameSite, and maxAge. The authentication cookie contains the JWT token, while the CSRF cookie contains the CSRF token. This function is used
- * during login to establish the user's session and provide them with the necessary tokens for authenticated requests.
- * @function setAuthCookies
- * @param {Response} res - The Express Response object used to set the cookies.
- * @param {string} authToken - The JWT authentication token to be set in the auth cookie.
- * @param {string} csrfToken - The CSRF token to be set in the CSRF cookie for CSRF protection.
- */
 const setAuthCookies = (res: Response, authToken: string, csrfToken: string) => {
   res.cookie(AUTH_COOKIE_NAME, authToken, {
     httpOnly: true,
@@ -103,13 +71,6 @@ const setAuthCookies = (res: Response, authToken: string, csrfToken: string) => 
   })
 }
 
-/**
- * @brief clearAuthCookies is a helper function that clears the authentication and CSRF cookies from the client's browser. It sets the cookies with the same names
- * and options as when they were created, but with an empty value and no maxAge, which effectively deletes them. This function is used during logout to remove the
- * user's session cookies and ensure they are logged out securely.
- * @function clearAuthCookies
- * @param {Response} res - The Express Response object used to clear the cookies.
- */
 const clearAuthCookies = (res: Response) => {
   res.clearCookie(AUTH_COOKIE_NAME, {
     httpOnly: true,
@@ -124,14 +85,6 @@ const clearAuthCookies = (res: Response) => {
   })
 }
 
-/**
- * @brief getJwtSecret is a helper function that retrieves the JWT secret key from environment variables. It checks if the secret is defined and throws an AppError
- * if it is missing, indicating a server misconfiguration. This function ensures that the application has a valid secret key for signing and verifying JWT tokens,
- * which is crucial for the security of the authentication system.
- * @function getJwtSecret
- * @returns {string} The JWT secret key retrieved from environment variables.
- * @throws {AppError} Throws an AppError with a 500 status code if the JWT secret is missing from environment variables, indicating a server misconfiguration.
- */
 const getJwtSecret = () => {
   const jwtSecret = process.env.JWT_SECRET
 
@@ -142,11 +95,6 @@ const getJwtSecret = () => {
   return jwtSecret
 }
 
-/**
- * @brief publicUserSelect is a Prisma select object that defines which fields of the User model should be included
- * when querying for public user information. This helps in controlling the exposure of sensitive user data.
- * @constant {Prisma.UserSelect} publicUserSelect - The Prisma select object for public user fields.
- */
 const publicUserSelect: Prisma.UserSelect = {
   id: true,
   email: true,
@@ -163,40 +111,14 @@ const publicUserSelect: Prisma.UserSelect = {
   updatedAt: true,
 }
 
-/**
- * @brief generateCsrfToken is a helper function that generates a random CSRF token using the crypto module. The token is a 32-byte random string encoded
- * in hexadecimal format. This token is used for CSRF protection by being included in the JWT payload and set as a cookie, allowing the server to validate
- * that incoming requests are legitimate and not forged.
- * @function generateCsrfToken
- * @returns {string} A randomly generated CSRF token in hexadecimal format.
- */
 const generateCsrfToken = () => {
   return randomBytes(32).toString('hex')
 }
 
-/**
- * @brief signAuthToken is a helper function that creates a signed JWT token containing the user's ID and role.
- * The token is signed using a secret key and has an expiration time of 7 days. This token will be used for authenticating subsequent requests from the client.
- * @function signAuthToken
- * @param {string} userId - The unique identifier of the user for whom the token is being created.
- * @param {string} role - The role of the user (e.g., 'user', 'admin') to be included in the token payload.
- * @param {string} csrfToken - The CSRF token to be included in the JWT payload for CSRF protection.
- * @returns {string} A signed JWT token that can be sent to the client for authentication purposes.
- */
 const signAuthToken = (userId: string, role: string, csrfToken: string) => {
   return jwt.sign({ userId, role, csrfToken }, getJwtSecret(), { expiresIn: '7d' })
 }
 
-/**
- * @brief verifyAuthToken is a helper function that verifies the provided JWT authentication token using the secret key. It checks if the token is valid and
- * not expired, and extracts the user information (userId, role, and csrfToken) from the token payload. If the token is missing, invalid, or expired, it throws
- * an AppError with a 401 status code indicating that authentication is required. This function is used in protected routes to ensure that the user has a valid
- * session and to retrieve their information for authorization checks.
- * @function verifyAuthToken
- * @param {string} token - The JWT authentication token to be verified.
- * @returns {Object} An object containing the userId, role, and csrfToken extracted from the token payload if the token is valid.
- * @throws {AppError} Throws an AppError with a 401 status code if the token is missing, invalid, or expired.
- */
 const verifyAuthToken = (token: string) => {
   try {
     const decoded = jwt.verify(token, getJwtSecret())
@@ -228,15 +150,6 @@ const verifyAuthToken = (token: string) => {
   }
 }
 
-/**
- * @brief validateRegisterInput is a helper function that validates the input for the registration endpoint. It checks for the presence and types of required fields
- * (email, username, and password), normalizes the email, trims the username, and validates the formats of the email and username. It also validates the password length.
- * If any validation fails, it throws an AppError with a 400 status code indicating that validation failed.
- * @function validateRegisterInput
- * @param {unknown} body - The request body to be validated, expected to contain email, username, password, and optionally displayName.
- * @returns {Object} An object containing the validated and normalized email, username, password, and optional displayName.
- * @throws {AppError} Throws an AppError with a 400 status code if validation fails for any of the required fields or formats.
- */
 const validateRegisterInput = (body: unknown) => {
   if (!isRecord(body)) {
     throw new AppError(400, 'Validation failed: email, username, and password are required')
@@ -277,14 +190,6 @@ const validateRegisterInput = (body: unknown) => {
   return { email, username, password, displayName }
 }
 
-/**
- * @brief validateLoginInput is a helper function that validates the input for the login endpoint. It checks for the presence and types of required fields
- * (email and password), and validates the email format. If validation fails, it throws an AppError with a 400 status code.
- * @function validateLoginInput
- * @param {unknown} body - The request body to be validated, expected to contain email and password.
- * @returns {Object} An object containing the validated and normalized email and password.
- * @throws {AppError} Throws an AppError with a 400 status code if validation fails for any of the required fields or formats.
- */
 const validateLoginInput = (body: unknown) => {
   if (!isRecord(body)) {
     throw new AppError(400, 'Validation failed: email and password are required')
@@ -306,15 +211,6 @@ const validateLoginInput = (body: unknown) => {
   return { email, password }
 }
 
-/**
- * @brief registerHandler is the route handler for the user registration endpoint. It validates the input, checks for existing users with the same email or username,
- * hashes the password, creates a new user in the database, and responds with the created user data (excluding the password hash) and a success status. If any validation
- * or database operation fails, it throws an AppError with an appropriate status code and message.
- * @function registerHandler
- * @param {Request} req - The Express Request object containing the registration data in the body.
- * @param {Response} res - The Express Response object used to send the response back to the client.
- * @throws {AppError} Throws an AppError with a 400 status code for validation errors, 409 for conflicts (email/username taken), or other errors as they occur.
- */
 const registerHandler = async (req: Request, res: Response) => {
   const registerInput = validateRegisterInput(req.body) // Validate the input for registration, ensuring required fields are present and properly formatted.
   const { email, username, password, displayName } = registerInput // Destructure the validated input for easier access in the subsequent code.
@@ -362,16 +258,6 @@ const registerHandler = async (req: Request, res: Response) => {
   }
 }
 
-/**
- * @brief loginHandler is the route handler for the user login endpoint. It validates the input, checks for the existence of a user with the provided email,
- * compares the provided password with the stored password hash, and if valid, generates a JWT token and CSRF token. It sets the authentication and CSRF cookies
- * and responds with the user data (excluding the password hash) and a success status. If any validation or authentication step fails, it throws an AppError with
- * an appropriate status code and message.
- * @function loginHandler
- * @param {Request} req - The Express Request object containing the login data in the body.
- * @param {Response} res - The Express Response object used to send the response back to the client.
- * @throws {AppError} Throws an AppError with a 400 status code for validation errors, 401 for invalid credentials, or other errors as they occur.
- */
 const loginHandler = async (req: Request, res: Response) => {
   const { email, password } = validateLoginInput(req.body)
 
@@ -404,16 +290,6 @@ const loginHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: publicUser })
 }
 
-/**
- * @brief validateCsrfToken is a helper function that validates the CSRF token by comparing the token from the cookie, the token from the request header,
- * and the token from the JWT payload. If any of the tokens are missing or do not match, it throws an AppError with a 403 status code indicating that
- * CSRF validation failed. This function is used to protect against Cross-Site Request Forgery attacks by ensuring that the request is coming from
- * a trusted source and that the user has a valid session.
- * @function validateCsrfToken
- * @param {Request} req - The Express Request object containing the cookies and headers with the CSRF tokens.
- * @param {string} tokenCsrf - The CSRF token extracted from the JWT payload, which should match the tokens in the cookie and header.
- * @throws {AppError} Throws an AppError with a 403 status code if CSRF validation fails due to missing or mismatched tokens.
- */
 const validateCsrfToken = (req: Request, tokenCsrf: string) => {
   const csrfCookie = req.cookies?.[CSRF_COOKIE_NAME]
   const csrfHeader = req.header(CSRF_HEADER_NAME)
@@ -427,16 +303,6 @@ const validateCsrfToken = (req: Request, tokenCsrf: string) => {
   }
 }
 
-/**
- * @brief logoutHandler is the route handler for the user logout endpoint. It reads the authentication token from the cookies, verifies it to extract the CSRF token,
- * validates the CSRF token to ensure the logout request is legitimate, clears the authentication and CSRF cookies, and responds with a success message. If any step in
- * the process fails (e.g., missing/invalid token, CSRF validation failure), it throws an AppError with an appropriate status code and message.
- * @function logoutHandler
- * @param {Request} req - The Express Request object containing the cookies with the authentication token.
- * @param {Response} res - The Express Response object used to send the response back to the client.
- * @throws {AppError} Throws an AppError with a 401 status code if authentication is required (token missing/invalid) or 403 for CSRF validation failure, or other errors
- * as they occur.
- */
 const logoutHandler = async (req: Request, res: Response) => {
   const token = readAuthTokenFromCookie(req)
 
@@ -449,15 +315,6 @@ const logoutHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, message: 'Logged out successfully' })
 }
 
-/**
- * @brief meHandler is the route handler for the endpoint that retrieves the currently authenticated user's information. It checks for the presence of the authentication
- * token in the cookies, verifies it, and if valid, retrieves the user's data from the database and responds with it. If the token is missing, invalid, or expired,
- * it throws an AppError with a 401 status code indicating that authentication is required.
- * @function meHandler
- * @param {Request} req - The Express Request object containing the cookies with the authentication token.
- * @param {Response} res - The Express Response object used to send the response back to the client.
- * @throws {AppError} Throws an AppError with a 401 status code if authentication is required (token missing/invalid/expired) or other errors as they occur.
- */
 const meHandler = async (req: Request, res: Response) => {
   const token = readAuthTokenFromCookie(req)
 

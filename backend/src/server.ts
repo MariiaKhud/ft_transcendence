@@ -1,11 +1,3 @@
-/**
- * @file server.ts
- * @description This file sets up and starts the Express server for the backend of the application. It configures
- * middleware for security, CORS, body parsing, and cookie handling. The server also defines a health check route,
- * placeholder routes for API endpoints, a 404 handler for undefined routes, and an error handler for centralized
- * error management. Finally, it starts the server and listens on the specified port, with graceful shutdown
- * handlers for SIGINT and SIGTERM signals.
- */
 
 
 

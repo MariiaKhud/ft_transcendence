@@ -1,12 +1,5 @@
 /// <reference types="node" />
 
-/**
- * @file seed.ts
- * @description This file contains the database seeding script for the application. It populates the database
- * with initial data for users, articles, comments, likes, follows, friendships, messages, notifications,
- * badges, and user badges. This script is run automatically after migrations to ensure the database has
- * sample data for development and testing purposes.
- */
 
 // Run with: npx prisma db seed
 // Called automatically by: npx prisma migrate dev

@@ -1,9 +1,3 @@
-/**
- * @file tsconfig.app.json
- * @description This file defines the TypeScript configuration for the application code in the frontend
- * of the project. It specifies compiler options, including target, module resolution, and strict
- * type checking settings, as well as the files to include in the compilation.
- */
 
 
 

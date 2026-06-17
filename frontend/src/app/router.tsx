@@ -6,15 +6,6 @@ import { Login } from '@/pages/Login'                   // For the LoginPage com
 import { Register } from '@/pages/Register'             // For the RegisterPage component that represents the registration page of the application and will be rendered when the user navigates to the "/register" path of the app. This page typically contains a form for new users to create an account by providing their information and credentials.
 import { NotFound } from '@/pages/NotFound'             // For the NotFound component that represents a 404 error page and will be rendered when the user navigates to a path that does not match any of the defined routes in the application. This page typically informs the user that the requested page was not found and may provide options to navigate back to the home page or other relevant sections of the app.
 
-/**
- * @brief The router configuration defines the routes for the React application using the createBrowserRouter function from react-router-dom. It specifies the paths
- * and their corresponding components that will be rendered when a user navigates to those paths. The router includes a root route ("/") that renders the App component,
- * which serves as the main layout for the application. Nested within the root route are child routes for the home page ("/"), login page ("/login"), registration page
- * ("/register"), feed page ("/feed"), and a catch-all route ("*") that renders the NotFound component for any undefined paths. This configuration allows for structured
- * navigation within the app and ensures that users are directed to the appropriate pages based on their interactions with the application's navigation links.
- * @constant {Object} router - The router configuration object created using createBrowserRouter, which defines the routes and their corresponding components for the React
- * application.
- */
 export const router = createBrowserRouter([
   {
     path: '/',

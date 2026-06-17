@@ -1,8 +1,3 @@
-/**
- * @file vite.config.ts
- * @description This file defines the Vite configuration for the frontend of the application, including
- * plugins for React and Tailwind CSS, as well as path aliasing for cleaner imports.
- */
 
 
 

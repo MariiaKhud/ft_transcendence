@@ -1,15 +1,8 @@
-import { useAuthStore } from '@/store/authStore'  // Importing the useAuthStore hook from the authStore file to access the authentication state and user information in the Feed component.
+import { useStore } from '@/store/store'  // Importing the root Zustand store to access authentication state and user information in the Feed component.
 
-/**
- * @brief The Feed component represents the feed page of the application, which displays a welcome message and a placeholder for the feed content. It uses the useAuthStore hook
- * to access the authenticated user's information and conditionally renders a personalized greeting if the user is logged in. The component is styled using Tailwind CSS classes
- * to create a visually appealing layout for the feed page.
- * @function Feed
- * @returns {JSX.Element} The JSX element representing the feed page, including a welcome message and a placeholder for the feed content.
- */
 export const Feed = () => {
-  const user = useAuthStore((state) => {
-    return state.currentUser
+  const user = useStore((state) => {
+    return state.auth.currentUser
   })
 
   return (

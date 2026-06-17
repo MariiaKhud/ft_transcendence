@@ -1,26 +1,9 @@
-/**
- * @file App.tsx
- * @description This file defines the main App component for the React frontend application, which serves as the root component and sets up the overall
- * layout and routing structure of the application. It includes a header with navigation links and a main content area where different pages and
- * components will be rendered based on the defined routes. The App component uses React Router's Outlet component to render the matched child routes,
- * allowing for nested routing and dynamic content rendering based on the URL. Overall, this file initializes the structure of the frontend application
- * and provides a foundation for building out the various pages and features of the app.
- */
 
 
 
 import { Link, Outlet } from 'react-router-dom'   // Importing Link and Outlet components from react-router-dom for navigation and rendering matched child routes in the application
 import { useAuth } from '@/hooks/useAuth'         // Importing a custom hook useAuth from the local hooks directory, which is likely used to manage authentication state and provide authentication-related functionality throughout the application
 
-/**
- * @brief The App component is the root component of the React frontend application, responsible for rendering the overall layout, including the header and main content area.
- * It uses the useAuth hook to manage authentication state and conditionally render user information and navigation links based on whether a user is logged in or not.
- * The component also includes decorative elements such as gradient blobs and scattered dots to enhance the visual appeal of the application. The Outlet component from
- * react-router-dom is used to render matched child routes, allowing for dynamic content rendering based on the current URL.
- * @function App
- * @returns {JSX.Element} The rendered App component, which includes the header, main content area, and decorative elements, along with authentication state management and
- * routing functionality.
- */
 const App = () => {
   const { currentUser, isLoading, logout } = useAuth({ restoreOnMount: true }) // Using the useAuth hook to access the current user's authentication state, loading status, and logout function. The restoreOnMount option is set to true to restore the authentication state when the component mounts.
 

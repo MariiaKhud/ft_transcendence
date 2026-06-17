@@ -1,8 +1,3 @@
-/**
- * @file tailwind.config.ts
- * @description This file defines the Tailwind CSS configuration for the frontend of the application,
- * specifying the content paths to scan for class names and any custom theme extensions or plugins.
- */
 
 
 

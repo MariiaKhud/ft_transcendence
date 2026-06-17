@@ -18,16 +18,6 @@ declare global {
   }
 }
 
-/**
- * @brief authMiddleware is an Express middleware function that checks for the presence of an authentication token in the cookies of incoming requests.
- * It verifies the token using the verifyAuthToken function, extracts the user information (userId and csrfToken), and attaches it to the req.user property for use
- * in subsequent route handlers. If the token is missing or invalid, it throws an AppError with a 401 status code indicating that authentication is required.
- * @function authMiddleware
- * @param {Request} req - The Express Request object containing the cookies with the authentication token.
- * @param {Response} res - The Express Response object used to send responses back to the client (not used in this middleware).
- * @param {NextFunction} next - The Express NextFunction used to pass control to the next middleware or route handler.
- * @throws {AppError} Throws an AppError with a 401 status code if the authentication token is missing or invalid.
- */
 const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
   // Read the authentication token from the cookies
   const token = req.cookies.auth_token;

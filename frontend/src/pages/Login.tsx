@@ -3,25 +3,11 @@ import { Link, useNavigate } from 'react-router-dom'            // Importing Lin
 import { Button } from '@/components/ui/button'                 // Importing a Button component from the local UI components for consistent styling of buttons across the application
 import { useAuth } from '@/hooks/useAuth'                       // Importing a custom hook useAuth from the local hooks directory, which is likely used to manage authentication state and provide authentication-related functionality throughout the application
 
-/**
- * @brief A utility function to validate email addresses using a regular expression. It checks if the provided email string matches the common pattern for valid emailaddresses.
- * @function validateEmail
- * @param {string} email - The email address to validate.
- * @returns {boolean} True if the email is valid, false otherwise. 
- */
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
 }
 
-/**
- * @brief The Login component is a React functional component that renders a login form for users to enter their email and password. It manages the form state using
- * useState hooks, validates the input fields, and handles form submission by making a POST request to the login API endpoint. If the login is successful, it updates
- * the authentication state using the useAuthStore hook and navigates the user to the feed page. If there are any validation errors or API errors, it displays
- * appropriate error messages to the user.
- * @function Login
- * @returns {JSX.Element} The rendered Login component with a form for user authentication.
- */
 export const Login = () => {
   const navigate = useNavigate() // Using the useNavigate hook from react-router-dom to programmatically navigate to different routes after successful login
 

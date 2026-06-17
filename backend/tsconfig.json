@@ -1,11 +1,3 @@
-/**
- * @file tsconfig.json
- * @description This file contains the TypeScript configuration for the backend of the application. It specifies
- * the compiler options, including target ECMAScript version, module system, library definitions, and other
- * settings that control how TypeScript code is compiled to JavaScript. The configuration also defines which
- * files to include and exclude during the compilation process, ensuring that the TypeScript code is properly
- * transpiled and organized in the output directory.
- */
 
 {
   "compilerOptions": {

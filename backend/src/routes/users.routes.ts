@@ -26,12 +26,6 @@ interface PublicProfile {
   xp: number
 }
 
-/**
- * @brief Validates the username parameter from the request and ensures it meets the required format.
- * @param {string} usernameParam - The username parameter extracted from the request URL.
- * @returns {string} - The validated and trimmed username.
- * @throws {AppError} - Throws an AppError with status code 400 if the username format is invalid.
- */
 const validateUsernameParam = (usernameParam: string) => {
   const username = usernameParam.trim()
 
@@ -42,11 +36,6 @@ const validateUsernameParam = (usernameParam: string) => {
   return username
 }
 
-/**
- * @brief Handles the request to get a public profile by username.
- * @param {Request} req - The Express request object.
- * @param {Response} res - The Express response object.
- */
 const getPublicProfileHandler = async (req: Request, res: Response) => {
   const username = validateUsernameParam(req.params.username)
 
