@@ -25,34 +25,46 @@ export const createAuthSlice: StoreSlice<AuthSlice> = (set) => {
     },
     authActions: {
       setCurrentUser: (currentUser) => {
-        set((state) => {
-          return {
-            auth: {
-              ...state.auth,
-              currentUser,
-            },
-          }
-        })
+        set(
+          (state) => {
+            return {
+              auth: {
+                ...state.auth,
+                currentUser,
+              },
+            }
+          },
+          false,
+          'auth/setCurrentUser',
+        )
       },
       clearCurrentUser: () => {
-        set((state) => {
-          return {
-            auth: {
-              ...state.auth,
-              currentUser: null,
-            },
-          }
-        })
+        set(
+          (state) => {
+            return {
+              auth: {
+                ...state.auth,
+                currentUser: null,
+              },
+            }
+          },
+          false,
+          'auth/clearCurrentUser',
+        )
       },
       setIsLoading: (isLoading) => {
-        set((state) => {
-          return {
-            auth: {
-              ...state.auth,
-              isLoading,
-            },
-          }
-        })
+        set(
+          (state) => {
+            return {
+              auth: {
+                ...state.auth,
+                isLoading,
+              },
+            }
+          },
+          false,
+          'auth/setIsLoading',
+        )
       },
     },
   }
