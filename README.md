@@ -69,9 +69,26 @@ make up
 ```bash
 make up        # build and run all services
 make down      # stop all services
+make clean     # stop all services and remove volumes
 make logs      # stream logs
 make migrate   # run prisma migrations in backend container
 make seed      # seed database in backend container
+```
+
+## Test Commands
+
+Backend flow tests:
+
+```bash
+cd backend
+npm run test:backend
+```
+
+Frontend smoke tests:
+
+```bash
+cd frontend
+npm run test:frontend
 ```
 
 ## Project Structure
@@ -132,3 +149,4 @@ docker compose up --build
 ## Getting Help
 
 - Backend API docs: `backend/README.md`
+- Frontend docs: `frontend/README.md`

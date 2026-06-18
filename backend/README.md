@@ -5,6 +5,8 @@ Express + TypeScript API for ft_transcendence.
 ## What This Service Does
 
 - User authentication (`register`, `login`, `logout`, `me`)
+- User profile updates (`PATCH /api/users/me`)
+- Avatar upload (`POST /api/users/me/avatar`)
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses
@@ -57,6 +59,7 @@ npm run db:seed     # prisma db seed
 npm run db:reset    # reset prisma database
 npm run type-check  # TypeScript type check
 npm run test:backend # backend flow bash test script
+npm run test:auth    # alias of test:backend
 ```
 
 ## Auth API
@@ -127,11 +130,57 @@ Success: `200` with `data` user payload.
 
 ### POST /api/auth/logout
 
-Clears auth cookies. Requires valid auth session and CSRF header.
+Clears auth cookies. When CSRF token/header is present, it is validated before logout.
 
 ### GET /api/auth/me
 
 Returns currently authenticated user from session cookie.
+
+## Users API
+
+Base path: `/api/users`
+
+### PATCH /api/users/me
+
+Edits authenticated user profile.
+
+Request body fields:
+
+- `displayName` (optional): string or `null`, max 50 chars
+- `bio` (optional): string or `null`, max 500 chars
+
+Success: `200` with updated editable profile payload.
+
+### POST /api/users/me/avatar
+
+Uploads authenticated user avatar.
+
+Rules:
+
+- Multipart field name: `avatar`
+- Allowed MIME types: `image/jpeg`, `image/png`, `image/webp`
+- Max size: 2MB
+- Stored as UUID filename under `/uploads`
+- Replaces `avatarUrl` and removes previous local avatar file (if present)
+
+Success: `200` with updated editable profile payload.
+
+Validation errors:
+
+- `400` invalid/missing file
+- `413` file too large
+
+## Test Flow Script
+
+The backend integration flow script lives in:
+
+- `scripts/test-backend-flow.sh`
+
+Run it with:
+
+```bash
+npm run test:backend
+```
 
 ## Error Response Shape
 
