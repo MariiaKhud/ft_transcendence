@@ -9,11 +9,12 @@ const validateEmail = (email: string) => {
 }
 
 export const Login = () => {
-  const navigate = useNavigate() // Using the useNavigate hook from react-router-dom to programmatically navigate to different routes after successful login
+  // Move user to another page after login.
+  const navigate = useNavigate()
 
   const { login, isLoading } = useAuth()
 
-  // State variables for managing form input values, error messages, and submission status
+  // Form values and errors.
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [emailError, setEmailError] = useState('')
@@ -21,15 +22,14 @@ export const Login = () => {
   const [formError, setFormError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
-  // Function to clear all error messages before validating or submitting the form
+  // Clear old errors.
   const clearErrors = () => {
     setEmailError('')
     setPasswordError('')
     setFormError('')
   }
 
-  // Function to validate the email and password fields, setting appropriate error messages if validation fails.
-  // It checks if the email is not empty and follows a valid email format, and if the password is not empty. It returns a boolean indicating whether the fields are valid.
+  // Check fields before submit.
   const validateFields = (): boolean => {
     let isValid = true
     const trimmedEmail = email.trim()
@@ -50,9 +50,15 @@ export const Login = () => {
     return isValid
   }
 
-  // Function to apply API error messages to the appropriate form fields
+  // Show API error in the right field.
   const applyApiError = (message: string) => {
     const lowerMessage = message.toLowerCase()
+
+    if (lowerMessage.includes('invalid email or password')) {
+      setEmailError('Invalid email or password')
+      setPasswordError('Invalid email or password')
+      return
+    }
 
     if (lowerMessage.includes('email')) {
       setEmailError(message)
@@ -64,34 +70,27 @@ export const Login = () => {
       return
     }
 
-    if (lowerMessage.includes('invalid email or password')) {
-      setEmailError('Invalid email or password')
-      setPasswordError('Invalid email or password')
-      return
-    }
-
     setFormError(message)
   }
 
-  // Asynchronous function to handle form submission, which prevents the default form behavior, validates the fields, and if valid, sends a POST request to the login
-  // API endpoint. It handles the API response, updating the authentication state and navigating to the feed page on success, or applying error messages on failure.
-  // It also manages the submission state to provide feedback to the user.
+  // Send login request.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-
-	// Preventing the default form submission behavior to handle it with custom logic
+    // Stop normal HTML form submit.
     event.preventDefault()
 
-	// Clearing any existing error messages before validating the form fields
+    // Remove old errors first.
     clearErrors()
 
     if (!validateFields()) {
       return
     }
 
-	// Wrapping the API call in a try-catch block to handle any network or server errors that may occur during the login process
+  // Try login and handle errors.
     try {
+      const normalizedEmail = email.trim()
+
       await login({
-        email,
+        email: normalizedEmail,
         password,
       })
       navigate('/feed', { replace: true })

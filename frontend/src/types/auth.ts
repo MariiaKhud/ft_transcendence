@@ -1,3 +1,4 @@
+// User and auth form types.
 export type UserRole = 'USER' | 'MODERATOR' | 'ADMIN'
 
 export interface AuthUser {

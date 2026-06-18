@@ -3,8 +3,7 @@ import { getCurrentUser, loginUser, logoutUser } from '@/api/authApi'
 import { useStore } from '@/store/store'
 import type { LoginCredentials } from '@/types/auth'
 
-// UseAuthOptions interface defines the shape of the options object that can be passed to the useAuth hook. It currently includes a single optional property, restoreOnMount,
-// which is a boolean indicating whether to restore the authentication session when the component using the hook mounts.
+// Hook options.
 interface UseAuthOptions {
   restoreOnMount?: boolean
 }
@@ -75,8 +74,7 @@ export const useAuth = (options: UseAuthOptions = {}) => {
     [clearCurrentUser, setCurrentUser, setIsLoading]
   )
 
-  // Using useEffect to restore the authentication session when the component mounts, if the restoreOnMount option is set to true.
-  // This ensures that the user's authentication state is maintained across page reloads or when navigating back to the app.
+  // Restore user session when needed.
   useEffect(
     () => {
       if (!options.restoreOnMount) {

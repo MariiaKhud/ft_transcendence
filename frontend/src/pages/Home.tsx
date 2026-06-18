@@ -35,6 +35,14 @@ export const Home = () => {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
         </svg>
       </div>
+
+      {/* Learn more target section */}
+      <div id="learn-more" className="mx-auto max-w-2xl rounded-2xl border border-white/30 bg-white/40 p-8 text-left shadow-xl backdrop-blur-md">
+        <h2 className="text-2xl font-bold text-slate-900">Learn More</h2>
+        <p className="mt-3 text-slate-600">
+          Explore feed updates, connect with other users, and build your profile with a simple and modern experience.
+        </p>
+      </div>
     </section>
   )
 }

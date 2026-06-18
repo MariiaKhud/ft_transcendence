@@ -14,13 +14,10 @@ const validateUsername = (username: string) => {
 }
 
 export const Register = () => {
-
-  // Using the useNavigate hook to get a navigate function that can be used to programmatically navigate to different routes in the application, such as redirecting
-  // the user to the login page after successful registration.
+  // Move user to login page after success.
   const navigate = useNavigate()
 
-  // Using useState hooks to manage the state of form inputs (email, username, password, confirmPassword), error messages for each field, a general form error message,
-  // a boolean to track the submission status, and a boolean to toggle password visibility.
+  // Form values and errors.
   const [email, setEmail] = useState('')
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
@@ -34,8 +31,7 @@ export const Register = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
-  // clearErrors is a helper function that resets all error messages to an empty string. It is called before validating the form fields or submitting the form
-  // to ensure that previous error messages do not persist.
+  // Clear old errors.
   const clearErrors = () => {
     setEmailError('')
     setUsernameError('')
@@ -44,9 +40,7 @@ export const Register = () => {
     setFormError('')
   }
 
-  // validateFields is a function that checks the validity of the form inputs. It ensures that the email is in a valid format, the username meets the specified criteria,
-  // the password is of an acceptable length, and that the confirm password field matches the password. If any validation fails, it sets the appropriate error messages
-  // and returns false to indicate that the form is not valid for submission.
+  // Check fields before submit.
   const validateFields = () => {
     let isValid = true
     const trimmedEmail = email.trim()
@@ -87,8 +81,7 @@ export const Register = () => {
     return isValid
   }
 
-  // applyApiError is a helper function that maps API error messages to the corresponding form fields. It checks the error message for keywords
-  // like "email", "username", or "password" and sets the appropriate error state. If no specific field is mentioned, it sets a general form error.
+  // Show API error in the right field.
   const applyApiError = (message: string) => {
     const lowerMessage = message.toLowerCase()
 
@@ -110,30 +103,31 @@ export const Register = () => {
     setFormError(message)
   }
 
-  // handleSubmit is an asynchronous function that handles the form submission event. It prevents the default form submission behavior,
-  // clears any existing error messages, validates the form fields, and sends a POST request to the registration API endpoint. If the registration
-  // is successful, it navigates the user to the login page. If there are any errors, it applies the appropriate error messages.
+  // Send register request.
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
-	// Prevent the default form submission behavior to handle it with JavaScript
+    // Stop normal HTML form submit.
     event.preventDefault()
-	// Clear any existing error messages before validating the form fields or submitting the form
+    // Remove old errors first.
     clearErrors()
 
-	// Validate the form fields and if any validation fails, return early to prevent submission
+    // Stop if form is not valid.
     if (!validateFields()) {
       return
     }
 
-    // Try to submit the registration data to the API endpoint. If successful, navigate to the login page. If there are errors, apply the appropriate error messages.
+    // Try register and handle errors.
     try {
+      const normalizedEmail = email.trim()
+      const normalizedUsername = username.trim()
+
       setIsSubmitting(true)
       await registerUser({
-        email,
-        username,
+        email: normalizedEmail,
+        username: normalizedUsername,
         password,
       })
 
-	  // If registration is successful, navigate the user to the login page
+    // Go to login page after success.
       navigate('/login', { replace: true })
     } catch (error) {
       if (error instanceof Error) {

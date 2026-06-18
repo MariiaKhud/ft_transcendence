@@ -1,6 +1,7 @@
-import { useStore } from '@/store/store'  // Importing the root Zustand store to access authentication state and user information in the Feed component.
+import { useStore } from '@/store/store'
 
 export const Feed = () => {
+  // Read current user from global store.
   const user = useStore((state) => {
     return state.auth.currentUser
   })
