@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
 import dotenv from 'dotenv'
 import { errorHandler } from './middleware/error.middleware.js'
+import { prisma } from './lib/prisma.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
 
@@ -31,7 +32,8 @@ const handleServerStart = () => {
 
 const handleGracefulShutdown = () => {
   console.log('\n🛑 Shutting down gracefully...')
-  server.close(() => {
+  server.close(async () => {
+    await prisma.$disconnect()
     console.log('✅ Server closed')
     process.exit(0)
   })
