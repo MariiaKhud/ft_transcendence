@@ -1,9 +1,8 @@
 import { Request, Response, NextFunction } from 'express'
 import { AppError } from './error.middleware.js'
+import type { AuthRole } from '../lib/auth.utils.js'
 
-type AuthRole = 'USER' | 'MODERATOR' | 'ADMIN'             // Defining a TypeScript type for user roles, which can be one of 'USER', 'MODERATOR', or 'ADMIN'. This will be used to enforce role-based access control in the application.
-
-// Defining a constant object ROLE_RANK that maps each AuthRole to a numeric rank. This allows for easy comparison of roles to determine if a user has sufficient privileges to access certain routes or perform specific actions based on their role.
+// Role priority map for permission checks.
 const ROLE_RANK: Record<AuthRole, number> = {
   USER: 1,
   MODERATOR: 2,
@@ -12,13 +11,12 @@ const ROLE_RANK: Record<AuthRole, number> = {
 
 const requireRole = (minimumRole: AuthRole) => {
   return (req: Request, _res: Response, next: NextFunction): void => {
-
-    // Step 1: the user must be authenticated first.
+    // User must be logged in first.
     if (!req.user) {
       throw new AppError(401, 'Authentication required')
     }
 
-    // Step 2: compare the user's role level with the minimum required level.
+    // Compare user role level with required role level.
     const userRole = req.user.role
     const userLevel = ROLE_RANK[userRole]
     const requiredLevel = ROLE_RANK[minimumRole]
@@ -27,7 +25,7 @@ const requireRole = (minimumRole: AuthRole) => {
       throw new AppError(403, 'Forbidden: insufficient role')
     }
 
-    // Step 3: access granted, continue to the next middleware/handler.
+    // Access granted.
     next()
   }
 }

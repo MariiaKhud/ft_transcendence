@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from 'express'
+import type { Request, Response, NextFunction } from 'express'
 
 
 export class AppError extends Error {
@@ -28,7 +28,9 @@ export const errorHandler = (err: Error | AppError, _req: Request, res: Response
   })
 }
 
-export const handleAsyncErrors = (fn: Function) => {
+type AsyncHandler = (req: Request, res: Response, next: NextFunction) => unknown | Promise<unknown>
+
+export const handleAsyncErrors = (fn: AsyncHandler) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next)
   }
