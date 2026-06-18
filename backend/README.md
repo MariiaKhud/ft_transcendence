@@ -51,13 +51,13 @@ Default local URL:
 ## NPM Scripts
 
 ```bash
-npm run dev         # tsx watch server
-npm run build       # compile TypeScript
-npm run start       # run compiled build
-npm run db:migrate  # prisma migrate dev
-npm run db:seed     # prisma db seed
-npm run db:reset    # reset prisma database
-npm run type-check  # TypeScript type check
+npm run dev          # tsx watch server
+npm run build        # compile TypeScript
+npm run start        # run compiled build
+npm run db:migrate   # prisma migrate dev
+npm run db:seed      # prisma db seed
+npm run db:reset     # reset prisma database
+npm run type-check   # TypeScript type check
 npm run test:backend # backend flow bash test script
 npm run test:auth    # alias of test:backend
 ```
