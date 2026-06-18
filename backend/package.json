@@ -2,15 +2,15 @@
   "name": "ft-transcendence-backend",
   "version": "1.0.0",
   "description": "Express backend for ft_transcendence platform",
-  "main": "dist/server.js",
+  "main": "dist/main.js",
   "type": "module",
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch src/main.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/main.js",
     "db:migrate": "prisma migrate dev",
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset",

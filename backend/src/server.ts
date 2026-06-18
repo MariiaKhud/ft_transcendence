@@ -2,13 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
-import dotenv from 'dotenv'
 import { errorHandler } from './middleware/error.middleware.js'
 import { prisma } from './lib/prisma.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
-
-dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -74,10 +71,11 @@ app.get('/health', handleHealthCheck)
 // API Routes
 // ─────────────────────────────────────────────
 
-// TODO: Wire up route modules here
 app.use('/api/auth', authRoutes)                       // Authentication routes (register, login, logout, etc.)
-// app.use('/api/articles', articleRoutes)
 app.use('/api/users', userRoutes)                      // User routes (profile management, user listing, etc.)
+
+// TODO: Wire up route modules here
+// app.use('/api/articles', articleRoutes)
 // app.use('/api/comments', commentRoutes)
 // app.use('/api/friends', friendshipRoutes)
 // app.use('/api/messages', messageRoutes)
