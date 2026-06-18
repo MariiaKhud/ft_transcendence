@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { AppError } from './error.middleware.js'
-import { verifyAuthToken } from '../routes/auth.routes.js'
+import { verifyAuthToken } from '../lib/auth.utils.js'
 
 type AuthRole = 'USER' | 'MODERATOR' | 'ADMIN';              // Defining a TypeScript type for user roles, which can be one of 'USER', 'MODERATOR', or 'ADMIN'. This will be used to enforce role-based access control in the application.
 
