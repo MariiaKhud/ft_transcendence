@@ -1,10 +1,8 @@
 
-
-
-
-// Importing UserSummary type for author information in comments
+import type { ISODateTime } from './api'
 import type { UserSummary } from './user'
 
+// Full comment record.
 export interface Comment {
   id: string
   articleId: string
@@ -12,20 +10,23 @@ export interface Comment {
   content: string
   isRemoved: boolean
   removedReason: string | null
-  removedAt: string | null
-  createdAt: string
-  updatedAt: string
+  removedAt: ISODateTime | null
+  createdAt: ISODateTime
+  updatedAt: ISODateTime
 }
 
+// Comment with author profile data.
 export interface CommentWithAuthor extends Comment {
   author: UserSummary
 }
 
+// Payload to create a comment.
 export interface CreateCommentRequest {
   articleId: string
   content: string
 }
 
+// Payload to edit a comment.
 export interface UpdateCommentRequest {
   content: string
 }

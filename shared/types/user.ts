@@ -1,9 +1,10 @@
 
+import type { ISODateTime } from './api'
 
-
-
+// User roles used for permissions.
 export type UserRole = 'USER' | 'MODERATOR' | 'ADMIN'
 
+// Full user record.
 export interface User {
   id: string
   email: string
@@ -15,11 +16,12 @@ export interface User {
   xp: number
   level: number
   isOnline: boolean
-  lastSeenAt: string
-  createdAt: string
-  updatedAt: string
+  lastSeenAt: ISODateTime
+  createdAt: ISODateTime
+  updatedAt: ISODateTime
 }
 
+// Small user shape for lists and relations.
 export interface UserSummary {
   id: string
   username: string
@@ -29,6 +31,7 @@ export interface UserSummary {
   level: number
 }
 
+// Payload to register a new account.
 export interface RegisterRequest {
   email: string
   username: string
@@ -36,11 +39,13 @@ export interface RegisterRequest {
   displayName?: string
 }
 
+// Payload to log in.
 export interface LoginRequest {
   email: string
   password: string
 }
 
+// User data returned in auth responses.
 export interface AuthUser {
   id: string
   email: string
@@ -48,17 +53,19 @@ export interface AuthUser {
   role: UserRole
 }
 
+// Cookie-based auth response payload.
 export interface AuthResponse {
   user: AuthUser
-  accessToken: string
 }
 
+// Public badge shape shown on profile.
 export interface PublicUserBadge {
   id: string
   name: string
   icon: string
 }
 
+// Public profile data shown to other users.
 export interface PublicUserProfile {
   displayName: string | null
   username: string

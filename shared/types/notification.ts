@@ -1,7 +1,7 @@
 
+import type { ISODateTime } from './api'
 
-
-
+// Kinds of notifications in the app.
 export type NotificationType =
   | 'FOLLOWED'
   | 'COMMENT'
@@ -10,6 +10,7 @@ export type NotificationType =
   | 'FRIEND_REQUEST'
   | 'FRIEND_ACCEPTED'
 
+// Notification record.
 export interface Notification {
   id: string
   userId: string
@@ -17,9 +18,10 @@ export interface Notification {
   message: string
   refId: string | null
   isRead: boolean
-  createdAt: string
+  createdAt: ISODateTime
 }
 
+// Payload to mark notification as read.
 export interface MarkNotificationAsReadRequest {
   notificationId: string
 }

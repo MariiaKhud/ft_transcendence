@@ -1,7 +1,7 @@
 
+export type ISODateTime = string
 
-
-
+// Common API response format.
 export interface ApiResponse<T = unknown> {
   success: boolean
   message?: string
@@ -9,6 +9,7 @@ export interface ApiResponse<T = unknown> {
   error?: string
 }
 
+// Paging info for list endpoints.
 export interface PaginationMeta {
   page: number
   pageSize: number
@@ -18,6 +19,7 @@ export interface PaginationMeta {
   hasPreviousPage: boolean
 }
 
+// Generic paginated payload.
 export interface PaginatedResponse<T> {
   items: T[]
   meta: PaginationMeta
