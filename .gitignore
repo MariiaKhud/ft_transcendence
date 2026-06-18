@@ -33,3 +33,6 @@ coverage/
 
 # OS files
 Thumbs.db
+
+# Local cookie jar files (may contain auth tokens)
+cookies.txt
