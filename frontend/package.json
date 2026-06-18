@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:frontend": "bash scripts/test-frontend-flow.sh"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",

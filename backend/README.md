@@ -56,7 +56,7 @@ npm run db:migrate  # prisma migrate dev
 npm run db:seed     # prisma db seed
 npm run db:reset    # reset prisma database
 npm run type-check  # TypeScript type check
-npm run test:auth   # auth flow bash test script
+npm run test:backend # backend flow bash test script
 ```
 
 ## Auth API

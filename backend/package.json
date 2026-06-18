@@ -16,7 +16,8 @@
     "db:reset": "prisma migrate reset",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit",
-    "test:auth": "bash scripts/test-auth-flow.sh"
+    "test:backend": "bash scripts/test-backend-flow.sh",
+    "test:auth": "npm run test:backend"
   },
   "keywords": [
     "express",
