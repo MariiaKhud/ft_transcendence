@@ -1,4 +1,4 @@
-import type { Express, Request, Response, NextFunction } from 'express' // For type annotations in Express middleware functions
+import type { Express, Request, Response, NextFunction } from 'express'
 
 
 export class AppError extends Error {

@@ -1,6 +1,6 @@
-import { useCallback, useEffect } from 'react'    // Importing React hooks for performing side effects and memoizing auth workflows
+import { useCallback, useEffect } from 'react'
 import { getCurrentUser, loginUser, logoutUser } from '@/api/authApi'
-import { useStore } from '@/store/store'          // Importing the root Zustand store to access authentication state and actions in the useAuth hook
+import { useStore } from '@/store/store'
 import type { LoginCredentials } from '@/types/auth'
 
 // UseAuthOptions interface defines the shape of the options object that can be passed to the useAuth hook. It currently includes a single optional property, restoreOnMount,

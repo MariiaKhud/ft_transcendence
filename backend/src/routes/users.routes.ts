@@ -1,7 +1,7 @@
-import { Router } from 'express'                                                // Importing the Router class from the Express library to create modular route handlers for user-related endpoints
-import type { Request, Response } from 'express'                                // Importing the Request and Response types from Express for type annotations in route handler functions
-import { prisma } from '../lib/prisma.js'                                       // Importing the Prisma client instance for database interactions, allowing the route handlers to query and manipulate user data in the database
-import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js' // Importing the AppError class for creating custom error objects and the handleAsyncErrors function for wrapping asynchronous route handlers to catch errors and pass them to the error handling middleware
+import { Router } from 'express'
+import type { Request, Response } from 'express'
+import { prisma } from '../lib/prisma.js'
+import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 
 const router = Router() // Creating a new router instance for user-related routes
 

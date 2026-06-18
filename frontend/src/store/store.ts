@@ -1,4 +1,4 @@
-import { create } from 'zustand'     // Importing the create function from the zustand library to create a global state store for the React application
+import { create } from 'zustand' // Importing the create function from the zustand library to create a global state store for the React application
 import { devtools } from 'zustand/middleware'
 import { createAuthSlice } from '@/store/slices/authSlice'
 import type { StoreState } from '@/store/store.types'

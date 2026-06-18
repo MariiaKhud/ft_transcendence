@@ -1,5 +1,5 @@
-import { Link } from 'react-router-dom'            // For the Link component from react-router-dom, which is used to create navigational links in the React application, allowing users to navigate between different routes defined in the router configuration without causing a full page reload.
-import { Button } from '@/components/ui/button'    // For the Button component from the local UI components, which is likely a styled button component used for consistent styling across the application. In this case, it is used to create buttons for navigating to the login page and for learning more about the application on the home page.
+import { Link } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 
 export const Home = () => {
   return (

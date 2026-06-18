@@ -1,15 +1,11 @@
-
-
-
-
-import express from 'express'                                // For creating the Express application and defining routes and middleware
-import cors from 'cors'                                      // For enabling Cross-Origin Resource Sharing (CORS) in the Express application, allowing the frontend to make requests to the backend from a different origin
-import cookieParser from 'cookie-parser'                     // For parsing cookies in incoming requests, allowing the server to read and manipulate cookies for authentication and other purposes
-import helmet from 'helmet'                                  // For setting various HTTP headers for security in the Express application
-import dotenv from 'dotenv'                                  // For loading environment variables from a .env file into process.env, allowing for configuration of the application through environment variables
-import { errorHandler } from './middleware/error.middleware.js'  // Importing the errorHandler middleware for centralized error handling in the Express application
-import authRoutes from './routes/auth.routes.js'             // Importing the authentication routes for handling user registration, login, logout, and other auth-related endpoints. This is a placeholder for where the actual auth routes will be defined and implemented.
-import userRoutes from './routes/users.routes.js'            // Importing the user routes for handling user-related endpoints such as profile management, user listing, etc. This is a placeholder for where the actual user routes will be defined and implemented.
+import express from 'express'
+import cors from 'cors'
+import cookieParser from 'cookie-parser'
+import helmet from 'helmet'
+import dotenv from 'dotenv'
+import { errorHandler } from './middleware/error.middleware.js'
+import authRoutes from './routes/auth.routes.js'
+import userRoutes from './routes/users.routes.js'
 
 dotenv.config()
 

@@ -1,7 +1,3 @@
-
-
-
-
 // Importing the Config type from Tailwind CSS for type checking
 import type { Config } from 'tailwindcss'
 

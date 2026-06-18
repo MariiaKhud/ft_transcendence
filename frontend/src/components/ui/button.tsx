@@ -1,8 +1,7 @@
-import * as React from 'react'                                      // Importing React for creating React components and using JSX syntax
-import { Slot } from '@radix-ui/react-slot'                         // Importing Slot from @radix-ui/react-slot, which is a utility component for rendering children in a flexible way, allowing for composition and customization of components
-import { cva, type VariantProps } from 'class-variance-authority'   // Importing cva and VariantProps from class-variance-authority, which is a utility for creating variant-based class name generators, allowing for easy management of CSS classes based on component variants
-
-import { cn } from '@/lib/utils'                                    // Importing the cn function from the utils module, which is a utility function for merging class names conditionally, often used in conjunction with the cva function to generate class names based on component variants and additional classes passed as props
+import * as React from 'react'
+import { Slot } from '@radix-ui/react-slot'
+import { cva, type VariantProps } from 'class-variance-authority'
+import { cn } from '@/lib/utils'
 
 const buttonVariants = cva(
   'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50',

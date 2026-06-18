@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from 'react'      // Importing necessary hooks and types from React for managing state and handling form events in the Register component
-import { Link, useNavigate } from 'react-router-dom'  // Importing Link and useNavigate from react-router-dom for navigation between routes in the React application. Link is used to create navigational links, while useNavigate is a hook that provides a function to programmatically navigate to different routes.
-import { Button } from '@/components/ui/button'       // Importing the Button component from the local UI components, which is likely a styled button component used for consistent styling across the application. In this case, it is used to create buttons for submitting the registration form and navigating to the login page.
+import { useState, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
 import { registerUser } from '@/api/authApi'
 
 const validateEmail = (email: string) => {
@@ -149,11 +149,13 @@ export const Register = () => {
 
   return (
     <section className="mx-auto w-full max-w-md space-y-8">
+      {/* Register header */}
       <div className="space-y-3 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">Create Account</h1>
         <p className="text-slate-600">Register to start using the platform</p>
       </div>
 
+      {/* Register form */}
       <form
         className="space-y-6 rounded-2xl border border-white/30 bg-white/40 p-8 backdrop-blur-md shadow-xl"
         onSubmit={handleSubmit}

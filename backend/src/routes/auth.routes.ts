@@ -1,11 +1,11 @@
-import { Router } from 'express'                                             // For creating route handlers
-import type { Request, Response } from 'express'                             // For type annotations in route handlers
-import { randomBytes } from 'crypto'                                         // For CSRF token generation
-import bcrypt from 'bcryptjs'                                                // For password hashing
-import jwt from 'jsonwebtoken'                                               // For creating signed authentication tokens
-import type { Prisma } from '@prisma/client'                                 // For strongly-typed Prisma select objects
-import { prisma } from '../lib/prisma.js'                                    // Prisma client instance for database operations
-import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'  // Custom error class and async handler utility for error handling in routes
+import { Router } from 'express'
+import type { Request, Response } from 'express'
+import { randomBytes } from 'crypto'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
+import type { Prisma } from '@prisma/client'
+import { prisma } from '../lib/prisma.js'
+import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 
 // Creating a new router instance for authentication routes
 const router = Router()

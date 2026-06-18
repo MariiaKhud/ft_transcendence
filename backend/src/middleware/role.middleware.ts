@@ -1,5 +1,5 @@
-import { Request, Response, NextFunction } from 'express'  // Importing necessary types from the Express library to define the types of the parameters for the middleware function.
-import { AppError } from './error.middleware.js'           // Importing the AppError class from the error.middleware.js file, which is used to create custom error objects with specific status codes and messages for error handling in the middleware function.
+import { Request, Response, NextFunction } from 'express'
+import { AppError } from './error.middleware.js'
 
 type AuthRole = 'USER' | 'MODERATOR' | 'ADMIN'             // Defining a TypeScript type for user roles, which can be one of 'USER', 'MODERATOR', or 'ADMIN'. This will be used to enforce role-based access control in the application.
 

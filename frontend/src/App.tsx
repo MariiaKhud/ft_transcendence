@@ -1,8 +1,5 @@
-
-
-
-import { Link, Outlet } from 'react-router-dom'   // Importing Link and Outlet components from react-router-dom for navigation and rendering matched child routes in the application
-import { useAuth } from '@/hooks/useAuth'         // Importing a custom hook useAuth from the local hooks directory, which is likely used to manage authentication state and provide authentication-related functionality throughout the application
+import { Link, Outlet } from 'react-router-dom'
+import { useAuth } from '@/hooks/useAuth'
 
 const App = () => {
   const { currentUser, isLoading, logout } = useAuth({ restoreOnMount: true }) // Using the useAuth hook to access the current user's authentication state, loading status, and logout function. The restoreOnMount option is set to true to restore the authentication state when the component mounts.

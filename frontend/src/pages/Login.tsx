@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from 'react'                // Importing useState and FormEvent type from React for managing component state and typing form events
-import { Link, useNavigate } from 'react-router-dom'            // Importing Link and useNavigate from react-router-dom for navigation
-import { Button } from '@/components/ui/button'                 // Importing a Button component from the local UI components for consistent styling of buttons across the application
-import { useAuth } from '@/hooks/useAuth'                       // Importing a custom hook useAuth from the local hooks directory, which is likely used to manage authentication state and provide authentication-related functionality throughout the application
+import { useState, type FormEvent } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { Button } from '@/components/ui/button'
+import { useAuth } from '@/hooks/useAuth'
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -107,11 +107,13 @@ export const Login = () => {
 
   return (
     <section className="mx-auto w-full max-w-md space-y-8">
+      {/* Login header */}
       <div className="space-y-3 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">Welcome Back</h1>
         <p className="text-slate-600">Sign in to your account to continue</p>
       </div>
 
+      {/* Login form */}
       <form className="space-y-6 rounded-2xl border border-white/30 bg-white/40 p-8 backdrop-blur-md shadow-xl" onSubmit={handleSubmit} noValidate>
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-semibold text-slate-900">

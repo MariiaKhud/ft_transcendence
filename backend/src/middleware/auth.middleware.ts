@@ -1,6 +1,6 @@
-import { Request, Response, NextFunction } from 'express';   // For type annotations in Express middleware functions
-import { AppError } from './error.middleware.js';                   // Importing the AppError class for throwing custom errors with specific status codes and messages
-import { verifyAuthToken } from '../routes/auth.routes.js';      // Importing the verifyAuthToken function from the authRoutes module, which is used to verify the JWT token and extract user information for authentication purposes
+import { Request, Response, NextFunction } from 'express'
+import { AppError } from './error.middleware.js'
+import { verifyAuthToken } from '../routes/auth.routes.js'
 
 type AuthRole = 'USER' | 'MODERATOR' | 'ADMIN';              // Defining a TypeScript type for user roles, which can be one of 'USER', 'MODERATOR', or 'ADMIN'. This will be used to enforce role-based access control in the application.
 

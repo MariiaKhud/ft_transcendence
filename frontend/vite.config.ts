@@ -1,7 +1,3 @@
-
-
-
-
 // Importing necessary modules for Vite configuration
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
