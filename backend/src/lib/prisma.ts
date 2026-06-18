@@ -1,3 +1,15 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import prismaClientPackage from '@prisma/client'
 
-export const prisma = new PrismaClient()      // Creating an instance of PrismaClient to be used throughout the application for database operations.
+const { PrismaClient } = prismaClientPackage
+const databaseUrl = process.env.DATABASE_URL
+
+if (!databaseUrl) {
+	throw new Error('DATABASE_URL is required to initialize PrismaClient')
+}
+
+const adapter = new PrismaPg({ connectionString: databaseUrl })
+
+export const prisma = new PrismaClient({
+	adapter,
+})

@@ -1,6 +1,14 @@
 import 'dotenv/config'
 import { defineConfig, env } from 'prisma/config'
 
+const databaseUrl = (() => {
+  try {
+    return env('DATABASE_URL')
+  } catch {
+    return ''
+  }
+})()
+
 export default defineConfig({
   schema: 'prisma/schema.prisma',
   migrations: {
@@ -8,6 +16,7 @@ export default defineConfig({
     seed: 'tsx prisma/seed.ts',
   },
   datasource: {
-    url: env('DATABASE_URL'),
+    // prisma generate does not require a live database URL during image builds.
+    url: databaseUrl,
   },
 })

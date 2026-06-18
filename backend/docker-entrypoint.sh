@@ -22,6 +22,14 @@ while [ "$attempt" -le "$max_attempts" ]; do
   sleep 3
 done
 
+echo "Generating Prisma client..."
+npx prisma generate
+
+if [ ! -e "/app/node_modules/@prisma/client/.prisma" ]; then
+  mkdir -p /app/node_modules/@prisma/client
+  ln -s /app/node_modules/.prisma /app/node_modules/@prisma/client/.prisma
+fi
+
 if [ "$NODE_ENV" = "development" ]; then
   exec npm run dev
 fi
