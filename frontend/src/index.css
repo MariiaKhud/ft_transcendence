@@ -1,11 +1,13 @@
 @import 'tailwindcss';
 
+/* Main app colors. */
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --border: oklch(0.922 0 0);
 }
 
+/* Give all elements the same border color by default. */
 * {
   border-color: var(--border);
 }

@@ -2,7 +2,8 @@ import { Link, Outlet } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 
 const App = () => {
-  const { currentUser, isLoading, logout } = useAuth({ restoreOnMount: true }) // Using the useAuth hook to access the current user's authentication state, loading status, and logout function. The restoreOnMount option is set to true to restore the authentication state when the component mounts.
+  // Get user data, loading state, and logout action.
+  const { currentUser, isLoading, logout } = useAuth({ restoreOnMount: true })
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -64,6 +65,7 @@ const App = () => {
         </div>
       </header>
 
+      {/* The router shows the current page here. */}
       <main className="relative z-10 mx-auto w-full max-w-6xl px-6 py-20">
         <Outlet />
       </main>

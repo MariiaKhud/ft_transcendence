@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
-// This file provides type definitions for Vite's import.meta.env variables.
+// Types for Vite env variables.
 interface ImportMetaEnv {
+  // Base URL for API calls.
   readonly VITE_API_BASE_URL?: string
 }
