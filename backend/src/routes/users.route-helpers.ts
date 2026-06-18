@@ -1,9 +1,18 @@
+import { promises as fs } from 'fs'
+import { randomUUID } from 'crypto'
 import { AppError } from '../middleware/error.middleware.js'
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/
 const MAX_DISPLAY_NAME_LENGTH = 50
 const MAX_BIO_LENGTH = 500
 const EDIT_PROFILE_ALLOWED_FIELDS = new Set(['displayName', 'bio'])
+const AVATAR_MAX_SIZE = 2 * 1024 * 1024
+const ALLOWED_AVATAR_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+const AVATAR_MIME_TO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+}
 
 export interface PublicBadge {
   id: string
@@ -198,5 +207,47 @@ export const mapUserToPublicProfile = (user: PublicProfileUserRecord): PublicPro
     }),
     level: user.level,
     xp: user.xp,
+  }
+}
+
+// Validate avatar file mimetype.
+export const validateAvatarMimetype = (mimetype: string | undefined) => {
+  if (!mimetype || !ALLOWED_AVATAR_MIMES.has(mimetype)) {
+    throw new AppError(400, 'Validation failed: avatar must be jpg, png, or webp')
+  }
+}
+
+// Get file extension from mimetype.
+export const getAvatarExtension = (mimetype: string): string => {
+  return AVATAR_MIME_TO_EXT[mimetype] || 'jpg'
+}
+
+// Get absolute path to uploads directory.
+export const getUploadsDir = (): string => {
+  return process.env.UPLOAD_PATH || './uploads'
+}
+
+// Generate avatar filename with UUID.
+export const generateAvatarFilename = (mimetype: string): string => {
+  const ext = getAvatarExtension(mimetype)
+  return `${randomUUID()}.${ext}`
+}
+
+// Delete old avatar file if it exists.
+export const deleteOldAvatar = async (oldAvatarUrl: string | null) => {
+  if (!oldAvatarUrl || !oldAvatarUrl.startsWith('/uploads/')) {
+    return
+  }
+
+  try {
+    const filename = oldAvatarUrl.replace('/uploads/', '')
+    const filepath = `${getUploadsDir()}/${filename}`
+    await fs.unlink(filepath)
+  } catch (error) {
+    // Ignore file not found errors; log others for debugging.
+    if (error instanceof Error && error.message.includes('ENOENT')) {
+      return
+    }
+    console.error('Failed to delete old avatar:', error)
   }
 }
