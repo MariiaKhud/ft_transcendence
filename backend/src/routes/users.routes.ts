@@ -138,7 +138,36 @@ const uploadAvatarHandler = async (req: FileRequest, res: Response) => {
   res.status(200).json({ success: true, data: updatedUser })
 }
 
+const deleteMyAvatarHandler = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, 'Authentication required')
+  }
+
+  // Load the current avatar path for this user.
+  const currentUser = await prisma.user.findUnique({
+    where: { id: req.user.userId },
+    select: { avatarUrl: true },
+  })
+
+  if (!currentUser) {
+    throw new AppError(404, 'User not found')
+  }
+
+  // Remove the avatar file from /uploads when it exists.
+  await deleteOldAvatar(currentUser.avatarUrl)
+
+  // Clear avatarUrl in the database and return the updated profile.
+  const updatedUser: EditableProfile = await prisma.user.update({
+    where: { id: req.user.userId },
+    data: { avatarUrl: null },
+    select: editableProfileSelect,
+  })
+
+  res.status(200).json({ success: true, data: updatedUser })
+}
+
 router.post('/me/avatar', authMiddleware, upload.single('avatar'), handleMulterError, handleAsyncErrors(uploadAvatarHandler))
+router.delete('/me/avatar', authMiddleware, handleAsyncErrors(deleteMyAvatarHandler))
 router.patch('/me', authMiddleware, handleAsyncErrors(editMyProfileHandler))
 router.get('/:username', handleAsyncErrors(getPublicProfileHandler))
 
