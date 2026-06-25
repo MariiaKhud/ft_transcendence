@@ -196,6 +196,32 @@ assert_status "200" "Update both"
 assert_body_contains '"displayName":"New Name"' "Update both"
 assert_body_contains '"bio":"New Bio"' "Update both"
 
+# Test 12b: GET /api/users/:username — read public profile
+color_echo "$BLUE" "12b. GET /api/users/:username — read public profile"
+perform_request "Get public profile" "${BASE_URL}/api/users/${USERNAME}"
+assert_status "200" "Get public profile"
+assert_body_contains '"username":"'"${USERNAME}"'"' "Get public profile"
+assert_body_contains '"displayName":"New Name"' "Get public profile"
+assert_body_contains '"bio":"New Bio"' "Get public profile"
+assert_body_contains '"articleCount":' "Get public profile"
+assert_body_not_contains '"email":' "Get public profile"
+
+# Test 12c: PATCH /api/users/me — clear displayName and bio with null
+color_echo "$BLUE" "12c. PATCH /api/users/me — clear displayName and bio"
+perform_request "Clear profile fields" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/users/me" \
+  -H "Content-Type: application/json" \
+  -d '{"displayName":null,"bio":null}'
+assert_status "200" "Clear profile fields"
+assert_body_contains '"displayName":null' "Clear profile fields"
+assert_body_contains '"bio":null' "Clear profile fields"
+
+# Test 12d: PATCH /api/users/me — unknown field should fail
+color_echo "$BLUE" "12d. PATCH /api/users/me — unknown field should fail"
+perform_request "Unknown field" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/users/me" \
+  -H "Content-Type: application/json" \
+  -d '{"unknownField":"value"}'
+assert_status "400" "Unknown field"
+
 # Test 13: PATCH /api/users/me — displayName too long (>50 chars)
 color_echo "$BLUE" "13. PATCH /api/users/me — displayName too long"
 perform_request "DisplayName too long" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/users/me" \
@@ -257,6 +283,22 @@ color_echo "$BLUE" "20. POST /api/users/me/avatar — unauthenticated request"
 perform_request "Upload avatar (no auth)" -b "$EMPTY_COOKIE_JAR" -X POST "${BASE_URL}/api/users/me/avatar" \
   -F "avatar=@${TEST_IMAGE_PNG}"
 assert_status "401" "Upload avatar (no auth)"
+
+# Test 20b: DELETE /api/users/me/avatar — remove avatar
+color_echo "$BLUE" "20b. DELETE /api/users/me/avatar — remove avatar"
+perform_request "Delete avatar" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/users/me/avatar"
+assert_status "200" "Delete avatar"
+assert_body_contains '"avatarUrl":null' "Delete avatar"
+
+# Test 20c: DELETE /api/users/me/avatar — unauthenticated request
+color_echo "$BLUE" "20c. DELETE /api/users/me/avatar — unauthenticated request"
+perform_request "Delete avatar (no auth)" -b "$EMPTY_COOKIE_JAR" -X DELETE "${BASE_URL}/api/users/me/avatar"
+assert_status "401" "Delete avatar (no auth)"
+
+# Test 20d: GET /api/users/:username — invalid username format
+color_echo "$BLUE" "20d. GET /api/users/:username — invalid username format"
+perform_request "Get profile (invalid username)" "${BASE_URL}/api/users/!!"
+assert_status "400" "Get profile (invalid username)"
 
 # Cleanup test images
 rm -f "$TEST_IMAGE_PNG" "$TEST_IMAGE_JPG" "$TEST_IMAGE_OVERSIZED"

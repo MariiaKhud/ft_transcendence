@@ -3,6 +3,7 @@ set -euo pipefail
 
 BASE_URL="${FRONTEND_BASE_URL:-https://localhost:8443}"
 API_PROXY_PATH="${FRONTEND_API_PROXY_PATH:-/api/auth/me}"
+USERS_PROXY_PATH="${FRONTEND_USERS_PROXY_PATH:-/api/users/smoke_user}"
 CURL_INSECURE="${FRONTEND_CURL_INSECURE:-true}"
 FRONTEND_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -125,18 +126,29 @@ assert_status "200" "Feed route"
 assert_header_contains 'content-type: text/html' "Feed route"
 assert_body_contains '<div id="root"></div>' "Feed route"
 
-color_echo "$BLUE" "5. Checking unknown route fallback"
+color_echo "$BLUE" "5. Checking /profile/:username route"
+perform_request "Profile route" "${BASE_URL}/profile/smoke_user"
+assert_status "200" "Profile route"
+assert_header_contains 'content-type: text/html' "Profile route"
+assert_body_contains '<div id="root"></div>' "Profile route"
+
+color_echo "$BLUE" "6. Checking unknown route fallback"
 perform_request "Unknown route" "${BASE_URL}/route-that-does-not-exist"
 assert_status "200" "Unknown route"
 assert_header_contains 'content-type: text/html' "Unknown route"
 assert_body_contains '<div id="root"></div>' "Unknown route"
 
-color_echo "$BLUE" "6. Checking API proxy through frontend (${API_PROXY_PATH})"
+color_echo "$BLUE" "7. Checking auth API proxy through frontend (${API_PROXY_PATH})"
 perform_request "API proxy" "${BASE_URL}${API_PROXY_PATH}"
 assert_status_one_of "API proxy" "200" "401"
 assert_header_contains 'content-type: application/json' "API proxy"
 
-color_echo "$BLUE" "7. Running frontend production build"
+color_echo "$BLUE" "8. Checking users API proxy through frontend (${USERS_PROXY_PATH})"
+perform_request "Users API proxy" "${BASE_URL}${USERS_PROXY_PATH}"
+assert_status_one_of "Users API proxy" "200" "400" "404"
+assert_header_contains 'content-type: application/json' "Users API proxy"
+
+color_echo "$BLUE" "9. Running frontend production build"
 (
   cd "$FRONTEND_DIR"
   npm run build
