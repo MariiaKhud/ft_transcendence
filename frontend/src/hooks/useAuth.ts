@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { getCurrentUser, loginUser, logoutUser } from '@/api/authApi'
+import { getCurrentUser, loginUser, logoutUser } from '@/api/auth'
 import { useStore } from '@/store/store'
 import type { LoginCredentials } from '@/types/auth'
 

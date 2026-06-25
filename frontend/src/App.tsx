@@ -2,7 +2,7 @@ import { Link, Outlet } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 
 const App = () => {
-  // Get user data, loading state, and logout action.
+  // Get user info and logout function.
   const { currentUser, isLoading, logout } = useAuth({ restoreOnMount: true })
 
   return (
@@ -30,19 +30,27 @@ const App = () => {
         </svg>
       </div>
 
+      {/* Top bar. */}
       <header className="relative z-10 border-b border-white/20 bg-white/10 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+          {/* App name link. */}
           <Link to="/" className="text-xl font-semibold tracking-tight text-slate-900">
             Codamium
           </Link>
           <div className="flex items-center gap-3">
+            {/* Show text while checking login. */}
             {isLoading ? <span className="text-sm font-medium text-slate-700">Checking session...</span> : null}
 
             {currentUser ? (
               <>
-                <span className="inline-flex items-center rounded-full border border-fuchsia-300/60 bg-gradient-to-r from-fuchsia-100 to-purple-100 px-3 py-1 text-sm font-semibold text-fuchsia-800 shadow-sm">
+                {/* Open your profile. */}
+                <Link
+                  to={`/profile/${currentUser.username}`}
+                  className="inline-flex items-center rounded-full border border-fuchsia-300/60 bg-gradient-to-r from-fuchsia-100 to-purple-100 px-3 py-1 text-sm font-semibold text-fuchsia-800 shadow-sm transition-all hover:scale-105"
+                >
                   {currentUser.displayName ?? currentUser.username}
-                </span>
+                </Link>
+                {/* Log out. */}
                 <button
                   type="button"
                   onClick={() => {
@@ -54,6 +62,7 @@ const App = () => {
                 </button>
               </>
             ) : (
+              // If not logged in, show login button.
               <Link
                 to="/login"
                 className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"

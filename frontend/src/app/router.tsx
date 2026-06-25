@@ -4,6 +4,7 @@ import { Home } from '@/pages/Home'
 import { Feed } from '@/pages/Feed'
 import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Register'
+import { Profile } from '@/pages/Profile'
 import { NotFound } from '@/pages/NotFound'
 
 // App routes.
@@ -27,6 +28,10 @@ export const router = createBrowserRouter([
       {
         path: 'feed',
         element: <Feed />,
+      },
+      {
+        path: 'profile/:username',
+        element: <Profile />,
       },
       {
         path: '*',
