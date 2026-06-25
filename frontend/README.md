@@ -55,8 +55,9 @@ Script file:
 Default behavior:
 
 - Uses `https://localhost:8443` (Docker + Nginx)
-- Checks `/`, `/login`, `/register`, `/feed`, and unknown route fallback
+- Checks `/`, `/login`, `/register`, `/feed`, `/profile/:username`, and unknown route fallback
 - Checks API proxy via `/api/auth/me`
+- Checks users proxy path via `/api/users/smoke_user`
 - Runs `npm run build`
 
 Optional env overrides:
@@ -64,6 +65,7 @@ Optional env overrides:
 ```bash
 FRONTEND_BASE_URL=https://localhost:8443
 FRONTEND_API_PROXY_PATH=/api/auth/me
+FRONTEND_USERS_PROXY_PATH=/api/users/smoke_user
 FRONTEND_CURL_INSECURE=true
 ```
 
@@ -92,6 +94,7 @@ Routes are configured in `src/app/router.tsx`:
 - `/login` -> `Login`
 - `/register` -> `Register`
 - `/feed` -> `Feed`
+- `/profile/:username` -> `Profile`
 - `*` -> `NotFound`
 
 ## Auth Flow
@@ -103,7 +106,8 @@ Auth state is managed by Zustand in:
 
 Auth API calls live in:
 
-- `src/api/authApi.ts`
+- `src/api/auth.ts`
+- `src/api/users.ts` (profile and profile-articles API wrappers)
 
 Current auth actions via `useAuth` hook (`src/hooks/useAuth.ts`):
 

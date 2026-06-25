@@ -5,8 +5,10 @@ Express + TypeScript API for ft_transcendence.
 ## What This Service Does
 
 - User authentication (`register`, `login`, `logout`, `me`)
+- Public profile read (`GET /api/users/:username`)
 - User profile updates (`PATCH /api/users/me`)
 - Avatar upload (`POST /api/users/me/avatar`)
+- Avatar delete (`DELETE /api/users/me/avatar`)
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses
@@ -170,6 +172,34 @@ Validation errors:
 - `400` invalid/missing file
 - `413` file too large
 
+### DELETE /api/users/me/avatar
+
+Deletes authenticated user's avatar.
+
+Success: `200` with updated editable profile payload (`avatarUrl: null`).
+
+### GET /api/users/:username
+
+Returns the public profile of a user by username.
+
+Public payload includes:
+
+- `displayName`
+- `username`
+- `avatarUrl`
+- `bio`
+- `followerCount`
+- `followingCount`
+- `articleCount`
+- `badges`
+- `level`
+- `xp`
+
+Validation and error behavior:
+
+- `400` invalid username format
+- `404` user not found
+
 ## Test Flow Script
 
 The backend integration flow script lives in:
@@ -181,6 +211,12 @@ Run it with:
 ```bash
 npm run test:backend
 ```
+
+Current flow also checks:
+
+- profile update success and validation cases
+- public profile read (`GET /api/users/:username`)
+- avatar upload, replace, delete, and unauthenticated access
 
 ## Error Response Shape
 

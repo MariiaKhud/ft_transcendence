@@ -115,6 +115,7 @@ ft_transcendence/
 ## Features
 
 - User authentication (JWT + HttpOnly cookies)
+- Profile page (avatar, bio, stats, badges, article section)
 - Article publishing
 - Comments and likes
 - Friend and follow systems
