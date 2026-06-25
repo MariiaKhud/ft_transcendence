@@ -37,7 +37,8 @@ export const Home = () => {
       </div>
 
       {/* Learn more target section */}
-      <div id="learn-more" className="mx-auto max-w-2xl rounded-2xl border border-white/30 bg-white/40 p-8 text-left shadow-xl backdrop-blur-md">
+      <div className="mx-auto mt-20 h-px w-full max-w-3xl bg-gradient-to-r from-transparent via-purple-200 to-transparent" aria-hidden="true" />
+      <div id="learn-more" className="mx-auto mt-10 max-w-2xl scroll-mt-24 rounded-2xl border border-white/30 bg-white/40 p-8 text-left shadow-xl backdrop-blur-md">
         <h2 className="text-2xl font-bold text-slate-900">Learn More</h2>
         <p className="mt-3 text-slate-600">
           Explore feed updates, connect with other users, and build your profile with a simple and modern experience.

@@ -19,3 +19,7 @@ body {
   color: var(--foreground);
   font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
 }
+
+html {
+  scroll-behavior: smooth;
+}
