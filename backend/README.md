@@ -4,11 +4,12 @@ Express + TypeScript API for ft_transcendence.
 
 ## What This Service Does
 
-- User authentication (`register`, `login`, `logout`, `me`)
-- Public profile read (`GET /api/users/:username`)
-- User profile updates (`PATCH /api/users/me`)
-- Avatar upload (`POST /api/users/me/avatar`)
-- Avatar delete (`DELETE /api/users/me/avatar`)
+### Completed ✓
+- **User authentication** (`register`, `login`, `logout`, `me`)
+- **Public profile read** (`GET /api/users/:username`) — displayName, bio, stats
+- **User profile updates** (`PATCH /api/users/me`) — displayName, bio with validation
+- **Avatar management** (`POST /api/users/me/avatar`) — upload PNG/JPG, max 2MB
+- **Avatar delete** (`DELETE /api/users/me/avatar`) — remove user avatar
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses
