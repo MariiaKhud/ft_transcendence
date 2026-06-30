@@ -1,5 +1,5 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { deleteMyAvatar, updateMyProfile, uploadMyAvatar } from '@/api/users'
 import { useStore } from '@/store/store'
@@ -40,8 +40,6 @@ const MAX_FILE_SIZE_MB = 2
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 export const EditProfile = () => {
-  const navigate = useNavigate()
-
   const currentUser = useStore((state) => {
     return state.auth.currentUser
   })
