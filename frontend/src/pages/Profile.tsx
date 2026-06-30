@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getProfileArticles, getPublicProfile } from '@/api/users'
 import { useStore } from '@/store/store'
 import type { ProfileArticle, PublicProfile } from '@/types/profile'
@@ -177,6 +177,8 @@ export const Profile = () => {
     return currentUser.username.toLowerCase() === profile.username.toLowerCase()
   }, [currentUser, profile])
 
+  const navigate = useNavigate()
+
   // Show this while profile data is still loading.
   if (isLoadingProfile) {
     return (
@@ -199,7 +201,10 @@ export const Profile = () => {
   }
 
   // Build safe avatar URL and pick the best display name.
-  const avatarUrl = toSafeImageUrl(profile.avatarUrl)
+  // For own profile, prefer the store's avatarUrl — it is updated immediately
+  // after an upload without waiting for a re-fetch of the public profile.
+  const resolvedAvatarUrl = isOwnProfile && currentUser ? currentUser.avatarUrl : profile.avatarUrl
+  const avatarUrl = toSafeImageUrl(resolvedAvatarUrl)
   const displayName = profile.displayName ?? profile.username
 
   return (
@@ -229,8 +234,10 @@ export const Profile = () => {
           {isOwnProfile ? (
             <button
               type="button"
+              onClick={() => {
+                navigate('/settings/profile')
+              }}
               className="rounded-full border border-purple-200 bg-white/70 px-5 py-2 text-sm font-semibold text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
-              title="Profile editing flow is coming soon"
             >
               Edit Profile
             </button>
