@@ -4,3 +4,42 @@ folder-structure.md
 jira-tasks.csv
 schema.prisma
 transcendence-summary.md
+
+# Environment variables (contains secrets!)
+.env
+.env.local
+.env.*.local
+
+# Node.js dependencies (too big to commit)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs (can be regenerated)
+dist/
+build/
+.next/
+out/
+
+# IDE settings (personal preferences, shouldn't be shared)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# OS files
+Thumbs.db
+
+# Local cookie jar files (may contain auth tokens)
+cookies.txt

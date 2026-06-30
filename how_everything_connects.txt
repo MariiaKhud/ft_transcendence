@@ -1,0 +1,110 @@
+                        INTERNET
+                           │
+                    port 80 / 443
+                           │
+                       ┌───▼───┐
+                       │ nginx │  ← the front door (HTTPS)
+                       └───┬───┘
+                           │
+              ┌────────────┴────────────┐
+              │                         │
+     /api/*   ▼                         ▼  everything else
+        ┌─────────┐               ┌──────────┐
+        │ backend │               │ frontend │
+        │  :3000  │               │  :5173   │
+        └────┬────┘               └──────────┘
+             │
+    SQL queries via
+    DATABASE_URL
+             │
+        ┌────▼─────┐
+        │ postgres │
+        │  :5432   │
+        └──────────┘
+             │
+        postgres_data
+        (Docker volume)
+
+
+Step by step — what happens when a user visits the site
+1. User opens the browser → hits nginx
+
+nginx listens on port 443 (HTTPS)
+It is the only service exposed to the outside world
+It reads the URL and decides where to send the request
+
+2. nginx routes the request
+
+URL starts with /api/ → nginx forwards it to the backend on port 3000
+URL is anything else → nginx forwards it to the frontend on port 5173
+
+3. Frontend (React)
+
+Serves HTML, CSS, JavaScript to the browser
+When the page needs data (articles, users, etc.) it calls /api/...
+That call goes through nginx → backend
+
+4. Backend (Express)
+
+Handles all API logic: login, articles, comments, friends, etc.
+Reads and writes data from postgres using Prisma
+Connects using the DATABASE_URL environment variable
+
+5. Postgres
+
+Stores everything: users, articles, messages, notifications, etc.
+Only the backend can talk to it (not exposed to the outside)
+Data is saved in the postgres_data Docker volume so it survives restarts
+
+6. Uploads volume
+
+When someone uploads an avatar, the backend saves the file to /app/uploads
+nginx also has access to /var/www/uploads — same folder, shared
+nginx can serve images directly without going through the backend
+
+
+The key rule
+Only nginx is visible from the internet (ports 80/443).
+Everything else — backend, frontend, postgres — is internal only.
+This is what makes it secure.
+
+
+
+
+
+Why these specific ports?
+
+Port 80 and 443 — nginx
+These are not chosen by us. They are fixed standards defined by the internet itself.
+
+80 = HTTP — every browser in the world sends unencrypted traffic here by default
+443 = HTTPS — every browser sends encrypted traffic here by default
+When you type https://google.com in your browser, your browser automatically connects to port 443. You never type the port number because the browser already knows.
+
+The subject requires HTTPS, so nginx must listen on 443.
+
+Port 3000 — backend
+This is just a convention in the Node.js world. There is nothing special about 3000. It could be 4000, 8080, or anything you want.
+
+3000 became popular because the original Express.js tutorials used it, and the whole Node.js community copied that habit. Now everyone just expects Node apps to be on 3000.
+
+Port 5173 — frontend
+This is Vite's default port. Vite is the tool that runs your React app in development.
+
+The original Vite developers picked 5173 because:
+
+5173 spells VITE on a phone keyboard (5=V, 1=I, 7=T, 3=E)
+That is the only reason. It is a fun choice, not a technical requirement.
+
+Port 5432 — postgres
+This is PostgreSQL's official registered port. The PostgreSQL team registered it with IANA (the organisation that manages port numbers globally) in 1996.
+
+The number 5432 was chosen because it was available at the time. Now it is the permanent standard.
+
+
+Port |  Service  |             Why
+80	 |  nginx	 |  Internet standard for HTTP
+443  |	nginx	 |  Internet standard for HTTPS
+3000 |	backend	 |  Node.js/Express convention
+5173 |	frontend |	Vite default (spells VITE on keyboard)
+5432 |	postgres |	Official registered port since 1996

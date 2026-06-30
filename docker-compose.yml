@@ -1,0 +1,72 @@
+services:
+  postgres:
+    image: postgres:16-alpine # Use a specific version for stability
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-transcendence}
+      POSTGRES_USER: ${POSTGRES_USER:-transcendence}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-transcendence}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-transcendence} -d ${POSTGRES_DB:-transcendence}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy # Ensure backend starts only after postgres is healthy
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      PORT: ${BACKEND_PORT:-3000}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://transcendence:transcendence@postgres:5432/transcendence}
+      JWT_SECRET: ${JWT_SECRET:-change-me}
+      UPLOAD_PATH: ${UPLOAD_PATH:-./uploads}
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+    volumes:
+      - ./backend:/app
+      - backend_node_modules:/app/node_modules
+      - ./uploads:/app/uploads
+
+  frontend:
+    build:
+      context: ./frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NODE_ENV: ${NODE_ENV:-development}
+      VITE_BACKEND_URL: ${VITE_BACKEND_URL:-/api}
+      VITE_DEV_API_PROXY_TARGET: ${VITE_DEV_API_PROXY_TARGET:-http://backend:3000}
+      CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+
+  nginx:
+    build:
+      context: ./nginx
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "${NGINX_HTTP_PORT:-8080}:80"
+      - "${NGINX_HTTPS_PORT:-8443}:443"
+    volumes:
+      - ./nginx/certs:/etc/nginx/certs
+      - ./uploads:/var/www/uploads
+
+volumes:
+  postgres_data:
+  backend_node_modules:
+  frontend_node_modules:
