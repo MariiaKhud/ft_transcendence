@@ -49,6 +49,45 @@ export const getPublicProfile = async (username: string) => {
   }
 }
 
+// Send PATCH /api/users/me with displayName and/or bio.
+export const updateMyProfile = async (updates: { displayName?: string | null; bio?: string | null }) => {
+  try {
+    const response = await apiClient.patch<ApiResponse<import('@/types/auth').AuthUser>>('/api/users/me', updates)
+    return requireResponseData(response.data, 'Unable to update profile')
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to update profile'))
+  }
+}
+
+// Send POST /api/users/me/avatar with a file.
+export const uploadMyAvatar = async (file: File) => {
+  try {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    // Set Content-Type to undefined so axios drops the instance-level
+    // 'application/json' default and lets the browser set the correct
+    // multipart/form-data boundary automatically.
+    const response = await apiClient.post<ApiResponse<import('@/types/auth').AuthUser>>(
+      '/api/users/me/avatar',
+      formData,
+      { headers: { 'Content-Type': undefined } },
+    )
+    return requireResponseData(response.data, 'Unable to upload avatar')
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to upload avatar'))
+  }
+}
+
+// Send DELETE /api/users/me/avatar to remove the avatar.
+export const deleteMyAvatar = async () => {
+  try {
+    const response = await apiClient.delete<ApiResponse<import('@/types/auth').AuthUser>>('/api/users/me/avatar')
+    return requireResponseData(response.data, 'Unable to delete avatar')
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to delete avatar'))
+  }
+}
+
 // Load profile articles if that endpoint exists.
 export const getProfileArticles = async (username: string): Promise<ProfileArticlesResponse> => {
   try {

@@ -2,10 +2,14 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { errorHandler } from './middleware/error.middleware.js'
 import { prisma } from './lib/prisma.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -60,6 +64,16 @@ app.use(
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
 app.use(cookieParser())
+
+// ─────────────────────────────────────────────
+// Static Files
+// ─────────────────────────────────────────────
+
+// Serve uploaded avatars at /uploads/<filename>.
+const uploadsDir = process.env.UPLOAD_PATH
+  ? path.resolve(process.env.UPLOAD_PATH)
+  : path.resolve(__dirname, '../../uploads')
+app.use('/uploads', express.static(uploadsDir))
 
 // ─────────────────────────────────────────────
 // Health Check
