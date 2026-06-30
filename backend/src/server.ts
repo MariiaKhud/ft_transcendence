@@ -6,6 +6,7 @@ import { errorHandler } from './middleware/error.middleware.js'
 import { prisma } from './lib/prisma.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
+import articleRoutes from './routes/articles.routes.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -73,9 +74,9 @@ app.get('/health', handleHealthCheck)
 
 app.use('/api/auth', authRoutes)                       // Authentication routes (register, login, logout, etc.)
 app.use('/api/users', userRoutes)                      // User routes (profile management, user listing, etc.)
+app.use('/api/articles', articleRoutes)                // Article routes (create, list, etc.)
 
 // TODO: Wire up route modules here
-// app.use('/api/articles', articleRoutes)
 // app.use('/api/comments', commentRoutes)
 // app.use('/api/friends', friendshipRoutes)
 // app.use('/api/messages', messageRoutes)
