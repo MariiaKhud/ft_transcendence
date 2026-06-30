@@ -148,7 +148,22 @@ perform_request "Users API proxy" "${BASE_URL}${USERS_PROXY_PATH}"
 assert_status_one_of "Users API proxy" "200" "400" "404"
 assert_header_contains 'content-type: application/json' "Users API proxy"
 
-color_echo "$BLUE" "9. Running frontend production build"
+color_echo "$BLUE" "9. Checking /edit-profile route"
+perform_request "Edit profile route" "${BASE_URL}/edit-profile"
+assert_status "200" "Edit profile route"
+assert_header_contains 'content-type: text/html' "Edit profile route"
+assert_body_contains '<div id="root"></div>' "Edit profile route"
+
+# ============================================================================
+# [USERS] Frontend: Edit profile form with displayName, bio, avatar
+# ============================================================================
+# Description: Form with displayName, bio, avatar upload/delete
+# Features: Form rendering, avatar preview, field validation, API integration
+# Epic Link: Auth + User Foundation
+# Status: Done ✓
+# ============================================================================
+
+color_echo "$BLUE" "10. Running frontend production build"
 (
   cd "$FRONTEND_DIR"
   npm run build

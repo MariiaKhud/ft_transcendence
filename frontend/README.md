@@ -94,8 +94,33 @@ Routes are configured in `src/app/router.tsx`:
 - `/login` -> `Login`
 - `/register` -> `Register`
 - `/feed` -> `Feed`
-- `/profile/:username` -> `Profile`
+- `/profile/:username` -> `Profile` (read-only public profile)
+- `/edit-profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
 - `*` -> `NotFound`
+
+## Edit Profile Form ✓
+
+**Route:** `/edit-profile`
+
+**Description:** Form for authenticated users to edit their profile information and avatar.
+
+**Features:**
+- Update `displayName` (optional, max 50 chars)
+- Update `bio` (optional, max 500 chars)
+- Upload avatar (PNG/JPG, max 2MB)
+- Preview avatar before upload
+- Delete existing avatar
+- Field validation and error handling
+
+**API Integration:**
+- `PATCH /api/users/me` — update displayName and bio
+- `POST /api/users/me/avatar` — upload new avatar
+- `DELETE /api/users/me/avatar` — remove avatar
+
+**Implementation files:**
+- `src/pages/EditProfile.tsx` — main edit profile page component
+- `src/api/users.ts` — API wrapper functions
+- `src/components/` — reusable form components
 
 ## Auth Flow
 
