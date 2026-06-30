@@ -28,7 +28,7 @@ const requireResponseData = <TData>(payload: ApiResponse<TData>, fallbackMessage
 export const getPublicProfile = async (username: string) => {
   try {
     const response = await apiClient.get<ApiResponse<PublicProfileApiResponse>>(
-      `/api/users/${encodeURIComponent(username.trim())}`,
+      `/users/${encodeURIComponent(username.trim())}`,
     )
     const data = requireResponseData(response.data, 'Unable to load profile')
 
@@ -49,17 +49,17 @@ export const getPublicProfile = async (username: string) => {
   }
 }
 
-// Send PATCH /api/users/me with displayName and/or bio.
+// Send PATCH /users/me with displayName and/or bio.
 export const updateMyProfile = async (updates: { displayName?: string | null; bio?: string | null }) => {
   try {
-    const response = await apiClient.patch<ApiResponse<import('@/types/auth').AuthUser>>('/api/users/me', updates)
+    const response = await apiClient.patch<ApiResponse<import('@/types/auth').AuthUser>>('/users/me', updates)
     return requireResponseData(response.data, 'Unable to update profile')
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Unable to update profile'))
   }
 }
 
-// Send POST /api/users/me/avatar with a file.
+// Send POST /users/me/avatar with a file.
 export const uploadMyAvatar = async (file: File) => {
   try {
     const formData = new FormData()
@@ -68,7 +68,7 @@ export const uploadMyAvatar = async (file: File) => {
     // 'application/json' default and lets the browser set the correct
     // multipart/form-data boundary automatically.
     const response = await apiClient.post<ApiResponse<import('@/types/auth').AuthUser>>(
-      '/api/users/me/avatar',
+      '/users/me/avatar',
       formData,
       { headers: { 'Content-Type': undefined } },
     )
@@ -78,10 +78,10 @@ export const uploadMyAvatar = async (file: File) => {
   }
 }
 
-// Send DELETE /api/users/me/avatar to remove the avatar.
+// Send DELETE /users/me/avatar to remove the avatar.
 export const deleteMyAvatar = async () => {
   try {
-    const response = await apiClient.delete<ApiResponse<import('@/types/auth').AuthUser>>('/api/users/me/avatar')
+    const response = await apiClient.delete<ApiResponse<import('@/types/auth').AuthUser>>('/users/me/avatar')
     return requireResponseData(response.data, 'Unable to delete avatar')
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Unable to delete avatar'))
@@ -92,7 +92,7 @@ export const deleteMyAvatar = async () => {
 export const getProfileArticles = async (username: string): Promise<ProfileArticlesResponse> => {
   try {
     const response = await apiClient.get<ApiResponse<ProfileArticle[]>>(
-      `/api/users/${encodeURIComponent(username.trim())}/articles`,
+      `/users/${encodeURIComponent(username.trim())}/articles`,
     )
 
     const items = requireResponseData(response.data, 'Unable to load articles')

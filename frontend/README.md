@@ -122,6 +122,34 @@ Routes are configured in `src/app/router.tsx`:
 - `src/api/users.ts` — API wrapper functions
 - `src/components/` — reusable form components
 
+## Articles Feed 🔄
+
+**Route:** `/feed`
+
+**Description:** Global articles feed with pagination, search, filtering, and sorting.
+
+**Features:**
+- Display paginated articles (20 per page by default)
+- Search articles by title and content
+- Filter articles by category (PROGRAMMING, CAREER, STUDY_NOTES, PROJECTS, LIFE, OPINION)
+- Sort articles (Newest, Oldest, Most Liked)
+- Show author info, article stats (likes, comments)
+- Responsive card-based layout
+
+**API Integration:**
+- `GET /api/articles` — fetch paginated articles with filtering/sorting
+
+**Query Parameters (via Feed component):**
+- `page` — pagination
+- `limit` — articles per page (max 100)
+- `search` — search in title and content
+- `category` — filter by category
+- `sort` — sort order (newest, oldest, most_liked)
+
+**Implementation files:**
+- `src/pages/Feed.tsx` — main feed page component with filtering UI
+- `src/api/articles.ts` — API wrapper functions for articles
+
 ## Auth Flow
 
 Auth state is managed by Zustand in:

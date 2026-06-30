@@ -154,16 +154,47 @@ assert_status "200" "Edit profile route"
 assert_header_contains 'content-type: text/html' "Edit profile route"
 assert_body_contains '<div id="root"></div>' "Edit profile route"
 
+color_echo "$BLUE" "10. Checking /feed route"
+perform_request "Feed route" "${BASE_URL}/feed"
+assert_status "200" "Feed route"
+assert_header_contains 'content-type: text/html' "Feed route"
+assert_body_contains '<div id="root"></div>' "Feed route"
+
+# ============================================================================
+# [ARTICLES] Frontend: Global feed with articles display
+# ============================================================================
+# Description: Feed page with articles list, filtering, sorting, pagination
+# Features: Search, category filter, sort (newest/oldest/most_liked), pagination
+# Epic Link: Articles + Feed
+# Status: In Progress
+# ============================================================================
+
+color_echo "$BLUE" "11. Checking articles API proxy through frontend (/api/articles)"
+perform_request "Articles API proxy" "${BASE_URL}/api/articles"
+assert_status_one_of "Articles API proxy" "200"
+assert_header_contains 'content-type: application/json' "Articles API proxy"
+
+color_echo "$BLUE" "12. Checking articles API with pagination (/api/articles?page=1&limit=5)"
+perform_request "Articles API with pagination" "${BASE_URL}/api/articles?page=1&limit=5"
+assert_status_one_of "Articles API with pagination" "200"
+assert_header_contains 'content-type: application/json' "Articles API with pagination"
+assert_body_contains '"pagination"' "Articles API with pagination"
+
+color_echo "$BLUE" "13. Checking articles API with category filter (/api/articles?category=PROGRAMMING)"
+perform_request "Articles API with category" "${BASE_URL}/api/articles?category=PROGRAMMING"
+assert_status_one_of "Articles API with category" "200"
+assert_header_contains 'content-type: application/json' "Articles API with category"
+
 # ============================================================================
 # [USERS] Frontend: Edit profile form with displayName, bio, avatar
 # ============================================================================
 # Description: Form with displayName, bio, avatar upload/delete
 # Features: Form rendering, avatar preview, field validation, API integration
 # Epic Link: Auth + User Foundation
-# Status: Done ✓
+# Status: Done \u2713
 # ============================================================================
 
-color_echo "$BLUE" "10. Running frontend production build"
+color_echo "$BLUE" "14. Running frontend production build"
 (
   cd "$FRONTEND_DIR"
   npm run build
