@@ -311,6 +311,65 @@ color_echo "$BLUE" "20d. GET /api/users/:username — invalid username format"
 perform_request "Get profile (invalid username)" "${BASE_URL}/api/users/!!"
 assert_status "400" "Get profile (invalid username)"
 
+# ============================================================================
+# [ARTICLES] GET /api/articles — global feed
+# ============================================================================
+# Description: Fetch paginated articles with filtering and sorting
+# Features: pagination, search, category filter, sort by newest/oldest/most_liked
+# Epic Link: Articles + Feed
+# Status: In Progress
+
+# Test 21: GET /api/articles — default (newest, page 1, limit 20)
+color_echo "$BLUE" "21. GET /api/articles — default (newest first, page 1)"
+perform_request "Get articles (default)" "${BASE_URL}/api/articles"
+assert_status "200" "Get articles (default)"
+assert_body_contains '"success":true' "Get articles (default)"
+assert_body_contains '"articles":' "Get articles (default)"
+assert_body_contains '"pagination":' "Get articles (default)"
+assert_body_contains '"page":1' "Get articles (default)"
+assert_body_contains '"limit":20' "Get articles (default)"
+
+# Test 22: GET /api/articles — with custom pagination
+color_echo "$BLUE" "22. GET /api/articles — with custom pagination (page=1, limit=5)"
+perform_request "Get articles (limit 5)" "${BASE_URL}/api/articles?page=1&limit=5"
+assert_status "200" "Get articles (limit 5)"
+assert_body_contains '"limit":5' "Get articles (limit 5)"
+
+# Test 23: GET /api/articles — with sort by oldest
+color_echo "$BLUE" "23. GET /api/articles — sort by oldest"
+perform_request "Get articles (oldest)" "${BASE_URL}/api/articles?sort=oldest"
+assert_status "200" "Get articles (oldest)"
+assert_body_contains '"success":true' "Get articles (oldest)"
+
+# Test 24: GET /api/articles — with sort by most_liked
+color_echo "$BLUE" "24. GET /api/articles — sort by most_liked"
+perform_request "Get articles (most liked)" "${BASE_URL}/api/articles?sort=most_liked"
+assert_status "200" "Get articles (most liked)"
+assert_body_contains '"success":true' "Get articles (most liked)"
+
+# Test 25: GET /api/articles — with category filter
+color_echo "$BLUE" "25. GET /api/articles — with category filter (PROGRAMMING)"
+perform_request "Get articles (category filter)" "${BASE_URL}/api/articles?category=PROGRAMMING"
+assert_status "200" "Get articles (category filter)"
+assert_body_contains '"success":true' "Get articles (category filter)"
+
+# Test 26: GET /api/articles — with search query
+color_echo "$BLUE" "26. GET /api/articles — with search query"
+perform_request "Get articles (search)" "${BASE_URL}/api/articles?search=test"
+assert_status "200" "Get articles (search)"
+assert_body_contains '"success":true' "Get articles (search)"
+
+# Test 27: GET /api/articles — invalid sort parameter
+color_echo "$BLUE" "27. GET /api/articles — invalid sort parameter"
+perform_request "Get articles (invalid sort)" "${BASE_URL}/api/articles?sort=invalid"
+assert_status "400" "Get articles (invalid sort)"
+
+# Test 28: GET /api/articles — pagination boundary (page out of range)
+color_echo "$BLUE" "28. GET /api/articles — page parameter (large page number)"
+perform_request "Get articles (high page)" "${BASE_URL}/api/articles?page=9999"
+assert_status "200" "Get articles (high page)"
+assert_body_contains '"articles":[]' "Get articles (high page)"
+
 # Cleanup test images
 rm -f "$TEST_IMAGE_PNG" "$TEST_IMAGE_JPG" "$TEST_IMAGE_OVERSIZED"
 
