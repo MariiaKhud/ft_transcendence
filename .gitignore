@@ -13,6 +13,7 @@ dist/
 build/
 .next/
 out/
+.vite/
 
 # IDE settings (personal preferences, shouldn't be shared)
 .vscode/

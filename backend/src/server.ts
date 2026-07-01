@@ -54,9 +54,11 @@ const allowedOrigins = [
   'http://localhost',
   'http://localhost:5173', // Vite dev server
   'http://localhost:5174',
+  'http://localhost:8080', // nginx HTTP port
   'https://localhost',
   'https://localhost:443',
   'https://localhost:3000',
+  'https://localhost:8443', // nginx HTTPS port
 ]
 
 app.use(

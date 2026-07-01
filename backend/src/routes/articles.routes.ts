@@ -87,7 +87,7 @@ const listArticlesHandler = async (req: Request, res: Response) => {
           total,
           totalPages,
           hasNextPage: page < totalPages,
-          hasPrevPage: page > 1,
+          hasPrevPage: page > 1 && total > 0,
         },
       },
     })

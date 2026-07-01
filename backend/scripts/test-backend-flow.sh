@@ -78,7 +78,7 @@ assert_body_contains() {
   local needle="$1"
   local label="$2"
 
-  if ! grep -q "$needle" <<<"$LAST_BODY"; then
+  if ! grep -qF "$needle" <<<"$LAST_BODY"; then
     color_echo "$RED" "${label}: response did not contain '${needle}'"
     exit 1
   fi
@@ -88,7 +88,7 @@ assert_body_not_contains() {
   local needle="$1"
   local label="$2"
 
-  if grep -q "$needle" <<<"$LAST_BODY"; then
+  if grep -qF "$needle" <<<"$LAST_BODY"; then
     color_echo "$RED" "${label}: response unexpectedly contained '${needle}'"
     exit 1
   fi
