@@ -15,6 +15,7 @@ help:
 	@printf "  $(GREEN)make seed$(RESET)     - Seed database with test data\n"
 	@printf "  $(GREEN)make test-backend$(RESET)  - Run backend flow tests\n"
 	@printf "  $(GREEN)make test-frontend$(RESET) - Run frontend smoke tests\n"
+	@printf "  $(GREEN)make test-friends$(RESET)  - Run friends flow integration test\n"
 
 up:
 	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"
@@ -41,5 +42,8 @@ test-backend:
 
 test-frontend:
 	cd frontend && npm run test:frontend
+
+test-friends:
+	cd backend && ./scripts/test-friends-flow.sh
 
 .DEFAULT_GOAL := help
