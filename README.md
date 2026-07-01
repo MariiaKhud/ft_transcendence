@@ -114,8 +114,14 @@ ft_transcendence/
 
 ## Features
 
-- User authentication (JWT + HttpOnly cookies)
-- Profile page (avatar, bio, stats, badges, article section)
+### Completed ✓
+- **User authentication** (JWT + HttpOnly cookies)
+- **Profile management** (displayName, bio, avatar upload/delete/preview)
+- **Public profiles** (read-only user profiles with stats)
+- **Edit profile form** (displayName, bio, avatar upload/delete, field validation)
+- **Global articles feed** (paginated, searchable, filterable by category, sortable)
+
+### In Progress
 - Article publishing
 - Comments and likes
 - Friend and follow systems

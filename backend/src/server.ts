@@ -8,6 +8,7 @@ import { errorHandler } from './middleware/error.middleware.js'
 import { prisma } from './lib/prisma.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
+import articleRoutes from './routes/articles.routes.js'
 import friendsRoutes from './routes/friends.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -48,10 +49,26 @@ const handleGracefulShutdown = () => {
 // Helmet sets various HTTP headers for security
 app.use(helmet())
 
-// CORS configuration
+// CORS configuration - allow both http and https for localhost dev
+const allowedOrigins = [
+  FRONTEND_URL,
+  'http://localhost',
+  'http://localhost:5173', // Vite dev server
+  'http://localhost:5174',
+  'https://localhost',
+  'https://localhost:443',
+  'https://localhost:3000',
+]
+
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
@@ -88,6 +105,7 @@ app.get('/health', handleHealthCheck)
 
 app.use('/api/auth', authRoutes)                       // Authentication routes (register, login, logout, etc.)
 app.use('/api/users', userRoutes)                      // User routes (profile management, user listing, etc.)
+app.use('/api/articles', articleRoutes)                // Articles routes (global feed, search, filtering)
 app.use('/api/friends', friendsRoutes);                // Friend system (send/accept requests, list friends, remove friends)
 
 // TODO: Wire up route modules here

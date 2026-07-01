@@ -4,14 +4,18 @@ Express + TypeScript API for ft_transcendence.
 
 ## What This Service Does
 
-- User authentication (`register`, `login`, `logout`, `me`)
-- Public profile read (`GET /api/users/:username`)
-- User profile updates (`PATCH /api/users/me`)
-- Avatar upload (`POST /api/users/me/avatar`)
-- Avatar delete (`DELETE /api/users/me/avatar`)
+### Completed ✓
+- **User authentication** (`register`, `login`, `logout`, `me`)
+- **Public profile read** (`GET /api/users/:username`) — displayName, bio, stats
+- **User profile updates** (`PATCH /api/users/me`) — displayName, bio with validation
+- **Avatar management** (`POST /api/users/me/avatar`) — upload PNG/JPG, max 2MB
+- **Avatar delete** (`DELETE /api/users/me/avatar`) — remove user avatar
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses
+
+### In Progress
+- **Global articles feed** (`GET /api/articles`) — paginated, searchable, filterable, sortable
 
 ## Run Modes
 
@@ -200,6 +204,82 @@ Validation and error behavior:
 - `400` invalid username format
 - `404` user not found
 
+## Articles API
+
+Base path: `/api/articles`
+
+**Status:** In Progress - GET endpoint complete, POST/PUT/DELETE coming soon
+
+### GET /api/articles
+
+Returns paginated articles with filtering, searching, and sorting. **Public route** (no auth required).
+
+Query Parameters:
+
+- `page` (optional): number, default `1`
+- `limit` (optional): number, default `20`, max `100`
+- `category` (optional): one of `PROGRAMMING`, `CAREER`, `STUDY_NOTES`, `PROJECTS`, `LIFE`, `OPINION`
+- `sort` (optional): one of `newest`, `oldest`, `most_liked`, default `newest`
+- `search` (optional): search in article title and content (case-insensitive)
+
+Success: `200` with paginated articles
+
+```json
+{
+  "success": true,
+  "data": {
+    "articles": [
+      {
+        "id": "uuid",
+        "title": "Article Title",
+        "content": "Article content...",
+        "category": "PROGRAMMING",
+        "likeCount": 10,
+        "createdAt": "2026-06-30T...",
+        "updatedAt": "2026-06-30T...",
+        "author": {
+          "id": "uuid",
+          "username": "author_username",
+          "displayName": "Author Display Name",
+          "avatarUrl": "/uploads/..."
+        },
+        "_count": {
+          "comments": 5
+        }
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 100,
+      "totalPages": 5,
+      "hasNextPage": true,
+      "hasPrevPage": false
+    }
+  }
+}
+```
+
+Validation errors:
+
+- `400` invalid query parameters (e.g., invalid sort value)
+
+Examples:
+
+```bash
+# Get latest articles
+curl http://localhost:3000/api/articles
+
+# Get programming articles, sorted by most liked
+curl 'http://localhost:3000/api/articles?category=PROGRAMMING&sort=most_liked'
+
+# Search articles
+curl 'http://localhost:3000/api/articles?search=typescript'
+
+# Paginate with custom limit
+curl 'http://localhost:3000/api/articles?page=2&limit=10'
+```
+
 ## Test Flow Script
 
 The backend integration flow script lives in:
@@ -217,6 +297,7 @@ Current flow also checks:
 - profile update success and validation cases
 - public profile read (`GET /api/users/:username`)
 - avatar upload, replace, delete, and unauthenticated access
+- articles feed with pagination, filtering, and sorting
 
 ## Error Response Shape
 

@@ -26,7 +26,7 @@ const requireResponseData = <TData>(payload: ApiResponse<TData>, fallbackMessage
 export const registerUser = async (credentials: RegisterCredentials) => {
   try {
     // Trim text fields before sending them.
-    const response = await apiClient.post<ApiResponse<AuthUser>>('/api/auth/register', {
+    const response = await apiClient.post<ApiResponse<AuthUser>>('/auth/register', {
       email: credentials.email.trim(),
       username: credentials.username.trim(),
       password: credentials.password,
@@ -43,7 +43,7 @@ export const registerUser = async (credentials: RegisterCredentials) => {
 export const loginUser = async (credentials: LoginCredentials) => {
   try {
     // Trim email to avoid login issues from extra spaces.
-    const response = await apiClient.post<ApiResponse<AuthUser>>('/api/auth/login', {
+    const response = await apiClient.post<ApiResponse<AuthUser>>('/auth/login', {
       email: credentials.email.trim(),
       password: credentials.password,
     })
@@ -61,7 +61,7 @@ export const logoutUser = async () => {
 
   try {
     await apiClient.post<ApiResponse>(
-      '/api/auth/logout',
+      '/auth/logout',
       undefined,
       {
         headers: csrfToken ? { 'x-csrf-token': csrfToken } : undefined,
@@ -75,7 +75,7 @@ export const logoutUser = async () => {
 // Get currently logged-in user from session cookie.
 export const getCurrentUser = async () => {
   try {
-    const response = await apiClient.get<ApiResponse<AuthUser>>('/api/auth/me')
+    const response = await apiClient.get<ApiResponse<AuthUser>>('/auth/me')
     return requireResponseData(response.data, 'Unable to restore session')
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Unable to restore session'))
