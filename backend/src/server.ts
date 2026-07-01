@@ -2,11 +2,15 @@ import express from 'express'
 import cors from 'cors'
 import cookieParser from 'cookie-parser'
 import helmet from 'helmet'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { errorHandler } from './middleware/error.middleware.js'
 import { prisma } from './lib/prisma.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
 import articleRoutes from './routes/articles.routes.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const app = express()
 const PORT = process.env.PORT || 3000
@@ -44,10 +48,26 @@ const handleGracefulShutdown = () => {
 // Helmet sets various HTTP headers for security
 app.use(helmet())
 
-// CORS configuration
+// CORS configuration - allow both http and https for localhost dev
+const allowedOrigins = [
+  FRONTEND_URL,
+  'http://localhost',
+  'http://localhost:5173', // Vite dev server
+  'http://localhost:5174',
+  'https://localhost',
+  'https://localhost:443',
+  'https://localhost:3000',
+]
+
 app.use(
   cors({
-    origin: FRONTEND_URL,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true)
+      } else {
+        callback(new Error('Not allowed by CORS'))
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
@@ -63,6 +83,16 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }))
 app.use(cookieParser())
 
 // ─────────────────────────────────────────────
+// Static Files
+// ─────────────────────────────────────────────
+
+// Serve uploaded avatars at /uploads/<filename>.
+const uploadsDir = process.env.UPLOAD_PATH
+  ? path.resolve(process.env.UPLOAD_PATH)
+  : path.resolve(__dirname, '../../uploads')
+app.use('/uploads', express.static(uploadsDir))
+
+// ─────────────────────────────────────────────
 // Health Check
 // ─────────────────────────────────────────────
 
@@ -74,7 +104,7 @@ app.get('/health', handleHealthCheck)
 
 app.use('/api/auth', authRoutes)                       // Authentication routes (register, login, logout, etc.)
 app.use('/api/users', userRoutes)                      // User routes (profile management, user listing, etc.)
-app.use('/api/articles', articleRoutes)                // Article routes (create, list, etc.)
+app.use('/api/articles', articleRoutes)                // Article routes (create, list, get, search, filtering)
 
 // TODO: Wire up route modules here
 // app.use('/api/comments', commentRoutes)

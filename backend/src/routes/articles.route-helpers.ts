@@ -1,5 +1,5 @@
 import { AppError } from '../middleware/error.middleware.js'
-import type { Category } from '@prisma/client'
+import type { Category, Prisma } from '@prisma/client'
 
 const TITLE_MAX_LENGTH = 120
 const CONTENT_MIN_LENGTH = 100
@@ -66,6 +66,64 @@ export const calculateLevelForXp = (xp: number): number => {
   return Math.floor(xp / 100) + 1
 }
 
+export interface ArticlesQueryParams {
+  page?: number | string
+  limit?: number | string
+  category?: string
+  sort?: 'newest' | 'oldest' | 'most_liked'
+  search?: string
+}
+
+export const validateArticlesQuery = (query: Record<string, any>) => {
+  const page = Math.max(1, parseInt(String(query.page || 1), 10) || 1)
+  const limit = Math.max(1, Math.min(100, parseInt(String(query.limit || 20), 10) || 20))
+  const category = query.category ? String(query.category).toUpperCase() : undefined
+  const sort = (query.sort as string)?.toLowerCase() || 'newest'
+  const search = query.search ? String(query.search).trim() : undefined
+
+  if (!['newest', 'oldest', 'most_liked'].includes(sort)) {
+    throw new Error('Invalid sort parameter: must be newest, oldest, or most_liked')
+  }
+
+  return { page, limit, category, sort, search }
+}
+
+export const buildArticlesFilter = (
+  category?: string,
+  search?: string
+): Prisma.ArticleWhereInput => {
+  const where: Prisma.ArticleWhereInput = {
+    isRemoved: false,
+  }
+
+  if (category) {
+    where.category = category as any
+  }
+
+  if (search) {
+    where.OR = [
+      { title: { contains: search, mode: 'insensitive' } },
+      { content: { contains: search, mode: 'insensitive' } },
+    ]
+  }
+
+  return where
+}
+
+export const buildArticlesOrderBy = (
+  sort: string
+): Prisma.ArticleOrderByWithRelationInput[] => {
+  switch (sort) {
+    case 'oldest':
+      return [{ createdAt: 'asc' }]
+    case 'most_liked':
+      return [{ likeCount: 'desc' }, { createdAt: 'desc' }]
+    case 'newest':
+    default:
+      return [{ createdAt: 'desc' }]
+  }
+}
+
 // Keep `as const` so Prisma understands the exact selected fields.
 export const articleWithAuthorSelect = {
   id: true,
@@ -91,10 +149,11 @@ export const articleWithAuthorSelect = {
   },
 } as const
 
-// Lighter shape for list views (no content — keeps the feed payload small).
+// Lighter shape for list views (no mod fields — keeps the feed payload small).
 export const articleSummarySelect = {
   id: true,
   title: true,
+  content: true,
   category: true,
   likeCount: true,
   createdAt: true,
@@ -132,28 +191,4 @@ interface ArticleWithCommentCount {
 export const mapArticleToDetails = (article: ArticleWithCommentCount) => {
   const { _count, ...rest } = article
   return { ...rest, commentsCount: _count.comments }
-}
-
-const DEFAULT_PAGE_SIZE = 10
-const MAX_PAGE_SIZE = 50
-
-export interface ListArticlesQuery {
-  page: number
-  pageSize: number
-}
-
-// Read ?page=&pageSize= from the URL, with safe defaults and limits.
-export const parsePaginationQuery = (query: unknown): ListArticlesQuery => {
-  const record = isRecord(query) ? query : {}
-
-  const rawPage = Number(record.page)
-  const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 1
-
-  const rawPageSize = Number(record.pageSize)
-  const pageSize =
-    Number.isInteger(rawPageSize) && rawPageSize > 0
-      ? Math.min(rawPageSize, MAX_PAGE_SIZE)
-      : DEFAULT_PAGE_SIZE
-
-  return { page, pageSize }
 }

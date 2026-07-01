@@ -7,9 +7,11 @@ import {
   articleDetailSelect,
   articleSummarySelect,
   articleWithAuthorSelect,
+  buildArticlesFilter,
+  buildArticlesOrderBy,
   calculateLevelForXp,
   mapArticleToDetails,
-  parsePaginationQuery,
+  validateArticlesQuery,
   validateCreateArticleInput,
   XP_REWARD_CREATE_ARTICLE,
 } from './articles.route-helpers.js'
@@ -54,39 +56,47 @@ const createArticleHandler = async (req: Request, res: Response) => {
   res.status(201).json({ success: true, data: { ...article, commentsCount: 0 } })
 }
 
-// List published articles for the feed, newest first.
+// List published articles with filtering and sorting, newest first by default.
 const listArticlesHandler = async (req: Request, res: Response) => {
-  const { page, pageSize } = parsePaginationQuery(req.query)
-  const where = { isRemoved: false }
+  try {
+    const { page, limit, category, sort, search } = validateArticlesQuery(req.query)
+    const where = buildArticlesFilter(category, search)
+    const orderBy = buildArticlesOrderBy(sort)
 
-  // Run the page of articles and the total count at the same time.
-  const [items, totalItems] = await Promise.all([
-    prisma.article.findMany({
-      where,
-      select: articleSummarySelect,
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * pageSize,
-      take: pageSize,
-    }),
-    prisma.article.count({ where }),
-  ])
+    // Run the page of articles and the total count at the same time.
+    const [articles, total] = await Promise.all([
+      prisma.article.findMany({
+        where,
+        select: articleSummarySelect,
+        orderBy,
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.article.count({ where }),
+    ])
 
-  const totalPages = Math.max(1, Math.ceil(totalItems / pageSize))
+    const totalPages = Math.ceil(total / limit)
 
-  res.status(200).json({
-    success: true,
-    data: {
-      items,
-      meta: {
-        page,
-        pageSize,
-        totalItems,
-        totalPages,
-        hasNextPage: page < totalPages,
-        hasPreviousPage: page > 1,
+    res.status(200).json({
+      success: true,
+      data: {
+        articles,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPrevPage: page > 1,
+        },
       },
-    },
-  })
+    })
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Invalid sort parameter')) {
+      throw new AppError(400, error.message)
+    }
+    throw error
+  }
 }
 
 // Get one article with its full content and comment count.

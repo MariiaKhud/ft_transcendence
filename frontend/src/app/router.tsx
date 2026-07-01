@@ -5,6 +5,7 @@ import { Feed } from '@/pages/Feed'
 import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Register'
 import { Profile } from '@/pages/Profile'
+import { EditProfile } from '@/pages/EditProfile'
 import { NotFound } from '@/pages/NotFound'
 
 // App routes.
@@ -32,6 +33,10 @@ export const router = createBrowserRouter([
       {
         path: 'profile/:username',
         element: <Profile />,
+      },
+      {
+        path: 'settings/profile',
+        element: <EditProfile />,
       },
       {
         path: '*',

@@ -94,8 +94,61 @@ Routes are configured in `src/app/router.tsx`:
 - `/login` -> `Login`
 - `/register` -> `Register`
 - `/feed` -> `Feed`
-- `/profile/:username` -> `Profile`
+- `/profile/:username` -> `Profile` (read-only public profile)
+- `/edit-profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
 - `*` -> `NotFound`
+
+## Edit Profile Form ✓
+
+**Route:** `/edit-profile`
+
+**Description:** Form for authenticated users to edit their profile information and avatar.
+
+**Features:**
+- Update `displayName` (optional, max 50 chars)
+- Update `bio` (optional, max 500 chars)
+- Upload avatar (PNG/JPG, max 2MB)
+- Preview avatar before upload
+- Delete existing avatar
+- Field validation and error handling
+
+**API Integration:**
+- `PATCH /api/users/me` — update displayName and bio
+- `POST /api/users/me/avatar` — upload new avatar
+- `DELETE /api/users/me/avatar` — remove avatar
+
+**Implementation files:**
+- `src/pages/EditProfile.tsx` — main edit profile page component
+- `src/api/users.ts` — API wrapper functions
+- `src/components/` — reusable form components
+
+## Articles Feed 🔄
+
+**Route:** `/feed`
+
+**Description:** Global articles feed with pagination, search, filtering, and sorting.
+
+**Features:**
+- Display paginated articles (20 per page by default)
+- Search articles by title and content
+- Filter articles by category (PROGRAMMING, CAREER, STUDY_NOTES, PROJECTS, LIFE, OPINION)
+- Sort articles (Newest, Oldest, Most Liked)
+- Show author info, article stats (likes, comments)
+- Responsive card-based layout
+
+**API Integration:**
+- `GET /api/articles` — fetch paginated articles with filtering/sorting
+
+**Query Parameters (via Feed component):**
+- `page` — pagination
+- `limit` — articles per page (max 100)
+- `search` — search in title and content
+- `category` — filter by category
+- `sort` — sort order (newest, oldest, most_liked)
+
+**Implementation files:**
+- `src/pages/Feed.tsx` — main feed page component with filtering UI
+- `src/api/articles.ts` — API wrapper functions for articles
 
 ## Auth Flow
 
