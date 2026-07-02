@@ -1,8 +1,9 @@
 import { Router } from 'express';
 import { authMiddleware } from '../middleware/auth.middleware';
-import { sendFriendRequest } from '../controllers/friends.controller';
+import { sendFriendRequest, respondToFriendRequest } from '../controllers/friends.controller.js';
 
 const router = Router();
 router.post('/request/:userId', authMiddleware, sendFriendRequest);
+router.patch('/request/:userId', authMiddleware, respondToFriendRequest);
 
 export default router;

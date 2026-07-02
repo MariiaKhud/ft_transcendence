@@ -241,7 +241,7 @@ perform_request \
     -b "$COOKIE_A" \
     -H "Content-Type: application/json"
 
-check "Duplicate request returns 400" "$LAST_STATUS" "400"
+check "Duplicate request returns 409" "$LAST_STATUS" "409"
 echo
 
 ###########################################################
@@ -298,8 +298,146 @@ LIMIT 1;
 " | tr -d '\n' | xargs)"
 
 check "Notification type is FRIEND_REQUEST" "$NOTIFICATION_TYPE" "FRIEND_REQUEST"
-
 echo
+
+###########################################################
+# Accept friend request
+###########################################################
+color_echo "$CYAN_L" "Test #12.1 - API response"
+
+perform_request \
+    "Accept friend request" \
+    -X PATCH \
+    "$BASE_URL/api/friends/request/$USER_A_ID" \
+    -b "$COOKIE_B" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "action":"ACCEPTED"
+    }'
+
+check "Accept request returns 200" "$LAST_STATUS" "200"
+echo
+
+###########################################################
+color_echo "$CYAN_L" "Test #12.2 - DB state"
+
+STATUS="$(query_db "
+SELECT status
+FROM friendships
+WHERE requester_id='${USER_A_ID}'
+AND addressee_id='${USER_B_ID}';
+" | tr -d '\n' | xargs)"
+
+check "Friendship status is ACCEPTED" "$STATUS" "ACCEPTED"
+echo
+
+###########################################################
+# Accept already accepted request
+###########################################################
+color_echo "$CYAN_L" "Test #13"
+
+perform_request \
+    "Accept already accepted request" \
+    -X PATCH \
+    "$BASE_URL/api/friends/request/$USER_A_ID" \
+    -b "$COOKIE_B" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "action":"ACCEPTED"
+    }'
+
+check "Second accept returns 403 (not authorized)" "$LAST_STATUS" "403"
+echo
+
+###########################################################
+# Invalid action
+###########################################################
+color_echo "$CYAN_L" "Test #14"
+
+perform_request \
+    "Invalid action" \
+    -X PATCH \
+    "$BASE_URL/api/friends/request/$USER_A_ID" \
+    -b "$COOKIE_B" \
+    -H "Content-Type: application/json" \
+    -d '{
+        "action":"YES"
+    }'
+
+check "Invalid action returns 400" "$LAST_STATUS" "400"
+echo
+
+###########################################################
+# FRIEND_ACCEPTED notification
+###########################################################
+color_echo "$CYAN_L" "Test #15"
+
+ACCEPTED_NOTIFICATION="$(query_db "
+SELECT type
+FROM notifications
+WHERE user_id='${USER_A_ID}'
+AND type='FRIEND_ACCEPTED'
+ORDER BY created_at DESC
+LIMIT 1;
+" | tr -d '\n' | xargs)"
+
+check \
+    "FRIEND_ACCEPTED notification created" \
+    "$ACCEPTED_NOTIFICATION" \
+    "FRIEND_ACCEPTED"
+echo
+
+###########################################################
+# User A cannot accept their own request
+###########################################################
+color_echo "$CYAN_L" "Test #16"
+
+perform_request \
+    "Requester tries to accept own request" \
+    -X PATCH \
+    "$BASE_URL/api/friends/request/$USER_B_ID" \
+    -b "$COOKIE_A" \
+    -H "Content-Type: application/json" \
+    -d '{"action":"ACCEPTED"}'
+
+check "Requester cannot accept own request" "$LAST_STATUS" "403"
+echo
+
+###########################################################
+# No authentication
+###########################################################
+color_echo "$CYAN_L" "Test #17"
+
+perform_request \
+    "Accept without authentication" \
+    -X PATCH \
+    "$BASE_URL/api/friends/request/$USER_A_ID" \
+    -H "Content-Type: application/json" \
+    -d '{"action":"ACCEPTED"}'
+
+check "Accept without auth returns 401" "$LAST_STATUS" "401"
+echo
+
+###########################################################
+# Non-existent request
+###########################################################
+color_echo "$CYAN_L" "Test #18"
+
+FAKE_ID="11111111-1111-1111-1111-111111111111"
+
+perform_request \
+    "Accept non-existent request" \
+    -X PATCH \
+    "$BASE_URL/api/friends/request/$FAKE_ID" \
+    -b "$COOKIE_B" \
+    -H "Content-Type: application/json" \
+    -d '{"action":"ACCEPTED"}'
+
+check "Non-existent request returns 404" "$LAST_STATUS" "404"
+echo
+
+
+
 if [[ $FAIL -eq 0 ]]; then
   color_echo "$GREEN" "ALL $PASS CHECKS PASSED"
 else
