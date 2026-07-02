@@ -27,6 +27,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
+CYAN_L='\033[2;36m'
 RESET='\033[0m'
 
 PASS=0
@@ -121,17 +122,18 @@ echo
 ###########################################################
 # Health
 ###########################################################
-
+color_echo "$CYAN_L" "Test #1"
 perform_request \
     "Health check" \
     "$BASE_URL/health"
 
 check "Health check returns 200" "$LAST_STATUS" "200"
+echo
 
 ###########################################################
 # Register A
 ###########################################################
-
+color_echo "$CYAN_L" "Test #2"
 perform_request \
     "Register User A" \
     -X POST \
@@ -144,11 +146,12 @@ perform_request \
     }"
 
 check "Register User A returns 201" "$LAST_STATUS" "201"
+echo
 
 ###########################################################
 # Register B
 ###########################################################
-
+color_echo "$CYAN_L" "Test #3"
 perform_request \
     "Register User B" \
     -X POST \
@@ -161,11 +164,12 @@ perform_request \
     }"
 
 check "Register User B returns 201" "$LAST_STATUS" "201"
+echo
 
 ###########################################################
 # Login A
 ###########################################################
-
+color_echo "$CYAN_L" "Test #4"
 perform_request \
     "Login User A" \
     -X POST \
@@ -178,11 +182,12 @@ perform_request \
     -c "$COOKIE_A"
 
 check "Login User A returns 200" "$LAST_STATUS" "200"
+echo
 
 ###########################################################
 # Login B
 ###########################################################
-
+color_echo "$CYAN_L" "Test #5"
 perform_request \
     "Login User B" \
     -X POST \
@@ -195,11 +200,12 @@ perform_request \
     -c "$COOKIE_B"
 
 check "Login User B returns 200" "$LAST_STATUS" "200"
+echo
 
 ###########################################################
 # Lookup ids
 ###########################################################
-
+color_echo "$CYAN_L" "Lookup ids"
 USER_A_ID="$(query_db "SELECT id FROM users WHERE username='${USERNAME_A}';" | tr -d '\n' | xargs)"
 USER_B_ID="$(query_db "SELECT id FROM users WHERE username='${USERNAME_B}';" | tr -d '\n' | xargs)"
 
@@ -213,7 +219,7 @@ echo
 ###########################################################
 # Friend request
 ###########################################################
-
+color_echo "$CYAN_L" "Test #6"
 perform_request \
     "Send friend request" \
     -X POST \
@@ -222,11 +228,12 @@ perform_request \
     -H "Content-Type: application/json"
 
 check "Send friend request returns 201" "$LAST_STATUS" "201"
+echo
 
 ###########################################################
 # Duplicate request
 ###########################################################
-
+color_echo "$CYAN_L" "Test #7"
 perform_request \
     "Duplicate friend request" \
     -X POST \
@@ -235,11 +242,12 @@ perform_request \
     -H "Content-Type: application/json"
 
 check "Duplicate request returns 400" "$LAST_STATUS" "400"
+echo
 
 ###########################################################
 # Friend yourself
 ###########################################################
-
+color_echo "$CYAN_L" "Test #8"
 perform_request \
     "Friend yourself" \
     -X POST \
@@ -248,11 +256,12 @@ perform_request \
     -H "Content-Type: application/json"
 
 check "Friend yourself returns 400" "$LAST_STATUS" "400"
+echo
 
 ###########################################################
 # Without authentication
 ###########################################################
-
+color_echo "$CYAN_L" "Test #9"
 perform_request \
     "No authentication" \
     -X POST \
@@ -260,11 +269,12 @@ perform_request \
     -H "Content-Type: application/json"
 
 check "No auth returns 401" "$LAST_STATUS" "401"
+echo
 
 ###########################################################
 # Verify friendship
 ###########################################################
-
+color_echo "$CYAN_L" "Test #10"
 STATUS="$(query_db "
 SELECT status
 FROM friendships
@@ -273,11 +283,12 @@ AND addressee_id='${USER_B_ID}';
 " | tr -d '\n' | xargs)"
 
 check "Friendship row status is PENDING" "$STATUS" "PENDING"
+echo
 
 ###########################################################
 # Verify notification
 ###########################################################
-
+color_echo "$CYAN_L" "Test #11"
 NOTIFICATION_TYPE="$(query_db "
 SELECT type
 FROM notifications
