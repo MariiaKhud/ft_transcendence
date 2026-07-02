@@ -4,9 +4,12 @@ set -euo pipefail
 BASE_URL="${BACKEND_BASE_URL:-http://localhost:3000}"
 COOKIE_JAR="$(mktemp)"
 EMPTY_COOKIE_JAR="$(mktemp)"
+COOKIE_JAR2="$(mktemp)"
 RUN_ID="$(date +%s | tail -c 5)"
 USERNAME="auth_${RUN_ID}"
 EMAIL="auth.${RUN_ID}@example.com"
+USERNAME2="auth2_${RUN_ID}"
+EMAIL2="auth2.${RUN_ID}@example.com"
 PASSWORD="strongPass123"
 DISPLAY_NAME="Auth Test User"
 ROLE_MOD_PATH="${ROLE_MOD_PATH:-}"
@@ -30,9 +33,10 @@ color_echo() {
 cleanup() {
   rm -f "$COOKIE_JAR"
   rm -f "$EMPTY_COOKIE_JAR"
+  rm -f "$COOKIE_JAR2"
 
   if command -v docker >/dev/null 2>&1 && [[ -f "../docker-compose.yml" ]]; then
-    docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"DELETE FROM users WHERE email = '${EMAIL}';\"" >/dev/null 2>&1 || true
+    docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"DELETE FROM users WHERE email IN ('${EMAIL}', '${EMAIL2}');\"" >/dev/null 2>&1 || true
   fi
 }
 
@@ -372,6 +376,199 @@ assert_body_contains '"articles":[]' "Get articles (high page)"
 
 # Cleanup test images
 rm -f "$TEST_IMAGE_PNG" "$TEST_IMAGE_JPG" "$TEST_IMAGE_OVERSIZED"
+
+# ============================================================================
+# [ARTICLES] POST /api/articles — create article
+# ============================================================================
+# Description: Tests for POST /api/articles and GET /api/articles/:id
+# Features: create article, XP reward, validation, single article fetch
+# Epic Link: Articles + Feed
+# Status: Done ✓
+# ============================================================================
+
+VALID_CONTENT="This is a valid article body. It is long enough to pass the minimum content length requirement of one hundred characters."
+LONG_TITLE="$(printf 'T%.0s' {1..121})"
+
+# Test 29: POST /api/articles — unauthenticated
+color_echo "$BLUE" "29. POST /api/articles — unauthenticated request"
+perform_request "Create article (no auth)" -b "$EMPTY_COOKIE_JAR" -X POST "${BASE_URL}/api/articles" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"Test Article\",\"content\":\"${VALID_CONTENT}\",\"category\":\"PROGRAMMING\"}"
+assert_status "401" "Create article (no auth)"
+
+# Test 30: POST /api/articles — missing required fields
+color_echo "$BLUE" "30. POST /api/articles — missing required fields"
+perform_request "Create article (empty body)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles" \
+  -H "Content-Type: application/json" \
+  -d "{}"
+assert_status "400" "Create article (empty body)"
+
+# Test 31: POST /api/articles — content too short (<100 chars)
+color_echo "$BLUE" "31. POST /api/articles — content too short"
+perform_request "Create article (short content)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Test Article","content":"Too short.","category":"PROGRAMMING"}'
+assert_status "400" "Create article (short content)"
+
+# Test 32: POST /api/articles — title too long (>120 chars)
+color_echo "$BLUE" "32. POST /api/articles — title too long (>120 chars)"
+perform_request "Create article (long title)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"${LONG_TITLE}\",\"content\":\"${VALID_CONTENT}\",\"category\":\"PROGRAMMING\"}"
+assert_status "400" "Create article (long title)"
+
+# Test 33: POST /api/articles — invalid category
+color_echo "$BLUE" "33. POST /api/articles — invalid category"
+perform_request "Create article (bad category)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"Test Article\",\"content\":\"${VALID_CONTENT}\",\"category\":\"INVALID\"}"
+assert_status "400" "Create article (bad category)"
+
+# Test 34: POST /api/articles — valid article creation
+color_echo "$BLUE" "34. POST /api/articles — valid article creation"
+perform_request "Create article" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"My Test Article\",\"content\":\"${VALID_CONTENT}\",\"category\":\"PROGRAMMING\"}"
+assert_status "201" "Create article"
+assert_body_contains '"success":true' "Create article"
+assert_body_contains '"title":"My Test Article"' "Create article"
+assert_body_contains '"category":"PROGRAMMING"' "Create article"
+assert_body_contains '"commentsCount":0' "Create article"
+
+ARTICLE_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')"
+color_echo "$BLUE" "   Created article ID: ${ARTICLE_ID}"
+
+# Test 35: POST /api/articles — XP awarded after publish (author gains 25 XP)
+color_echo "$BLUE" "35. POST /api/articles — author XP increases by 25 after publish"
+perform_request "Check XP after publish" -b "$COOKIE_JAR" "${BASE_URL}/api/auth/me"
+assert_status "200" "Check XP after publish"
+assert_body_contains '"xp":25' "Check XP after publish"
+
+# Test 36: GET /api/articles/:id — authenticated user gets isLikedByCurrentUser: false
+color_echo "$BLUE" "36. GET /api/articles/:id — authenticated user, not yet liked"
+perform_request "Get article by ID (auth)" -b "$COOKIE_JAR" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article by ID (auth)"
+assert_body_contains '"success":true' "Get article by ID (auth)"
+assert_body_contains '"title":"My Test Article"' "Get article by ID (auth)"
+assert_body_contains '"commentsCount":' "Get article by ID (auth)"
+assert_body_contains '"isLikedByCurrentUser":false' "Get article by ID (auth)"
+
+# Test 36b: GET /api/articles/:id — guest gets isLikedByCurrentUser: null
+color_echo "$BLUE" "36b. GET /api/articles/:id — guest user gets isLikedByCurrentUser null"
+perform_request "Get article by ID (guest)" -b "$EMPTY_COOKIE_JAR" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article by ID (guest)"
+assert_body_contains '"isLikedByCurrentUser":null' "Get article by ID (guest)"
+
+# Test 37: GET /api/articles/:id — non-existent article returns 404
+color_echo "$BLUE" "37. GET /api/articles/:id — non-existent ID returns 404"
+perform_request "Get article (not found)" "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000"
+assert_status "404" "Get article (not found)"
+
+# Test 38: GET /api/articles — created article appears in the feed
+color_echo "$BLUE" "38. GET /api/articles — created article appears in feed"
+perform_request "Get feed after create" "${BASE_URL}/api/articles"
+assert_status "200" "Get feed after create"
+assert_body_contains '"title":"My Test Article"' "Get feed after create"
+
+# ============================================================================
+# [ARTICLES] PATCH /api/articles/:id — edit article
+# ============================================================================
+# Description: Tests for PATCH /api/articles/:id (author-only edit)
+# Features: partial update, ownership check, validation, auth requirement
+# Epic Link: Articles + Feed
+# Status: Done ✓
+# ============================================================================
+
+UPDATED_CONTENT="This is the updated article body. It is also long enough to pass the minimum content length requirement of one hundred characters."
+
+# Test 39: Register + login a second user to test author-only enforcement
+color_echo "$BLUE" "39. Registering a second user for author-only PATCH checks"
+perform_request "Register (user2)" -X POST "${BASE_URL}/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${EMAIL2}\",\"username\":\"${USERNAME2}\",\"password\":\"${PASSWORD}\",\"displayName\":\"Second Test User\"}"
+assert_status "201" "Register (user2)"
+
+perform_request "Login (user2)" -c "$COOKIE_JAR2" -X POST "${BASE_URL}/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${EMAIL2}\",\"password\":\"${PASSWORD}\"}"
+assert_status "200" "Login (user2)"
+
+# Test 40: PATCH /api/articles/:id — unauthenticated
+color_echo "$BLUE" "40. PATCH /api/articles/:id — unauthenticated request"
+perform_request "Edit article (no auth)" -b "$EMPTY_COOKIE_JAR" -X PATCH "${BASE_URL}/api/articles/${ARTICLE_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Hacked Title"}'
+assert_status "401" "Edit article (no auth)"
+
+# Test 41: PATCH /api/articles/:id — non-author is forbidden
+color_echo "$BLUE" "41. PATCH /api/articles/:id — non-author forbidden"
+perform_request "Edit article (non-author)" -b "$COOKIE_JAR2" -X PATCH "${BASE_URL}/api/articles/${ARTICLE_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Hacked Title"}'
+assert_status "403" "Edit article (non-author)"
+
+# Test 42: PATCH /api/articles/:id — non-existent article
+color_echo "$BLUE" "42. PATCH /api/articles/:id — non-existent article returns 404"
+perform_request "Edit article (not found)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"Does Not Matter"}'
+assert_status "404" "Edit article (not found)"
+
+# Test 43: PATCH /api/articles/:id — empty body is rejected
+color_echo "$BLUE" "43. PATCH /api/articles/:id — empty body rejected"
+perform_request "Edit article (empty body)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/articles/${ARTICLE_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{}'
+assert_status "400" "Edit article (empty body)"
+
+# Test 44: PATCH /api/articles/:id — invalid category
+color_echo "$BLUE" "44. PATCH /api/articles/:id — invalid category"
+perform_request "Edit article (bad category)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/articles/${ARTICLE_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{"category":"INVALID"}'
+assert_status "400" "Edit article (bad category)"
+
+# Test 45: PATCH /api/articles/:id — content too short
+color_echo "$BLUE" "45. PATCH /api/articles/:id — content too short"
+perform_request "Edit article (short content)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/articles/${ARTICLE_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Too short."}'
+assert_status "400" "Edit article (short content)"
+
+# Test 46: PATCH /api/articles/:id — title too long
+color_echo "$BLUE" "46. PATCH /api/articles/:id — title too long"
+perform_request "Edit article (long title)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/articles/${ARTICLE_ID}" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"${LONG_TITLE}\"}"
+assert_status "400" "Edit article (long title)"
+
+# Test 47: PATCH /api/articles/:id — author partial update (title only)
+color_echo "$BLUE" "47. PATCH /api/articles/:id — author updates title only"
+perform_request "Edit article (title)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/articles/${ARTICLE_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{"title":"My Updated Article Title"}'
+assert_status "200" "Edit article (title)"
+assert_body_contains '"success":true' "Edit article (title)"
+assert_body_contains '"title":"My Updated Article Title"' "Edit article (title)"
+
+# Test 48: PATCH /api/articles/:id — author updates content + category
+color_echo "$BLUE" "48. PATCH /api/articles/:id — author updates content and category"
+perform_request "Edit article (content+category)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/articles/${ARTICLE_ID}" \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":\"${UPDATED_CONTENT}\",\"category\":\"CAREER\"}"
+assert_status "200" "Edit article (content+category)"
+assert_body_contains "\"content\":\"${UPDATED_CONTENT}\"" "Edit article (content+category)"
+assert_body_contains '"category":"CAREER"' "Edit article (content+category)"
+# Title from the previous edit should be untouched by this partial update
+assert_body_contains '"title":"My Updated Article Title"' "Edit article (content+category)"
+
+# Test 49: GET /api/articles/:id — reflects the persisted edits
+color_echo "$BLUE" "49. GET /api/articles/:id — edits are persisted"
+perform_request "Get article after edit" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article after edit"
+assert_body_contains '"title":"My Updated Article Title"' "Get article after edit"
+assert_body_contains "\"content\":\"${UPDATED_CONTENT}\"" "Get article after edit"
+assert_body_contains '"category":"CAREER"' "Get article after edit"
 
 if [[ -n "$ROLE_MOD_PATH" ]]; then
   color_echo "$BLUE" "21. Role guard check for MODERATOR path (${ROLE_MOD_PATH})"

@@ -17,6 +17,21 @@ declare global {
   }
 }
 
+// Like authMiddleware but never rejects — populates req.user if a valid cookie is present,
+// otherwise continues as guest. Use on public routes that have auth-dependent behaviour.
+const optionalAuthMiddleware = (req: Request, _res: Response, next: NextFunction): void => {
+  const token = req.cookies?.auth_token
+  if (typeof token === 'string' && token.length > 0) {
+    try {
+      const decoded = verifyAuthToken(token)
+      req.user = { userId: decoded.userId, role: decoded.role, csrfToken: decoded.csrfToken }
+    } catch {
+      // Invalid / expired token — treat request as guest
+    }
+  }
+  next()
+}
+
 const authMiddleware = (req: Request, _res: Response, next: NextFunction): void => {
   // Read auth token from cookies.
   const token = readAuthTokenFromCookie(req)
@@ -42,4 +57,4 @@ const authMiddleware = (req: Request, _res: Response, next: NextFunction): void 
   }
 }
 
-export { authMiddleware }
+export { authMiddleware, optionalAuthMiddleware }

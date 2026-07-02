@@ -61,6 +61,62 @@ export const validateCreateArticleInput = (body: unknown): CreateArticleInput =>
   }
 }
 
+export interface UpdateArticleInput {
+  title?: string
+  content?: string
+  category?: Category
+}
+
+// Partial update: only validates fields that are present, but requires at least one.
+export const validateUpdateArticleInput = (body: unknown): UpdateArticleInput => {
+  if (!isRecord(body)) {
+    throw new AppError(400, 'Validation failed: at least one of title, content, category is required')
+  }
+
+  const { title, content, category } = body
+  const result: UpdateArticleInput = {}
+
+  if (title !== undefined) {
+    if (typeof title !== 'string' || title.trim().length === 0) {
+      throw new AppError(400, 'Validation failed: title must be a non-empty string')
+    }
+
+    const trimmedTitle = title.trim()
+    if (trimmedTitle.length > TITLE_MAX_LENGTH) {
+      throw new AppError(400, `Validation failed: title must be at most ${TITLE_MAX_LENGTH} characters`)
+    }
+
+    result.title = trimmedTitle
+  }
+
+  if (content !== undefined) {
+    if (typeof content !== 'string' || content.trim().length === 0) {
+      throw new AppError(400, 'Validation failed: content must be a non-empty string')
+    }
+
+    const trimmedContent = content.trim()
+    if (trimmedContent.length < CONTENT_MIN_LENGTH) {
+      throw new AppError(400, `Validation failed: content must be at least ${CONTENT_MIN_LENGTH} characters`)
+    }
+
+    result.content = trimmedContent
+  }
+
+  if (category !== undefined) {
+    if (typeof category !== 'string' || !VALID_CATEGORIES.has(category)) {
+      throw new AppError(400, `Validation failed: category must be one of ${Array.from(VALID_CATEGORIES).join(', ')}`)
+    }
+
+    result.category = category as Category
+  }
+
+  if (Object.keys(result).length === 0) {
+    throw new AppError(400, 'Validation failed: at least one of title, content, category is required')
+  }
+
+  return result
+}
+
 // Every 100 XP earns one level, starting at level 1.
 export const calculateLevelForXp = (xp: number): number => {
   return Math.floor(xp / 100) + 1

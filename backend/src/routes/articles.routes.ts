@@ -2,7 +2,7 @@ import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
-import { authMiddleware } from '../middleware/auth.middleware.js'
+import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.middleware.js'
 import {
   articleDetailSelect,
   articleSummarySelect,
@@ -13,6 +13,7 @@ import {
   mapArticleToDetails,
   validateArticlesQuery,
   validateCreateArticleInput,
+  validateUpdateArticleInput,
   XP_REWARD_CREATE_ARTICLE,
 } from './articles.route-helpers.js'
 
@@ -99,7 +100,7 @@ const listArticlesHandler = async (req: Request, res: Response) => {
   }
 }
 
-// Get one article with its full content and comment count.
+// Get one article with full content, comment count, and whether the current user liked it.
 const getArticleHandler = async (req: Request, res: Response) => {
   const article = await prisma.article.findUnique({
     where: { id: req.params.id },
@@ -110,11 +111,56 @@ const getArticleHandler = async (req: Request, res: Response) => {
     throw new AppError(404, 'Article not found')
   }
 
+  const userId = req.user?.userId ?? null
+
+  // null for guests; true/false for authenticated users
+  let isLikedByCurrentUser: boolean | null = null
+  if (userId) {
+    const like = await prisma.articleLike.findUnique({
+      where: { userId_articleId: { userId, articleId: article.id } },
+    })
+    isLikedByCurrentUser = like !== null
+  }
+
+  res.status(200).json({
+    success: true,
+    data: { ...mapArticleToDetails(article), isLikedByCurrentUser },
+  })
+}
+
+// Update an article's title, content, or category. Author only.
+const updateArticleHandler = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, 'Authentication required')
+  }
+
+  const existing = await prisma.article.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, authorId: true, isRemoved: true },
+  })
+
+  if (!existing || existing.isRemoved) {
+    throw new AppError(404, 'Article not found')
+  }
+
+  if (existing.authorId !== req.user.userId) {
+    throw new AppError(403, 'Only the author can edit this article')
+  }
+
+  const updates = validateUpdateArticleInput(req.body)
+
+  const article = await prisma.article.update({
+    where: { id: existing.id },
+    data: updates,
+    select: articleDetailSelect,
+  })
+
   res.status(200).json({ success: true, data: mapArticleToDetails(article) })
 }
 
 router.post('/', authMiddleware, handleAsyncErrors(createArticleHandler))
 router.get('/', handleAsyncErrors(listArticlesHandler))
-router.get('/:id', handleAsyncErrors(getArticleHandler))
+router.get('/:id', optionalAuthMiddleware, handleAsyncErrors(getArticleHandler))
+router.patch('/:id', authMiddleware, handleAsyncErrors(updateArticleHandler))
 
 export default router
