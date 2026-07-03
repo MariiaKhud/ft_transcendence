@@ -158,9 +158,34 @@ const updateArticleHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: mapArticleToDetails(article) })
 }
 
+// Hard-delete an article. Author only — cascades to comments and likes via DB foreign keys.
+const deleteArticleHandler = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, 'Authentication required')
+  }
+
+  const existing = await prisma.article.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, authorId: true, isRemoved: true },
+  })
+
+  if (!existing || existing.isRemoved) {
+    throw new AppError(404, 'Article not found')
+  }
+
+  if (existing.authorId !== req.user.userId) {
+    throw new AppError(403, 'Only the author can delete this article')
+  }
+
+  await prisma.article.delete({ where: { id: existing.id } })
+
+  res.status(200).json({ success: true, data: { id: existing.id } })
+}
+
 router.post('/', authMiddleware, handleAsyncErrors(createArticleHandler))
 router.get('/', handleAsyncErrors(listArticlesHandler))
 router.get('/:id', optionalAuthMiddleware, handleAsyncErrors(getArticleHandler))
 router.patch('/:id', authMiddleware, handleAsyncErrors(updateArticleHandler))
+router.delete('/:id', authMiddleware, handleAsyncErrors(deleteArticleHandler))
 
 export default router

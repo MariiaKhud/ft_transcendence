@@ -570,6 +570,81 @@ assert_body_contains '"title":"My Updated Article Title"' "Get article after edi
 assert_body_contains "\"content\":\"${UPDATED_CONTENT}\"" "Get article after edit"
 assert_body_contains '"category":"CAREER"' "Get article after edit"
 
+# ============================================================================
+# [ARTICLES] DELETE /api/articles/:id — delete article
+# ============================================================================
+# Description: Tests for DELETE /api/articles/:id (author-only hard delete)
+# Features: ownership check, auth requirement, cascade delete of comments/likes
+# Epic Link: Articles + Feed
+# Status: Done ✓
+# ============================================================================
+
+# Test 50: DELETE /api/articles/:id — unauthenticated
+color_echo "$BLUE" "50. DELETE /api/articles/:id — unauthenticated request"
+perform_request "Delete article (no auth)" -b "$EMPTY_COOKIE_JAR" -X DELETE "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "401" "Delete article (no auth)"
+
+# Test 51: DELETE /api/articles/:id — non-author is forbidden
+color_echo "$BLUE" "51. DELETE /api/articles/:id — non-author forbidden"
+perform_request "Delete article (non-author)" -b "$COOKIE_JAR2" -X DELETE "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "403" "Delete article (non-author)"
+
+# Test 52: DELETE /api/articles/:id — non-existent article
+color_echo "$BLUE" "52. DELETE /api/articles/:id — non-existent article returns 404"
+perform_request "Delete article (not found)" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000"
+assert_status "404" "Delete article (not found)"
+
+# Test 53: seed a comment and a like on the article directly in the DB so we can
+# prove the delete cascades, since comment/like API endpoints aren't built yet.
+CASCADE_CHECK_ENABLED=0
+perform_request "Whoami for cascade seed" -b "$COOKIE_JAR" "${BASE_URL}/api/auth/me" >/dev/null
+USER_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')"
+
+if command -v docker >/dev/null 2>&1 && [[ -n "$USER_ID" ]]; then
+  color_echo "$BLUE" "53. Seeding a comment + like on the article to verify cascade delete"
+  if docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"INSERT INTO comments (id, article_id, author_id, content, updated_at) VALUES (gen_random_uuid(), '${ARTICLE_ID}', '${USER_ID}', 'seed comment', now());\"" >/dev/null 2>&1 \
+    && docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"INSERT INTO article_likes (id, article_id, user_id) VALUES (gen_random_uuid(), '${ARTICLE_ID}', '${USER_ID}');\"" >/dev/null 2>&1; then
+    CASCADE_CHECK_ENABLED=1
+    color_echo "$GREEN" "Seed comment + like: inserted"
+  else
+    color_echo "$YELLOW" "Seed comment + like: skipped (docker/psql not reachable)"
+  fi
+else
+  color_echo "$YELLOW" "53. Cascade seed skipped (docker not available or user id not resolved)"
+fi
+
+# Test 54: DELETE /api/articles/:id — author deletes their own article
+color_echo "$BLUE" "54. DELETE /api/articles/:id — author deletes own article"
+perform_request "Delete article" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Delete article"
+assert_body_contains '"success":true' "Delete article"
+
+# Test 55: GET /api/articles/:id — deleted article is gone
+color_echo "$BLUE" "55. GET /api/articles/:id — deleted article returns 404"
+perform_request "Get article after delete" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "404" "Get article after delete"
+
+# Test 56: DELETE /api/articles/:id — deleting again returns 404 (already gone)
+color_echo "$BLUE" "56. DELETE /api/articles/:id — deleting again returns 404"
+perform_request "Delete article (again)" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "404" "Delete article (again)"
+
+# Test 57: comments and likes for the deleted article are gone from the DB (cascade)
+if [[ "$CASCADE_CHECK_ENABLED" == "1" ]]; then
+  color_echo "$BLUE" "57. Verifying comments and likes were cascade-deleted"
+  REMAINING_COMMENTS="$(docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -tAc \"SELECT COUNT(*) FROM comments WHERE article_id = '${ARTICLE_ID}';\"" 2>/dev/null | tr -d '[:space:]')"
+  REMAINING_LIKES="$(docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -tAc \"SELECT COUNT(*) FROM article_likes WHERE article_id = '${ARTICLE_ID}';\"" 2>/dev/null | tr -d '[:space:]')"
+
+  if [[ "$REMAINING_COMMENTS" == "0" && "$REMAINING_LIKES" == "0" ]]; then
+    color_echo "$GREEN" "Cascade delete: comments and likes removed (0 remaining each)"
+  else
+    color_echo "$RED" "Cascade delete: expected 0 remaining comments/likes, got comments=${REMAINING_COMMENTS} likes=${REMAINING_LIKES}"
+    exit 1
+  fi
+else
+  color_echo "$YELLOW" "57. Cascade delete DB check skipped (seed step unavailable)"
+fi
+
 if [[ -n "$ROLE_MOD_PATH" ]]; then
   color_echo "$BLUE" "21. Role guard check for MODERATOR path (${ROLE_MOD_PATH})"
   perform_request "Role MOD test" -b "$COOKIE_JAR" "${BASE_URL}${ROLE_MOD_PATH}"
