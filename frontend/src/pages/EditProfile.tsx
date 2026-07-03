@@ -1,7 +1,8 @@
-import { useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { deleteMyAvatar, updateMyProfile, uploadMyAvatar } from '@/api/users'
+import { useAuth } from '@/hooks/useAuth'
 import { useStore } from '@/store/store'
 
 // Convert relative avatar path to full URL for browser image tag.
@@ -40,6 +41,8 @@ const MAX_FILE_SIZE_MB = 2
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 export const EditProfile = () => {
+  const { hasRestoredSession, isLoading } = useAuth({ restoreOnMount: true })
+
   const currentUser = useStore((state) => {
     return state.auth.currentUser
   })
@@ -68,6 +71,11 @@ export const EditProfile = () => {
   const [isDeletingAvatar, setIsDeletingAvatar] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    setDisplayName(currentUser?.displayName ?? '')
+    setBio(currentUser?.bio ?? '')
+  }, [currentUser])
 
   // Current avatar URL from store, or the preview of the pending file.
   const activeAvatarUrl = previewUrl ?? toSafeImageUrl(currentUser?.avatarUrl ?? null)
@@ -257,6 +265,17 @@ export const EditProfile = () => {
   }
 
   // Redirect unauthenticated visitors.
+  if (!hasRestoredSession || isLoading) {
+    return (
+      <section className="mx-auto w-full max-w-md space-y-8">
+        <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">Edit Profile</p>
+          <p className="mt-3 text-slate-700">Checking your session...</p>
+        </div>
+      </section>
+    )
+  }
+
   if (!currentUser) {
     return (
       <section className="mx-auto w-full max-w-md space-y-8">

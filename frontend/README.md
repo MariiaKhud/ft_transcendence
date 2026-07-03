@@ -78,8 +78,8 @@ npm run test:frontend
 ## Environment Variables
 
 - `VITE_API_BASE_URL`
-  - Default: empty string
-  - When empty, requests are same-origin (recommended with Nginx reverse proxy)
+  - Default: `/api`
+  - Recommended: keep this as `/api` so the browser stays same-origin and auth cookies work consistently on refresh
   - When set, Axios uses this as base URL
 
 - `VITE_DEV_API_PROXY_TARGET`

@@ -3,7 +3,7 @@ import { useAuth } from '@/hooks/useAuth'
 
 const App = () => {
   // Get user info and logout function.
-  const { currentUser, isLoading, logout } = useAuth({ restoreOnMount: true })
+  const { currentUser, hasRestoredSession, isLoading, logout } = useAuth({ restoreOnMount: true })
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -61,7 +61,7 @@ const App = () => {
                   Logout
                 </button>
               </>
-            ) : (
+            ) : hasRestoredSession ? (
               // If not logged in, show login button.
               <Link
                 to="/login"
@@ -69,7 +69,7 @@ const App = () => {
               >
                 Login
               </Link>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
