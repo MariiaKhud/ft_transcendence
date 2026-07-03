@@ -26,7 +26,7 @@ export const Feed = () => {
     try {
       const response: ArticlesResponse = await getArticles({
         page,
-        limit: 20,
+        limit: 10,
         sort,
         category: category || undefined,
         search: search || undefined,

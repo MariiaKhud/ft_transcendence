@@ -145,6 +145,76 @@ const main = async () => {
     },
   })
 
+  const article6 = await prisma.article.create({
+    data: {
+      authorId: bob.id,
+      title: 'Test Article 6',
+      content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
+      category: Category.LIFE,
+      likeCount: 4,
+    },
+  })
+
+  const article7 = await prisma.article.create({
+    data: {
+      authorId: bob.id,
+      title: 'Test Article 7',
+      content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
+      category: Category.LIFE,
+      likeCount: 4,
+    },
+  })
+
+  const article8 = await prisma.article.create({
+    data: {
+      authorId: bob.id,
+      title: 'Test Article 8',
+      content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
+      category: Category.LIFE,
+      likeCount: 4,
+    },
+  })
+
+  const article9 = await prisma.article.create({
+    data: {
+      authorId: bob.id,
+      title: 'Test Article 9',
+      content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
+      category: Category.LIFE,
+      likeCount: 4,
+    },
+  })
+
+  const article10 = await prisma.article.create({
+    data: {
+      authorId: bob.id,
+      title: 'Test Article 10',
+      content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
+      category: Category.LIFE,
+      likeCount: 4,
+    },
+  })
+
+  const article11 = await prisma.article.create({
+    data: {
+      authorId: bob.id,
+      title: 'Test Article 11',
+      content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
+      category: Category.LIFE,
+      likeCount: 4,
+    },
+  })      
+
+  const article12 = await prisma.article.create({
+    data: {
+      authorId: bob.id,
+      title: 'Test Article 12',
+      content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
+      category: Category.LIFE,
+      likeCount: 4,
+    },
+  })
+
   console.log('✅ Articles created')
 
   // Create comments

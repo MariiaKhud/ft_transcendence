@@ -1,49 +1,213 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
+import { ArticleCard } from '@/components/ArticleCard'
+import { useStore } from '@/store/store'
+import { getArticles, type Article, type ArticlesResponse } from '@/api/articles'
+
+type SortOption = 'newest' | 'oldest' | 'most_liked'
+
+const CATEGORIES: { value: string; label: string }[] = [
+  { value: '', label: 'All' },
+  { value: 'PROGRAMMING', label: 'Programming' },
+  { value: 'CAREER', label: 'Career' },
+  { value: 'STUDY_NOTES', label: 'Study Notes' },
+  { value: 'PROJECTS', label: 'Projects' },
+  { value: 'LIFE', label: 'Life' },
+  { value: 'OPINION', label: 'Opinion' },
+]
 
 export const Home = () => {
+  // Read current user from global store (guests get null, feed still loads).
+  const user = useStore((state) => {
+    return state.auth.currentUser
+  })
+
+  const [articles, setArticles] = useState<Article[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [page, setPage] = useState(1)
+  const [sort, setSort] = useState<SortOption>('newest')
+  const [category, setCategory] = useState<string>('')
+  const [search, setSearch] = useState<string>('')
+  const [totalPages, setTotalPages] = useState(1)
+
+  const fetchArticles = async () => {
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response: ArticlesResponse = await getArticles({
+        page,
+        limit: 10,
+        sort,
+        category: category || undefined,
+        search: search || undefined,
+      })
+
+      if (response.success) {
+        setArticles(response.data.articles)
+        setTotalPages(response.data.pagination.totalPages)
+      } else {
+        setError('Failed to load articles')
+      }
+    } catch (err) {
+      console.error('Error fetching articles:', err)
+      setError('Failed to load articles. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Reset to first page and refetch when filters change.
+  useEffect(() => {
+    setPage(1)
+    fetchArticles()
+  }, [sort, category, search])
+
+  // Refetch when page changes.
+  useEffect(() => {
+    fetchArticles()
+  }, [page])
+
   return (
-    <section className="grid gap-12 text-center">
+    <div className="space-y-16">
       {/* Hero headline */}
-      <div className="mx-auto space-y-6">
-        <div className="space-y-4">
-          <div className="inline-block">
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">Welcome</p>
-          </div>
-          <h1 className="text-6xl font-bold tracking-tight text-slate-900 sm:text-7xl">
+      <section className="grid gap-8 text-center">
+        <div className="mx-auto space-y-4">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">Welcome</p>
+          <h1 className="text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl">
             Connect. Share. Grow.
           </h1>
-          <p className="mx-auto max-w-2xl text-xl text-slate-600">
-            A transcendent experience built with modern web technologies and designed for the future.
+          <p className="mx-auto max-w-2xl text-lg text-slate-600">
+            {user
+              ? `Hello ${user.displayName ?? user.username}, discover the latest activity from your network.`
+              : 'A transcendent experience built with modern web technologies and designed for the future.'}
           </p>
         </div>
-      </div>
 
-      {/* CTA Buttons */}
-      <div className="flex flex-wrap justify-center gap-4">
-        <Button asChild className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
-          <Link to="/login">Get Started</Link>
-        </Button>
-        <Button asChild variant="outline" className="rounded-full border-2 border-purple-300 px-8 py-3 text-base font-semibold hover:bg-purple-50">
-          <a href="#learn-more">Learn More</a>
-        </Button>
-      </div>
+        {!user && (
+          <div className="flex flex-wrap justify-center gap-4">
+            <Button asChild className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
+              <Link to="/login">Get Started</Link>
+            </Button>
+            <Button asChild variant="outline" className="rounded-full border-2 border-purple-300 px-8 py-3 text-base font-semibold hover:bg-purple-50">
+              <a href="#global-feed">Browse Articles</a>
+            </Button>
+          </div>
+        )}
+      </section>
 
-      {/* Decorative arrow */}
-      <div className="flex justify-center pt-8">
-        <svg className="h-8 w-8 animate-bounce text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-        </svg>
-      </div>
+      {/* Global feed */}
+      <section id="global-feed" className="mx-auto w-full max-w-4xl scroll-mt-24 space-y-8">
+        <div className="space-y-2 text-center">
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">Global Feed</p>
+          <h2 className="text-3xl font-bold tracking-tight text-slate-900">Latest Articles</h2>
+        </div>
 
-      {/* Learn more target section */}
-      <div className="mx-auto mt-20 h-px w-full max-w-3xl bg-gradient-to-r from-transparent via-purple-200 to-transparent" aria-hidden="true" />
-      <div id="learn-more" className="mx-auto mt-10 max-w-2xl scroll-mt-24 rounded-2xl border border-white/30 bg-white/40 p-8 text-left shadow-xl backdrop-blur-md">
-        <h2 className="text-2xl font-bold text-slate-900">Learn More</h2>
-        <p className="mt-3 text-slate-600">
-          Explore feed updates, connect with other users, and build your profile with a simple and modern experience.
-        </p>
-      </div>
-    </section>
+        {/* Filters */}
+        <div className="rounded-2xl border border-white/30 bg-white/40 p-6 shadow-xl backdrop-blur-md space-y-4">
+          {/* Search */}
+          <div>
+            <input
+              type="text"
+              placeholder="Search articles..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+            />
+          </div>
+
+          {/* Sort and Category */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="sort-select" className="block text-sm font-medium text-slate-700 mb-2">
+                Sort by
+              </label>
+              <select
+                id="sort-select"
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortOption)}
+                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-purple-500 focus:outline-none"
+              >
+                <option value="newest">Newest</option>
+                <option value="oldest">Oldest</option>
+                <option value="most_liked">Most Liked</option>
+              </select>
+            </div>
+
+            <div>
+              <label htmlFor="category-select" className="block text-sm font-medium text-slate-700 mb-2">
+                Category
+              </label>
+              <select
+                id="category-select"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-purple-500 focus:outline-none"
+              >
+                {CATEGORIES.map((cat) => (
+                  <option key={cat.value || 'all'} value={cat.value}>
+                    {cat.label === 'All' ? 'All Categories' : cat.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Articles list */}
+        {loading ? (
+          <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md text-center">
+            <p className="text-slate-700">Loading articles...</p>
+          </div>
+        ) : error ? (
+          <div className="rounded-2xl border border-red-300/30 bg-red-50/40 p-8 shadow-xl backdrop-blur-md">
+            <p className="text-red-700">{error}</p>
+            <button
+              onClick={() => fetchArticles()}
+              className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        ) : articles.length === 0 ? (
+          <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md text-center">
+            <p className="text-slate-700">No articles found. Try a different category.</p>
+          </div>
+        ) : (
+          <>
+            <div className="space-y-4">
+              {articles.map((article) => (
+                <ArticleCard key={article.id} article={article} />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-8">
+                <button
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-lg bg-purple-600 text-white disabled:bg-slate-300 hover:bg-purple-700"
+                >
+                  Previous
+                </button>
+                <span className="text-slate-700 font-medium">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 rounded-lg bg-purple-600 text-white disabled:bg-slate-300 hover:bg-purple-700"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </section>
+    </div>
   )
 }
