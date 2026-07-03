@@ -194,7 +194,49 @@ assert_header_contains 'content-type: application/json' "Articles API with categ
 # Status: Done \u2713
 # ============================================================================
 
-color_echo "$BLUE" "14. Running frontend production build"
+# ============================================================================
+# [ARTICLES] Frontend: Global feed page (Home)
+# ============================================================================
+# Description: Paginated ArticleCards on Home ("/"), category filter, sort
+#              dropdown (newest/oldest/most_liked), pagination, guest access
+# Features: Category filter, sort order, search, pagination, guest accessibility
+# Epic Link: Articles + Feed
+# Status: Done \u2713
+# ============================================================================
+
+color_echo "$BLUE" "14. Checking articles API with sort=oldest"
+perform_request "Articles API sort oldest" "${BASE_URL}/api/articles?sort=oldest"
+assert_status_one_of "Articles API sort oldest" "200"
+assert_header_contains 'content-type: application/json' "Articles API sort oldest"
+
+color_echo "$BLUE" "15. Checking articles API with sort=most_liked"
+perform_request "Articles API sort most_liked" "${BASE_URL}/api/articles?sort=most_liked"
+assert_status_one_of "Articles API sort most_liked" "200"
+assert_header_contains 'content-type: application/json' "Articles API sort most_liked"
+
+color_echo "$BLUE" "16. Checking articles API rejects an invalid sort value"
+perform_request "Articles API invalid sort" "${BASE_URL}/api/articles?sort=bogus"
+assert_status "400" "Articles API invalid sort"
+assert_header_contains 'content-type: application/json' "Articles API invalid sort"
+
+color_echo "$BLUE" "17. Checking articles API with search (/api/articles?search=docker)"
+perform_request "Articles API search" "${BASE_URL}/api/articles?search=docker"
+assert_status_one_of "Articles API search" "200"
+assert_header_contains 'content-type: application/json' "Articles API search"
+assert_body_contains '"pagination"' "Articles API search"
+
+color_echo "$BLUE" "18. Checking articles API is guest-accessible (no auth cookie sent)"
+perform_request "Articles API guest access" "${BASE_URL}/api/articles"
+assert_status "200" "Articles API guest access"
+assert_body_contains '"success":true' "Articles API guest access"
+
+color_echo "$BLUE" "19. Checking /feed redirects to the consolidated Home feed"
+perform_request "Feed redirect shell" "${BASE_URL}/feed"
+assert_status "200" "Feed redirect shell"
+assert_header_contains 'content-type: text/html' "Feed redirect shell"
+assert_body_contains '<div id="root"></div>' "Feed redirect shell"
+
+color_echo "$BLUE" "20. Running frontend production build"
 (
   cd "$FRONTEND_DIR"
   npm run build
