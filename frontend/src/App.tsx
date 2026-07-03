@@ -1,7 +1,9 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 
 const App = () => {
+  const navigate = useNavigate()
+
   // Get user info and logout function.
   const { currentUser, hasRestoredSession, isLoading, logout } = useAuth({ restoreOnMount: true })
 
@@ -54,7 +56,13 @@ const App = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    void logout()
+                    void (async () => {
+                      try {
+                        await logout()
+                      } finally {
+                        navigate('/login', { replace: true })
+                      }
+                    })()
                   }}
                   className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
                 >
