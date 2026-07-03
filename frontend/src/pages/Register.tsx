@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { registerUser } from '@/api/auth'
 
+const PASSWORD_HELP_TEXT = '8-72 chars. Recommended: lowercase, uppercase, and digits.'
+
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
   return emailRegex.test(email)
@@ -247,6 +249,7 @@ export const Register = () => {
               )}
             </button>
           </div>
+          <p className="text-xs text-slate-500">{PASSWORD_HELP_TEXT}</p>
           {passwordError.length > 0 ? <p className="text-xs font-medium text-red-500">{passwordError}</p> : null}
         </div>
 
