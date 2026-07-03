@@ -95,7 +95,7 @@ export const Login = () => {
         email: normalizedEmail,
         password,
       })
-      navigate('/feed', { replace: true })
+      navigate('/', { replace: true })
     } catch (error) {
       if (error instanceof Error) {
         applyApiError(error.message)

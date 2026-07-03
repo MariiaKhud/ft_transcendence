@@ -352,7 +352,7 @@ export const Profile = () => {
         ) : null}
 
         <div className="mt-6">
-          <Link to="/feed" className="text-sm font-semibold text-purple-700 hover:text-purple-900">
+          <Link to="/" className="text-sm font-semibold text-purple-700 hover:text-purple-900">
             Back to Feed
           </Link>
         </div>

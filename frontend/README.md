@@ -90,10 +90,10 @@ npm run test:frontend
 
 Routes are configured in `src/app/router.tsx`:
 
-- `/` -> `Home`
+- `/` -> `Home` (includes the global articles feed)
 - `/login` -> `Login`
 - `/register` -> `Register`
-- `/feed` -> `Feed`
+- `/feed` -> redirects to `/` (kept for old links/bookmarks)
 - `/profile/:username` -> `Profile` (read-only public profile)
 - `/settings/profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
 - `*` -> `NotFound`
@@ -122,14 +122,14 @@ Routes are configured in `src/app/router.tsx`:
 - `src/api/users.ts` — API wrapper functions
 - `src/components/` — reusable form components
 
-## Articles Feed 🔄
+## Global Articles Feed 🔄
 
-**Route:** `/feed`
+**Route:** `/` (Home)
 
-**Description:** Global articles feed with pagination, search, filtering, and sorting.
+**Description:** Global articles feed with pagination, search, filtering, and sorting. Accessible to guests; logged-in users see a personalized greeting but the same feed.
 
 **Features:**
-- Display paginated articles (20 per page by default)
+- Display paginated articles
 - Search articles by title and content
 - Filter articles by category (PROGRAMMING, CAREER, STUDY_NOTES, PROJECTS, LIFE, OPINION)
 - Sort articles (Newest, Oldest, Most Liked)
@@ -139,7 +139,7 @@ Routes are configured in `src/app/router.tsx`:
 **API Integration:**
 - `GET /api/articles` — fetch paginated articles with filtering/sorting
 
-**Query Parameters (via Feed component):**
+**Query Parameters (via Home component):**
 - `page` — pagination
 - `limit` — articles per page (max 100)
 - `search` — search in title and content
@@ -147,7 +147,8 @@ Routes are configured in `src/app/router.tsx`:
 - `sort` — sort order (newest, oldest, most_liked)
 
 **Implementation files:**
-- `src/pages/Feed.tsx` — main feed page component with filtering UI
+- `src/pages/Home.tsx` — feed page component with filtering UI
+- `src/components/ArticleCard.tsx` — article card presentational component
 - `src/api/articles.ts` — API wrapper functions for articles
 
 ## Auth Flow

@@ -1,7 +1,6 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from '@/App'
 import { Home } from '@/pages/Home'
-import { Feed } from '@/pages/Feed'
 import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Register'
 import { Profile } from '@/pages/Profile'
@@ -27,8 +26,9 @@ export const router = createBrowserRouter([
         element: <Register />,
       },
       {
+        // The global feed now lives at "/"; keep this as a redirect for old links/bookmarks.
         path: 'feed',
-        element: <Feed />,
+        element: <Navigate to="/" replace />,
       },
       {
         path: 'profile/:username',
