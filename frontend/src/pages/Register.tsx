@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { registerUser } from '@/api/auth'
 
-const PASSWORD_HELP_TEXT = '8-72 chars. Recommended: lowercase, uppercase, and digits.'
+const PASSWORD_HELP_TEXT = '8-72 chars, use lowercase, uppercase, and digits.'
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/

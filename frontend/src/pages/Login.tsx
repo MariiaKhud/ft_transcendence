@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 
-const PASSWORD_HELP_TEXT = 'Use your password (8-72 chars, lowercase, uppercase, and digits).'
+const PASSWORD_HELP_TEXT = '8-72 chars, use lowercase, uppercase, and digits.'
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
