@@ -91,7 +91,7 @@ Validation:
 
 - `email`: valid format
 - `username`: 3-20 chars, letters/numbers/underscore
-- `password`: 8-72 chars
+- `password`: 8-72 chars (length rule only; complexity checks are handled by frontend hints)
 
 Success: `201`
 
@@ -137,6 +137,8 @@ Success: `200` with `data` user payload.
 ### POST /api/auth/logout
 
 Clears auth cookies. When CSRF token/header is present, it is validated before logout.
+
+Note: frontend behavior is to redirect to `/login` after logout.
 
 ### GET /api/auth/me
 

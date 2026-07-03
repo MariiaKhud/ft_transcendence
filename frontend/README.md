@@ -95,12 +95,12 @@ Routes are configured in `src/app/router.tsx`:
 - `/register` -> `Register`
 - `/feed` -> `Feed`
 - `/profile/:username` -> `Profile` (read-only public profile)
-- `/edit-profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
+- `/settings/profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
 - `*` -> `NotFound`
 
 ## Edit Profile Form ✓
 
-**Route:** `/edit-profile`
+**Route:** `/settings/profile`
 
 **Description:** Form for authenticated users to edit their profile information and avatar.
 
@@ -167,6 +167,13 @@ Current auth actions via `useAuth` hook (`src/hooks/useAuth.ts`):
 - `login(credentials)`
 - `logout()`
 - `restoreSession()`
+
+Current auth UX behavior:
+
+- Session is restored on app load via `/api/auth/me` before protected UI is resolved.
+- Logout redirects users to `/login` from profile/edit flows.
+- `EditProfile` redirects unauthenticated access to `/login`.
+- Login/Register forms show a short password hint: `8-72 chars, use lowercase, uppercase, and digits.`
 
 ## Project Structure
 

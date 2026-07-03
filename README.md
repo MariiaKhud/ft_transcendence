@@ -116,9 +116,12 @@ ft_transcendence/
 
 ### Completed ✓
 - **User authentication** (JWT + HttpOnly cookies)
+- **Session restore on refresh** (frontend restores user via `/api/auth/me`)
 - **Profile management** (displayName, bio, avatar upload/delete/preview)
 - **Public profiles** (read-only user profiles with stats)
 - **Edit profile form** (displayName, bio, avatar upload/delete, field validation)
+- **Logout redirect UX** (logout from profile/edit pages redirects to login)
+- **Password requirement hints** (short helper text in login/register forms)
 - **Global articles feed** (paginated, searchable, filterable by category, sortable)
 
 ### In Progress
