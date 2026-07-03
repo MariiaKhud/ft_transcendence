@@ -17,6 +17,10 @@ export const useAuth = (options: UseAuthOptions = {}) => {
     return state.auth.isLoading
   })
 
+  const hasRestoredSession = useStore((state) => {
+    return state.auth.hasRestoredSession
+  })
+
   const setCurrentUser = useStore((state) => {
     return state.authActions.setCurrentUser
   })
@@ -27,6 +31,10 @@ export const useAuth = (options: UseAuthOptions = {}) => {
 
   const setIsLoading = useStore((state) => {
     return state.authActions.setIsLoading
+  })
+
+  const setHasRestoredSession = useStore((state) => {
+    return state.authActions.setHasRestoredSession
   })
 
   const login = useCallback(
@@ -68,27 +76,29 @@ export const useAuth = (options: UseAuthOptions = {}) => {
       } catch {
         clearCurrentUser()
       } finally {
+        setHasRestoredSession(true)
         setIsLoading(false)
       }
     },
-    [clearCurrentUser, setCurrentUser, setIsLoading]
+    [clearCurrentUser, setCurrentUser, setHasRestoredSession, setIsLoading]
   )
 
   // Restore user session when needed.
   useEffect(
     () => {
-      if (!options.restoreOnMount) {
+      if (!options.restoreOnMount || hasRestoredSession || isLoading) {
         return
       }
 
       void restoreSession()
     },
-    [options.restoreOnMount, restoreSession]
+    [hasRestoredSession, isLoading, options.restoreOnMount, restoreSession]
   )
 
   return {
     currentUser,
     isLoading,
+    hasRestoredSession,
     isAuthenticated: currentUser !== null,
     login,
     logout,

@@ -5,6 +5,7 @@ import type { AuthUser } from '@/types/auth'
 interface AuthSliceState {
   currentUser: AuthUser | null
   isLoading: boolean
+  hasRestoredSession: boolean
 }
 
 // Functions that update auth data.
@@ -12,6 +13,7 @@ interface AuthSliceActions {
   setCurrentUser: (currentUser: AuthUser) => void
   clearCurrentUser: () => void
   setIsLoading: (isLoading: boolean) => void
+  setHasRestoredSession: (hasRestoredSession: boolean) => void
 }
 
 export interface AuthSlice {
@@ -27,6 +29,8 @@ export const createAuthSlice: StoreSlice<AuthSlice> = (set) => {
       currentUser: null,
       // Global loading flag for auth requests.
       isLoading: false,
+      // Marks when the initial session restore attempt has finished.
+      hasRestoredSession: false,
     },
     authActions: {
       // Save logged-in user.
@@ -72,6 +76,20 @@ export const createAuthSlice: StoreSlice<AuthSlice> = (set) => {
           },
           false,
           'auth/setIsLoading',
+        )
+      },
+      setHasRestoredSession: (hasRestoredSession) => {
+        set(
+          (state) => {
+            return {
+              auth: {
+                ...state.auth,
+                hasRestoredSession,
+              },
+            }
+          },
+          false,
+          'auth/setHasRestoredSession',
         )
       },
     },

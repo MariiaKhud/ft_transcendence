@@ -9,7 +9,7 @@ export interface ApiResponse<TData = unknown> {
 }
 
 export const getApiBaseUrl = () => {
-  return import.meta.env.VITE_API_BASE_URL ?? ''
+  return import.meta.env.VITE_API_BASE_URL ?? '/api'
 }
 
 // Shared Axios client for all requests.
