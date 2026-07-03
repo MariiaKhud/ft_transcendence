@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { deleteMyAvatar, updateMyProfile, uploadMyAvatar } from '@/api/users'
 import { useAuth } from '@/hooks/useAuth'
@@ -277,17 +277,7 @@ export const EditProfile = () => {
   }
 
   if (!currentUser) {
-    return (
-      <section className="mx-auto w-full max-w-md space-y-8">
-        <div className="rounded-2xl border border-red-200/50 bg-red-50/80 p-8 shadow-xl backdrop-blur-md">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-600">Edit Profile</p>
-          <p className="mt-3 text-slate-700">You must be signed in to edit your profile.</p>
-          <Link to="/login" className="mt-4 inline-block text-sm font-semibold text-purple-700 hover:text-purple-900">
-            Go to login →
-          </Link>
-        </div>
-      </section>
-    )
+    return <Navigate to="/login" replace />
   }
 
   const hasCurrentAvatar = Boolean(currentUser.avatarUrl)
