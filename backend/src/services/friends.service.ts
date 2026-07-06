@@ -162,3 +162,28 @@ export async function getFriends(userId: string) {
     };
   });
 }
+
+export async function removeFriend(currentUserId: string, friendId: string) {
+  if (currentUserId === friendId) {
+    throw new AppError(400, "You can't remove yourself");
+  }
+
+  // Find in both directions — either user could have been the original requester
+  const friendship = await prisma.friendship.findFirst({
+    where: {
+      status: 'ACCEPTED',
+      OR: [
+        { requesterId: currentUserId, addresseeId: friendId },
+        { requesterId: friendId, addresseeId: currentUserId },
+      ],
+    },
+  });
+
+  if (!friendship) {
+    throw new AppError(404, 'Friendship not found');
+  }
+
+  await prisma.friendship.delete({
+    where: { id: friendship.id },
+  });
+}
