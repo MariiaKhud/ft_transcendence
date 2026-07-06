@@ -97,6 +97,7 @@ Routes are configured in `src/app/router.tsx`:
 - `/profile/:username` -> `Profile` (read-only public profile)
 - `/settings/profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
 - `/privacy-policy` -> `PrivacyPolicy` ✓ (static policy page, guest accessible)
+- `/terms-of-service` -> `TermsOfService` ✓ (static terms page, guest accessible)
 - `*` -> `NotFound`
 
 ## Edit Profile Form ✓
@@ -168,6 +169,23 @@ Routes are configured in `src/app/router.tsx`:
 - `src/pages/PrivacyPolicy.tsx` — privacy policy content page
 - `src/components/Footer.tsx` — footer component with links (including Privacy Policy)
 
+## Terms of Service Page ✓
+
+**Route:** `/terms-of-service`
+
+**Description:** Static page covering acceptable use, content ownership, and moderation policy. Accessible to all users (guests and authenticated).
+
+**Features:**
+- Acceptable use policy (prohibited activities)
+- Content ownership (user content vs platform content)
+- Moderation policy (review, reporting, suspension)
+- User account responsibilities
+- Disclaimers and limitation of liability
+- Contact information
+
+**Implementation files:**
+- `src/pages/TermsOfService.tsx` — terms of service content page
+
 ## Footer Component ✓
 
 **Description:** Sticky footer displayed on all pages linking to important pages and contact information.
@@ -175,6 +193,7 @@ Routes are configured in `src/app/router.tsx`:
 **Links:**
 - Home
 - Privacy Policy
+- Terms of Service
 - Contact email
 
 **Implementation files:**
