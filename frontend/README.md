@@ -55,7 +55,7 @@ Script file:
 Default behavior:
 
 - Uses `https://localhost:8443` (Docker + Nginx)
-- Checks `/`, `/login`, `/register`, `/feed`, `/profile/:username`, and unknown route fallback
+- Checks `/`, `/login`, `/register`, `/feed`, `/profile/:username`, `/privacy-policy`, and unknown route fallback
 - Checks API proxy via `/api/auth/me`
 - Checks users proxy path via `/api/users/smoke_user`
 - Runs `npm run build`
@@ -96,6 +96,7 @@ Routes are configured in `src/app/router.tsx`:
 - `/feed` -> redirects to `/` (kept for old links/bookmarks)
 - `/profile/:username` -> `Profile` (read-only public profile)
 - `/settings/profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
+- `/privacy-policy` -> `PrivacyPolicy` ✓ (static policy page, guest accessible)
 - `*` -> `NotFound`
 
 ## Edit Profile Form ✓
@@ -148,6 +149,36 @@ Routes are configured in `src/app/router.tsx`:
 
 **Implementation files:**
 - `src/pages/Home.tsx` — feed page component with filtering UI
+
+## Privacy Policy Page ✓
+
+**Route:** `/privacy-policy`
+
+**Description:** Static page with comprehensive privacy policy covering data collection, cookies (JWT), usage, and contact information. Accessible to all users (guests and authenticated).
+
+**Features:**
+- Data collection practices
+- JWT and cookie usage
+- Information usage and sharing
+- Data security measures
+- User rights and data retention
+- Contact information for privacy inquiries
+
+**Implementation files:**
+- `src/pages/PrivacyPolicy.tsx` — privacy policy content page
+- `src/components/Footer.tsx` — footer component with links (including Privacy Policy)
+
+## Footer Component ✓
+
+**Description:** Sticky footer displayed on all pages linking to important pages and contact information.
+
+**Links:**
+- Home
+- Privacy Policy
+- Contact email
+
+**Implementation files:**
+- `src/components/Footer.tsx` — footer component
 - `src/components/ArticleCard.tsx` — article card presentational component
 - `src/api/articles.ts` — API wrapper functions for articles
 
