@@ -91,3 +91,27 @@ export async function respondToFriendRequest(
 
   return updated;
 }
+
+export async function getIncomingRequests(addresseeId: string) {
+  const requests = await prisma.friendship.findMany({
+    where: {
+      addresseeId,
+      status: 'PENDING',
+    },
+    include: {
+      requester: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+
+  return requests;
+}
