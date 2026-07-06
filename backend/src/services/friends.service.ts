@@ -115,3 +115,50 @@ export async function getIncomingRequests(addresseeId: string) {
 
   return requests;
 }
+
+export async function getFriends(userId: string) {
+  const friendships = await prisma.friendship.findMany({
+    where: {
+      status: 'ACCEPTED',
+      OR: [
+        { requesterId: userId },
+        { addresseeId: userId },
+      ],
+    },
+    include: {
+      requester: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+          isOnline: true,
+          lastSeenAt: true,
+        },
+      },
+      addressee: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+          isOnline: true,
+          lastSeenAt: true,
+        },
+      },
+    },
+    orderBy: {
+      updatedAt: 'desc',
+    },
+  });
+
+  // For each friendship, return the person who is NOT the current user
+  return friendships.map((f) => {
+    const friend = f.requesterId === userId ? f.addressee : f.requester;
+    return {
+      friendshipId: f.id,
+      since: f.updatedAt,  // updatedAt = when status changed to ACCEPTED
+      ...friend,
+    };
+  });
+}

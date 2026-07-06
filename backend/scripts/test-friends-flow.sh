@@ -247,17 +247,18 @@ echo
 ###########################################################
 # GET incoming requests — User B should see User A's request
 ###########################################################
-color_echo "$CYAN_L" "Test #8.1"
+color_echo "$CYAN_L" "Test #8"
 perform_request \
     "Get incoming requests (User B)" \
     -X GET \
     "$BASE_URL/api/friends/requests" \
     -b "$COOKIE_B"
 check "Get incoming requests returns 200" "$LAST_STATUS" "200"
+echo
 
 ###########################################################
 # Verify the requester in the response is User A
-color_echo "$CYAN_L" "Test #8.2"
+color_echo "$CYAN_L" "Test #9"
 REQUESTER_ID="$(echo "$LAST_BODY" | grep -o '"requesterId":"[^"]*"' | head -1 | cut -d'"' -f4)"
 check "Incoming request is from User A" "$REQUESTER_ID" "$USER_A_ID"
 echo
@@ -265,19 +266,22 @@ echo
 ###########################################################
 # GET incoming requests — User A should see empty array
 ###########################################################
-color_echo "$CYAN_L" "Test #9"
+color_echo "$CYAN_L" "Test #10"
 perform_request \
     "Get incoming requests (User A — should be empty)" \
     -X GET \
     "$BASE_URL/api/friends/requests" \
     -b "$COOKIE_A"
-check "Sender gets empty incoming list" "$LAST_STATUS" "200"
+check "Sender gets HTTP 200" "$LAST_STATUS" "200"
+echo
+color_echo "$CYAN_L" "Test #11"
+check "Incoming list is empty" "$LAST_BODY" '{"data":[],"error":null}'
 echo
 
 ###########################################################
 # No auth
 ###########################################################
-color_echo "$CYAN_L" "Test #10"
+color_echo "$CYAN_L" "Test #12"
 perform_request \
     "Get incoming requests — no auth" \
     -X GET \
@@ -288,7 +292,7 @@ echo
 ###########################################################
 # Friend yourself
 ###########################################################
-color_echo "$CYAN_L" "Test #11"
+color_echo "$CYAN_L" "Test #13"
 perform_request \
     "Friend yourself" \
     -X POST \
@@ -302,7 +306,7 @@ echo
 ###########################################################
 # Without authentication
 ###########################################################
-color_echo "$CYAN_L" "Test #12"
+color_echo "$CYAN_L" "Test #14"
 perform_request \
     "No authentication" \
     -X POST \
@@ -315,7 +319,7 @@ echo
 ###########################################################
 # Verify friendship
 ###########################################################
-color_echo "$CYAN_L" "Test #13"
+color_echo "$CYAN_L" "Test #15"
 STATUS="$(query_db "
 SELECT status
 FROM friendships
@@ -329,7 +333,7 @@ echo
 ###########################################################
 # Verify notification
 ###########################################################
-color_echo "$CYAN_L" "Test #14"
+color_echo "$CYAN_L" "Test #16"
 NOTIFICATION_TYPE="$(query_db "
 SELECT type
 FROM notifications
@@ -344,7 +348,7 @@ echo
 ###########################################################
 # Accept friend request
 ###########################################################
-color_echo "$CYAN_L" "Test #15.1 - API response"
+color_echo "$CYAN_L" "Test #17 - API response"
 
 perform_request \
     "Accept friend request" \
@@ -360,7 +364,7 @@ check "Accept request returns 200" "$LAST_STATUS" "200"
 echo
 
 ###########################################################
-color_echo "$CYAN_L" "Test #15.2 - DB state"
+color_echo "$CYAN_L" "Test #18 - DB state"
 
 STATUS="$(query_db "
 SELECT status
@@ -373,9 +377,50 @@ check "Friendship status is ACCEPTED" "$STATUS" "ACCEPTED"
 echo
 
 ###########################################################
+# GET friends — both users should see each other
+###########################################################
+color_echo "$CYAN_L" "Test #19"
+perform_request \
+    "Get friends list (User A)" \
+    -X GET \
+    "$BASE_URL/api/friends" \
+    -b "$COOKIE_A"
+check "Get friends returns 200" "$LAST_STATUS" "200"
+echo
+
+color_echo "$CYAN_L" "Test #20"
+FRIEND_ID_IN_A_LIST="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
+check "User A's friend is User B" "$FRIEND_ID_IN_A_LIST" "$USER_B_ID"
+echo
+
+###########################################################
+color_echo "$CYAN_L" "Test #21"
+perform_request \
+    "Get friends list (User B)" \
+    -X GET \
+    "$BASE_URL/api/friends" \
+    -b "$COOKIE_B"
+check "Get friends returns 200" "$LAST_STATUS" "200"
+echo
+
+color_echo "$CYAN_L" "Test #22"
+FRIEND_ID_IN_B_LIST="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
+check "User B's friend is User A" "$FRIEND_ID_IN_B_LIST" "$USER_A_ID"
+echo
+
+###########################################################
+color_echo "$CYAN_L" "Test #23"
+perform_request \
+    "Get friends — no auth" \
+    -X GET \
+    "$BASE_URL/api/friends"
+check "No auth returns 401" "$LAST_STATUS" "401"
+echo
+
+###########################################################
 # Accept already accepted request
 ###########################################################
-color_echo "$CYAN_L" "Test #16"
+color_echo "$CYAN_L" "Test #24"
 
 perform_request \
     "Accept already accepted request" \
@@ -393,7 +438,7 @@ echo
 ###########################################################
 # Invalid action
 ###########################################################
-color_echo "$CYAN_L" "Test #17"
+color_echo "$CYAN_L" "Test #25"
 
 perform_request \
     "Invalid action" \
@@ -411,7 +456,7 @@ echo
 ###########################################################
 # FRIEND_ACCEPTED notification
 ###########################################################
-color_echo "$CYAN_L" "Test #18"
+color_echo "$CYAN_L" "Test #26"
 
 ACCEPTED_NOTIFICATION="$(query_db "
 SELECT type
@@ -431,7 +476,7 @@ echo
 ###########################################################
 # User A cannot accept their own request
 ###########################################################
-color_echo "$CYAN_L" "Test #19"
+color_echo "$CYAN_L" "Test #27"
 
 perform_request \
     "Requester tries to accept own request" \
@@ -447,7 +492,7 @@ echo
 ###########################################################
 # No authentication
 ###########################################################
-color_echo "$CYAN_L" "Test #20"
+color_echo "$CYAN_L" "Test #28"
 
 perform_request \
     "Accept without authentication" \
@@ -462,7 +507,7 @@ echo
 ###########################################################
 # Non-existent request
 ###########################################################
-color_echo "$CYAN_L" "Test #21"
+color_echo "$CYAN_L" "Test #29"
 
 FAKE_ID="11111111-1111-1111-1111-111111111111"
 
