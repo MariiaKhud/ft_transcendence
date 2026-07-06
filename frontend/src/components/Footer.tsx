@@ -29,6 +29,11 @@ export const Footer = () => {
                   Privacy Policy
                 </Link>
               </li>
+              <li>
+                <Link to="/terms-of-service" className="text-slate-600 hover:text-purple-600 transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -54,6 +59,9 @@ export const Footer = () => {
           <div className="flex gap-4 text-sm">
             <Link to="/privacy-policy" className="text-slate-600 hover:text-purple-600 transition-colors">
               Privacy Policy
+            </Link>
+            <Link to="/terms-of-service" className="text-slate-600 hover:text-purple-600 transition-colors">
+              Terms of Service
             </Link>
           </div>
         </div>
