@@ -5,6 +5,7 @@ import { Login } from '@/pages/Login'
 import { Register } from '@/pages/Register'
 import { Profile } from '@/pages/Profile'
 import { EditProfile } from '@/pages/EditProfile'
+import { Article } from '@/pages/Article'
 import { NotFound } from '@/pages/NotFound'
 
 // App routes.
@@ -33,6 +34,10 @@ export const router = createBrowserRouter([
       {
         path: 'profile/:username',
         element: <Profile />,
+      },
+      {
+        path: 'articles/:id',
+        element: <Article />,
       },
       {
         path: 'settings/profile',

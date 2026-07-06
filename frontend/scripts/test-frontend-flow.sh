@@ -236,7 +236,77 @@ assert_status "200" "Feed redirect shell"
 assert_header_contains 'content-type: text/html' "Feed redirect shell"
 assert_body_contains '<div id="root"></div>' "Feed redirect shell"
 
-color_echo "$BLUE" "20. Running frontend production build"
+# ============================================================================
+# [ARTICLES] Frontend: ArticleCard component
+# ============================================================================
+# Description: Article summary card - title, excerpt, author avatar +
+#              username, category badge, like count, comment count, date.
+#              Clickable, links to the article page.
+# Features: Field rendering, link target, single-article API fields
+# Epic Link: Articles + Feed
+# Status: Done ✓
+# ============================================================================
+
+color_echo "$BLUE" "20. Checking articles API response includes ArticleCard fields"
+perform_request "Articles API fields" "${BASE_URL}/api/articles?limit=1"
+assert_status "200" "Articles API fields"
+assert_body_contains '"title"' "Articles API fields"
+assert_body_contains '"category"' "Articles API fields"
+assert_body_contains '"likeCount"' "Articles API fields"
+assert_body_contains '"createdAt"' "Articles API fields"
+assert_body_contains '"username"' "Articles API fields"
+assert_body_contains '"avatarUrl"' "Articles API fields"
+
+FIRST_ARTICLE_ID="$(grep -o '"id":"[^"]*"' <<<"$LAST_BODY" | head -1 | cut -d'"' -f4)"
+
+color_echo "$BLUE" "21. Checking single article API includes comment count for ArticleCard"
+perform_request "Single article API" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}"
+assert_status "200" "Single article API"
+assert_body_contains '"commentsCount"' "Single article API"
+
+color_echo "$BLUE" "22. Checking /articles/:id route (ArticleCard link target) serves the SPA shell"
+perform_request "Article detail route" "${BASE_URL}/articles/${FIRST_ARTICLE_ID}"
+assert_status "200" "Article detail route"
+assert_header_contains 'content-type: text/html' "Article detail route"
+assert_body_contains '<div id="root"></div>' "Article detail route"
+
+# ============================================================================
+# [ARTICLES] Frontend: Article page
+# ============================================================================
+# Description: Full article view - Markdown content, author info, like
+#              button, comments section, edit/delete buttons if own article.
+# Features: Article detail data, edit/delete auth guard, like + comments stubs
+# Epic Link: Articles + Feed
+# Status: Done ✓ (like/comments are UI-only until their backend endpoints exist)
+# ============================================================================
+
+color_echo "$BLUE" "23. Checking single article API includes fields the Article page needs"
+perform_request "Article page fields" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}"
+assert_status "200" "Article page fields"
+assert_body_contains '"authorId"' "Article page fields"
+assert_body_contains '"isLikedByCurrentUser"' "Article page fields"
+assert_body_contains '"content"' "Article page fields"
+
+color_echo "$BLUE" "24. Checking PATCH /api/articles/:id proxy requires authentication (Edit button)"
+perform_request "Edit article proxy" -X PATCH "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}" \
+  -H "Content-Type: application/json" -d '{"title":"Unauthorized edit attempt"}'
+assert_status "401" "Edit article proxy"
+assert_header_contains 'content-type: application/json' "Edit article proxy"
+
+color_echo "$BLUE" "25. Checking DELETE /api/articles/:id proxy requires authentication (Delete button)"
+perform_request "Delete article proxy" -X DELETE "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}"
+assert_status "401" "Delete article proxy"
+assert_header_contains 'content-type: application/json' "Delete article proxy"
+
+color_echo "$BLUE" "26. Checking the like endpoint isn't implemented yet (Like button degrades gracefully)"
+perform_request "Like article proxy" -X POST "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/like"
+assert_status "404" "Like article proxy"
+
+color_echo "$BLUE" "27. Checking the comments endpoint isn't implemented yet (Comments section degrades gracefully)"
+perform_request "Article comments proxy" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/comments"
+assert_status "404" "Article comments proxy"
+
+color_echo "$BLUE" "28. Running frontend production build"
 (
   cd "$FRONTEND_DIR"
   npm run build
