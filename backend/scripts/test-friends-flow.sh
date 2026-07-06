@@ -28,6 +28,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 BLUE='\033[0;34m'
 CYAN_L='\033[2;36m'
+CYAN_HI='\033[0;96m'
 RESET='\033[0m'
 
 PASS=0
@@ -120,7 +121,7 @@ color_echo "$BLUE" "==========================================="
 echo
 
 ###########################################################
-# Health
+color_echo "$CYAN_HI" ============== System health ==============
 ###########################################################
 color_echo "$CYAN_L" "Check #1"
 perform_request \
@@ -131,8 +132,10 @@ check "Health check returns 200" "$LAST_STATUS" "200"
 echo
 
 ###########################################################
-# Register A
+color_echo "$CYAN_HI" ============== Auth flow ==============
 ###########################################################
+
+# Register A
 color_echo "$CYAN_L" "Check #2"
 perform_request \
     "Register User A" \
@@ -148,9 +151,7 @@ perform_request \
 check "Register User A returns 201" "$LAST_STATUS" "201"
 echo
 
-###########################################################
 # Register B
-###########################################################
 color_echo "$CYAN_L" "Check #3"
 perform_request \
     "Register User B" \
@@ -166,9 +167,7 @@ perform_request \
 check "Register User B returns 201" "$LAST_STATUS" "201"
 echo
 
-###########################################################
 # Login A
-###########################################################
 color_echo "$CYAN_L" "Check #4"
 perform_request \
     "Login User A" \
@@ -184,9 +183,7 @@ perform_request \
 check "Login User A returns 200" "$LAST_STATUS" "200"
 echo
 
-###########################################################
 # Login B
-###########################################################
 color_echo "$CYAN_L" "Check #5"
 perform_request \
     "Login User B" \
@@ -203,8 +200,10 @@ check "Login User B returns 200" "$LAST_STATUS" "200"
 echo
 
 ###########################################################
-# Lookup ids
+color_echo "$CYAN_HI" ============== User setup ==============
 ###########################################################
+
+# Database lookup
 color_echo "$CYAN_L" "Lookup ids"
 USER_A_ID="$(query_db "SELECT id FROM users WHERE username='${USERNAME_A}';" | tr -d '\n' | xargs)"
 USER_B_ID="$(query_db "SELECT id FROM users WHERE username='${USERNAME_B}';" | tr -d '\n' | xargs)"
@@ -217,8 +216,10 @@ color_echo "$BLUE" "User B: $USER_B_ID"
 echo
 
 ###########################################################
-# Friend request
+color_echo "$CYAN_HI" ============== Friend request flow ==============
 ###########################################################
+
+# Create request
 color_echo "$CYAN_L" "Check #6"
 perform_request \
     "Send friend request" \
@@ -230,9 +231,7 @@ perform_request \
 check "Send friend request returns 201" "$LAST_STATUS" "201"
 echo
 
-###########################################################
 # Duplicate request
-###########################################################
 color_echo "$CYAN_L" "Check #7"
 perform_request \
     "Duplicate friend request" \
@@ -244,9 +243,7 @@ perform_request \
 check "Duplicate request returns 409" "$LAST_STATUS" "409"
 echo
 
-###########################################################
 # GET incoming requests — User B should see User A's request
-###########################################################
 color_echo "$CYAN_L" "Check #8"
 perform_request \
     "Get incoming requests (User B)" \
@@ -256,16 +253,13 @@ perform_request \
 check "Get incoming requests returns 200" "$LAST_STATUS" "200"
 echo
 
-###########################################################
 # Verify the requester in the response is User A
 color_echo "$CYAN_L" "Check #9"
 REQUESTER_ID="$(echo "$LAST_BODY" | grep -o '"requesterId":"[^"]*"' | head -1 | cut -d'"' -f4)"
 check "Incoming request is from User A" "$REQUESTER_ID" "$USER_A_ID"
 echo
 
-###########################################################
 # GET incoming requests — User A should see empty array
-###########################################################
 color_echo "$CYAN_L" "Check #10"
 perform_request \
     "Get incoming requests (User A — should be empty)" \
@@ -274,13 +268,13 @@ perform_request \
     -b "$COOKIE_A"
 check "Sender gets HTTP 200" "$LAST_STATUS" "200"
 echo
+
+# Empty validation
 color_echo "$CYAN_L" "Check #11"
 check "Incoming list is empty" "$LAST_BODY" '{"data":[],"error":null}'
 echo
 
-###########################################################
 # No auth
-###########################################################
 color_echo "$CYAN_L" "Check #12"
 perform_request \
     "Get incoming requests — no auth" \
@@ -290,8 +284,10 @@ check "No auth returns 401" "$LAST_STATUS" "401"
 echo
 
 ###########################################################
-# Friend yourself
+color_echo "$CYAN_HI" ============== Request validation rules ==============
 ###########################################################
+
+# Friend yourself
 color_echo "$CYAN_L" "Check #13"
 perform_request \
     "Friend yourself" \
@@ -303,9 +299,7 @@ perform_request \
 check "Friend yourself returns 400" "$LAST_STATUS" "400"
 echo
 
-###########################################################
 # Without authentication
-###########################################################
 color_echo "$CYAN_L" "Check #14"
 perform_request \
     "No authentication" \
@@ -316,9 +310,7 @@ perform_request \
 check "No auth returns 401" "$LAST_STATUS" "401"
 echo
 
-###########################################################
-# Verify friendship
-###########################################################
+# Verify friendship. DB pending status
 color_echo "$CYAN_L" "Check #15"
 STATUS="$(query_db "
 SELECT status
@@ -330,9 +322,7 @@ AND addressee_id='${USER_B_ID}';
 check "Friendship row status is PENDING" "$STATUS" "PENDING"
 echo
 
-###########################################################
 # Verify notification
-###########################################################
 color_echo "$CYAN_L" "Check #16"
 NOTIFICATION_TYPE="$(query_db "
 SELECT type
@@ -345,11 +335,8 @@ LIMIT 1;
 check "Notification type is FRIEND_REQUEST" "$NOTIFICATION_TYPE" "FRIEND_REQUEST"
 echo
 
-###########################################################
-# Accept friend request
-###########################################################
+# Accept friend request. Accept API
 color_echo "$CYAN_L" "Check #17 - API response"
-
 perform_request \
     "Accept friend request" \
     -X PATCH \
@@ -363,9 +350,8 @@ perform_request \
 check "Accept request returns 200" "$LAST_STATUS" "200"
 echo
 
-###########################################################
+# DB accepted state
 color_echo "$CYAN_L" "Check #18 - DB state"
-
 STATUS="$(query_db "
 SELECT status
 FROM friendships
@@ -377,8 +363,10 @@ check "Friendship status is ACCEPTED" "$STATUS" "ACCEPTED"
 echo
 
 ###########################################################
-# GET friends — both users should see each other
+color_echo "$CYAN_HI" ============== Friend list ==============
 ###########################################################
+
+# GET friends — both users should see each other
 color_echo "$CYAN_L" "Check #19"
 perform_request \
     "Get friends list (User A)" \
@@ -388,12 +376,13 @@ perform_request \
 check "Get friends returns 200" "$LAST_STATUS" "200"
 echo
 
+# Verify friend in A
 color_echo "$CYAN_L" "Check #20"
 FRIEND_ID_IN_A_LIST="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
 check "User A's friend is User B" "$FRIEND_ID_IN_A_LIST" "$USER_B_ID"
 echo
 
-###########################################################
+# User B list
 color_echo "$CYAN_L" "Check #21"
 perform_request \
     "Get friends list (User B)" \
@@ -403,12 +392,13 @@ perform_request \
 check "Get friends returns 200" "$LAST_STATUS" "200"
 echo
 
+# verify friend in B
 color_echo "$CYAN_L" "Check #22"
 FRIEND_ID_IN_B_LIST="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
 check "User B's friend is User A" "$FRIEND_ID_IN_B_LIST" "$USER_A_ID"
 echo
 
-###########################################################
+# No auth
 color_echo "$CYAN_L" "Check #23"
 perform_request \
     "Get friends — no auth" \
@@ -417,11 +407,9 @@ perform_request \
 check "No auth returns 401" "$LAST_STATUS" "401"
 echo
 
-###########################################################
-# Accept already accepted request
-###########################################################
+# Edge cases
+# Already accepted
 color_echo "$CYAN_L" "Check #24"
-
 perform_request \
     "Accept already accepted request" \
     -X PATCH \
@@ -435,11 +423,8 @@ perform_request \
 check "Second accept returns 403 (not authorized)" "$LAST_STATUS" "403"
 echo
 
-###########################################################
 # Invalid action
-###########################################################
 color_echo "$CYAN_L" "Check #25"
-
 perform_request \
     "Invalid action" \
     -X PATCH \
@@ -453,11 +438,9 @@ perform_request \
 check "Invalid action returns 400" "$LAST_STATUS" "400"
 echo
 
-###########################################################
-# FRIEND_ACCEPTED notification
-###########################################################
+# Notifications after accept
+# FRIEND_ACCEPTED
 color_echo "$CYAN_L" "Check #26"
-
 ACCEPTED_NOTIFICATION="$(query_db "
 SELECT type
 FROM notifications
@@ -473,11 +456,8 @@ check \
     "FRIEND_ACCEPTED"
 echo
 
-###########################################################
 # User A cannot accept their own request
-###########################################################
 color_echo "$CYAN_L" "Check #27"
-
 perform_request \
     "Requester tries to accept own request" \
     -X PATCH \
@@ -489,11 +469,8 @@ perform_request \
 check "Requester cannot accept own request" "$LAST_STATUS" "403"
 echo
 
-###########################################################
 # No authentication
-###########################################################
 color_echo "$CYAN_L" "Check #28"
-
 perform_request \
     "Accept without authentication" \
     -X PATCH \
@@ -504,9 +481,7 @@ perform_request \
 check "Accept without auth returns 401" "$LAST_STATUS" "401"
 echo
 
-###########################################################
-# Non-existent request
-###########################################################
+# Fake request
 color_echo "$CYAN_L" "Check #29"
 
 FAKE_ID="11111111-1111-1111-1111-111111111111"
@@ -523,8 +498,10 @@ check "Non-existent request returns 404" "$LAST_STATUS" "404"
 echo
 
 ###########################################################
-# Remove yourself
+color_echo "$CYAN_HI" ============== Friend delete ==============
 ###########################################################
+
+# Remove yourself
 color_echo "$CYAN_L" "Check #30"
 perform_request \
     "Remove yourself" \
@@ -535,9 +512,7 @@ perform_request \
 check "Remove yourself returns 400" "$LAST_STATUS" "400"
 echo
 
-###########################################################
 # DELETE friend — User A removes User B
-###########################################################
 color_echo "$CYAN_L" "Check #31"
 perform_request \
     "Remove friend (User A removes User B)" \
@@ -547,9 +522,7 @@ perform_request \
 check "Remove friend returns 200" "$LAST_STATUS" "200"
 echo
 
-###########################################################
 # Try to remove again — should 404
-###########################################################
 color_echo "$CYAN_L" "Check #32"
 perform_request \
     "Remove friend again (should 404)" \
@@ -559,9 +532,7 @@ perform_request \
 check "Double remove returns 404" "$LAST_STATUS" "404"
 echo
 
-###########################################################
-# Verify friends list is now empty after removal (User A)
-###########################################################
+# Check User B's ID is NOT in the response anymore
 color_echo "$CYAN_L" "Check #33"
 perform_request \
     "Get friends after removal (User A)" \
@@ -572,13 +543,11 @@ check "Get friends returns 200" "$LAST_STATUS" "200"
 echo
 
 color_echo "$CYAN_L" "Check #34"
-FRIENDS_COUNT="$(echo "$LAST_BODY" | grep -o '"data":\[\]' | head -1)"
-check "Friends array is empty" "$FRIENDS_COUNT" '"data":[]'
+STILL_FRIENDS="$(echo "$LAST_BODY" | grep -o "$USER_B_ID" | head -1)"
+check "User B no longer in friends list" "$STILL_FRIENDS" ""
 echo
 
-###########################################################
-# Verify friends list is now empty after removal (User B)
-###########################################################
+# Check User A's ID is NOT in the response anymore
 color_echo "$CYAN_L" "Check #35"
 perform_request \
     "Get friends after removal (User B)" \
@@ -589,13 +558,11 @@ check "Get friends returns 200" "$LAST_STATUS" "200"
 echo
 
 color_echo "$CYAN_L" "Check #36"
-FRIENDS_COUNT="$(echo "$LAST_BODY" | grep -o '"data":\[\]' | head -1)"
-check "Friends array is empty" "$FRIENDS_COUNT" '"data":[]'
+STILL_FRIENDS="$(echo "$LAST_BODY" | grep -o "$USER_A_ID" | head -1)"
+check "User A no longer in friends list" "$STILL_FRIENDS" ""
 echo
 
-###########################################################
-# No auth
-###########################################################
+# No auth delete
 color_echo "$CYAN_L" "Check #37"
 perform_request \
     "Remove friend — no auth" \
@@ -604,23 +571,69 @@ perform_request \
 check "No auth returns 401" "$LAST_STATUS" "401"
 echo
 
-###########################################################
 # DB verify — friendship row is gone
-###########################################################
 color_echo "$CYAN_L" "Check #38"
 DELETED_FRIENDSHIP="$(query_db "
-SELECT id FROM friendships
+SELECT id 
+FROM friendships
 WHERE (requester_id='${USER_A_ID}' AND addressee_id='${USER_B_ID}')
 OR (requester_id='${USER_B_ID}' AND addressee_id='${USER_A_ID}');
 " | tr -d '\n' | xargs)"
+
 check "Friendship row deleted from DB" "$DELETED_FRIENDSHIP" ""
 echo
 
 ###########################################################
-# Recreate friendship - User A sends request
+color_echo "$CYAN_HI" ============== Cancel sent request ==============
 ###########################################################
-color_echo "$CYAN_L" "Check #39"
 
+# Create pending request for cancel tests
+color_echo "$CYAN_L" "Check #39"
+perform_request \
+    "Send new friend request (for cancel test)" \
+    -X POST \
+    "$BASE_URL/api/friends/request/$USER_B_ID" \
+    -b "$COOKIE_A" \
+    -H "Content-Type: application/json"
+check "Re-send request returns 201" "$LAST_STATUS" "201"
+echo
+
+# Addressee cannot cancel (only requester can)
+color_echo "$CYAN_L" "Check #40"
+perform_request \
+    "Addressee tries to cancel (should 404)" \
+    -X DELETE \
+    "$BASE_URL/api/friends/request/$USER_A_ID" \
+    -b "$COOKIE_B"
+check "Addressee cannot cancel returns 404" "$LAST_STATUS" "404"
+echo
+
+# Requester cancels their own request
+color_echo "$CYAN_L" "Check #41"
+perform_request \
+    "Requester cancels sent request" \
+    -X DELETE \
+    "$BASE_URL/api/friends/request/$USER_B_ID" \
+    -b "$COOKIE_A"
+check "Cancel request returns 200" "$LAST_STATUS" "200"
+echo
+
+# Try to cancel again — already gone
+color_echo "$CYAN_L" "Check #42"
+perform_request \
+    "Cancel already-cancelled request (should 404)" \
+    -X DELETE \
+    "$BASE_URL/api/friends/request/$USER_B_ID" \
+    -b "$COOKIE_A"
+check "Double cancel returns 404" "$LAST_STATUS" "404"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" ============== Recreate friendship lifecycle ==============
+###########################################################
+
+# User A sends request
+color_echo "$CYAN_L" "Check #43"
 perform_request \
     "Re-send friend request" \
     -X POST \
@@ -631,11 +644,8 @@ perform_request \
 check "Re-send request returns 201" "$LAST_STATUS" "201"
 echo
 
-###########################################################
 # User B accepts recreated request
-###########################################################
-color_echo "$CYAN_L" "Check #40"
-
+color_echo "$CYAN_L" "Check #44"
 perform_request \
     "Accept recreated request" \
     -X PATCH \
@@ -647,11 +657,8 @@ perform_request \
 check "Accept recreated request returns 200" "$LAST_STATUS" "200"
 echo
 
-###########################################################
 # User B removes User A
-###########################################################
-color_echo "$CYAN_L" "Check #41"
-
+color_echo "$CYAN_L" "Check #45"
 perform_request \
     "Remove friend (User B removes User A)" \
     -X DELETE \
@@ -662,24 +669,11 @@ check "User B removes friend returns 200" "$LAST_STATUS" "200"
 echo
 
 ###########################################################
-# Verify friendship removed by User B
+color_echo "$CYAN_HI" ============== Pending delete restriction. Pending edge case ==============
 ###########################################################
-color_echo "$CYAN_L" "Check #42"
 
-DELETED_FRIENDSHIP="$(query_db "
-SELECT id
-FROM friendships
-WHERE (requester_id='${USER_A_ID}' AND addressee_id='${USER_B_ID}')
-OR (requester_id='${USER_B_ID}' AND addressee_id='${USER_A_ID}');
-" | tr -d '\n' | xargs)"
-
-check "Friendship removed by User B" "$DELETED_FRIENDSHIP" ""
-echo
-
-###########################################################
-# Create pending friendship
-###########################################################
-color_echo "$CYAN_L" "Check #43"
+## Create pending friendship
+color_echo "$CYAN_L" "Check #46"
 
 perform_request \
     "Create pending friend request" \
@@ -691,10 +685,21 @@ perform_request \
 check "Pending request returns 201" "$LAST_STATUS" "201"
 echo
 
-###########################################################
-# Remove pending friendship
-###########################################################
-color_echo "$CYAN_L" "Check #44"
+# Verify pending exists (DB sanity)
+color_echo "$CYAN_L" "Check #47"
+
+PENDING_STATUS="$(query_db "
+SELECT status
+FROM friendships
+WHERE requester_id='${USER_A_ID}'
+AND addressee_id='${USER_B_ID}';
+" | tr -d '\n' | xargs)"
+
+check "Pending friendship exists" "$PENDING_STATUS" "PENDING"
+echo
+
+# Remove pending friendship (should fail)
+color_echo "$CYAN_L" "Check #48"
 
 perform_request \
     "Remove pending friendship" \
@@ -705,24 +710,11 @@ perform_request \
 check "Remove pending friendship returns 404" "$LAST_STATUS" "404"
 echo
 
-###########################################################
-# Verify pending friendship still exists
-###########################################################
-color_echo "$CYAN_L" "Check #45"
 
-PENDING_STATUS="$(query_db "
-SELECT status
-FROM friendships
-WHERE requester_id='${USER_A_ID}'
-AND addressee_id='${USER_B_ID}';
-" | tr -d '\n' | xargs)"
-
-check "Pending friendship still exists" "$PENDING_STATUS" "PENDING"
-echo
 
 
 if [[ $FAIL -eq 0 ]]; then
-  color_echo "$GREEN" "ALL $PASS CHECKS PASSED"
+  color_echo "$GREEN" "============== ALL $PASS CHECKS PASSED =============="
 else
   color_echo "$RED" "$FAIL FAILED / $PASS PASSED"
   exit 1

@@ -187,3 +187,25 @@ export async function removeFriend(currentUserId: string, friendId: string) {
     where: { id: friendship.id },
   });
 }
+
+export async function cancelFriendRequest(requesterId: string, addresseeId: string) {
+  if (requesterId === addresseeId) {
+    throw new AppError(400, "You can't cancel a request to yourself");
+  }
+
+  const friendship = await prisma.friendship.findFirst({
+    where: {
+      requesterId,   // only the original sender can cancel — no OR here
+      addresseeId,
+      status: 'PENDING',
+    },
+  });
+
+  if (!friendship) {
+    throw new AppError(404, 'Pending friend request not found');
+  }
+
+  await prisma.friendship.delete({
+    where: { id: friendship.id },
+  });
+}

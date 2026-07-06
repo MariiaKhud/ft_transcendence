@@ -6,6 +6,7 @@ import {
   getIncomingRequests,
   getFriends,
   removeFriend,
+  cancelFriendRequest,
 } from '../controllers/friends.controller.js';
 
 const router = Router();
@@ -13,6 +14,7 @@ router.get('/requests', authMiddleware, getIncomingRequests); // must stay above
 router.get('/', authMiddleware, getFriends);
 router.post('/request/:userId', authMiddleware, sendFriendRequest);
 router.patch('/request/:userId', authMiddleware, respondToFriendRequest);
+router.delete('/request/:userId', authMiddleware, cancelFriendRequest);
 router.delete('/:userId', authMiddleware, removeFriend);
 
 export default router;
