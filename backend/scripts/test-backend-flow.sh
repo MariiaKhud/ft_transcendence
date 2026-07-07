@@ -471,6 +471,57 @@ assert_status "200" "Get feed after create"
 assert_body_contains '"title":"My Test Article"' "Get feed after create"
 
 # ============================================================================
+# [ARTICLES] GET /api/articles?search=&category=&sort= — advanced search
+# ============================================================================
+# Description: Keyword search across title + content + author username
+# (ILIKE), combined with category filter, on top of pagination/sort.
+# Epic Link: Articles + Feed
+# Status: Done ✓
+# ============================================================================
+
+# Test 38a: GET /api/articles — search matches by title keyword
+color_echo "$BLUE" "38a. GET /api/articles — search matches title keyword"
+perform_request "Search by title" "${BASE_URL}/api/articles?search=Article"
+assert_status "200" "Search by title"
+assert_body_contains '"title":"My Test Article"' "Search by title"
+
+# Test 38b: GET /api/articles — search matches by content keyword
+color_echo "$BLUE" "38b. GET /api/articles — search matches content keyword"
+perform_request "Search by content" "${BASE_URL}/api/articles?search=hundred"
+assert_status "200" "Search by content"
+assert_body_contains '"title":"My Test Article"' "Search by content"
+
+# Test 38c: GET /api/articles — search matches by author username
+color_echo "$BLUE" "38c. GET /api/articles — search matches author username"
+perform_request "Search by author username" "${BASE_URL}/api/articles?search=${USERNAME}"
+assert_status "200" "Search by author username"
+assert_body_contains '"title":"My Test Article"' "Search by author username"
+
+# Test 38d: GET /api/articles — author username search is case-insensitive (ILIKE)
+color_echo "$BLUE" "38d. GET /api/articles — author username search is case-insensitive"
+perform_request "Search by author username (uppercased)" "${BASE_URL}/api/articles?search=${USERNAME^^}"
+assert_status "200" "Search by author username (uppercased)"
+assert_body_contains '"title":"My Test Article"' "Search by author username (uppercased)"
+
+# Test 38e: GET /api/articles — search with no matches returns an empty page
+color_echo "$BLUE" "38e. GET /api/articles — search with no matches returns empty list"
+perform_request "Search (no match)" "${BASE_URL}/api/articles?search=zzz_no_such_match_zzz"
+assert_status "200" "Search (no match)"
+assert_body_contains '"articles":[]' "Search (no match)"
+
+# Test 38f: GET /api/articles — search + category combined (matching category)
+color_echo "$BLUE" "38f. GET /api/articles — search + matching category returns the article"
+perform_request "Search + matching category" "${BASE_URL}/api/articles?search=${USERNAME}&category=PROGRAMMING"
+assert_status "200" "Search + matching category"
+assert_body_contains '"title":"My Test Article"' "Search + matching category"
+
+# Test 38g: GET /api/articles — search + category combined (non-matching category excludes it)
+color_echo "$BLUE" "38g. GET /api/articles — search + non-matching category excludes the article"
+perform_request "Search + non-matching category" "${BASE_URL}/api/articles?search=${USERNAME}&category=CAREER"
+assert_status "200" "Search + non-matching category"
+assert_body_not_contains '"title":"My Test Article"' "Search + non-matching category"
+
+# ============================================================================
 # [ARTICLES] PATCH /api/articles/:id — edit article
 # ============================================================================
 # Description: Tests for PATCH /api/articles/:id (author-only edit)

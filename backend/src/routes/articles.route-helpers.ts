@@ -160,6 +160,7 @@ export const buildArticlesFilter = (
     where.OR = [
       { title: { contains: search, mode: 'insensitive' } },
       { content: { contains: search, mode: 'insensitive' } },
+      { author: { username: { contains: search, mode: 'insensitive' } } },
     ]
   }
 
