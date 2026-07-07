@@ -6,6 +6,8 @@ import { Register } from '@/pages/Register'
 import { Profile } from '@/pages/Profile'
 import { EditProfile } from '@/pages/EditProfile'
 import { Article } from '@/pages/Article'
+import { PrivacyPolicy } from '@/pages/PrivacyPolicy'
+import { TermsOfService } from '@/pages/TermsOfService'
 import { NotFound } from '@/pages/NotFound'
 
 // App routes.
@@ -42,6 +44,14 @@ export const router = createBrowserRouter([
       {
         path: 'settings/profile',
         element: <EditProfile />,
+      },
+      {
+        path: 'privacy-policy',
+        element: <PrivacyPolicy />,
+      },
+      {
+        path: 'terms-of-service',
+        element: <TermsOfService />,
       },
       {
         path: '*',

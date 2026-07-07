@@ -123,6 +123,8 @@ ft_transcendence/
 - **Logout redirect UX** (logout from profile/edit pages redirects to login)
 - **Password requirement hints** (short helper text in login/register forms)
 - **Global articles feed** (paginated, searchable, filterable by category, sortable)
+- **Privacy Policy page** (static content, linked from footer, guest accessible)
+- **Terms of Service page** (acceptable use, content ownership, moderation policy, guest accessible)
 
 ### In Progress
 - Article publishing
