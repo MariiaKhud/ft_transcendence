@@ -257,7 +257,7 @@ export const Article = () => {
           </div>
         ) : (
           <>
-            <h1 className="mt-3 text-3xl font-bold text-slate-900">{article.title}</h1>
+            <h1 className="mt-3 break-words text-3xl font-bold text-slate-900">{article.title}</h1>
 
             {/* Author info */}
             <div className="mt-4 flex items-center gap-3">
