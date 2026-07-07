@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Footer } from '@/components/Footer'
@@ -85,7 +86,9 @@ const App = () => {
 
       {/* The router shows the current page here. */}
       <main className="relative z-10 flex-1 mx-auto w-full max-w-6xl px-6 py-20">
-        <Outlet />
+        <Suspense fallback={null}>
+          <Outlet />
+        </Suspense>
       </main>
 
       {/* Footer */}

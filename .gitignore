@@ -1,3 +1,10 @@
+MY_NOTES.md
+
+folder-structure.md
+jira-tasks.csv
+schema.prisma
+transcendence-summary.md
+
 # Environment variables (contains secrets!)
 .env
 .env.local
