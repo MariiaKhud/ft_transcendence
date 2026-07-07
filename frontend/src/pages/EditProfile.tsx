@@ -408,6 +408,9 @@ export const EditProfile = () => {
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
             placeholder="Your display name (optional)"
           />
+          <p className="text-right text-xs text-slate-400">
+            {displayName.length} / {MAX_DISPLAY_NAME_LENGTH}
+          </p>
           {displayNameError.length > 0 ? (
             <p className="text-xs font-medium text-red-500">{displayNameError}</p>
           ) : null}
