@@ -15,11 +15,12 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
   const authorName = article.author.displayName ?? article.author.username
 
   return (
-    <Link
-      to={`/articles/${article.id}`}
-      className="block rounded-2xl border border-white/30 bg-white/40 p-6 shadow-xl backdrop-blur-md transition-shadow hover:shadow-2xl"
-    >
-      <article>
+    <article className="relative rounded-2xl border border-white/30 bg-white/40 p-6 shadow-xl backdrop-blur-md transition-shadow hover:shadow-2xl">
+      {/* Stretched link: makes the whole card clickable to the article, while
+          sitting below the author avatar/name so those can link elsewhere. */}
+      <Link to={`/articles/${article.id}`} className="absolute inset-0 z-0" aria-label={article.title} />
+
+      <div className="pointer-events-none relative z-10">
         <div className="flex items-start justify-between gap-4">
           <h2 className="text-2xl font-bold text-slate-900 mb-2">{article.title}</h2>
           <span className="shrink-0 rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
@@ -31,14 +32,22 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-semibold text-white">
+            <Link
+              to={`/profile/${article.author.username}`}
+              className="pointer-events-auto flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-semibold text-white"
+            >
               {avatarUrl ? (
                 <img src={avatarUrl} alt={authorName} className="h-full w-full object-cover" />
               ) : (
                 <span>{getInitials(article.author)}</span>
               )}
-            </div>
-            <span className="text-sm font-medium text-slate-700">{authorName}</span>
+            </Link>
+            <Link
+              to={`/profile/${article.author.username}`}
+              className="pointer-events-auto text-sm font-medium text-slate-700 hover:text-purple-700"
+            >
+              {authorName}
+            </Link>
             <span className="text-xs text-slate-500">· {new Date(article.createdAt).toLocaleDateString()}</span>
           </div>
 
@@ -47,7 +56,7 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
             <span>💬 {article._count?.comments ?? 0}</span>
           </div>
         </div>
-      </article>
-    </Link>
+      </div>
+    </article>
   )
 }
