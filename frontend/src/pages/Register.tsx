@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { registerUser } from '@/api/auth'
 
-const PASSWORD_HELP_TEXT = '8-72 chars, use lowercase, uppercase, and digits.'
+const PASSWORD_HELP_TEXT = '8-72 chars, use lowercase, uppercase, and digits'
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -173,6 +173,7 @@ export const Register = () => {
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
             placeholder="you@example.com"
           />
+          <p className="text-xs text-slate-500">Valid email format required (e.g., user@example.com)</p>
           {emailError.length > 0 ? <p className="text-xs font-medium text-red-500">{emailError}</p> : null}
         </div>
 
@@ -189,9 +190,14 @@ export const Register = () => {
             onChange={(event) => {
               setUsername(event.target.value)
             }}
+            maxLength={20}
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
             placeholder="your_username"
           />
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500">3-20 chars, letters, numbers, or underscore</p>
+            <p className="text-xs text-slate-400">{username.length} / 20</p>
+          </div>
           {usernameError.length > 0 ? <p className="text-xs font-medium text-red-500">{usernameError}</p> : null}
         </div>
 
@@ -249,7 +255,10 @@ export const Register = () => {
               )}
             </button>
           </div>
-          <p className="text-xs text-slate-500">{PASSWORD_HELP_TEXT}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500">{PASSWORD_HELP_TEXT}</p>
+            <p className="text-xs text-slate-400">{password.length} / 72</p>
+          </div>
           {passwordError.length > 0 ? <p className="text-xs font-medium text-red-500">{passwordError}</p> : null}
         </div>
 
@@ -307,6 +316,7 @@ export const Register = () => {
               )}
             </button>
           </div>
+          <p className="text-right text-xs text-slate-400">{confirmPassword.length} / 72</p>
           {confirmPasswordError.length > 0 ? (
             <p className="text-xs font-medium text-red-500">{confirmPasswordError}</p>
           ) : null}
