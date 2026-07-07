@@ -177,7 +177,21 @@ const deleteArticleHandler = async (req: Request, res: Response) => {
     throw new AppError(403, 'Only the author can delete this article')
   }
 
-  await prisma.article.delete({ where: { id: existing.id } })
+  // Revert the publish XP in the same transaction so delete-then-republish can't farm XP.
+  await prisma.$transaction(async (tx) => {
+    await tx.article.delete({ where: { id: existing.id } })
+
+    const author = await tx.user.findUniqueOrThrow({
+      where: { id: existing.authorId },
+      select: { xp: true },
+    })
+
+    const newXp = Math.max(0, author.xp - XP_REWARD_CREATE_ARTICLE)
+    await tx.user.update({
+      where: { id: existing.authorId },
+      data: { xp: newXp, level: calculateLevelForXp(newXp) },
+    })
+  })
 
   res.status(200).json({ success: true, data: { id: existing.id } })
 }

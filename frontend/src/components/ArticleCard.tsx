@@ -28,7 +28,7 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
           </span>
         </div>
 
-        <p className="mb-4 line-clamp-2 text-slate-600">{article.content}</p>
+        <p className="mb-4 line-clamp-2 break-words text-slate-600">{article.content}</p>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

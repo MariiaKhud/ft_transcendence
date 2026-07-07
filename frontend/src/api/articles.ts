@@ -114,6 +114,30 @@ export const getArticle = async (id: string): Promise<ArticleDetail> => {
 }
 
 /**
+ * Fields required to publish a new article.
+ */
+export interface CreateArticleInput {
+  title: string
+  content: string
+  category: string
+}
+
+// POST /api/articles doesn't compute isLikedByCurrentUser (there's nothing to like yet).
+type CreatedArticle = Omit<ArticleDetail, 'isLikedByCurrentUser'>
+
+/**
+ * Sends POST /api/articles to publish a new article. Requires authentication.
+ */
+export const createArticle = async (input: CreateArticleInput): Promise<CreatedArticle> => {
+  try {
+    const response = await apiClient.post<ApiResponse<CreatedArticle>>('/articles', input)
+    return requireResponseData(response.data, 'Unable to publish article')
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to publish article'))
+  }
+}
+
+/**
  * Fields an author can update on their own article.
  */
 export interface UpdateArticleInput {

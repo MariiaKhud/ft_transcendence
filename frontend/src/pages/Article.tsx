@@ -3,6 +3,7 @@ import axios from 'axios'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { Button } from '@/components/ui/button'
+import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
 import { useStore } from '@/store/store'
 import { formatCategoryLabel, getInitials, toSafeImageUrl } from '@/lib/article-display'
 import {
@@ -16,8 +17,6 @@ import {
   type ArticleDetail,
   type Comment,
 } from '@/api/articles'
-
-const CATEGORIES = ['PROGRAMMING', 'CAREER', 'STUDY_NOTES', 'PROJECTS', 'LIFE', 'OPINION']
 
 export const Article = () => {
   const { id } = useParams<{ id: string }>()
@@ -44,10 +43,6 @@ export const Article = () => {
 
   // Edit mode state.
   const [isEditing, setIsEditing] = useState(false)
-  const [editTitle, setEditTitle] = useState('')
-  const [editContent, setEditContent] = useState('')
-  const [editCategory, setEditCategory] = useState('')
-  const [editError, setEditError] = useState('')
   const [isSaving, setIsSaving] = useState(false)
 
   // Delete state.
@@ -147,42 +142,24 @@ export const Article = () => {
   }
 
   const handleStartEdit = () => {
-    if (!article) {
-      return
-    }
-
-    setEditTitle(article.title)
-    setEditContent(article.content)
-    setEditCategory(article.category)
-    setEditError('')
     setIsEditing(true)
   }
 
   const handleCancelEdit = () => {
     setIsEditing(false)
-    setEditError('')
   }
 
-  const handleSaveEdit = async (event: FormEvent) => {
-    event.preventDefault()
-
+  const handleSaveEdit = async (values: ArticleFormValues) => {
     if (!id) {
       return
     }
 
-    setEditError('')
     setIsSaving(true)
 
     try {
-      const updated = await updateArticle(id, {
-        title: editTitle,
-        content: editContent,
-        category: editCategory,
-      })
+      const updated = await updateArticle(id, values)
       setArticle(updated)
       setIsEditing(false)
-    } catch (err) {
-      setEditError(err instanceof Error ? err.message : 'Unable to update article')
     } finally {
       setIsSaving(false)
     }
@@ -238,86 +215,46 @@ export const Article = () => {
   return (
     <article className="mx-auto w-full max-w-3xl space-y-6">
       <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
-        {/* Header: category, title, edit/delete */}
-        <div className="flex items-start justify-between gap-4">
-          {isEditing ? (
-            <select
-              value={editCategory}
-              onChange={(e) => setEditCategory(e.target.value)}
-              className="rounded-lg border border-slate-300 px-3 py-1 text-sm text-slate-900 focus:border-purple-500 focus:outline-none"
-            >
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {formatCategoryLabel(category)}
-                </option>
-              ))}
-            </select>
-          ) : (
+        {!isEditing && (
+          <div className="flex items-start justify-between gap-4">
             <span className="shrink-0 rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
               {formatCategoryLabel(article.category)}
             </span>
-          )}
 
-          {isOwnArticle && !isEditing && (
-            <div className="flex shrink-0 gap-2">
-              <button
-                type="button"
-                onClick={handleStartEdit}
-                className="rounded-lg border border-slate-300 bg-white/70 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-white"
-              >
-                Edit
-              </button>
-              <button
-                type="button"
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="rounded-lg border border-red-200 bg-red-50/70 px-3 py-1 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete'}
-              </button>
-            </div>
-          )}
-        </div>
+            {isOwnArticle && (
+              <div className="flex shrink-0 gap-2">
+                <button
+                  type="button"
+                  onClick={handleStartEdit}
+                  className="rounded-lg border border-slate-300 bg-white/70 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-white"
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="rounded-lg border border-red-200 bg-red-50/70 px-3 py-1 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
 
         {deleteError.length > 0 && <p className="mt-2 text-sm font-medium text-red-600">{deleteError}</p>}
 
         {isEditing ? (
-          <form className="mt-4 space-y-4" onSubmit={handleSaveEdit}>
-            <input
-              type="text"
-              value={editTitle}
-              onChange={(e) => setEditTitle(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-2xl font-bold text-slate-900 focus:border-purple-500 focus:outline-none"
-              placeholder="Title"
+          <div className="mt-4">
+            <ArticleForm
+              initialValues={{ title: article.title, content: article.content, category: article.category }}
+              submitLabel="Save changes"
+              isSubmitting={isSaving}
+              onSubmit={handleSaveEdit}
+              onCancel={handleCancelEdit}
             />
-            <textarea
-              value={editContent}
-              onChange={(e) => setEditContent(e.target.value)}
-              rows={12}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-purple-500 focus:outline-none"
-              placeholder="Content (Markdown supported)"
-            />
-
-            {editError.length > 0 && <p className="text-sm font-medium text-red-600">{editError}</p>}
-
-            <div className="flex gap-3">
-              <Button
-                type="submit"
-                disabled={isSaving}
-                className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
-              >
-                {isSaving ? 'Saving...' : 'Save changes'}
-              </Button>
-              <button
-                type="button"
-                onClick={handleCancelEdit}
-                disabled={isSaving}
-                className="rounded-lg border border-slate-200 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-white disabled:opacity-50"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
+          </div>
         ) : (
           <>
             <h1 className="mt-3 text-3xl font-bold text-slate-900">{article.title}</h1>
@@ -348,7 +285,7 @@ export const Article = () => {
             </div>
 
             {/* Markdown content */}
-            <div className="prose prose-slate mt-6 max-w-none">
+            <div className="prose prose-slate mt-6 max-w-none break-words">
               <ReactMarkdown
                 components={{
                   // Shift headings down a level so they nest under the article's own <h1> title.

@@ -9,6 +9,7 @@ const Register = lazy(() => import('@/pages/Register').then((m) => ({ default: m
 const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
 const EditProfile = lazy(() => import('@/pages/EditProfile').then((m) => ({ default: m.EditProfile })))
 const Article = lazy(() => import('@/pages/Article').then((m) => ({ default: m.Article })))
+const CreateArticle = lazy(() => import('@/pages/CreateArticle').then((m) => ({ default: m.CreateArticle })))
 const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy })))
 const TermsOfService = lazy(() => import('@/pages/TermsOfService').then((m) => ({ default: m.TermsOfService })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
@@ -39,6 +40,10 @@ export const router = createBrowserRouter([
       {
         path: 'profile/:username',
         element: <Profile />,
+      },
+      {
+        path: 'articles/new',
+        element: <CreateArticle />,
       },
       {
         path: 'articles/:id',
