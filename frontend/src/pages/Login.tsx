@@ -132,6 +132,7 @@ export const Login = () => {
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
             placeholder="you@example.com"
           />
+          <p className="text-xs text-slate-500">Valid email format required (e.g., user@example.com)</p>
           {emailError.length > 0 ? <p className="text-xs font-medium text-red-500">{emailError}</p> : null}
         </div>
 
@@ -189,7 +190,10 @@ export const Login = () => {
               )}
             </button>
           </div>
-          <p className="text-xs text-slate-500">{PASSWORD_HELP_TEXT}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-slate-500">{PASSWORD_HELP_TEXT}</p>
+            <p className="text-xs text-slate-400">{password.length} / 72</p>
+          </div>
           {passwordError.length > 0 ? <p className="text-xs font-medium text-red-500">{passwordError}</p> : null}
         </div>
 
