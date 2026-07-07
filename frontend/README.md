@@ -100,6 +100,8 @@ Routes are configured in `src/app/router.tsx`:
 - `/terms-of-service` -> `TermsOfService` ✓ (static terms page, guest accessible)
 - `*` -> `NotFound`
 
+Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS chunk instead of inflating the initial bundle.
+
 ## Edit Profile Form ✓
 
 **Route:** `/settings/profile`
@@ -188,18 +190,15 @@ Routes are configured in `src/app/router.tsx`:
 
 ## Footer Component ✓
 
-**Description:** Sticky footer displayed on all pages linking to important pages and contact information.
+**Description:** Minimal footer displayed on all pages with static policy and repository links.
 
 **Links:**
-- Home
 - Privacy Policy
 - Terms of Service
-- Contact email
+- GitHub repo (`https://github.com/MariiaKhud/ft_transcendence/tree/main`)
 
 **Implementation files:**
 - `src/components/Footer.tsx` — footer component
-- `src/components/ArticleCard.tsx` — article card presentational component
-- `src/api/articles.ts` — API wrapper functions for articles
 
 ## Auth Flow
 

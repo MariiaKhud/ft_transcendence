@@ -10,12 +10,13 @@ Express + TypeScript API for ft_transcendence.
 - **User profile updates** (`PATCH /api/users/me`) — displayName, bio with validation
 - **Avatar management** (`POST /api/users/me/avatar`) — upload PNG/JPG, max 2MB
 - **Avatar delete** (`DELETE /api/users/me/avatar`) — remove user avatar
+- **Global articles feed** (`GET /api/articles`) — paginated, searchable, filterable, sortable
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses
 
 ### In Progress
-- **Global articles feed** (`GET /api/articles`) — paginated, searchable, filterable, sortable
+- **Article authoring endpoints** (`POST /api/articles`, `PUT /api/articles/:id`, `DELETE /api/articles/:id`)
 
 ## Run Modes
 
