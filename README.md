@@ -30,7 +30,7 @@
 ### 1. Clone
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/MariiaKhud/ft_transcendence.git
 cd ft_transcendence
 ```
 
@@ -125,6 +125,7 @@ ft_transcendence/
 - **Global articles feed** (paginated, searchable, filterable by category, sortable)
 - **Privacy Policy page** (static content, linked from footer, guest accessible)
 - **Terms of Service page** (acceptable use, content ownership, moderation policy, guest accessible)
+- **Minimal footer links** (Privacy Policy, Terms of Service, GitHub repo)
 
 ### In Progress
 - Article publishing
@@ -160,5 +161,5 @@ docker compose up --build
 
 ## Getting Help
 
-- Backend API docs: `backend/README.md`
-- Frontend docs: `frontend/README.md`
+- Backend API docs: [backend/README.md](backend/README.md)
+- Frontend docs: [frontend/README.md](frontend/README.md)
