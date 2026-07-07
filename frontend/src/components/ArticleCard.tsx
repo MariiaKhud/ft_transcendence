@@ -22,7 +22,7 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
 
       <div className="pointer-events-none relative z-10">
         <div className="flex items-start justify-between gap-4">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">{article.title}</h2>
+          <h2 className="mb-2 min-w-0 break-words text-2xl font-bold text-slate-900">{article.title}</h2>
           <span className="shrink-0 rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
             {formatCategoryLabel(article.category)}
           </span>
