@@ -212,10 +212,10 @@ export const Profile = () => {
       <div className="relative overflow-hidden rounded-3xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-fuchsia-100/30 via-transparent to-cyan-100/30" />
 
-        <div className="relative flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-5">
+        <div className="relative flex flex-col gap-4 sm:gap-6 md:flex-row md:items-start md:justify-between">
+          <div className="flex min-w-0 items-center gap-5">
             {/* Avatar image or initials if no image. */}
-            <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-2xl border border-white/50 bg-gradient-to-br from-purple-500 to-pink-500 text-2xl font-bold text-white shadow-lg">
+            <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/50 bg-gradient-to-br from-purple-500 to-pink-500 text-2xl font-bold text-white shadow-lg">
               {avatarUrl ? (
                 <img src={avatarUrl} alt={`${displayName} avatar`} className="h-full w-full object-cover" />
               ) : (
@@ -223,10 +223,10 @@ export const Profile = () => {
               )}
             </div>
 
-            <div>
+            <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">Profile</p>
-              <h1 className="mt-1 text-4xl font-bold tracking-tight text-slate-900">{displayName}</h1>
-              <p className="text-slate-600">@{profile.username}</p>
+              <h1 className="mt-1 break-words text-2xl font-bold tracking-tight text-slate-900 md:text-4xl">{displayName}</h1>
+              <p className="break-words text-slate-600">@{profile.username}</p>
             </div>
           </div>
 
@@ -237,7 +237,7 @@ export const Profile = () => {
               onClick={() => {
                 navigate('/settings/profile')
               }}
-              className="rounded-full border border-purple-200 bg-white/70 px-5 py-2 text-sm font-semibold text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+              className="flex-shrink-0 rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-xs font-semibold text-purple-700 transition-all hover:border-purple-300 hover:bg-white sm:px-5 sm:text-sm"
             >
               Edit Profile
             </button>
@@ -245,7 +245,7 @@ export const Profile = () => {
         </div>
 
         {/* Bio text or a default message if empty. */}
-        <p className="relative mt-6 text-slate-700">
+        <p className="relative mt-6 break-words whitespace-pre-wrap text-slate-700">
           {profile.bio ?? 'No bio yet. This user has not added a profile bio.'}
         </p>
 
