@@ -57,11 +57,9 @@ const App = () => {
                 {/* Open your profile. */}
                 <Link
                   to={`/profile/${currentUser.username}`}
-                  className="inline-flex items-center justify-center rounded-full border border-fuchsia-300/60 bg-gradient-to-r from-fuchsia-100 to-purple-100 px-6 py-2 text-sm font-semibold text-fuchsia-800 shadow-sm transition-all hover:scale-105"
+                  className="inline-flex items-center justify-center rounded-full border border-fuchsia-300/60 bg-gradient-to-r from-fuchsia-100 to-purple-100 px-4 py-2 text-sm font-semibold text-fuchsia-800 shadow-sm transition-all hover:scale-105"
                 >
-                  {((currentUser.displayName ?? currentUser.username).length > 6
-                    ? (currentUser.displayName ?? currentUser.username).slice(0, 6) + '...'
-                    : (currentUser.displayName ?? currentUser.username))}
+                  {(currentUser.displayName ?? currentUser.username).slice(0, 6)}
                 </Link>
                 {/* Log out. */}
                 <button

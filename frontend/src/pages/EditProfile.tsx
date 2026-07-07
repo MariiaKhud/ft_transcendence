@@ -34,7 +34,7 @@ const getInitials = (displayName: string | null, username: string) => {
   return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
 }
 
-const MAX_DISPLAY_NAME_LENGTH = 50
+const MAX_DISPLAY_NAME_LENGTH = 20
 const MAX_BIO_LENGTH = 500
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const MAX_FILE_SIZE_MB = 2
