@@ -4,6 +4,7 @@ import App from '@/App'
 
 // Lazily load each page so its code ships in its own chunk instead of the main bundle.
 const Home = lazy(() => import('@/pages/Home').then((m) => ({ default: m.Home })))
+const Search = lazy(() => import('@/pages/Search').then((m) => ({ default: m.Search })))
 const Login = lazy(() => import('@/pages/Login').then((m) => ({ default: m.Login })))
 const Register = lazy(() => import('@/pages/Register').then((m) => ({ default: m.Register })))
 const Profile = lazy(() => import('@/pages/Profile').then((m) => ({ default: m.Profile })))
@@ -23,6 +24,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <Home />,
+      },
+      {
+        path: 'search',
+        element: <Search />,
       },
       {
         path: 'login',

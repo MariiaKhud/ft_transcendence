@@ -60,8 +60,9 @@ const createArticleHandler = async (req: Request, res: Response) => {
 // List published articles with filtering and sorting, newest first by default.
 const listArticlesHandler = async (req: Request, res: Response) => {
   try {
-    const { page, limit, category, sort, search } = validateArticlesQuery(req.query)
-    const where = buildArticlesFilter(category, search)
+    const { page, limit, category, sort, search, title, author, content, postedFrom, postedTo } =
+      validateArticlesQuery(req.query)
+    const where = buildArticlesFilter({ category, search, title, author, content, postedFrom, postedTo })
     const orderBy = buildArticlesOrderBy(sort)
 
     // Run the page of articles and the total count at the same time.
@@ -93,7 +94,7 @@ const listArticlesHandler = async (req: Request, res: Response) => {
       },
     })
   } catch (error) {
-    if (error instanceof Error && error.message.includes('Invalid sort parameter')) {
+    if (error instanceof Error && error.message.startsWith('Invalid ')) {
       throw new AppError(400, error.message)
     }
     throw error

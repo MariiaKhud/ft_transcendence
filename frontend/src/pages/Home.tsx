@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { ArticleCard } from '@/components/ArticleCard'
+import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { useStore } from '@/store/store'
 import { getArticles, type Article, type ArticlesResponse } from '@/api/articles'
 
@@ -30,6 +31,7 @@ export const Home = () => {
   const [sort, setSort] = useState<SortOption>('newest')
   const [category, setCategory] = useState<string>('')
   const [search, setSearch] = useState<string>('')
+  const debouncedSearch = useDebouncedValue(search, 400)
   const [totalPages, setTotalPages] = useState(1)
 
   const fetchArticles = async () => {
@@ -42,7 +44,7 @@ export const Home = () => {
         limit: 10,
         sort,
         category: category || undefined,
-        search: search || undefined,
+        search: debouncedSearch || undefined,
       })
 
       if (response.success) {
@@ -63,7 +65,7 @@ export const Home = () => {
   useEffect(() => {
     setPage(1)
     fetchArticles()
-  }, [sort, category, search])
+  }, [sort, category, debouncedSearch])
 
   // Refetch when page changes.
   useEffect(() => {
@@ -108,50 +110,57 @@ export const Home = () => {
         {/* Filters */}
         <div className="rounded-2xl border border-white/30 bg-white/40 p-6 shadow-xl backdrop-blur-md space-y-4">
           {/* Search */}
-          <div>
+          <div className="flex flex-col gap-3 sm:flex-row">
             <input
               type="text"
               placeholder="Search articles..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+              className="w-full flex-1 rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
             />
+            <Link
+              to="/search"
+              className="inline-flex shrink-0 items-center justify-center rounded-lg border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+            >
+              Advanced Search
+            </Link>
           </div>
 
-          {/* Sort and Category */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label htmlFor="sort-select" className="block text-sm font-medium text-slate-700 mb-2">
-                Sort by
-              </label>
-              <select
-                id="sort-select"
-                value={sort}
-                onChange={(e) => setSort(e.target.value as SortOption)}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-purple-500 focus:outline-none"
-              >
-                <option value="newest">Newest</option>
-                <option value="oldest">Oldest</option>
-                <option value="most_liked">Most Liked</option>
-              </select>
-            </div>
+          {/* Sort */}
+          <div>
+            <label htmlFor="sort-select" className="block text-sm font-medium text-slate-700 mb-2">
+              Sort by
+            </label>
+            <select
+              id="sort-select"
+              value={sort}
+              onChange={(e) => setSort(e.target.value as SortOption)}
+              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-purple-500 focus:outline-none sm:w-auto"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="most_liked">Most Liked</option>
+            </select>
+          </div>
 
-            <div>
-              <label htmlFor="category-select" className="block text-sm font-medium text-slate-700 mb-2">
-                Category
-              </label>
-              <select
-                id="category-select"
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-purple-500 focus:outline-none"
-              >
-                {CATEGORIES.map((cat) => (
-                  <option key={cat.value || 'all'} value={cat.value}>
-                    {cat.label === 'All' ? 'All Categories' : cat.label}
-                  </option>
-                ))}
-              </select>
+          {/* Category pills */}
+          <div>
+            <span className="mb-2 block text-sm font-medium text-slate-700">Category</span>
+            <div className="flex flex-wrap gap-2">
+              {CATEGORIES.map((cat) => (
+                <button
+                  key={cat.value || 'all'}
+                  type="button"
+                  onClick={() => setCategory(cat.value)}
+                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                    category === cat.value
+                      ? 'border-purple-600 bg-purple-600 text-white'
+                      : 'border-slate-300 bg-white text-slate-700 hover:border-purple-300 hover:bg-purple-50'
+                  }`}
+                >
+                  {cat.label === 'All' ? 'All Categories' : cat.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>

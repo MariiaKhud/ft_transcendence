@@ -79,6 +79,11 @@ export interface GetArticlesParams {
   category?: string
   sort?: 'newest' | 'oldest' | 'most_liked'
   search?: string
+  title?: string
+  author?: string
+  content?: string
+  postedFrom?: string
+  postedTo?: string
 }
 
 /**

@@ -128,6 +128,24 @@ export interface ArticlesQueryParams {
   category?: string
   sort?: 'newest' | 'oldest' | 'most_liked'
   search?: string
+  title?: string
+  author?: string
+  content?: string
+  postedFrom?: string
+  postedTo?: string
+}
+
+const parseDateParam = (value: unknown, label: string): Date | undefined => {
+  if (value === undefined || value === null || value === '') {
+    return undefined
+  }
+
+  const date = new Date(String(value))
+  if (Number.isNaN(date.getTime())) {
+    throw new Error(`Invalid ${label} parameter: must be a valid date`)
+  }
+
+  return date
 }
 
 export const validateArticlesQuery = (query: Record<string, any>) => {
@@ -136,18 +154,41 @@ export const validateArticlesQuery = (query: Record<string, any>) => {
   const category = query.category ? String(query.category).toUpperCase() : undefined
   const sort = (query.sort as string)?.toLowerCase() || 'newest'
   const search = query.search ? String(query.search).trim() : undefined
+  const title = query.title ? String(query.title).trim() : undefined
+  const author = query.author ? String(query.author).trim() : undefined
+  const content = query.content ? String(query.content).trim() : undefined
 
   if (!['newest', 'oldest', 'most_liked'].includes(sort)) {
     throw new Error('Invalid sort parameter: must be newest, oldest, or most_liked')
   }
 
-  return { page, limit, category, sort, search }
+  const postedFrom = parseDateParam(query.postedFrom, 'postedFrom')
+  const postedTo = parseDateParam(query.postedTo, 'postedTo')
+
+  return { page, limit, category, sort, search, title, author, content, postedFrom, postedTo }
 }
 
-export const buildArticlesFilter = (
-  category?: string,
+export interface ArticlesFilterInput {
+  category?: string
   search?: string
-): Prisma.ArticleWhereInput => {
+  title?: string
+  author?: string
+  content?: string
+  postedFrom?: Date
+  postedTo?: Date
+}
+
+// `search` matches anything (title/content/author); the field-specific
+// filters are ANDed on top of it for the advanced search form.
+export const buildArticlesFilter = ({
+  category,
+  search,
+  title,
+  author,
+  content,
+  postedFrom,
+  postedTo,
+}: ArticlesFilterInput): Prisma.ArticleWhereInput => {
   const where: Prisma.ArticleWhereInput = {
     isRemoved: false,
   }
@@ -162,6 +203,25 @@ export const buildArticlesFilter = (
       { content: { contains: search, mode: 'insensitive' } },
       { author: { username: { contains: search, mode: 'insensitive' } } },
     ]
+  }
+
+  if (title) {
+    where.title = { contains: title, mode: 'insensitive' }
+  }
+
+  if (author) {
+    where.author = { username: { contains: author, mode: 'insensitive' } }
+  }
+
+  if (content) {
+    where.content = { contains: content, mode: 'insensitive' }
+  }
+
+  if (postedFrom || postedTo) {
+    where.createdAt = {
+      ...(postedFrom ? { gte: postedFrom } : {}),
+      ...(postedTo ? { lte: postedTo } : {}),
+    }
   }
 
   return where
