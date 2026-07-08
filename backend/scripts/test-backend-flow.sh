@@ -522,6 +522,67 @@ assert_status "200" "Search + non-matching category"
 assert_body_not_contains '"title":"My Test Article"' "Search + non-matching category"
 
 # ============================================================================
+# [ARTICLES] GET /api/articles?title=&author=&content=&postedFrom=&postedTo=
+# — advanced search, per-field form
+# ============================================================================
+# Description: Field-specific filters (title/author/content ILIKE, plus a
+# posted-date range), ANDed together and with category/sort, backing the
+# dedicated /search page's structured form.
+# Epic Link: Articles + Feed
+# Status: Done ✓
+# ============================================================================
+
+# Test 38h: GET /api/articles — title field matches
+color_echo "$BLUE" "38h. GET /api/articles — title field matches"
+perform_request "Search by title field" "${BASE_URL}/api/articles?title=Article"
+assert_status "200" "Search by title field"
+assert_body_contains '"title":"My Test Article"' "Search by title field"
+
+# Test 38i: GET /api/articles — author field matches (case-insensitive)
+color_echo "$BLUE" "38i. GET /api/articles — author field matches (case-insensitive)"
+perform_request "Search by author field" "${BASE_URL}/api/articles?author=${USERNAME^^}"
+assert_status "200" "Search by author field"
+assert_body_contains '"title":"My Test Article"' "Search by author field"
+
+# Test 38j: GET /api/articles — content field matches
+color_echo "$BLUE" "38j. GET /api/articles — content field matches"
+perform_request "Search by content field" "${BASE_URL}/api/articles?content=hundred"
+assert_status "200" "Search by content field"
+assert_body_contains '"title":"My Test Article"' "Search by content field"
+
+# Test 38k: GET /api/articles — title + author fields combined (AND, matching)
+color_echo "$BLUE" "38k. GET /api/articles — title + author fields combined (matching)"
+perform_request "Title + author fields (match)" "${BASE_URL}/api/articles?title=Article&author=${USERNAME}"
+assert_status "200" "Title + author fields (match)"
+assert_body_contains '"title":"My Test Article"' "Title + author fields (match)"
+
+# Test 38l: GET /api/articles — title + author fields combined (AND, non-matching author excludes it)
+color_echo "$BLUE" "38l. GET /api/articles — title + author fields combined (non-matching author excludes it)"
+perform_request "Title + author fields (no match)" "${BASE_URL}/api/articles?title=Article&author=${USERNAME2}"
+assert_status "200" "Title + author fields (no match)"
+assert_body_not_contains '"title":"My Test Article"' "Title + author fields (no match)"
+
+# Test 38m: GET /api/articles — posted date range includes the just-created article
+color_echo "$BLUE" "38m. GET /api/articles — posted date range includes today's article"
+POSTED_FROM="$(date -u -d 'yesterday' +%Y-%m-%d)"
+POSTED_TO="$(date -u -d 'tomorrow' +%Y-%m-%d)"
+perform_request "Posted date range (match)" "${BASE_URL}/api/articles?author=${USERNAME}&postedFrom=${POSTED_FROM}&postedTo=${POSTED_TO}"
+assert_status "200" "Posted date range (match)"
+assert_body_contains '"title":"My Test Article"' "Posted date range (match)"
+
+# Test 38n: GET /api/articles — posted date range excludes the article when postedTo is in the past
+color_echo "$BLUE" "38n. GET /api/articles — posted date range excludes when postedTo is in the past"
+PAST_DATE="$(date -u -d 'yesterday' +%Y-%m-%d)"
+perform_request "Posted date range (excluded)" "${BASE_URL}/api/articles?author=${USERNAME}&postedTo=${PAST_DATE}"
+assert_status "200" "Posted date range (excluded)"
+assert_body_not_contains '"title":"My Test Article"' "Posted date range (excluded)"
+
+# Test 38o: GET /api/articles — invalid postedFrom returns 400
+color_echo "$BLUE" "38o. GET /api/articles — invalid postedFrom returns 400"
+perform_request "Invalid postedFrom" "${BASE_URL}/api/articles?postedFrom=not-a-date"
+assert_status "400" "Invalid postedFrom"
+
+# ============================================================================
 # [ARTICLES] PATCH /api/articles/:id — edit article
 # ============================================================================
 # Description: Tests for PATCH /api/articles/:id (author-only edit)

@@ -180,6 +180,12 @@ assert_status "200" "Terms of Service route"
 assert_header_contains 'content-type: text/html' "Terms of Service route"
 assert_body_contains '<div id="root"></div>' "Terms of Service route"
 
+color_echo "$BLUE" "12a. Checking /search route (dedicated advanced search page)"
+perform_request "Search route" "${BASE_URL}/search"
+assert_status "200" "Search route"
+assert_header_contains 'content-type: text/html' "Search route"
+assert_body_contains '<div id="root"></div>' "Search route"
+
 # ============================================================================
 # [ARTICLES] Frontend: Global feed with articles display
 # ============================================================================
@@ -204,6 +210,47 @@ color_echo "$BLUE" "15. Checking articles API with category filter (/api/article
 perform_request "Articles API with category" "${BASE_URL}/api/articles?category=PROGRAMMING"
 assert_status_one_of "Articles API with category" "200"
 assert_header_contains 'content-type: application/json' "Articles API with category"
+
+# ============================================================================
+# [SEARCH] Frontend: Advanced search page (/search) — per-field form
+# ============================================================================
+# Description: Structured search form (Title/Author/Content/posted-date
+# range) backing the dedicated /search page, proxied through the frontend.
+# Features: field-specific filters, AND combination, date range, validation
+# Epic Link: Articles + Feed
+# Status: Done ✓
+# ============================================================================
+
+color_echo "$BLUE" "15a. Checking articles API with title field (/api/articles?title=test)"
+perform_request "Articles API title field" "${BASE_URL}/api/articles?title=test"
+assert_status_one_of "Articles API title field" "200"
+assert_header_contains 'content-type: application/json' "Articles API title field"
+assert_body_contains '"pagination"' "Articles API title field"
+
+color_echo "$BLUE" "15b. Checking articles API with author field (/api/articles?author=admin)"
+perform_request "Articles API author field" "${BASE_URL}/api/articles?author=admin"
+assert_status_one_of "Articles API author field" "200"
+assert_header_contains 'content-type: application/json' "Articles API author field"
+
+color_echo "$BLUE" "15c. Checking articles API with content field (/api/articles?content=the)"
+perform_request "Articles API content field" "${BASE_URL}/api/articles?content=the"
+assert_status_one_of "Articles API content field" "200"
+assert_header_contains 'content-type: application/json' "Articles API content field"
+
+color_echo "$BLUE" "15d. Checking articles API with title+author fields combined"
+perform_request "Articles API title+author fields" "${BASE_URL}/api/articles?title=test&author=admin"
+assert_status_one_of "Articles API title+author fields" "200"
+assert_header_contains 'content-type: application/json' "Articles API title+author fields"
+
+color_echo "$BLUE" "15e. Checking articles API with a posted-date range"
+perform_request "Articles API date range" "${BASE_URL}/api/articles?postedFrom=2020-01-01&postedTo=2030-01-01"
+assert_status_one_of "Articles API date range" "200"
+assert_header_contains 'content-type: application/json' "Articles API date range"
+
+color_echo "$BLUE" "15f. Checking articles API rejects an invalid postedFrom date"
+perform_request "Articles API invalid date" "${BASE_URL}/api/articles?postedFrom=not-a-date"
+assert_status "400" "Articles API invalid date"
+assert_header_contains 'content-type: application/json' "Articles API invalid date"
 
 # ============================================================================
 # [USERS] Frontend: Edit profile form with displayName, bio, avatar
