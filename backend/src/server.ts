@@ -10,6 +10,7 @@ import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
 import articleRoutes from './routes/articles.routes.js'
 import friendsRoutes from './routes/friends.routes.js';
+import followsRoutes from './routes/follows.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -109,6 +110,7 @@ app.use('/api/auth', authRoutes)                       // Authentication routes 
 app.use('/api/users', userRoutes)                      // User routes (profile management, user listing, etc.)
 app.use('/api/articles', articleRoutes)                // Articles routes (global feed, search, filtering)
 app.use('/api/friends', friendsRoutes);                // Friend system (send/accept requests, list friends, remove friends)
+app.use('/api/follows', followsRoutes);                // Follow system (follow/unfollow authors)
 
 // TODO: Wire up route modules here
 // app.use('/api/comments', commentRoutes)

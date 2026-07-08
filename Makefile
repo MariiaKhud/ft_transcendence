@@ -16,6 +16,7 @@ help:
 	@printf "  $(GREEN)make test-backend$(RESET)  - Run backend flow tests\n"
 	@printf "  $(GREEN)make test-frontend$(RESET) - Run frontend smoke tests\n"
 	@printf "  $(GREEN)make test-friends$(RESET)  - Run friends flow integration test\n"
+	@printf "  $(GREEN)make test-follows$(RESET)  - Run follows flow integration test\n"
 
 up:
 	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"
@@ -45,5 +46,8 @@ test-frontend:
 
 test-friends:
 	cd backend && ./scripts/test-friends-flow.sh
+
+test-follows:
+	cd backend && ./scripts/test-follows-flow.sh
 
 .DEFAULT_GOAL := help
