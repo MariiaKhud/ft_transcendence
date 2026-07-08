@@ -1,19 +1,7 @@
 import axios from 'axios'
 import { apiClient, getApiErrorMessage, type ApiResponse } from '@/lib/api'
 import type { ProfileArticle, ProfileArticlesResponse, PublicProfile } from '@/types/profile'
-
-interface PublicProfileApiResponse {
-  displayName: string | null
-  username: string
-  avatarUrl: string | null
-  bio: string | null
-  followerCount: number
-  followingCount: number
-  articleCount: number
-  badges: PublicProfile['badges']
-  level: number
-  xp: number
-}
+import type { PublicProfileApiResponse } from '@/types/users'
 
 // Make sure API returns valid data.
 const requireResponseData = <TData>(payload: ApiResponse<TData>, fallbackMessage: string) => {
