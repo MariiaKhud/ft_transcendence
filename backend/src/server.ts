@@ -12,6 +12,7 @@ import articleRoutes from './routes/articles.routes.js'
 import friendsRoutes from './routes/friends.routes.js';
 import followsRoutes from './routes/follows.routes.js';
 import { startOnlineStatusJob } from './jobs/onlineStatus.job.js';
+import notificationsRoutes from './routes/notifications.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -112,11 +113,11 @@ app.use('/api/users', userRoutes)                      // User routes (profile m
 app.use('/api/articles', articleRoutes)                // Articles routes (global feed, search, filtering)
 app.use('/api/friends', friendsRoutes);                // Friend system (send/accept requests, list friends, remove friends)
 app.use('/api/follows', followsRoutes);                // Follow system (follow/unfollow authors)
+app.use('/api/notifications', notificationsRoutes);    // Notification system (list user notifications)
 
 // TODO: Wire up route modules here
 // app.use('/api/comments', commentRoutes)
 // app.use('/api/messages', messageRoutes)
-// app.use('/api/notifications', notificationRoutes)
 // app.use('/api/gamification', gamificationRoutes)
 
 // ─────────────────────────────────────────────

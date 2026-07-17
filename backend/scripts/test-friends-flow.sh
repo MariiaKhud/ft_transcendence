@@ -498,11 +498,114 @@ check "Non-existent request returns 404" "$LAST_STATUS" "404"
 echo
 
 ###########################################################
+color_echo "$CYAN_HI" ============== Notifications API ==============
+###########################################################
+
+###########################################################
+# GET all notifications
+###########################################################
+color_echo "$CYAN_L" "Check #30"
+perform_request \
+    "Get all notifications (User B)" \
+    -X GET \
+    "$BASE_URL/api/notifications" \
+    -b "$COOKIE_B"
+check "Get notifications returns 200" "$LAST_STATUS" "200"
+ALL_NOTIFICATIONS_BODY="$LAST_BODY"
+echo
+
+# Verify unreadCount is in the response
+color_echo "$CYAN_L" "Check #31"
+UNREAD_COUNT="$(echo "$LAST_BODY" | grep -o '"unreadCount":[0-9]*' | cut -d':' -f2)"
+[[ -n "$UNREAD_COUNT" ]] && \
+    { color_echo "$GREEN" "✔ unreadCount present: $UNREAD_COUNT"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ unreadCount missing from response"; ((FAIL++)) || true; }
+echo
+
+# Verify notifications array is present
+color_echo "$CYAN_L" "Check #32"
+NOTIF_ARRAY="$(echo "$LAST_BODY" | grep -o '"notifications":\[' | head -1)"
+check "Notifications array present" "$NOTIF_ARRAY" '"notifications":['
+echo
+
+###########################################################
+# GET unread only
+###########################################################
+color_echo "$CYAN_L" "Check #33"
+perform_request \
+    "Get unread notifications only" \
+    -X GET \
+    "$BASE_URL/api/notifications?unread=true" \
+    -b "$COOKIE_B"
+check "Unread filter returns 200" "$LAST_STATUS" "200"
+echo
+
+# Every notification in unread response should have isRead:false
+color_echo "$CYAN_L" "Check #34"
+ALL_UNREAD="$(echo "$LAST_BODY" | grep -o '"isRead":true')"
+[[ -z "$ALL_UNREAD" ]] && \
+    { color_echo "$GREEN" "✔ All returned notifications are unread"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ Read notifications appeared in unread filter"; ((FAIL++)) || true; }
+echo
+
+###########################################################
+# Invalid unread param — treated as false, returns all
+###########################################################
+color_echo "$CYAN_L" "Check #35"
+perform_request \
+    "Invalid unread param falls back to all" \
+    -X GET \
+    "$BASE_URL/api/notifications?unread=yes" \
+    -b "$COOKIE_B"
+check "Invalid param still returns 200" "$LAST_STATUS" "200"
+
+ALL_COUNT="$(echo "$ALL_NOTIFICATIONS_BODY" | \
+    grep -o '"id"' | wc -l | tr -d ' ')"
+
+INVALID_COUNT="$(echo "$LAST_BODY" | \
+    grep -o '"id"' | wc -l | tr -d ' ')"
+echo
+
+color_echo "$CYAN_L" "Check #36"
+check \
+    "Invalid unread parameter returns all notifications" \
+    "$INVALID_COUNT" \
+    "$ALL_COUNT"
+echo
+
+###########################################################
+# No auth
+###########################################################
+color_echo "$CYAN_L" "Check #37"
+perform_request \
+    "Get notifications without auth (should 401)" \
+    -X GET \
+    "$BASE_URL/api/notifications"
+check "No auth returns 401" "$LAST_STATUS" "401"
+echo
+
+###########################################################
+# DB verify — notification count matches
+###########################################################
+color_echo "$CYAN_L" "Check #38"
+DB_COUNT="$(query_db "
+SELECT COUNT(*)
+FROM notifications
+WHERE user_id='${USER_B_ID}';
+" | tr -d '\n' | xargs)"
+
+RESPONSE_COUNT="$(echo "$ALL_NOTIFICATIONS_BODY" | \
+    grep -o '"id"' | wc -l | tr -d ' ')"
+
+check "Notification count matches DB" "$RESPONSE_COUNT" "$DB_COUNT"
+echo
+
+###########################################################
 color_echo "$CYAN_HI" ============== Friend delete ==============
 ###########################################################
 
 # Remove yourself
-color_echo "$CYAN_L" "Check #30"
+color_echo "$CYAN_L" "Check #39"
 perform_request \
     "Remove yourself" \
     -X DELETE \
@@ -513,7 +616,7 @@ check "Remove yourself returns 400" "$LAST_STATUS" "400"
 echo
 
 # DELETE friend — User A removes User B
-color_echo "$CYAN_L" "Check #31"
+color_echo "$CYAN_L" "Check #40"
 perform_request \
     "Remove friend (User A removes User B)" \
     -X DELETE \
@@ -523,7 +626,7 @@ check "Remove friend returns 200" "$LAST_STATUS" "200"
 echo
 
 # Try to remove again — should 404
-color_echo "$CYAN_L" "Check #32"
+color_echo "$CYAN_L" "Check #41"
 perform_request \
     "Remove friend again (should 404)" \
     -X DELETE \
@@ -533,7 +636,7 @@ check "Double remove returns 404" "$LAST_STATUS" "404"
 echo
 
 # Check User B's ID is NOT in the response anymore
-color_echo "$CYAN_L" "Check #33"
+color_echo "$CYAN_L" "Check #42"
 perform_request \
     "Get friends after removal (User A)" \
     -X GET \
@@ -542,13 +645,13 @@ perform_request \
 check "Get friends returns 200" "$LAST_STATUS" "200"
 echo
 
-color_echo "$CYAN_L" "Check #34"
+color_echo "$CYAN_L" "Check #43"
 STILL_FRIENDS="$(echo "$LAST_BODY" | grep -o "$USER_B_ID" | head -1)"
 check "User B no longer in friends list" "$STILL_FRIENDS" ""
 echo
 
 # Check User A's ID is NOT in the response anymore
-color_echo "$CYAN_L" "Check #35"
+color_echo "$CYAN_L" "Check #44"
 perform_request \
     "Get friends after removal (User B)" \
     -X GET \
@@ -557,13 +660,13 @@ perform_request \
 check "Get friends returns 200" "$LAST_STATUS" "200"
 echo
 
-color_echo "$CYAN_L" "Check #36"
+color_echo "$CYAN_L" "Check #45"
 STILL_FRIENDS="$(echo "$LAST_BODY" | grep -o "$USER_A_ID" | head -1)"
 check "User A no longer in friends list" "$STILL_FRIENDS" ""
 echo
 
 # No auth delete
-color_echo "$CYAN_L" "Check #37"
+color_echo "$CYAN_L" "Check #46"
 perform_request \
     "Remove friend — no auth" \
     -X DELETE \
@@ -572,7 +675,7 @@ check "No auth returns 401" "$LAST_STATUS" "401"
 echo
 
 # DB verify — friendship row is gone
-color_echo "$CYAN_L" "Check #38"
+color_echo "$CYAN_L" "Check #47"
 DELETED_FRIENDSHIP="$(query_db "
 SELECT id 
 FROM friendships
@@ -588,7 +691,7 @@ color_echo "$CYAN_HI" ============== Cancel sent request ==============
 ###########################################################
 
 # Create pending request for cancel tests
-color_echo "$CYAN_L" "Check #39"
+color_echo "$CYAN_L" "Check #48"
 perform_request \
     "Send new friend request (for cancel test)" \
     -X POST \
@@ -599,7 +702,7 @@ check "Re-send request returns 201" "$LAST_STATUS" "201"
 echo
 
 # Addressee cannot cancel (only requester can)
-color_echo "$CYAN_L" "Check #40"
+color_echo "$CYAN_L" "Check #49"
 perform_request \
     "Addressee tries to cancel (should 404)" \
     -X DELETE \
@@ -609,7 +712,7 @@ check "Addressee cannot cancel returns 404" "$LAST_STATUS" "404"
 echo
 
 # Requester cancels their own request
-color_echo "$CYAN_L" "Check #41"
+color_echo "$CYAN_L" "Check #50"
 perform_request \
     "Requester cancels sent request" \
     -X DELETE \
@@ -619,7 +722,7 @@ check "Cancel request returns 200" "$LAST_STATUS" "200"
 echo
 
 # Try to cancel again — already gone
-color_echo "$CYAN_L" "Check #42"
+color_echo "$CYAN_L" "Check #51"
 perform_request \
     "Cancel already-cancelled request (should 404)" \
     -X DELETE \
@@ -633,7 +736,7 @@ color_echo "$CYAN_HI" ============== Recreate friendship lifecycle =============
 ###########################################################
 
 # User A sends request
-color_echo "$CYAN_L" "Check #43"
+color_echo "$CYAN_L" "Check #52"
 perform_request \
     "Re-send friend request" \
     -X POST \
@@ -645,7 +748,7 @@ check "Re-send request returns 201" "$LAST_STATUS" "201"
 echo
 
 # User B accepts recreated request
-color_echo "$CYAN_L" "Check #44"
+color_echo "$CYAN_L" "Check #53"
 perform_request \
     "Accept recreated request" \
     -X PATCH \
@@ -658,7 +761,7 @@ check "Accept recreated request returns 200" "$LAST_STATUS" "200"
 echo
 
 # User B removes User A
-color_echo "$CYAN_L" "Check #45"
+color_echo "$CYAN_L" "Check #54"
 perform_request \
     "Remove friend (User B removes User A)" \
     -X DELETE \
@@ -673,7 +776,7 @@ color_echo "$CYAN_HI" ============== Pending delete restriction. Pending edge ca
 ###########################################################
 
 ## Create pending friendship
-color_echo "$CYAN_L" "Check #46"
+color_echo "$CYAN_L" "Check #55"
 
 perform_request \
     "Create pending friend request" \
@@ -686,7 +789,7 @@ check "Pending request returns 201" "$LAST_STATUS" "201"
 echo
 
 # Verify pending exists (DB sanity)
-color_echo "$CYAN_L" "Check #47"
+color_echo "$CYAN_L" "Check #56"
 
 PENDING_STATUS="$(query_db "
 SELECT status
@@ -699,7 +802,7 @@ check "Pending friendship exists" "$PENDING_STATUS" "PENDING"
 echo
 
 # Remove pending friendship (should fail)
-color_echo "$CYAN_L" "Check #48"
+color_echo "$CYAN_L" "Check #57"
 
 perform_request \
     "Remove pending friendship" \
@@ -713,6 +816,7 @@ echo
 
 
 
+echo
 if [[ $FAIL -eq 0 ]]; then
   color_echo "$GREEN" "============== ALL $PASS CHECKS PASSED =============="
 else
