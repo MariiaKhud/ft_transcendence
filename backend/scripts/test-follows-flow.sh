@@ -57,6 +57,7 @@ cleanup() {
           -c \"
 DELETE FROM notifications;
 DELETE FROM friendships;
+DELETE FROM follows;
 DELETE FROM users WHERE email IN ('${EMAIL_A}','${EMAIL_B}');
 \" >/dev/null" || true
 }
@@ -378,6 +379,62 @@ AND following_id='${USER_B_ID}';
     { color_echo "$GREEN" "✔ Follow row correctly deleted from DB"; ((PASS++)) || true; } || \
     { color_echo "$RED" "✘ Follow row still exists in DB"; ((FAIL++)) || true; }
 echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== Mark online =============="
+###########################################################
+color_echo "$CYAN_L" "Check #19"
+perform_request \
+    "Mark User A online" \
+    -X PATCH \
+    "$BASE_URL/api/users/me/online" \
+    -b "$COOKIE_A"
+check "Mark online returns 200" "$LAST_STATUS" "200"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== Mark online without auth =============="
+###########################################################
+color_echo "$CYAN_L" "Check #20"
+perform_request \
+    "Mark online without auth (should 401)" \
+    -X PATCH \
+    "$BASE_URL/api/users/me/online"
+check "No auth returns 401" "$LAST_STATUS" "401"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== DB verify — is_online is true =============="
+###########################################################
+color_echo "$CYAN_L" "Check #21"
+IS_ONLINE="$(query_db "
+SELECT is_online
+FROM users
+WHERE id='${USER_A_ID}';
+" | tr -d '\n' | xargs)"
+check "User A is_online is true in DB" "$IS_ONLINE" "t"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== DB verify — background job sets offline after cutoff =============="
+###########################################################
+color_echo "$CYAN_L" "Check #22"
+color_echo "$BLUE" "Setting last_seen_at to 3 minutes ago to test background job..."
+query_db "
+UPDATE users
+SET last_seen_at = NOW() - INTERVAL '3 minutes'
+WHERE id='${USER_A_ID}';
+" > /dev/null
+
+color_echo "$BLUE" "Waiting 35 seconds for background job to run..."
+sleep 35
+
+IS_ONLINE_AFTER="$(query_db "
+SELECT is_online
+FROM users
+WHERE id='${USER_A_ID}';
+" | tr -d '\n' | xargs)"
+check "User A marked offline by background job" "$IS_ONLINE_AFTER" "f"
 
 
 

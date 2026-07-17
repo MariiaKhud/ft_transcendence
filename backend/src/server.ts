@@ -11,6 +11,7 @@ import userRoutes from './routes/users.routes.js'
 import articleRoutes from './routes/articles.routes.js'
 import friendsRoutes from './routes/friends.routes.js';
 import followsRoutes from './routes/follows.routes.js';
+import { startOnlineStatusJob } from './jobs/onlineStatus.job.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -135,6 +136,7 @@ app.use(errorHandler)
 // ─────────────────────────────────────────────
 
 const server = app.listen(PORT, handleServerStart)
+startOnlineStatusJob();
 
 // Graceful shutdown
 process.on('SIGINT', handleGracefulShutdown)
