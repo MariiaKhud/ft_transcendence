@@ -44,3 +44,31 @@ export async function followUser(followerId: string, followingId: string) {
 
   return follow;
 }
+
+export async function unfollowUser(followerId: string, followingId: string) {
+  if (followerId === followingId) {
+    throw new AppError(400, "You can't unfollow yourself");
+  }
+
+  const follow = await prisma.follow.findUnique({
+    where: {
+      followerId_followingId: {
+        followerId,
+        followingId,
+      },
+    },
+  });
+
+  if (!follow) {
+    throw new AppError(404, 'You are not following this user');
+  }
+
+  await prisma.follow.delete({
+    where: {
+      followerId_followingId: {
+        followerId,
+        followingId,
+      },
+    },
+  });
+}

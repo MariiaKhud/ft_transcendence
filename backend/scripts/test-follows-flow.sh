@@ -212,9 +212,21 @@ color_echo "$BLUE" "User B: $USER_B_ID"
 echo
 
 ###########################################################
-color_echo "$CYAN_HI" "============== Follow user =============="
+color_echo "$CYAN_HI" "============== Unfollow — not following yet =============="
 ###########################################################
 color_echo "$CYAN_L" "Check #6"
+perform_request \
+    "Unfollow user not followed (should 404)" \
+    -X DELETE \
+    "$BASE_URL/api/follows/$USER_A_ID" \
+    -b "$COOKIE_B"
+check "Not following returns 404" "$LAST_STATUS" "404"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== Follow user =============="
+###########################################################
+color_echo "$CYAN_L" "Check #7"
 perform_request \
     "User A follows User B" \
     -X POST \
@@ -226,7 +238,7 @@ echo
 ###########################################################
 color_echo "$CYAN_HI" "============== Duplicate follow =============="
 ###########################################################
-color_echo "$CYAN_L" "Check #7"
+color_echo "$CYAN_L" "Check #8"
 perform_request \
     "Duplicate follow (should 409)" \
     -X POST \
@@ -238,7 +250,7 @@ echo
 ###########################################################
 color_echo "$CYAN_HI" "============== Follow yourself =============="
 ###########################################################
-color_echo "$CYAN_L" "Check #8"
+color_echo "$CYAN_L" "Check #9"
 perform_request \
     "Follow yourself (should 400)" \
     -X POST \
@@ -250,7 +262,7 @@ echo
 ###########################################################
 color_echo "$CYAN_HI" "============== Follow non-existent user =============="
 ###########################################################
-color_echo "$CYAN_L" "Check #9"
+color_echo "$CYAN_L" "Check #10"
 FAKE_ID="00000000-0000-0000-0000-000000000000"
 perform_request \
     "Follow non-existent user (should 404)" \
@@ -261,9 +273,9 @@ check "Non-existent user returns 404" "$LAST_STATUS" "404"
 echo
 
 ###########################################################
-color_echo "$CYAN_HI" "============== No auth =============="
+color_echo "$CYAN_HI" "============== Follow without auth =============="
 ###########################################################
-color_echo "$CYAN_L" "Check #10"
+color_echo "$CYAN_L" "Check #11"
 perform_request \
     "Follow without auth (should 401)" \
     -X POST \
@@ -274,7 +286,7 @@ echo
 ###########################################################
 color_echo "$CYAN_HI" "============== DB verify — follow row exists =============="
 ###########################################################
-color_echo "$CYAN_L" "Check #11"
+color_echo "$CYAN_L" "Check #12"
 FOLLOW_ROW="$(query_db "
 SELECT id
 FROM follows
@@ -294,9 +306,10 @@ echo
 ###########################################################
 color_echo "$CYAN_HI" "============== DB verify — FOLLOWED notification created =============="
 ###########################################################
-color_echo "$CYAN_L" "Check #12"
+color_echo "$CYAN_L" "Check #13"
 FOLLOW_NOTIF="$(query_db "
-SELECT type FROM notifications
+SELECT type 
+FROM notifications
 WHERE user_id='${USER_B_ID}'
 AND type='FOLLOWED'
 ORDER BY created_at DESC LIMIT 1;
@@ -304,11 +317,71 @@ ORDER BY created_at DESC LIMIT 1;
 check "FOLLOWED notification created" "$FOLLOW_NOTIF" "FOLLOWED"
 echo
 
+###########################################################
+color_echo "$CYAN_HI" "============== Unfollow yourself =============="
+###########################################################
+color_echo "$CYAN_L" "Check #14"
+perform_request \
+    "Unfollow yourself (should 400)" \
+    -X DELETE \
+    "$BASE_URL/api/follows/$USER_A_ID" \
+    -b "$COOKIE_A"
+check "Self unfollow returns 400" "$LAST_STATUS" "400"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== Unfollow without auth =============="
+###########################################################
+color_echo "$CYAN_L" "Check #15"
+perform_request \
+    "Unfollow without auth (should 401)" \
+    -X DELETE \
+    "$BASE_URL/api/follows/$USER_B_ID"
+check "No auth returns 401" "$LAST_STATUS" "401"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== Successful unfollow — User A unfollows User B =============="
+###########################################################
+color_echo "$CYAN_L" "Check #16"
+perform_request \
+    "User A unfollows User B" \
+    -X DELETE \
+    "$BASE_URL/api/follows/$USER_B_ID" \
+    -b "$COOKIE_A"
+check "Unfollow returns 200" "$LAST_STATUS" "200"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== Unfollow again — row is gone now =============="
+###########################################################
+color_echo "$CYAN_L" "Check #17"
+perform_request \
+    "Unfollow again (should 404)" \
+    -X DELETE \
+    "$BASE_URL/api/follows/$USER_B_ID" \
+    -b "$COOKIE_A"
+check "Double unfollow returns 404" "$LAST_STATUS" "404"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== DB verify — follow row is gone =============="
+###########################################################
+color_echo "$CYAN_L" "Check #18"
+FOLLOW_ROW="$(query_db "
+SELECT id FROM follows
+WHERE follower_id='${USER_A_ID}'
+AND following_id='${USER_B_ID}';
+" | tr -d '\n' | xargs)"
+
+[[ -z "$FOLLOW_ROW" ]] && \
+    { color_echo "$GREEN" "✔ Follow row correctly deleted from DB"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ Follow row still exists in DB"; ((FAIL++)) || true; }
+echo
 
 
 
-
-
+echo
 if [[ $FAIL -eq 0 ]]; then
   color_echo "$GREEN" "============== ALL $PASS CHECKS PASSED =============="
 else
