@@ -370,7 +370,150 @@ color_echo "$BLUE" "Total messages between A and B in DB: $MSG_COUNT"
     { color_echo "$RED" "✘ Expected at least 2 messages in DB"; ((FAIL++)) || true; }
 echo
 
+###########################################################
+color_echo "$CYAN_HI" "============== Get conversation =============="
+###########################################################
 
+# Success
+color_echo "$CYAN_L" "Check #19"
+perform_request \
+    "Get conversation (User A fetches chat with User B)" \
+    -X GET \
+    "$BASE_URL/api/messages/$USER_B_ID" \
+    -b "$COOKIE_A"
+check "Get conversation returns 200" "$LAST_STATUS" "200"
+echo
+
+# Verify messages array is not empty
+color_echo "$CYAN_L" "Check #20"
+FIRST_MSG_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
+[[ -n "$FIRST_MSG_ID" ]] && \
+    { color_echo "$GREEN" "✔ Messages returned in response"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ No messages in response"; ((FAIL++)) || true; }
+
+# Verify oldest message is first (asc order)
+color_echo "$CYAN_L" "Check #21"
+FIRST_CONTENT="$(echo "$LAST_BODY" | grep -o '"content":"[^"]*"' | head -1 | cut -d'"' -f4)"
+check "First message is oldest (Hey, how are you?)" "$FIRST_CONTENT" "Hey, how are you?"
+echo
+
+# Check messages from B to A are now read
+color_echo "$CYAN_L" "Check #22"
+UNREAD_FOR_A="$(query_db "
+SELECT COUNT(*)
+FROM messages
+WHERE sender_id='${USER_B_ID}'
+AND receiver_id='${USER_A_ID}'
+AND is_read = false;
+" | tr -d '\n' | xargs)"
+check "Messages from B to A marked as read" "$UNREAD_FOR_A" "0"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== Conversation from other user =============="
+###########################################################
+
+color_echo "$CYAN_L" "Check #23"
+perform_request \
+    "Get conversation (User B fetches chat with User A)" \
+    -X GET \
+    "$BASE_URL/api/messages/$USER_A_ID" \
+    -b "$COOKIE_B"
+check "Get conversation from B side returns 200" "$LAST_STATUS" "200"
+echo
+
+# After B fetches, messages from A to B should be read too
+color_echo "$CYAN_L" "Check #24"
+UNREAD_FOR_B="$(query_db "
+SELECT COUNT(*) FROM messages
+WHERE sender_id='${USER_A_ID}'
+AND receiver_id='${USER_B_ID}'
+AND is_read = false;
+" | tr -d '\n' | xargs)"
+check "Messages from A to B marked as read" "$UNREAD_FOR_B" "0"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" "============== Conversation validation =============="
+###########################################################
+
+# Self conversation
+color_echo "$CYAN_L" "Check #25"
+perform_request \
+    "Get conversation with yourself (should 400)" \
+    -X GET \
+    "$BASE_URL/api/messages/$USER_A_ID" \
+    -b "$COOKIE_A"
+check "Self conversation returns 400" "$LAST_STATUS" "400"
+echo
+
+# Non-existent user
+color_echo "$CYAN_L" "Check #26"
+perform_request \
+    "Get conversation with non-existent user (should 404)" \
+    -X GET \
+    "$BASE_URL/api/messages/00000000-0000-0000-0000-000000000000" \
+    -b "$COOKIE_A"
+check "Non-existent user returns 404" "$LAST_STATUS" "404"
+echo
+
+# Empty conversation
+# Register a third user with no messages
+color_echo "$CYAN_L" "Check #27"
+
+RUN_ID_C="$(date +%s | tail -c 6)"
+USERNAME_C="friend_c_${RUN_ID_C}"
+EMAIL_C="${USERNAME_C}@example.com"
+COOKIE_C="$(mktemp)"
+
+perform_request \
+    "Register User C" \
+    -X POST \
+    "$BASE_URL/api/auth/register" \
+    -H "Content-Type: application/json" \
+    -d "{\"email\":\"$EMAIL_C\",\"username\":\"$USERNAME_C\",\"password\":\"$PASSWORD\"}"
+check "Register User C returns 201" "$LAST_STATUS" "201"
+echo
+
+color_echo "$CYAN_L" "Check #28"
+perform_request \
+    "Login User C" \
+    -X POST \
+    "$BASE_URL/api/auth/login" \
+    -H "Content-Type: application/json" \
+    -d "{\"email\":\"$EMAIL_C\",\"password\":\"$PASSWORD\"}" \
+    -c "$COOKIE_C"
+check "Login User C returns 200" "$LAST_STATUS" "200"
+echo
+
+color_echo "$CYAN_L" "Check #29"
+USER_C_ID="$(query_db "SELECT id FROM users WHERE username='${USERNAME_C}';" | tr -d '\n' | xargs)"
+perform_request \
+    "Get conversation with User C — no messages yet (should be empty array)" \
+    -X GET \
+    "$BASE_URL/api/messages/$USER_C_ID" \
+    -b "$COOKIE_A"
+check "Empty conversation returns 200" "$LAST_STATUS" "200"
+echo
+
+color_echo "$CYAN_L" "Check #30"
+EMPTY_DATA="$(echo "$LAST_BODY" | grep -o '"data":\[\]' | head -1)"
+check "Empty conversation returns empty array" "$EMPTY_DATA" '"data":[]'
+echo
+
+rm -f "$COOKIE_C"
+
+###########################################################
+color_echo "$CYAN_HI" "============== Authentication =============="
+###########################################################
+
+color_echo "$CYAN_L" "Test #31"
+perform_request \
+    "Get conversation without auth (should 401)" \
+    -X GET \
+    "$BASE_URL/api/messages/$USER_B_ID"
+check "No auth returns 401" "$LAST_STATUS" "401"
+echo
 
 
 echo
