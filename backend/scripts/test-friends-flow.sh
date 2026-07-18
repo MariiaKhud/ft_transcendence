@@ -95,16 +95,6 @@ perform_request() {
     echo
 }
 
-assert_status() {
-
-    local expected="$1"
-
-    if [[ "$LAST_STATUS" != "$expected" ]]; then
-        color_echo "$RED" "Expected HTTP $expected but got $LAST_STATUS"
-        exit 1
-    fi
-}
-
 query_db() {
 
     docker compose exec -T postgres sh -lc \
@@ -116,7 +106,7 @@ query_db() {
 }
 
 color_echo "$BLUE" "==========================================="
-color_echo "$BLUE" " Friends API integration tests"
+color_echo "$BLUE" "       Friends API integration tests       "
 color_echo "$BLUE" "==========================================="
 echo
 

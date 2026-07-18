@@ -13,6 +13,7 @@ import friendsRoutes from './routes/friends.routes.js';
 import followsRoutes from './routes/follows.routes.js';
 import { startOnlineStatusJob } from './jobs/onlineStatus.job.js';
 import notificationsRoutes from './routes/notifications.routes.js';
+import messagesRoutes from './routes/messages.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -114,10 +115,10 @@ app.use('/api/articles', articleRoutes)                // Articles routes (globa
 app.use('/api/friends', friendsRoutes);                // Friend system (send/accept requests, list friends, remove friends)
 app.use('/api/follows', followsRoutes);                // Follow system (follow/unfollow authors)
 app.use('/api/notifications', notificationsRoutes);    // Notification system (list user notifications)
+app.use('/api/messages', messagesRoutes);              // 
 
 // TODO: Wire up route modules here
 // app.use('/api/comments', commentRoutes)
-// app.use('/api/messages', messageRoutes)
 // app.use('/api/gamification', gamificationRoutes)
 
 // ─────────────────────────────────────────────
