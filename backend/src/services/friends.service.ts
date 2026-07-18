@@ -195,7 +195,7 @@ export async function cancelFriendRequest(requesterId: string, addresseeId: stri
 
   const friendship = await prisma.friendship.findFirst({
     where: {
-      requesterId,   // only the original sender can cancel — no OR here
+      requesterId,
       addresseeId,
       status: 'PENDING',
     },
@@ -205,7 +205,17 @@ export async function cancelFriendRequest(requesterId: string, addresseeId: stri
     throw new AppError(404, 'Pending friend request not found');
   }
 
+  // Remove the pending friendship
   await prisma.friendship.delete({
     where: { id: friendship.id },
+  });
+
+  // Remove the notification so addressee doesn't see a dangling request
+  await prisma.notification.deleteMany({
+    where: {
+      userId: addresseeId,
+      type: 'FRIEND_REQUEST',
+      refId: requesterId,
+    },
   });
 }
