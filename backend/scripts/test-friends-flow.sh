@@ -871,11 +871,86 @@ check "No auth returns 401" "$LAST_STATUS" "401"
 echo
 
 ###########################################################
+color_echo "$CYAN_HI" ============== Mark all notifications as read ==============
+###########################################################
+
+# Verify remaining unread notifications before mark-all
+color_echo "$CYAN_L" "Check #63"
+UNREAD_BEFORE="$(query_db "
+SELECT COUNT(*)
+FROM notifications
+WHERE user_id='${USER_B_ID}'
+AND is_read = false;
+" | tr -d '\n' | xargs)"
+color_echo "$BLUE" "Unread notifications before mark-all: $UNREAD_BEFORE"
+
+[[ "$UNREAD_BEFORE" -gt 0 ]] && \
+    { color_echo "$GREEN" "✔ User B has unread notifications"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ No unread notifications available for mark-all test"; ((FAIL++)) || true; exit 1; }
+echo
+
+# Mark all as read — success
+color_echo "$CYAN_L" "Check #64"
+perform_request \
+    "Mark all notifications as read (User B)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/read-all" \
+    -b "$COOKIE_B"
+check "Mark all as read returns 200" "$LAST_STATUS" "200"
+echo
+
+color_echo "$CYAN_L" "Check #65"
+UPDATED_COUNT="$(echo "$LAST_BODY" | grep -o '"updatedCount":[0-9]*' | cut -d':' -f2)"
+[[ -n "$UPDATED_COUNT" ]] && \
+    { color_echo "$GREEN" "✔ updatedCount present: $UPDATED_COUNT"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ updatedCount missing from response"; ((FAIL++)) || true; }
+echo
+
+color_echo "$CYAN_L" "Check #66"
+check "updatedCount matches previous unread count" "$UPDATED_COUNT" "$UNREAD_BEFORE"
+echo
+
+# Mark all again — nothing left to mark, should return 0
+color_echo "$CYAN_L" "Check #67"
+perform_request \
+    "Mark all as read again (should return updatedCount 0)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/read-all" \
+    -b "$COOKIE_B"
+check "Second mark-all returns 200" "$LAST_STATUS" "200"
+echo
+
+color_echo "$CYAN_L" "Check #68"
+UPDATED_COUNT_SECOND="$(echo "$LAST_BODY" | grep -o '"updatedCount":[0-9]*' | cut -d':' -f2)"
+check "updatedCount is 0 on second call" "$UPDATED_COUNT_SECOND" "0"
+echo
+
+# No auth
+color_echo "$CYAN_L" "Check #69"
+perform_request \
+    "Mark all as read without auth (should 401)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/read-all"
+check "No auth returns 401" "$LAST_STATUS" "401"
+echo
+
+# DB verify — no unread notifications remain for User B
+color_echo "$CYAN_L" "Check #70"
+UNREAD_AFTER="$(query_db "
+SELECT COUNT(*)
+FROM notifications
+WHERE user_id='${USER_B_ID}'
+AND is_read = false;
+" | tr -d '\n' | xargs)"
+check "No unread notifications remain in DB" "$UNREAD_AFTER" "0"
+echo
+
+###########################################################
 color_echo "$CYAN_HI" ============== Notification database verification ==============
 ###########################################################
 
 # Count matches
-color_echo "$CYAN_L" "Check #63"
+color_echo "$CYAN_L" "Check #71"
 DB_COUNT="$(query_db "
 SELECT COUNT(*)
 FROM notifications
@@ -889,7 +964,7 @@ check "Notification count matches DB" "$RESPONSE_COUNT" "$DB_COUNT"
 echo
 
 # isRead persisted
-color_echo "$CYAN_L" "Check #64"
+color_echo "$CYAN_L" "Check #72"
 DB_IS_READ="$(query_db "
 SELECT is_read FROM notifications
 WHERE id='${NOTIFICATION_ID}';
