@@ -3,6 +3,7 @@ import type { Request, Response } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.middleware.js'
+import { createNotification } from '../services/notifications.service.js'
 import {
   articleDetailSelect,
   articleSummarySelect,
@@ -16,6 +17,7 @@ import {
   validateUpdateArticleInput,
   XP_REWARD_CREATE_ARTICLE,
 } from './articles.route-helpers.js'
+import { commentWithAuthorSelect, validateCreateCommentInput } from './comments.route-helpers.js'
 
 const router = Router()
 
@@ -197,10 +199,52 @@ const deleteArticleHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: { id: existing.id } })
 }
 
+// Add a comment to an article and notify the article's author.
+const createCommentHandler = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, 'Authentication required')
+  }
+
+  const authorId = req.user.userId
+
+  const article = await prisma.article.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, authorId: true, title: true, isRemoved: true },
+  })
+
+  if (!article || article.isRemoved) {
+    throw new AppError(404, 'Article not found')
+  }
+
+  const { content } = validateCreateCommentInput(req.body)
+
+  const comment = await prisma.comment.create({
+    data: {
+      articleId: article.id,
+      authorId,
+      content,
+    },
+    select: commentWithAuthorSelect,
+  })
+
+  // Don't notify authors about their own comments.
+  if (article.authorId !== authorId) {
+    await createNotification(
+      article.authorId,
+      'COMMENT',
+      `commented on your article "${article.title}"`,
+      article.id
+    )
+  }
+
+  res.status(201).json({ success: true, data: comment })
+}
+
 router.post('/', authMiddleware, handleAsyncErrors(createArticleHandler))
 router.get('/', handleAsyncErrors(listArticlesHandler))
 router.get('/:id', optionalAuthMiddleware, handleAsyncErrors(getArticleHandler))
 router.patch('/:id', authMiddleware, handleAsyncErrors(updateArticleHandler))
 router.delete('/:id', authMiddleware, handleAsyncErrors(deleteArticleHandler))
+router.post('/:id/comments', authMiddleware, handleAsyncErrors(createCommentHandler))
 
 export default router
