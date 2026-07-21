@@ -95,16 +95,6 @@ perform_request() {
     echo
 }
 
-assert_status() {
-
-    local expected="$1"
-
-    if [[ "$LAST_STATUS" != "$expected" ]]; then
-        color_echo "$RED" "Expected HTTP $expected but got $LAST_STATUS"
-        exit 1
-    fi
-}
-
 query_db() {
 
     docker compose exec -T postgres sh -lc \
@@ -116,7 +106,7 @@ query_db() {
 }
 
 color_echo "$BLUE" "==========================================="
-color_echo "$BLUE" " Friends API integration tests"
+color_echo "$BLUE" "       Friends API integration tests       "
 color_echo "$BLUE" "==========================================="
 echo
 
@@ -710,9 +700,273 @@ perform_request \
 check "Remove pending friendship returns 404" "$LAST_STATUS" "404"
 echo
 
+###########################################################
+color_echo "$CYAN_HI" "============== Notifications API =============="
+###########################################################
+
+# GET all notifications
+color_echo "$CYAN_L" "Check #49"
+perform_request \
+    "Get all notifications (User B)" \
+    -X GET \
+    "$BASE_URL/api/notifications" \
+    -b "$COOKIE_B"
+check "Get notifications returns 200" "$LAST_STATUS" "200"
+ALL_NOTIFICATIONS_BODY="$LAST_BODY"
+echo
+
+# Verify unreadCount is in the response
+color_echo "$CYAN_L" "Check #50"
+UNREAD_COUNT="$(echo "$LAST_BODY" | grep -o '"unreadCount":[0-9]*' | cut -d':' -f2)"
+[[ -n "$UNREAD_COUNT" ]] && \
+    { color_echo "$GREEN" "✔ UnreadCount present: $UNREAD_COUNT"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ UnreadCount missing from response"; ((FAIL++)) || true; }
+echo
+
+# Verify notifications array is present
+color_echo "$CYAN_L" "Check #51"
+NOTIF_ARRAY="$(echo "$LAST_BODY" | grep -o '"notifications":\[' | head -1)"
+check "Notifications array present" "$NOTIF_ARRAY" '"notifications":['
+echo
+
+###########################################################
+color_echo "$CYAN_HI" ============== Notification filtering ==============
+###########################################################
+
+# GET unread only
+color_echo "$CYAN_L" "Check #52"
+perform_request \
+    "Get unread notifications only" \
+    -X GET \
+    "$BASE_URL/api/notifications?unread=true" \
+    -b "$COOKIE_B"
+check "Unread filter returns 200" "$LAST_STATUS" "200"
+echo
+
+# Verify unread notifications
+color_echo "$CYAN_L" "Check #53"
+ALL_UNREAD="$(echo "$LAST_BODY" | grep -o '"isRead":true')"
+[[ -z "$ALL_UNREAD" ]] && \
+    { color_echo "$GREEN" "✔ All returned notifications are unread"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ Read notifications appeared in unread filter"; ((FAIL++)) || true; }
+echo
+
+# Invalid query parameter
+color_echo "$CYAN_L" "Check #54"
+perform_request \
+    "Invalid unread param falls back to all" \
+    -X GET \
+    "$BASE_URL/api/notifications?unread=yes" \
+    -b "$COOKIE_B"
+check "Invalid param still returns 200" "$LAST_STATUS" "200"
+
+ALL_COUNT="$(echo "$ALL_NOTIFICATIONS_BODY" | \
+    grep -o '"id"' | wc -l | tr -d ' ')"
+
+INVALID_COUNT="$(echo "$LAST_BODY" | \
+    grep -o '"id"' | wc -l | tr -d ' ')"
+echo
+
+color_echo "$CYAN_L" "Check #55"
+check \
+    "Invalid unread parameter returns all notifications" \
+    "$INVALID_COUNT" \
+    "$ALL_COUNT"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" ============== Notification authentication ==============
+###########################################################
+
+# No auth
+color_echo "$CYAN_L" "Check #56"
+perform_request \
+    "Get notifications without auth (should 401)" \
+    -X GET \
+    "$BASE_URL/api/notifications"
+check "No auth returns 401" "$LAST_STATUS" "401"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" ============== Mark notification as read ==============
+###########################################################
+
+NOTIFICATION_ID="$(query_db "
+SELECT id
+FROM notifications
+WHERE user_id='${USER_B_ID}'
+ORDER BY created_at DESC
+LIMIT 1;
+" | tr -d '\n' | xargs)"
+
+[[ -z "$NOTIFICATION_ID" ]] && \
+    { color_echo "$RED" "No notifications found for User B"; exit 1; }
+
+color_echo "$BLUE" "Using notification: $NOTIFICATION_ID"
+echo
+
+# Wrong user
+color_echo "$CYAN_L" "Check #57"
+perform_request \
+    "Mark User B notification as read using User A cookie (should 403)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/$NOTIFICATION_ID/read" \
+    -b "$COOKIE_A"
+check "Wrong user returns 403" "$LAST_STATUS" "403"
+echo
+
+# Fake ID
+color_echo "$CYAN_L" "Check #58"
+FAKE_ID="00000000-0000-0000-0000-000000000000"
+perform_request \
+    "Mark non-existent notification as read (should 404)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/$FAKE_ID/read" \
+    -b "$COOKIE_B"
+check "Non-existent notification returns 404" "$LAST_STATUS" "404"
+echo
+
+# Success
+color_echo "$CYAN_L" "Check #59"
+perform_request \
+    "Mark notification as read (User B)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/$NOTIFICATION_ID/read" \
+    -b "$COOKIE_B"
+check "Mark as read returns 200" "$LAST_STATUS" "200"
+echo
+
+color_echo "$CYAN_L" "Check #60"
+IS_READ="$(echo "$LAST_BODY" | grep -o '"isRead":[a-z]*' | cut -d':' -f2)"
+check "isRead is true in response" "$IS_READ" "true"
+echo
+
+# Already read
+color_echo "$CYAN_L" "Check #61"
+perform_request \
+    "Mark already-read notification as read (should still 200)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/$NOTIFICATION_ID/read" \
+    -b "$COOKIE_B"
+check "Already read returns 200" "$LAST_STATUS" "200"
+echo
+
+# No auth
+color_echo "$CYAN_L" "Check #62"
+perform_request \
+    "Mark as read without auth (should 401)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/$NOTIFICATION_ID/read"
+check "No auth returns 401" "$LAST_STATUS" "401"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" ============== Mark all notifications as read ==============
+###########################################################
+
+# Verify remaining unread notifications before mark-all
+color_echo "$CYAN_L" "Check #63"
+UNREAD_BEFORE="$(query_db "
+SELECT COUNT(*)
+FROM notifications
+WHERE user_id='${USER_B_ID}'
+AND is_read = false;
+" | tr -d '\n' | xargs)"
+color_echo "$BLUE" "Unread notifications before mark-all: $UNREAD_BEFORE"
+
+[[ "$UNREAD_BEFORE" -gt 0 ]] && \
+    { color_echo "$GREEN" "✔ User B has unread notifications"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ No unread notifications available for mark-all test"; ((FAIL++)) || true; exit 1; }
+echo
+
+# Mark all as read — success
+color_echo "$CYAN_L" "Check #64"
+perform_request \
+    "Mark all notifications as read (User B)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/read-all" \
+    -b "$COOKIE_B"
+check "Mark all as read returns 200" "$LAST_STATUS" "200"
+echo
+
+color_echo "$CYAN_L" "Check #65"
+UPDATED_COUNT="$(echo "$LAST_BODY" | grep -o '"updatedCount":[0-9]*' | cut -d':' -f2)"
+[[ -n "$UPDATED_COUNT" ]] && \
+    { color_echo "$GREEN" "✔ updatedCount present: $UPDATED_COUNT"; ((PASS++)) || true; } || \
+    { color_echo "$RED" "✘ updatedCount missing from response"; ((FAIL++)) || true; }
+echo
+
+color_echo "$CYAN_L" "Check #66"
+check "updatedCount matches previous unread count" "$UPDATED_COUNT" "$UNREAD_BEFORE"
+echo
+
+# Mark all again — nothing left to mark, should return 0
+color_echo "$CYAN_L" "Check #67"
+perform_request \
+    "Mark all as read again (should return updatedCount 0)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/read-all" \
+    -b "$COOKIE_B"
+check "Second mark-all returns 200" "$LAST_STATUS" "200"
+echo
+
+color_echo "$CYAN_L" "Check #68"
+UPDATED_COUNT_SECOND="$(echo "$LAST_BODY" | grep -o '"updatedCount":[0-9]*' | cut -d':' -f2)"
+check "updatedCount is 0 on second call" "$UPDATED_COUNT_SECOND" "0"
+echo
+
+# No auth
+color_echo "$CYAN_L" "Check #69"
+perform_request \
+    "Mark all as read without auth (should 401)" \
+    -X PATCH \
+    "$BASE_URL/api/notifications/read-all"
+check "No auth returns 401" "$LAST_STATUS" "401"
+echo
+
+# DB verify — no unread notifications remain for User B
+color_echo "$CYAN_L" "Check #70"
+UNREAD_AFTER="$(query_db "
+SELECT COUNT(*)
+FROM notifications
+WHERE user_id='${USER_B_ID}'
+AND is_read = false;
+" | tr -d '\n' | xargs)"
+check "No unread notifications remain in DB" "$UNREAD_AFTER" "0"
+echo
+
+###########################################################
+color_echo "$CYAN_HI" ============== Notification database verification ==============
+###########################################################
+
+# Count matches
+color_echo "$CYAN_L" "Check #71"
+DB_COUNT="$(query_db "
+SELECT COUNT(*)
+FROM notifications
+WHERE user_id='${USER_B_ID}';
+" | tr -d '\n' | xargs)"
+
+RESPONSE_COUNT="$(echo "$ALL_NOTIFICATIONS_BODY" | \
+    grep -o '"id"' | wc -l | tr -d ' ')"
+
+check "Notification count matches DB" "$RESPONSE_COUNT" "$DB_COUNT"
+echo
+
+# isRead persisted
+color_echo "$CYAN_L" "Check #72"
+DB_IS_READ="$(query_db "
+SELECT is_read FROM notifications
+WHERE id='${NOTIFICATION_ID}';
+" | tr -d '\n' | xargs)"
+check "is_read is true in DB" "$DB_IS_READ" "t"
+echo
 
 
 
+
+
+echo
 if [[ $FAIL -eq 0 ]]; then
   color_echo "$GREEN" "============== ALL $PASS CHECKS PASSED =============="
 else

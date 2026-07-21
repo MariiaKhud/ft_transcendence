@@ -17,6 +17,7 @@ import {
   deleteOldAvatar,
 } from './users.route-helpers.js'
 import type { EditableProfile } from './users.route-helpers.js'
+import { updateOnlineStatus } from '../controllers/users.controller.js';
 
 // Type for request with file from multer
 interface FileRequest extends Request {
@@ -170,5 +171,6 @@ router.post('/me/avatar', authMiddleware, upload.single('avatar'), handleMulterE
 router.delete('/me/avatar', authMiddleware, handleAsyncErrors(deleteMyAvatarHandler))
 router.patch('/me', authMiddleware, handleAsyncErrors(editMyProfileHandler))
 router.get('/:username', handleAsyncErrors(getPublicProfileHandler))
+router.patch('/me/online', authMiddleware, updateOnlineStatus);
 
 export default router

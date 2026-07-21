@@ -11,6 +11,10 @@ import userRoutes from './routes/users.routes.js'
 import articleRoutes from './routes/articles.routes.js'
 import commentRoutes from './routes/comments.routes.js'
 import friendsRoutes from './routes/friends.routes.js';
+import followsRoutes from './routes/follows.routes.js';
+import { startOnlineStatusJob } from './jobs/onlineStatus.job.js';
+import notificationsRoutes from './routes/notifications.routes.js';
+import messagesRoutes from './routes/messages.routes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -111,10 +115,11 @@ app.use('/api/users', userRoutes)                      // User routes (profile m
 app.use('/api/articles', articleRoutes)                // Articles routes (global feed, search, filtering)
 app.use('/api/comments', commentRoutes)                // Comments routes (edit comment)
 app.use('/api/friends', friendsRoutes);                // Friend system (send/accept requests, list friends, remove friends)
+app.use('/api/follows', followsRoutes);                // Follow system (follow/unfollow authors)
+app.use('/api/notifications', notificationsRoutes);    // Notification system (list user notifications)
+app.use('/api/messages', messagesRoutes);              // 
 
 // TODO: Wire up route modules here
-// app.use('/api/messages', messageRoutes)
-// app.use('/api/notifications', notificationRoutes)
 // app.use('/api/gamification', gamificationRoutes)
 
 // ─────────────────────────────────────────────
@@ -134,6 +139,7 @@ app.use(errorHandler)
 // ─────────────────────────────────────────────
 
 const server = app.listen(PORT, handleServerStart)
+startOnlineStatusJob();
 
 // Graceful shutdown
 process.on('SIGINT', handleGracefulShutdown)
