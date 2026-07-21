@@ -3,6 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getProfileArticles, getPublicProfile } from '@/api/users'
 import { useStore } from '@/store/store'
 import type { ProfileArticle, PublicProfile } from '@/types/profile'
+import { FriendButton } from '@/components/user/FriendButton'
+import type { FriendshipState } from '@shared/types/friendship'
+import {
+  getFriends,
+  getIncomingRequests,
+  getSentRequests,
+} from '@/api/friends'
 
 // Convert relative avatar path to full URL for browser image tag.
 const toSafeImageUrl = (avatarUrl: string | null) => {
@@ -48,6 +55,27 @@ const formatDate = (isoDate: string) => {
     month: 'short',
     day: 'numeric',
   })
+}
+
+function getFriendshipState(
+  targetUserId: string,
+  friends: { id: string }[],
+  incoming: { requesterId: string }[],
+  sent: { addresseeId: string }[],
+): FriendshipState {
+  if (friends.some((f) => f.id === targetUserId)) {
+    return 'friends'
+  }
+
+  if (incoming.some((r) => r.requesterId === targetUserId)) {
+    return 'pending_received'
+  }
+
+  if (sent.some((r) => r.addresseeId === targetUserId)) {
+    return 'pending_sent'
+  }
+
+  return 'none'
 }
 
 export const Profile = () => {
@@ -177,6 +205,41 @@ export const Profile = () => {
     return currentUser.username.toLowerCase() === profile.username.toLowerCase()
   }, [currentUser, profile])
 
+  const [friendshipState, setFriendshipState] = useState<FriendshipState>('none')
+
+  useEffect(() => {
+    async function loadFriendship() {
+      if (!profile || isOwnProfile) {
+        return
+      }
+
+      try {
+        const [
+          friendsResponse,
+          incomingResponse,
+          sentResponse,
+        ] = await Promise.all([
+          getFriends(),
+          getIncomingRequests(),
+          getSentRequests(),
+        ])
+
+        const state = getFriendshipState(
+          profile.id,
+          friendsResponse.data,
+          incomingResponse.data,
+          sentResponse.data,
+        )
+
+        setFriendshipState(state)
+      } catch {
+        setFriendshipState('none')
+      }
+    }
+
+    void loadFriendship()
+  }, [profile, isOwnProfile])
+
   const navigate = useNavigate()
 
   // Show this while profile data is still loading.
@@ -241,7 +304,12 @@ export const Profile = () => {
             >
               Edit Profile
             </button>
-          ) : null}
+          ) : (
+            <FriendButton
+              targetUserId={profile.id}
+              initialState={friendshipState}
+            />
+          )}
         </div>
 
         {/* Bio text or a default message if empty. */}

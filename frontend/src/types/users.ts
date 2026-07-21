@@ -12,4 +12,5 @@ export interface PublicProfileApiResponse {
   badges: PublicProfile['badges']
   level: number
   xp: number
+  id: string
 }

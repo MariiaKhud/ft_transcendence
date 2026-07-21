@@ -117,7 +117,7 @@ app.use('/api/comments', commentRoutes)                // Comments routes (edit 
 app.use('/api/friends', friendsRoutes);                // Friend system (send/accept requests, list friends, remove friends)
 app.use('/api/follows', followsRoutes);                // Follow system (follow/unfollow authors)
 app.use('/api/notifications', notificationsRoutes);    // Notification system (list user notifications)
-app.use('/api/messages', messagesRoutes);              // 
+app.use('/api/messages', messagesRoutes);              // Private messaging (send messages, retrieve conversations)
 
 // TODO: Wire up route modules here
 // app.use('/api/gamification', gamificationRoutes)

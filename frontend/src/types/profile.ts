@@ -16,6 +16,7 @@ export interface PublicProfile {
   badges: PublicProfileBadge[]
   level: number
   experiencePoints: number
+  id: string
 }
 
 export interface ProfileArticle {
