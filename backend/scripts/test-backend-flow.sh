@@ -5,6 +5,7 @@ BASE_URL="${BACKEND_BASE_URL:-http://localhost:3000}"
 COOKIE_JAR="$(mktemp)"
 EMPTY_COOKIE_JAR="$(mktemp)"
 COOKIE_JAR2="$(mktemp)"
+COOKIE_JAR_MOD="$(mktemp)"
 RUN_ID="$(date +%s | tail -c 5)"
 USERNAME="auth_${RUN_ID}"
 EMAIL="auth.${RUN_ID}@example.com"
@@ -34,6 +35,7 @@ cleanup() {
   rm -f "$COOKIE_JAR"
   rm -f "$EMPTY_COOKIE_JAR"
   rm -f "$COOKIE_JAR2"
+  rm -f "$COOKIE_JAR_MOD"
 
   if command -v docker >/dev/null 2>&1 && [[ -f "../docker-compose.yml" ]]; then
     docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"DELETE FROM users WHERE email IN ('${EMAIL}', '${EMAIL2}');\"" >/dev/null 2>&1 || true
@@ -681,6 +683,293 @@ assert_status "200" "Get article after edit"
 assert_body_contains '"title":"My Updated Article Title"' "Get article after edit"
 assert_body_contains "\"content\":\"${UPDATED_CONTENT}\"" "Get article after edit"
 assert_body_contains '"category":"CAREER"' "Get article after edit"
+
+# ============================================================================
+# [COMMENTS] POST /api/articles/:id/comments — add comment
+# ============================================================================
+# Description: Tests for POST /api/articles/:id/comments
+# Features: content validation (1-1000 chars), auth requirement, article
+# existence check, commentsCount bump, notification to article author
+# (skipped when commenting on your own article)
+# Epic Link: Comments + Notifications
+# Status: Done ✓
+# ============================================================================
+
+LONG_COMMENT="$(printf 'c%.0s' {1..1001})"
+MAX_COMMENT="$(printf 'c%.0s' {1..1000})"
+
+perform_request "Whoami for comment notification checks" -b "$COOKIE_JAR" "${BASE_URL}/api/auth/me" >/dev/null
+AUTHOR_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')"
+
+NOTIF_CHECK_ENABLED=0
+count_author_comment_notifications() {
+  docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -tAc \"SELECT COUNT(*) FROM notifications WHERE user_id = '${AUTHOR_ID}' AND type = 'COMMENT' AND ref_id = '${ARTICLE_ID}';\"" 2>/dev/null | tr -d '[:space:]'
+}
+
+if command -v docker >/dev/null 2>&1 && [[ -n "$AUTHOR_ID" ]]; then
+  INITIAL_NOTIF_COUNT="$(count_author_comment_notifications)"
+  if [[ "$INITIAL_NOTIF_COUNT" =~ ^[0-9]+$ ]]; then
+    NOTIF_CHECK_ENABLED=1
+  fi
+fi
+
+# Test 49a: POST /api/articles/:id/comments — unauthenticated
+color_echo "$BLUE" "49a. POST /api/articles/:id/comments — unauthenticated request"
+perform_request "Add comment (no auth)" -b "$EMPTY_COOKIE_JAR" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/comments" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Nice article!"}'
+assert_status "401" "Add comment (no auth)"
+
+# Test 49b: POST /api/articles/:id/comments — empty content
+color_echo "$BLUE" "49b. POST /api/articles/:id/comments — empty content rejected"
+perform_request "Add comment (empty content)" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/comments" \
+  -H "Content-Type: application/json" \
+  -d '{"content":""}'
+assert_status "400" "Add comment (empty content)"
+
+# Test 49c: POST /api/articles/:id/comments — whitespace-only content
+color_echo "$BLUE" "49c. POST /api/articles/:id/comments — whitespace-only content rejected"
+perform_request "Add comment (whitespace content)" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/comments" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"   "}'
+assert_status "400" "Add comment (whitespace content)"
+
+# Test 49d: POST /api/articles/:id/comments — content too long (>1000 chars)
+color_echo "$BLUE" "49d. POST /api/articles/:id/comments — content too long (>1000 chars)"
+perform_request "Add comment (too long)" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/comments" \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":\"${LONG_COMMENT}\"}"
+assert_status "400" "Add comment (too long)"
+
+# Test 49e: POST /api/articles/:id/comments — non-existent article
+color_echo "$BLUE" "49e. POST /api/articles/:id/comments — non-existent article returns 404"
+perform_request "Add comment (not found)" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000/comments" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Nice article!"}'
+assert_status "404" "Add comment (not found)"
+
+# Test 49f: POST /api/articles/:id/comments — valid comment at max length (1000 chars)
+color_echo "$BLUE" "49f. POST /api/articles/:id/comments — valid comment at max length (1000 chars)"
+perform_request "Add comment (max length)" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/comments" \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":\"${MAX_COMMENT}\"}"
+assert_status "201" "Add comment (max length)"
+assert_body_contains '"success":true' "Add comment (max length)"
+assert_body_contains "\"content\":\"${MAX_COMMENT}\"" "Add comment (max length)"
+assert_body_contains "\"articleId\":\"${ARTICLE_ID}\"" "Add comment (max length)"
+
+MAX_COMMENT_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')"
+
+# Test 49g: POST /api/articles/:id/comments — valid comment by non-author
+color_echo "$BLUE" "49g. POST /api/articles/:id/comments — non-author adds a comment"
+perform_request "Add comment (non-author)" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/comments" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Great read, thanks for sharing!"}'
+assert_status "201" "Add comment (non-author)"
+assert_body_contains '"content":"Great read, thanks for sharing!"' "Add comment (non-author)"
+assert_body_contains "\"username\":\"${USERNAME2}\"" "Add comment (non-author)"
+
+COMMENT_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')"
+color_echo "$BLUE" "   Created comment ID: ${COMMENT_ID}"
+
+# Test 49h: GET /api/articles/:id — commentsCount reflects the new comments
+color_echo "$BLUE" "49h. GET /api/articles/:id — commentsCount increases after comments"
+perform_request "Get article after comments" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article after comments"
+assert_body_contains '"commentsCount":2' "Get article after comments"
+
+# Test 49i: non-author comments trigger a notification to the article author
+if [[ "$NOTIF_CHECK_ENABLED" == "1" ]]; then
+  color_echo "$BLUE" "49i. Verifying notifications were created for the article author"
+  NOTIF_COUNT_AFTER_OTHERS="$(count_author_comment_notifications)"
+  EXPECTED_COUNT=$((INITIAL_NOTIF_COUNT + 2))
+  if [[ "$NOTIF_COUNT_AFTER_OTHERS" == "$EXPECTED_COUNT" ]]; then
+    color_echo "$GREEN" "Notification check: author received ${EXPECTED_COUNT} COMMENT notification(s) as expected"
+  else
+    color_echo "$RED" "Notification check: expected ${EXPECTED_COUNT} COMMENT notifications, got ${NOTIF_COUNT_AFTER_OTHERS}"
+    exit 1
+  fi
+else
+  color_echo "$YELLOW" "49i. Notification DB check skipped (docker/psql not reachable)"
+fi
+
+# Test 49j: POST /api/articles/:id/comments — author comments on their own article
+color_echo "$BLUE" "49j. POST /api/articles/:id/comments — author comments on own article"
+perform_request "Add comment (self)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/comments" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Thanks everyone for reading!"}'
+assert_status "201" "Add comment (self)"
+assert_body_contains "\"username\":\"${USERNAME}\"" "Add comment (self)"
+
+# Test 49k: self-comment does NOT trigger a self-notification
+if [[ "$NOTIF_CHECK_ENABLED" == "1" ]]; then
+  color_echo "$BLUE" "49k. Verifying no self-notification is created for the author's own comment"
+  NOTIF_COUNT_AFTER_SELF="$(count_author_comment_notifications)"
+  if [[ "$NOTIF_COUNT_AFTER_SELF" == "$NOTIF_COUNT_AFTER_OTHERS" ]]; then
+    color_echo "$GREEN" "Notification check: no self-notification created (still ${NOTIF_COUNT_AFTER_SELF})"
+  else
+    color_echo "$RED" "Notification check: self-comment unexpectedly created a notification (${NOTIF_COUNT_AFTER_OTHERS} -> ${NOTIF_COUNT_AFTER_SELF})"
+    exit 1
+  fi
+else
+  color_echo "$YELLOW" "49k. Self-notification DB check skipped (docker/psql not reachable)"
+fi
+
+# ============================================================================
+# [COMMENTS] PATCH /api/comments/:id — edit comment
+# ============================================================================
+# Description: Tests for PATCH /api/comments/:id
+# Features: author-only edit, content validation (1-1000 chars), auth requirement
+# Epic Link: Comments + Notifications
+# Status: Done ✓
+# ============================================================================
+
+# Test 49l: PATCH /api/comments/:id — unauthenticated
+color_echo "$BLUE" "49l. PATCH /api/comments/:id — unauthenticated request"
+perform_request "Edit comment (no auth)" -b "$EMPTY_COOKIE_JAR" -X PATCH "${BASE_URL}/api/comments/${COMMENT_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Hacked comment"}'
+assert_status "401" "Edit comment (no auth)"
+
+# Test 49m: PATCH /api/comments/:id — non-author is forbidden
+color_echo "$BLUE" "49m. PATCH /api/comments/:id — non-author forbidden"
+perform_request "Edit comment (non-author)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/comments/${COMMENT_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Hacked comment"}'
+assert_status "403" "Edit comment (non-author)"
+
+# Test 49n: PATCH /api/comments/:id — non-existent comment
+color_echo "$BLUE" "49n. PATCH /api/comments/:id — non-existent comment returns 404"
+perform_request "Edit comment (not found)" -b "$COOKIE_JAR2" -X PATCH "${BASE_URL}/api/comments/00000000-0000-0000-0000-000000000000" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Does not matter"}'
+assert_status "404" "Edit comment (not found)"
+
+# Test 49o: PATCH /api/comments/:id — empty content rejected
+color_echo "$BLUE" "49o. PATCH /api/comments/:id — empty content rejected"
+perform_request "Edit comment (empty content)" -b "$COOKIE_JAR2" -X PATCH "${BASE_URL}/api/comments/${COMMENT_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"   "}'
+assert_status "400" "Edit comment (empty content)"
+
+# Test 49p: PATCH /api/comments/:id — content too long (>1000 chars)
+color_echo "$BLUE" "49p. PATCH /api/comments/:id — content too long (>1000 chars)"
+perform_request "Edit comment (too long)" -b "$COOKIE_JAR2" -X PATCH "${BASE_URL}/api/comments/${COMMENT_ID}" \
+  -H "Content-Type: application/json" \
+  -d "{\"content\":\"${LONG_COMMENT}\"}"
+assert_status "400" "Edit comment (too long)"
+
+# Test 49q: PATCH /api/comments/:id — author edits their own comment
+color_echo "$BLUE" "49q. PATCH /api/comments/:id — author edits own comment"
+perform_request "Edit comment" -b "$COOKIE_JAR2" -X PATCH "${BASE_URL}/api/comments/${COMMENT_ID}" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Edited: great read, thanks for sharing!"}'
+assert_status "200" "Edit comment"
+assert_body_contains '"success":true' "Edit comment"
+assert_body_contains '"content":"Edited: great read, thanks for sharing!"' "Edit comment"
+assert_body_contains "\"id\":\"${COMMENT_ID}\"" "Edit comment"
+
+# Test 49r: GET /api/articles/:id — edit is persisted and commentsCount unchanged
+color_echo "$BLUE" "49r. GET /api/articles/:id — comment edit does not change commentsCount"
+perform_request "Get article after comment edit" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article after comment edit"
+assert_body_contains '"commentsCount":3' "Get article after comment edit"
+
+# ============================================================================
+# [COMMENTS] DELETE /api/comments/:id — delete comment
+# ============================================================================
+# Description: Tests for DELETE /api/comments/:id
+# Features: author hard-deletes own comment; moderator/admin soft-removes with
+# a required reason (1-500 chars); auth requirement; ownership/role enforcement
+# Epic Link: Comments + Notifications
+# Status: Done ✓
+# ============================================================================
+
+# Log in as the seeded moderator account to test the moderator soft-remove path.
+# Skipped gracefully if the seed data isn't present (e.g. a fresh, unseeded DB).
+MOD_CHECK_ENABLED=0
+perform_request "Login (moderator seed)" -c "$COOKIE_JAR_MOD" -X POST "${BASE_URL}/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"carol@example.com","password":"password123"}'
+if [[ "$LAST_STATUS" == "200" ]]; then
+  MOD_CHECK_ENABLED=1
+  color_echo "$GREEN" "Login (moderator seed): moderator account available for role tests"
+else
+  color_echo "$YELLOW" "Login (moderator seed): skipped moderator tests (seed data unavailable)"
+fi
+
+# Test 49s: DELETE /api/comments/:id — unauthenticated
+color_echo "$BLUE" "49s. DELETE /api/comments/:id — unauthenticated request"
+perform_request "Delete comment (no auth)" -b "$EMPTY_COOKIE_JAR" -X DELETE "${BASE_URL}/api/comments/${COMMENT_ID}"
+assert_status "401" "Delete comment (no auth)"
+
+# Test 49t: DELETE /api/comments/:id — neither the comment author nor a moderator
+color_echo "$BLUE" "49t. DELETE /api/comments/:id — non-author, non-moderator forbidden"
+perform_request "Delete comment (forbidden)" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/comments/${COMMENT_ID}"
+assert_status "403" "Delete comment (forbidden)"
+
+if [[ "$MOD_CHECK_ENABLED" == "1" ]]; then
+  # Test 49u: DELETE /api/comments/:id — moderator soft-remove without a reason
+  color_echo "$BLUE" "49u. DELETE /api/comments/:id — moderator soft-remove missing reason"
+  perform_request "Delete comment (mod, no reason)" -b "$COOKIE_JAR_MOD" -X DELETE "${BASE_URL}/api/comments/${COMMENT_ID}" \
+    -H "Content-Type: application/json" \
+    -d '{}'
+  assert_status "400" "Delete comment (mod, no reason)"
+
+  # Test 49v: DELETE /api/comments/:id — moderator soft-remove with whitespace-only reason
+  color_echo "$BLUE" "49v. DELETE /api/comments/:id — moderator soft-remove whitespace reason"
+  perform_request "Delete comment (mod, blank reason)" -b "$COOKIE_JAR_MOD" -X DELETE "${BASE_URL}/api/comments/${COMMENT_ID}" \
+    -H "Content-Type: application/json" \
+    -d '{"reason":"   "}'
+  assert_status "400" "Delete comment (mod, blank reason)"
+
+  # Test 49w: DELETE /api/comments/:id — moderator soft-remove with oversized reason (>500 chars)
+  color_echo "$BLUE" "49w. DELETE /api/comments/:id — moderator soft-remove reason too long"
+  LONG_REASON="$(printf 'r%.0s' {1..501})"
+  perform_request "Delete comment (mod, long reason)" -b "$COOKIE_JAR_MOD" -X DELETE "${BASE_URL}/api/comments/${COMMENT_ID}" \
+    -H "Content-Type: application/json" \
+    -d "{\"reason\":\"${LONG_REASON}\"}"
+  assert_status "400" "Delete comment (mod, long reason)"
+
+  # Test 49x: DELETE /api/comments/:id — moderator soft-removes with a valid reason
+  color_echo "$BLUE" "49x. DELETE /api/comments/:id — moderator soft-remove with valid reason"
+  perform_request "Delete comment (mod)" -b "$COOKIE_JAR_MOD" -X DELETE "${BASE_URL}/api/comments/${COMMENT_ID}" \
+    -H "Content-Type: application/json" \
+    -d '{"reason":"Violates community guidelines"}'
+  assert_status "200" "Delete comment (mod)"
+  assert_body_contains '"isRemoved":true' "Delete comment (mod)"
+  assert_body_contains '"removedReason":"Violates community guidelines"' "Delete comment (mod)"
+
+  # Test 49y: DELETE /api/comments/:id — already soft-removed comment is gone (404)
+  color_echo "$BLUE" "49y. DELETE /api/comments/:id — already-removed comment returns 404"
+  perform_request "Delete comment (already removed)" -b "$COOKIE_JAR_MOD" -X DELETE "${BASE_URL}/api/comments/${COMMENT_ID}" \
+    -H "Content-Type: application/json" \
+    -d '{"reason":"again"}'
+  assert_status "404" "Delete comment (already removed)"
+else
+  color_echo "$YELLOW" "49u-49y. Moderator soft-remove tests skipped (seed data unavailable)"
+fi
+
+# Test 49z: DELETE /api/comments/:id — author hard-deletes their own comment
+color_echo "$BLUE" "49z. DELETE /api/comments/:id — author hard-deletes own comment"
+perform_request "Delete comment (author)" -b "$COOKIE_JAR2" -X DELETE "${BASE_URL}/api/comments/${MAX_COMMENT_ID}"
+assert_status "200" "Delete comment (author)"
+assert_body_contains "\"id\":\"${MAX_COMMENT_ID}\"" "Delete comment (author)"
+
+# Test 49z1: DELETE /api/comments/:id — hard-deleted comment is gone (404)
+color_echo "$BLUE" "49z1. DELETE /api/comments/:id — hard-deleted comment returns 404 on re-delete"
+perform_request "Delete comment (already deleted)" -b "$COOKIE_JAR2" -X DELETE "${BASE_URL}/api/comments/${MAX_COMMENT_ID}"
+assert_status "404" "Delete comment (already deleted)"
+
+# Test 49z2: GET /api/articles/:id — commentsCount reflects the removed/deleted comments
+color_echo "$BLUE" "49z2. GET /api/articles/:id — commentsCount excludes removed and deleted comments"
+perform_request "Get article after comment deletions" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article after comment deletions"
+if [[ "$MOD_CHECK_ENABLED" == "1" ]]; then
+  assert_body_contains '"commentsCount":1' "Get article after comment deletions"
+else
+  assert_body_contains '"commentsCount":2' "Get article after comment deletions"
+fi
 
 # ============================================================================
 # [ARTICLES] DELETE /api/articles/:id — delete article

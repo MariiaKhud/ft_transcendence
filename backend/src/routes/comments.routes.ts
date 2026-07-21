@@ -1,0 +1,84 @@
+import { Router } from 'express'
+import type { Request, Response } from 'express'
+import { prisma } from '../lib/prisma.js'
+import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
+import { authMiddleware } from '../middleware/auth.middleware.js'
+import {
+  commentWithAuthorSelect,
+  validateCreateCommentInput,
+  validateRemoveCommentInput,
+} from './comments.route-helpers.js'
+
+const router = Router()
+
+// Update a comment's content. Author only.
+const updateCommentHandler = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, 'Authentication required')
+  }
+
+  const existing = await prisma.comment.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, authorId: true, isRemoved: true },
+  })
+
+  if (!existing || existing.isRemoved) {
+    throw new AppError(404, 'Comment not found')
+  }
+
+  if (existing.authorId !== req.user.userId) {
+    throw new AppError(403, 'Only the author can edit this comment')
+  }
+
+  const { content } = validateCreateCommentInput(req.body)
+
+  const comment = await prisma.comment.update({
+    where: { id: existing.id },
+    data: { content },
+    select: commentWithAuthorSelect,
+  })
+
+  res.status(200).json({ success: true, data: comment })
+}
+
+// Delete a comment. The author hard-deletes their own comment; a moderator/admin
+// soft-removes someone else's comment with a reason instead.
+const deleteCommentHandler = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, 'Authentication required')
+  }
+
+  const existing = await prisma.comment.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, authorId: true, isRemoved: true },
+  })
+
+  if (!existing || existing.isRemoved) {
+    throw new AppError(404, 'Comment not found')
+  }
+
+  if (existing.authorId === req.user.userId) {
+    await prisma.comment.delete({ where: { id: existing.id } })
+    res.status(200).json({ success: true, data: { id: existing.id } })
+    return
+  }
+
+  if (req.user.role !== 'MODERATOR' && req.user.role !== 'ADMIN') {
+    throw new AppError(403, 'Only the author or a moderator can delete this comment')
+  }
+
+  const { reason } = validateRemoveCommentInput(req.body)
+
+  const comment = await prisma.comment.update({
+    where: { id: existing.id },
+    data: { isRemoved: true, removedReason: reason, removedAt: new Date() },
+    select: commentWithAuthorSelect,
+  })
+
+  res.status(200).json({ success: true, data: comment })
+}
+
+router.patch('/:id', authMiddleware, handleAsyncErrors(updateCommentHandler))
+router.delete('/:id', authMiddleware, handleAsyncErrors(deleteCommentHandler))
+
+export default router

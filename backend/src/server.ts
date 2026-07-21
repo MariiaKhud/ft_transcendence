@@ -9,6 +9,7 @@ import { prisma } from './lib/prisma.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
 import articleRoutes from './routes/articles.routes.js'
+import commentRoutes from './routes/comments.routes.js'
 import friendsRoutes from './routes/friends.routes.js';
 import followsRoutes from './routes/follows.routes.js';
 import { startOnlineStatusJob } from './jobs/onlineStatus.job.js';
@@ -112,13 +113,13 @@ app.get('/health', handleHealthCheck)
 app.use('/api/auth', authRoutes)                       // Authentication routes (register, login, logout, etc.)
 app.use('/api/users', userRoutes)                      // User routes (profile management, user listing, etc.)
 app.use('/api/articles', articleRoutes)                // Articles routes (global feed, search, filtering)
+app.use('/api/comments', commentRoutes)                // Comments routes (edit comment)
 app.use('/api/friends', friendsRoutes);                // Friend system (send/accept requests, list friends, remove friends)
 app.use('/api/follows', followsRoutes);                // Follow system (follow/unfollow authors)
 app.use('/api/notifications', notificationsRoutes);    // Notification system (list user notifications)
 app.use('/api/messages', messagesRoutes);              // 
 
 // TODO: Wire up route modules here
-// app.use('/api/comments', commentRoutes)
 // app.use('/api/gamification', gamificationRoutes)
 
 // ─────────────────────────────────────────────
