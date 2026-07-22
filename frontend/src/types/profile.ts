@@ -6,6 +6,7 @@ export interface PublicProfileBadge {
 }
 
 export interface PublicProfile {
+  id: string
   displayName: string | null
   username: string
   avatarUrl: string | null
@@ -16,7 +17,6 @@ export interface PublicProfile {
   badges: PublicProfileBadge[]
   level: number
   experiencePoints: number
-  id: string
 }
 
 export interface ProfileArticle {

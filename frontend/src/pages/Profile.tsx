@@ -10,6 +10,7 @@ import {
   getIncomingRequests,
   getSentRequests,
 } from '@/api/friends'
+import { Button } from '@/components/ui/button'
 
 // Convert relative avatar path to full URL for browser image tag.
 const toSafeImageUrl = (avatarUrl: string | null) => {
@@ -294,7 +295,7 @@ export const Profile = () => {
           </div>
 
           {/* Only show Edit button on your own profile. */}
-          {isOwnProfile ? (
+          {/* {isOwnProfile ? (
             <button
               type="button"
               onClick={() => {
@@ -304,6 +305,22 @@ export const Profile = () => {
             >
               Edit Profile
             </button>
+          ) : (
+            <FriendButton
+              targetUserId={profile.id}
+              initialState={friendshipState}
+            />
+          )} */}
+          {isOwnProfile ? (
+            <Button
+              variant="profile"
+              type="button"
+              onClick={() => {
+                navigate('/settings/profile')
+              }}
+            >
+              Edit Profile
+            </Button>
           ) : (
             <FriendButton
               targetUserId={profile.id}

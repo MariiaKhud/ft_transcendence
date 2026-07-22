@@ -6,6 +6,7 @@ import {
   respondToFriendRequest,
   removeFriend,
 } from '../../api/friends';
+import { Button } from '@/components/ui/button'
 
 interface FriendButtonProps {
   targetUserId: string;
@@ -30,21 +31,21 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
     }
   }
 
-  // Shared button style base
-  const base = 'inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2';
-
   if (state === 'none') {
     return (
       <div className="flex flex-col items-start gap-1">
-        <button
-          onClick={() => handle(() => sendFriendRequest(targetUserId), 'pending_sent')}
+        <Button
+          variant="profile"
+          onClick={() =>
+            handle(() => sendFriendRequest(targetUserId), 'pending_sent')
+          }
           disabled={loading}
-          className={`${base} bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500`}
           aria-label="Send friend request"
         >
           {loading ? <Spinner /> : <PlusIcon />}
           Add Friend
-        </button>
+        </Button>
+
         {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
     );
@@ -53,16 +54,20 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
   if (state === 'pending_sent') {
     return (
       <div className="flex flex-col items-start gap-1">
-        <button
-          onClick={() => handle(() => cancelFriendRequest(targetUserId), 'none')}
+        <Button
+          variant="outline"
+          onClick={() =>
+            handle(() => cancelFriendRequest(targetUserId), 'none')
+          }
           disabled={loading}
-          className={`${base} bg-gray-100 hover:bg-red-50 hover:text-red-600 hover:border-red-300 border border-gray-300 text-gray-600 focus:ring-gray-400`}
           aria-label="Cancel friend request"
           title="Click to cancel request"
+          className="hover:border-red-300 hover:bg-red-50 hover:text-red-600"
         >
           {loading ? <Spinner /> : <ClockIcon />}
           Pending
-        </button>
+        </Button>
+
         {error && <p className="text-xs text-red-500">{error}</p>}
       </div>
     );
@@ -72,31 +77,39 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
     return (
       <div className="flex flex-col items-start gap-1">
         <div className="flex gap-2">
-          <button
-            onClick={() => handle(
-              () => respondToFriendRequest(targetUserId, 'ACCEPTED'),
-              'friends'
-            )}
+          <Button
+            variant="default"
+            onClick={() =>
+              handle(
+                () => respondToFriendRequest(targetUserId, 'ACCEPTED'),
+                'friends',
+              )
+            }
             disabled={loading}
-            className={`${base} bg-green-600 hover:bg-green-700 text-white focus:ring-green-500`}
             aria-label="Accept friend request"
           >
             {loading ? <Spinner /> : <CheckIcon />}
             Accept
-          </button>
-          <button
-            onClick={() => handle(
-              () => respondToFriendRequest(targetUserId, 'DECLINED'),
-              'none'
-            )}
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() =>
+              handle(
+                () => respondToFriendRequest(targetUserId, 'DECLINED'),
+                'none',
+              )
+            }
             disabled={loading}
-            className={`${base} bg-white hover:bg-gray-50 border border-gray-300 text-gray-600 focus:ring-gray-400`}
             aria-label="Decline friend request"
           >
             Decline
-          </button>
+          </Button>
         </div>
-        {error && <p className="text-xs text-red-500">{error}</p>}
+
+        {error && (
+          <p className="text-xs text-red-500">{error}</p>
+        )}
       </div>
     );
   }
@@ -104,17 +117,21 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
   // state === 'friends'
   return (
     <div className="flex flex-col items-start gap-1">
-      <button
+      <Button
+        variant="outline"
         onClick={() => handle(() => removeFriend(targetUserId), 'none')}
         disabled={loading}
-        className={`${base} bg-gray-100 hover:bg-red-50 hover:text-red-600 hover:border-red-300 border border-gray-300 text-gray-600 focus:ring-gray-400`}
         aria-label="Remove friend"
         title="Click to remove friend"
+        className="hover:border-red-300 hover:bg-red-50 hover:text-red-600"
       >
         {loading ? <Spinner /> : <CheckIcon />}
         Friends
-      </button>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+      </Button>
+
+      {error && (
+        <p className="text-xs text-red-500">{error}</p>
+      )}
     </div>
   );
 }
