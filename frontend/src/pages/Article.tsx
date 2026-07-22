@@ -9,11 +9,13 @@ import { formatCategoryLabel, getInitials, toSafeImageUrl } from '@/lib/article-
 import {
   createComment,
   deleteArticle,
+  deleteComment,
   getArticle,
   getComments,
   likeArticle,
   unlikeArticle,
   updateArticle,
+  updateComment,
   type ArticleDetail,
   type Comment,
 } from '@/api/articles'
@@ -40,6 +42,15 @@ export const Article = () => {
   const [newComment, setNewComment] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
   const [commentError, setCommentError] = useState('')
+
+  // Per-comment edit state.
+  const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
+  const [editingCommentContent, setEditingCommentContent] = useState('')
+  const [isSavingCommentEdit, setIsSavingCommentEdit] = useState(false)
+
+  // Per-comment delete state and errors, keyed by comment id.
+  const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
+  const [commentActionErrors, setCommentActionErrors] = useState<Record<string, string>>({})
 
   // Edit mode state.
   const [isEditing, setIsEditing] = useState(false)
@@ -132,12 +143,86 @@ export const Article = () => {
 
     try {
       const comment = await createComment(id, newComment.trim())
-      setComments((prev) => [comment, ...prev])
+      setComments((prev) => [...prev, comment])
+      setArticle((prev) => (prev ? { ...prev, commentsCount: prev.commentsCount + 1 } : prev))
       setNewComment('')
     } catch (err) {
       setCommentError(err instanceof Error ? err.message : 'Unable to post comment')
     } finally {
       setIsSubmittingComment(false)
+    }
+  }
+
+  const handleStartEditComment = (comment: Comment) => {
+    setEditingCommentId(comment.id)
+    setEditingCommentContent(comment.content)
+    setCommentActionErrors((prev) => ({ ...prev, [comment.id]: '' }))
+  }
+
+  const handleCancelEditComment = () => {
+    setEditingCommentId(null)
+    setEditingCommentContent('')
+  }
+
+  const handleSaveEditComment = async (commentId: string) => {
+    const trimmed = editingCommentContent.trim()
+    if (trimmed.length === 0) {
+      return
+    }
+
+    setIsSavingCommentEdit(true)
+
+    try {
+      const updated = await updateComment(commentId, trimmed)
+      setComments((prev) => prev.map((comment) => (comment.id === commentId ? updated : comment)))
+      setEditingCommentId(null)
+    } catch (err) {
+      setCommentActionErrors((prev) => ({
+        ...prev,
+        [commentId]: err instanceof Error ? err.message : 'Unable to update comment',
+      }))
+    } finally {
+      setIsSavingCommentEdit(false)
+    }
+  }
+
+  // Owner hard-deletes their own comment; a moderator/admin soft-removes someone else's with a reason.
+  const handleDeleteComment = async (comment: Comment) => {
+    const isOwnComment = currentUser?.id === comment.authorId
+
+    let reason: string | undefined
+    if (isOwnComment) {
+      if (!window.confirm('Delete this comment? This cannot be undone.')) {
+        return
+      }
+    } else {
+      const promptedReason = window.prompt('Reason for removing this comment:')
+      if (promptedReason === null || promptedReason.trim().length === 0) {
+        return
+      }
+      reason = promptedReason.trim()
+    }
+
+    setCommentActionErrors((prev) => ({ ...prev, [comment.id]: '' }))
+    setDeletingCommentId(comment.id)
+
+    try {
+      const result = await deleteComment(comment.id, reason)
+      if (isOwnComment) {
+        setComments((prev) => prev.filter((item) => item.id !== comment.id))
+        setArticle((prev) => (prev ? { ...prev, commentsCount: Math.max(0, prev.commentsCount - 1) } : prev))
+      } else {
+        const updated = result as Comment
+        setComments((prev) => prev.map((item) => (item.id === comment.id ? updated : item)))
+        setArticle((prev) => (prev ? { ...prev, commentsCount: Math.max(0, prev.commentsCount - 1) } : prev))
+      }
+    } catch (err) {
+      setCommentActionErrors((prev) => ({
+        ...prev,
+        [comment.id]: err instanceof Error ? err.message : 'Unable to delete comment',
+      }))
+    } finally {
+      setDeletingCommentId(null)
     }
   }
 
@@ -361,19 +446,120 @@ export const Article = () => {
           ) : comments.length === 0 ? (
             <p className="text-sm text-slate-600">No comments yet. Be the first to comment!</p>
           ) : (
-            comments.map((comment) => (
-              <div key={comment.id} className="border-t border-white/30 pt-4 first:border-t-0 first:pt-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-semibold text-slate-900">
-                    {comment.author.displayName ?? comment.author.username}
-                  </span>
-                  <span className="text-xs text-slate-500">
-                    {new Date(comment.createdAt).toLocaleDateString()}
-                  </span>
+            comments.map((comment) => {
+              const isStaff = currentUser?.role === 'MODERATOR' || currentUser?.role === 'ADMIN'
+              const isOwnComment = currentUser?.id === comment.authorId
+              const showRemovedPlaceholder = comment.isRemoved && !isStaff
+              const commentAuthorName = comment.author.displayName ?? comment.author.username
+              const commentAvatarUrl = toSafeImageUrl(comment.author.avatarUrl)
+              const actionError = commentActionErrors[comment.id]
+
+              return (
+                <div key={comment.id} className="border-t border-white/30 pt-4 first:border-t-0 first:pt-0">
+                  <div className="flex items-start gap-3">
+                    <Link
+                      to={`/profile/${comment.author.username}`}
+                      className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-semibold text-white"
+                    >
+                      {commentAvatarUrl ? (
+                        <img src={commentAvatarUrl} alt={commentAuthorName} className="h-full w-full object-cover" />
+                      ) : (
+                        <span>{getInitials(comment.author)}</span>
+                      )}
+                    </Link>
+
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          to={`/profile/${comment.author.username}`}
+                          className="text-sm font-semibold text-slate-900 hover:text-purple-700"
+                        >
+                          {commentAuthorName}
+                        </Link>
+                        <span className="text-xs text-slate-500">
+                          {new Date(comment.createdAt).toLocaleDateString()}
+                        </span>
+
+                        {!showRemovedPlaceholder && !isOwnComment && isStaff && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteComment(comment)}
+                            disabled={deletingCommentId === comment.id}
+                            className="ml-auto text-xs font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
+                          >
+                            {deletingCommentId === comment.id ? 'Removing...' : 'Remove'}
+                          </button>
+                        )}
+
+                        {!showRemovedPlaceholder && isOwnComment && editingCommentId !== comment.id && (
+                          <div className="ml-auto flex gap-3">
+                            <button
+                              type="button"
+                              onClick={() => handleStartEditComment(comment)}
+                              className="text-xs font-semibold text-slate-600 hover:text-purple-700"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteComment(comment)}
+                              disabled={deletingCommentId === comment.id}
+                              className="text-xs font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
+                            >
+                              {deletingCommentId === comment.id ? 'Deleting...' : 'Delete'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {showRemovedPlaceholder ? (
+                        <p className="mt-1 text-sm italic text-slate-400">[removed]</p>
+                      ) : editingCommentId === comment.id ? (
+                        <div className="mt-2 space-y-2">
+                          <textarea
+                            value={editingCommentContent}
+                            onChange={(e) => setEditingCommentContent(e.target.value)}
+                            rows={3}
+                            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-purple-500 focus:outline-none"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              type="button"
+                              onClick={() => handleSaveEditComment(comment.id)}
+                              disabled={isSavingCommentEdit || editingCommentContent.trim().length === 0}
+                              className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1 text-xs font-semibold text-white shadow disabled:opacity-50"
+                            >
+                              {isSavingCommentEdit ? 'Saving...' : 'Save'}
+                            </Button>
+                            <button
+                              type="button"
+                              onClick={handleCancelEditComment}
+                              disabled={isSavingCommentEdit}
+                              className="rounded-lg border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-white disabled:opacity-50"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <p className="mt-1 whitespace-pre-wrap break-words text-sm text-slate-700">
+                            {comment.content}
+                          </p>
+                          {comment.isRemoved && isStaff && (
+                            <p className="mt-1 text-xs italic text-red-500">
+                              Removed{comment.removedReason ? `: ${comment.removedReason}` : ''}
+                            </p>
+                          )}
+                        </>
+                      )}
+
+                      {actionError && <p className="mt-1 text-xs font-medium text-red-600">{actionError}</p>}
+                    </div>
+                  </div>
                 </div>
-                <p className="mt-1 text-sm text-slate-700">{comment.content}</p>
-              </div>
-            ))
+              )
+            })
           )}
         </div>
       </div>

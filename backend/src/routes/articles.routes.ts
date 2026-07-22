@@ -240,11 +240,34 @@ const createCommentHandler = async (req: Request, res: Response) => {
   res.status(201).json({ success: true, data: comment })
 }
 
+// List all comments on an article, oldest first. Includes soft-removed
+// comments so the thread keeps its shape — the frontend decides how to
+// display them based on the viewer's role.
+const listCommentsHandler = async (req: Request, res: Response) => {
+  const article = await prisma.article.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, isRemoved: true },
+  })
+
+  if (!article || article.isRemoved) {
+    throw new AppError(404, 'Article not found')
+  }
+
+  const comments = await prisma.comment.findMany({
+    where: { articleId: article.id },
+    select: commentWithAuthorSelect,
+    orderBy: { createdAt: 'asc' },
+  })
+
+  res.status(200).json({ success: true, data: comments })
+}
+
 router.post('/', authMiddleware, handleAsyncErrors(createArticleHandler))
 router.get('/', handleAsyncErrors(listArticlesHandler))
 router.get('/:id', optionalAuthMiddleware, handleAsyncErrors(getArticleHandler))
 router.patch('/:id', authMiddleware, handleAsyncErrors(updateArticleHandler))
 router.delete('/:id', authMiddleware, handleAsyncErrors(deleteArticleHandler))
+router.get('/:id/comments', handleAsyncErrors(listCommentsHandler))
 router.post('/:id/comments', authMiddleware, handleAsyncErrors(createCommentHandler))
 
 export default router

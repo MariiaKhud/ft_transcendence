@@ -38,13 +38,21 @@ export interface ArticleDetail extends Article {
  */
 export interface Comment {
   id: string
+  articleId: string
+  authorId: string
   content: string
+  isRemoved: boolean
+  removedReason: string | null
+  removedAt: string | null
   createdAt: string
+  updatedAt: string
   author: {
     id: string
     username: string
     displayName: string | null
     avatarUrl: string | null
+    role: 'USER' | 'MODERATOR' | 'ADMIN'
+    level: number
   }
 }
 
@@ -197,8 +205,8 @@ export const unlikeArticle = async (id: string): Promise<{ likeCount: number }> 
 }
 
 /**
- * Result of loading comments — flags when the backend doesn't have the
- * comments endpoint yet so the page can degrade gracefully.
+ * Result of loading comments — flags when the article (and therefore its
+ * comments) can't be found, so the page can degrade gracefully.
  */
 export interface GetCommentsResult {
   items: Comment[]
@@ -206,8 +214,8 @@ export interface GetCommentsResult {
 }
 
 /**
- * Fetches comments for an article. The backend does not have this endpoint
- * yet, so a 404 is treated as "comments unavailable" rather than an error.
+ * Fetches all comments for an article, oldest first. Includes soft-removed
+ * comments — the UI decides how to render those based on the viewer's role.
  */
 export const getComments = async (articleId: string): Promise<GetCommentsResult> => {
   try {
@@ -224,7 +232,7 @@ export const getComments = async (articleId: string): Promise<GetCommentsResult>
 }
 
 /**
- * Posts a new comment on an article.
+ * Posts a new comment on an article. Requires authentication.
  */
 export const createComment = async (articleId: string, content: string): Promise<Comment> => {
   try {
@@ -232,5 +240,33 @@ export const createComment = async (articleId: string, content: string): Promise
     return requireResponseData(response.data, 'Unable to post comment')
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Unable to post comment'))
+  }
+}
+
+/**
+ * Sends PATCH /api/comments/:id. Author-only.
+ */
+export const updateComment = async (id: string, content: string): Promise<Comment> => {
+  try {
+    const response = await apiClient.patch<ApiResponse<Comment>>(`/comments/${id}`, { content })
+    return requireResponseData(response.data, 'Unable to update comment')
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to update comment'))
+  }
+}
+
+/**
+ * Sends DELETE /api/comments/:id. The author hard-deletes their own comment
+ * (no `reason`); a moderator/admin soft-removes someone else's comment and
+ * must supply a `reason`, getting back the updated (now-removed) comment.
+ */
+export const deleteComment = async (id: string, reason?: string): Promise<{ id: string } | Comment> => {
+  try {
+    const response = await apiClient.delete<ApiResponse<{ id: string } | Comment>>(`/comments/${id}`, {
+      data: reason ? { reason } : undefined,
+    })
+    return requireResponseData(response.data, 'Unable to delete comment')
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to delete comment'))
   }
 }

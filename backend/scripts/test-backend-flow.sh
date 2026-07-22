@@ -778,6 +778,14 @@ perform_request "Get article after comments" "${BASE_URL}/api/articles/${ARTICLE
 assert_status "200" "Get article after comments"
 assert_body_contains '"commentsCount":2' "Get article after comments"
 
+# Test 49h2: GET /api/articles — the feed list's comment count also reflects the new comments.
+# Regression guard: articleSummarySelect used to omit `_count` entirely, so feed
+# cards always showed a stale/zero comment count no matter how many comments existed.
+color_echo "$BLUE" "49h2. GET /api/articles — feed list comment count increases after comments"
+perform_request "Get feed after comments" "${BASE_URL}/api/articles?author=${USERNAME}"
+assert_status "200" "Get feed after comments"
+assert_body_contains '"_count":{"comments":2}' "Get feed after comments"
+
 # Test 49i: non-author comments trigger a notification to the article author
 if [[ "$NOTIF_CHECK_ENABLED" == "1" ]]; then
   color_echo "$BLUE" "49i. Verifying notifications were created for the article author"
@@ -970,6 +978,56 @@ if [[ "$MOD_CHECK_ENABLED" == "1" ]]; then
 else
   assert_body_contains '"commentsCount":2' "Get article after comment deletions"
 fi
+
+# ============================================================================
+# [COMMENTS] GET /api/articles/:id/comments — list comments
+# ============================================================================
+# Description: Tests for GET /api/articles/:id/comments
+# Features: public (no auth required), oldest-first ordering, includes
+# soft-removed comments (the frontend decides how to render them), excludes
+# hard-deleted comments, 404 for a non-existent article
+# Epic Link: Comments + Notifications
+# Status: Done ✓
+# ============================================================================
+
+# Test 49z3: GET /api/articles/:id/comments — public request succeeds
+color_echo "$BLUE" "49z3. GET /api/articles/:id/comments — public request returns the comment list"
+perform_request "List comments" -b "$EMPTY_COOKIE_JAR" "${BASE_URL}/api/articles/${ARTICLE_ID}/comments"
+assert_status "200" "List comments"
+assert_body_contains '"success":true' "List comments"
+
+# Test 49z4: hard-deleted comment is excluded from the list
+color_echo "$BLUE" "49z4. GET /api/articles/:id/comments — hard-deleted comment is excluded"
+assert_body_not_contains "\"id\":\"${MAX_COMMENT_ID}\"" "List comments"
+
+# Test 49z5: the surviving self-comment is present
+color_echo "$BLUE" "49z5. GET /api/articles/:id/comments — surviving comment is present"
+assert_body_contains '"content":"Thanks everyone for reading!"' "List comments"
+
+# Test 49z6: comments are ordered oldest first
+color_echo "$BLUE" "49z6. GET /api/articles/:id/comments — comments are ordered oldest first"
+FIRST_POS="$(grep -bo 'Edited: great read, thanks for sharing!' <<<"$LAST_BODY" | head -1 | cut -d: -f1)"
+SECOND_POS="$(grep -bo 'Thanks everyone for reading!' <<<"$LAST_BODY" | head -1 | cut -d: -f1)"
+if [[ -n "$FIRST_POS" && -n "$SECOND_POS" && "$FIRST_POS" -lt "$SECOND_POS" ]]; then
+  color_echo "$GREEN" "List comments ordering: oldest-first confirmed"
+else
+  color_echo "$RED" "List comments ordering: expected the earlier comment to appear first (positions: ${FIRST_POS:-?} vs ${SECOND_POS:-?})"
+  exit 1
+fi
+
+if [[ "$MOD_CHECK_ENABLED" == "1" ]]; then
+  # Test 49z7: soft-removed comment is still included, with isRemoved + removedReason
+  color_echo "$BLUE" "49z7. GET /api/articles/:id/comments — soft-removed comment included with reason"
+  assert_body_contains '"isRemoved":true' "List comments"
+  assert_body_contains '"removedReason":"Violates community guidelines"' "List comments"
+else
+  color_echo "$YELLOW" "49z7. Soft-removed comment check skipped (moderator tests were skipped)"
+fi
+
+# Test 49z8: GET /api/articles/:id/comments — non-existent article returns 404
+color_echo "$BLUE" "49z8. GET /api/articles/:id/comments — non-existent article returns 404"
+perform_request "List comments (not found)" "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000/comments"
+assert_status "404" "List comments (not found)"
 
 # ============================================================================
 # [ARTICLES] DELETE /api/articles/:id — delete article

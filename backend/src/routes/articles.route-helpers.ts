@@ -285,6 +285,13 @@ export const articleSummarySelect = {
       level: true,
     },
   },
+  _count: {
+    select: {
+      comments: {
+        where: { isRemoved: false },
+      },
+    },
+  },
 } as const
 
 // Single-article view: full article plus how many comments it has.

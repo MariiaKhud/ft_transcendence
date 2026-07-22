@@ -323,6 +323,9 @@ assert_body_contains '"likeCount"' "Articles API fields"
 assert_body_contains '"createdAt"' "Articles API fields"
 assert_body_contains '"username"' "Articles API fields"
 assert_body_contains '"avatarUrl"' "Articles API fields"
+# Regression guard: the feed list used to omit `_count` entirely, so the
+# ArticleCard's comment count (article._count?.comments) was always stale/zero.
+assert_body_contains '"_count":{"comments"' "Articles API fields"
 
 FIRST_ARTICLE_ID="$(grep -o '"id":"[^"]*"' <<<"$LAST_BODY" | head -1 | cut -d'"' -f4)"
 
@@ -342,9 +345,10 @@ assert_body_contains '<div id="root"></div>' "Article detail route"
 # ============================================================================
 # Description: Full article view - Markdown content, author info, like
 #              button, comments section, edit/delete buttons if own article.
-# Features: Article detail data, edit/delete auth guard, like + comments stubs
+# Features: Article detail data, edit/delete auth guard, like stub, comments
+#           section (list, add, edit, delete/soft-remove)
 # Epic Link: Articles + Feed
-# Status: Done ✓ (like/comments are UI-only until their backend endpoints exist)
+# Status: Done ✓ (like is UI-only until its backend endpoint exists)
 # ============================================================================
 
 color_echo "$BLUE" "25. Checking single article API includes fields the Article page needs"
@@ -369,9 +373,32 @@ color_echo "$BLUE" "28. Checking the like endpoint isn't implemented yet (Like b
 perform_request "Like article proxy" -X POST "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/like"
 assert_status "404" "Like article proxy"
 
-color_echo "$BLUE" "29. Checking the comments endpoint isn't implemented yet (Comments section degrades gracefully)"
+color_echo "$BLUE" "29. Checking the comments list proxy returns the article's comments (Comments section)"
 perform_request "Article comments proxy" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/comments"
-assert_status "404" "Article comments proxy"
+assert_status "200" "Article comments proxy"
+assert_header_contains 'content-type: application/json' "Article comments proxy"
+assert_body_contains '"success":true' "Article comments proxy"
+
+color_echo "$BLUE" "29a. Checking POST /api/articles/:id/comments proxy requires authentication (Add comment form)"
+perform_request "Add comment proxy" -X POST "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/comments" \
+  -H "Content-Type: application/json" -d '{"content":"Unauthorized comment attempt"}'
+assert_status "401" "Add comment proxy"
+assert_header_contains 'content-type: application/json' "Add comment proxy"
+
+color_echo "$BLUE" "29b. Checking PATCH /api/comments/:id proxy requires authentication (comment Edit button)"
+perform_request "Edit comment proxy" -X PATCH "${BASE_URL}/api/comments/00000000-0000-0000-0000-000000000000" \
+  -H "Content-Type: application/json" -d '{"content":"Unauthorized edit attempt"}'
+assert_status "401" "Edit comment proxy"
+assert_header_contains 'content-type: application/json' "Edit comment proxy"
+
+color_echo "$BLUE" "29c. Checking DELETE /api/comments/:id proxy requires authentication (comment Delete/Remove button)"
+perform_request "Delete comment proxy" -X DELETE "${BASE_URL}/api/comments/00000000-0000-0000-0000-000000000000"
+assert_status "401" "Delete comment proxy"
+assert_header_contains 'content-type: application/json' "Delete comment proxy"
+
+color_echo "$BLUE" "29d. Checking the comments list proxy 404s for a non-existent article"
+perform_request "Article comments proxy (not found)" "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000/comments"
+assert_status "404" "Article comments proxy (not found)"
 
 # ============================================================================
 # [ARTICLES] Frontend: Create/Edit article form
