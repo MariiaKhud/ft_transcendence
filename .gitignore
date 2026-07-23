@@ -13,6 +13,8 @@ transcendence-summary.md
 # Node.js dependencies (too big to commit)
 node_modules/
 package-lock.json
+!backend/package-lock.json
+!frontend/package-lock.json
 yarn.lock
 
 # Build outputs (can be regenerated)
