@@ -1,5 +1,4 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import axios from 'axios'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { Button } from '@/components/ui/button'
@@ -12,8 +11,7 @@ import {
   deleteComment,
   getArticle,
   getComments,
-  likeArticle,
-  unlikeArticle,
+  toggleArticleLike,
   updateArticle,
   updateComment,
   type ArticleDetail,
@@ -33,7 +31,6 @@ export const Article = () => {
   const [isLiked, setIsLiked] = useState(false)
   const [likeCount, setLikeCount] = useState(0)
   const [isLiking, setIsLiking] = useState(false)
-  const [likeUnavailable, setLikeUnavailable] = useState(false)
 
   // Comments state.
   const [comments, setComments] = useState<Comment[]>([])
@@ -105,7 +102,7 @@ export const Article = () => {
   const isOwnArticle = Boolean(currentUser && article && currentUser.id === article.authorId)
 
   const handleToggleLike = async () => {
-    if (!id || isLiking || likeUnavailable) {
+    if (!id || isLiking) {
       return
     }
 
@@ -116,16 +113,13 @@ export const Article = () => {
     setIsLiking(true)
 
     try {
-      const result = wasLiked ? await unlikeArticle(id) : await likeArticle(id)
+      const result = await toggleArticleLike(id)
+      setIsLiked(result.liked)
       setLikeCount(result.likeCount)
-    } catch (err) {
+    } catch {
       // Revert the optimistic update.
       setIsLiked(wasLiked)
       setLikeCount((count) => count + (wasLiked ? 1 : -1))
-
-      if (axios.isAxiosError(err) && err.response?.status === 404) {
-        setLikeUnavailable(true)
-      }
     } finally {
       setIsLiking(false)
     }
@@ -391,8 +385,7 @@ export const Article = () => {
               <button
                 type="button"
                 onClick={handleToggleLike}
-                disabled={isLiking || likeUnavailable}
-                title={likeUnavailable ? 'Liking is not available yet' : undefined}
+                disabled={isLiking}
                 className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
                   isLiked
                     ? 'border-purple-300 bg-purple-100 text-purple-700'
@@ -401,7 +394,6 @@ export const Article = () => {
               >
                 👍 {likeCount} {isLiked ? 'Liked' : 'Like'}
               </button>
-              {likeUnavailable && <span className="text-sm text-slate-500">Liking isn't available yet.</span>}
             </div>
           </>
         )}

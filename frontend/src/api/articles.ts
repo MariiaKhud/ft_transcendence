@@ -183,24 +183,15 @@ export const deleteArticle = async (id: string): Promise<void> => {
 }
 
 /**
- * Likes or unlikes an article. The backend does not have this endpoint yet,
- * so callers should catch a 404 and treat liking as unavailable for now.
+ * Toggles the current user's like on an article: likes it if not yet liked,
+ * unlikes it if already liked. Requires authentication.
  */
-export const likeArticle = async (id: string): Promise<{ likeCount: number }> => {
+export const toggleArticleLike = async (id: string): Promise<{ liked: boolean; likeCount: number }> => {
   try {
-    const response = await apiClient.post<ApiResponse<{ likeCount: number }>>(`/articles/${id}/like`)
-    return requireResponseData(response.data, 'Unable to like article')
+    const response = await apiClient.post<ApiResponse<{ liked: boolean; likeCount: number }>>(`/articles/${id}/like`)
+    return requireResponseData(response.data, 'Unable to update like')
   } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to like article'))
-  }
-}
-
-export const unlikeArticle = async (id: string): Promise<{ likeCount: number }> => {
-  try {
-    const response = await apiClient.delete<ApiResponse<{ likeCount: number }>>(`/articles/${id}/like`)
-    return requireResponseData(response.data, 'Unable to unlike article')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to unlike article'))
+    throw new Error(getApiErrorMessage(error, 'Unable to update like'))
   }
 }
 

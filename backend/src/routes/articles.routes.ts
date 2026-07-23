@@ -240,6 +240,56 @@ const createCommentHandler = async (req: Request, res: Response) => {
   res.status(201).json({ success: true, data: comment })
 }
 
+// Toggle the current user's like on an article: insert+increment if not yet
+// liked (and notify the author), delete+decrement if already liked.
+const toggleLikeHandler = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, 'Authentication required')
+  }
+
+  const userId = req.user.userId
+
+  const article = await prisma.article.findUnique({
+    where: { id: req.params.id },
+    select: { id: true, authorId: true, title: true, isRemoved: true },
+  })
+
+  if (!article || article.isRemoved) {
+    throw new AppError(404, 'Article not found')
+  }
+
+  const existingLike = await prisma.articleLike.findUnique({
+    where: { userId_articleId: { userId, articleId: article.id } },
+  })
+
+  const { liked, likeCount } = await prisma.$transaction(async (tx) => {
+    if (existingLike) {
+      await tx.articleLike.delete({ where: { id: existingLike.id } })
+      const updated = await tx.article.update({
+        where: { id: article.id },
+        data: { likeCount: { decrement: 1 } },
+        select: { likeCount: true },
+      })
+      return { liked: false, likeCount: updated.likeCount }
+    }
+
+    await tx.articleLike.create({ data: { userId, articleId: article.id } })
+    const updated = await tx.article.update({
+      where: { id: article.id },
+      data: { likeCount: { increment: 1 } },
+      select: { likeCount: true },
+    })
+    return { liked: true, likeCount: updated.likeCount }
+  })
+
+  // Don't notify authors about their own likes, and only notify on the like transition.
+  if (liked && article.authorId !== userId) {
+    await createNotification(article.authorId, 'LIKE', `liked your article "${article.title}"`, article.id)
+  }
+
+  res.status(200).json({ success: true, data: { liked, likeCount } })
+}
+
 // List all comments on an article, oldest first. Includes soft-removed
 // comments so the thread keeps its shape — the frontend decides how to
 // display them based on the viewer's role.
@@ -269,5 +319,6 @@ router.patch('/:id', authMiddleware, handleAsyncErrors(updateArticleHandler))
 router.delete('/:id', authMiddleware, handleAsyncErrors(deleteArticleHandler))
 router.get('/:id/comments', handleAsyncErrors(listCommentsHandler))
 router.post('/:id/comments', authMiddleware, handleAsyncErrors(createCommentHandler))
+router.post('/:id/like', authMiddleware, handleAsyncErrors(toggleLikeHandler))
 
 export default router

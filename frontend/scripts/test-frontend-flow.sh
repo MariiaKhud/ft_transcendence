@@ -348,7 +348,7 @@ assert_body_contains '<div id="root"></div>' "Article detail route"
 # Features: Article detail data, edit/delete auth guard, like stub, comments
 #           section (list, add, edit, delete/soft-remove)
 # Epic Link: Articles + Feed
-# Status: Done ✓ (like is UI-only until its backend endpoint exists)
+# Status: Done ✓
 # ============================================================================
 
 color_echo "$BLUE" "25. Checking single article API includes fields the Article page needs"
@@ -369,9 +369,10 @@ perform_request "Delete article proxy" -X DELETE "${BASE_URL}/api/articles/${FIR
 assert_status "401" "Delete article proxy"
 assert_header_contains 'content-type: application/json' "Delete article proxy"
 
-color_echo "$BLUE" "28. Checking the like endpoint isn't implemented yet (Like button degrades gracefully)"
+color_echo "$BLUE" "28. Checking POST /api/articles/:id/like proxy requires authentication (Like button)"
 perform_request "Like article proxy" -X POST "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/like"
-assert_status "404" "Like article proxy"
+assert_status "401" "Like article proxy"
+assert_header_contains 'content-type: application/json' "Like article proxy"
 
 color_echo "$BLUE" "29. Checking the comments list proxy returns the article's comments (Comments section)"
 perform_request "Article comments proxy" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/comments"

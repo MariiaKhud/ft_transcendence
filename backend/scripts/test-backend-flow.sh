@@ -1030,6 +1030,128 @@ perform_request "List comments (not found)" "${BASE_URL}/api/articles/00000000-0
 assert_status "404" "List comments (not found)"
 
 # ============================================================================
+# [LIKES] POST /api/articles/:id/like — like or unlike (toggle)
+# ============================================================================
+# Description: Tests for POST /api/articles/:id/like
+# Features: toggle like/unlike, likeCount increment/decrement, isLikedByCurrentUser
+# per-viewer, notification to article author on like (skipped on unlike and on
+# self-like), auth requirement, article existence check
+# Epic Link: Comments + Notifications
+# Status: Done ✓
+# ============================================================================
+
+count_author_like_notifications() {
+  docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -tAc \"SELECT COUNT(*) FROM notifications WHERE user_id = '${AUTHOR_ID}' AND type = 'LIKE' AND ref_id = '${ARTICLE_ID}';\"" 2>/dev/null | tr -d '[:space:]'
+}
+
+if [[ "$NOTIF_CHECK_ENABLED" == "1" ]]; then
+  LIKE_NOTIF_BASELINE="$(count_author_like_notifications)"
+fi
+
+# Test 49z9: POST /api/articles/:id/like — unauthenticated
+color_echo "$BLUE" "49z9. POST /api/articles/:id/like — unauthenticated request"
+perform_request "Like article (no auth)" -b "$EMPTY_COOKIE_JAR" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/like"
+assert_status "401" "Like article (no auth)"
+
+# Test 49z10: POST /api/articles/:id/like — non-existent article
+color_echo "$BLUE" "49z10. POST /api/articles/:id/like — non-existent article returns 404"
+perform_request "Like article (not found)" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000/like"
+assert_status "404" "Like article (not found)"
+
+# Test 49z11: POST /api/articles/:id/like — non-author likes the article (toggle on)
+color_echo "$BLUE" "49z11. POST /api/articles/:id/like — non-author likes the article"
+perform_request "Like article (user2)" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/like"
+assert_status "200" "Like article (user2)"
+assert_body_contains '"success":true' "Like article (user2)"
+assert_body_contains '"liked":true' "Like article (user2)"
+assert_body_contains '"likeCount":1' "Like article (user2)"
+
+# Test 49z12: GET /api/articles/:id — liker sees isLikedByCurrentUser true and likeCount 1
+color_echo "$BLUE" "49z12. GET /api/articles/:id — liker sees isLikedByCurrentUser true"
+perform_request "Get article (as liker)" -b "$COOKIE_JAR2" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article (as liker)"
+assert_body_contains '"isLikedByCurrentUser":true' "Get article (as liker)"
+assert_body_contains '"likeCount":1' "Get article (as liker)"
+
+# Test 49z13: GET /api/articles/:id — a different viewer (the author) sees isLikedByCurrentUser false, same likeCount
+color_echo "$BLUE" "49z13. GET /api/articles/:id — likeCount is shared but isLikedByCurrentUser is per-viewer"
+perform_request "Get article (as author)" -b "$COOKIE_JAR" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article (as author)"
+assert_body_contains '"isLikedByCurrentUser":false' "Get article (as author)"
+assert_body_contains '"likeCount":1' "Get article (as author)"
+
+# Test 49z14: liking as a non-author triggers a LIKE notification for the article author
+if [[ "$NOTIF_CHECK_ENABLED" == "1" ]]; then
+  color_echo "$BLUE" "49z14. Verifying a LIKE notification was created for the article author"
+  LIKE_NOTIF_AFTER_LIKE="$(count_author_like_notifications)"
+  EXPECTED_LIKE_COUNT=$((LIKE_NOTIF_BASELINE + 1))
+  if [[ "$LIKE_NOTIF_AFTER_LIKE" == "$EXPECTED_LIKE_COUNT" ]]; then
+    color_echo "$GREEN" "Notification check: author received a LIKE notification as expected"
+  else
+    color_echo "$RED" "Notification check: expected ${EXPECTED_LIKE_COUNT} LIKE notifications, got ${LIKE_NOTIF_AFTER_LIKE}"
+    exit 1
+  fi
+else
+  color_echo "$YELLOW" "49z14. LIKE notification DB check skipped (docker/psql not reachable)"
+fi
+
+# Test 49z15: POST /api/articles/:id/like — same user toggles again (unlike)
+color_echo "$BLUE" "49z15. POST /api/articles/:id/like — non-author unlikes the article"
+perform_request "Unlike article (user2)" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/like"
+assert_status "200" "Unlike article (user2)"
+assert_body_contains '"liked":false' "Unlike article (user2)"
+assert_body_contains '"likeCount":0' "Unlike article (user2)"
+
+# Test 49z16: GET /api/articles/:id — isLikedByCurrentUser is false again after unlike
+color_echo "$BLUE" "49z16. GET /api/articles/:id — isLikedByCurrentUser false after unlike"
+perform_request "Get article (after unlike)" -b "$COOKIE_JAR2" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article (after unlike)"
+assert_body_contains '"isLikedByCurrentUser":false' "Get article (after unlike)"
+assert_body_contains '"likeCount":0' "Get article (after unlike)"
+
+# Test 49z17: unliking does NOT create an additional notification
+if [[ "$NOTIF_CHECK_ENABLED" == "1" ]]; then
+  color_echo "$BLUE" "49z17. Verifying unlike does not create a notification"
+  LIKE_NOTIF_AFTER_UNLIKE="$(count_author_like_notifications)"
+  if [[ "$LIKE_NOTIF_AFTER_UNLIKE" == "$LIKE_NOTIF_AFTER_LIKE" ]]; then
+    color_echo "$GREEN" "Notification check: no notification created on unlike (still ${LIKE_NOTIF_AFTER_UNLIKE})"
+  else
+    color_echo "$RED" "Notification check: unlike unexpectedly created a notification (${LIKE_NOTIF_AFTER_LIKE} -> ${LIKE_NOTIF_AFTER_UNLIKE})"
+    exit 1
+  fi
+else
+  color_echo "$YELLOW" "49z17. Unlike notification DB check skipped (docker/psql not reachable)"
+fi
+
+# Test 49z18: POST /api/articles/:id/like — author likes their own article (self-like)
+color_echo "$BLUE" "49z18. POST /api/articles/:id/like — author likes own article"
+perform_request "Like article (self)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/like"
+assert_status "200" "Like article (self)"
+assert_body_contains '"liked":true' "Like article (self)"
+assert_body_contains '"likeCount":1' "Like article (self)"
+
+# Test 49z19: self-like does NOT trigger a self-notification
+if [[ "$NOTIF_CHECK_ENABLED" == "1" ]]; then
+  color_echo "$BLUE" "49z19. Verifying no self-notification is created for the author's own like"
+  LIKE_NOTIF_AFTER_SELF="$(count_author_like_notifications)"
+  if [[ "$LIKE_NOTIF_AFTER_SELF" == "$LIKE_NOTIF_AFTER_UNLIKE" ]]; then
+    color_echo "$GREEN" "Notification check: no self-notification created (still ${LIKE_NOTIF_AFTER_SELF})"
+  else
+    color_echo "$RED" "Notification check: self-like unexpectedly created a notification (${LIKE_NOTIF_AFTER_UNLIKE} -> ${LIKE_NOTIF_AFTER_SELF})"
+    exit 1
+  fi
+else
+  color_echo "$YELLOW" "49z19. Self-notification DB check skipped (docker/psql not reachable)"
+fi
+
+# Test 49z20: POST /api/articles/:id/like — author unlikes own article again, restoring likeCount to 0
+color_echo "$BLUE" "49z20. POST /api/articles/:id/like — author unlikes own article (cleanup)"
+perform_request "Unlike article (self)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/like"
+assert_status "200" "Unlike article (self)"
+assert_body_contains '"liked":false' "Unlike article (self)"
+assert_body_contains '"likeCount":0' "Unlike article (self)"
+
+# ============================================================================
 # [ARTICLES] DELETE /api/articles/:id — delete article
 # ============================================================================
 # Description: Tests for DELETE /api/articles/:id (author-only hard delete)
@@ -1053,8 +1175,9 @@ color_echo "$BLUE" "52. DELETE /api/articles/:id — non-existent article return
 perform_request "Delete article (not found)" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000"
 assert_status "404" "Delete article (not found)"
 
-# Test 53: seed a comment and a like on the article directly in the DB so we can
-# prove the delete cascades, since comment/like API endpoints aren't built yet.
+# Test 53: seed a comment and a like on the article directly in the DB (rather
+# than via the API) so this cascade check stays independent of the like/unlike
+# toggle state exercised above, and so we can prove the delete cascades.
 CASCADE_CHECK_ENABLED=0
 perform_request "Whoami for cascade seed" -b "$COOKIE_JAR" "${BASE_URL}/api/auth/me" >/dev/null
 USER_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')"
