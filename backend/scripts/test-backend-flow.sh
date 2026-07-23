@@ -1034,8 +1034,8 @@ assert_status "404" "List comments (not found)"
 # ============================================================================
 # Description: Tests for POST /api/articles/:id/like
 # Features: toggle like/unlike, likeCount increment/decrement, isLikedByCurrentUser
-# per-viewer, notification to article author on like (skipped on unlike and on
-# self-like), auth requirement, article existence check
+# per-viewer, notification to article author on like (skipped on unlike),
+# self-like rejected with 400, auth requirement, article existence check
 # Epic Link: Comments + Notifications
 # Status: Done ✓
 # ============================================================================
@@ -1123,33 +1123,30 @@ else
   color_echo "$YELLOW" "49z17. Unlike notification DB check skipped (docker/psql not reachable)"
 fi
 
-# Test 49z18: POST /api/articles/:id/like — author likes their own article (self-like)
-color_echo "$BLUE" "49z18. POST /api/articles/:id/like — author likes own article"
+# Test 49z18: POST /api/articles/:id/like — author cannot like their own article
+color_echo "$BLUE" "49z18. POST /api/articles/:id/like — author cannot like own article"
 perform_request "Like article (self)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/like"
-assert_status "200" "Like article (self)"
-assert_body_contains '"liked":true' "Like article (self)"
-assert_body_contains '"likeCount":1' "Like article (self)"
+assert_status "400" "Like article (self)"
 
-# Test 49z19: self-like does NOT trigger a self-notification
+# Test 49z19: GET /api/articles/:id — likeCount is unaffected by the rejected self-like attempt
+color_echo "$BLUE" "49z19. GET /api/articles/:id — likeCount unchanged after rejected self-like"
+perform_request "Get article (after rejected self-like)" "${BASE_URL}/api/articles/${ARTICLE_ID}"
+assert_status "200" "Get article (after rejected self-like)"
+assert_body_contains '"likeCount":0' "Get article (after rejected self-like)"
+
+# Test 49z20: the rejected self-like attempt does NOT create a notification
 if [[ "$NOTIF_CHECK_ENABLED" == "1" ]]; then
-  color_echo "$BLUE" "49z19. Verifying no self-notification is created for the author's own like"
+  color_echo "$BLUE" "49z20. Verifying no notification is created for a rejected self-like"
   LIKE_NOTIF_AFTER_SELF="$(count_author_like_notifications)"
   if [[ "$LIKE_NOTIF_AFTER_SELF" == "$LIKE_NOTIF_AFTER_UNLIKE" ]]; then
-    color_echo "$GREEN" "Notification check: no self-notification created (still ${LIKE_NOTIF_AFTER_SELF})"
+    color_echo "$GREEN" "Notification check: no notification created (still ${LIKE_NOTIF_AFTER_SELF})"
   else
-    color_echo "$RED" "Notification check: self-like unexpectedly created a notification (${LIKE_NOTIF_AFTER_UNLIKE} -> ${LIKE_NOTIF_AFTER_SELF})"
+    color_echo "$RED" "Notification check: rejected self-like unexpectedly created a notification (${LIKE_NOTIF_AFTER_UNLIKE} -> ${LIKE_NOTIF_AFTER_SELF})"
     exit 1
   fi
 else
-  color_echo "$YELLOW" "49z19. Self-notification DB check skipped (docker/psql not reachable)"
+  color_echo "$YELLOW" "49z20. Self-like notification DB check skipped (docker/psql not reachable)"
 fi
-
-# Test 49z20: POST /api/articles/:id/like — author unlikes own article again, restoring likeCount to 0
-color_echo "$BLUE" "49z20. POST /api/articles/:id/like — author unlikes own article (cleanup)"
-perform_request "Unlike article (self)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles/${ARTICLE_ID}/like"
-assert_status "200" "Unlike article (self)"
-assert_body_contains '"liked":false' "Unlike article (self)"
-assert_body_contains '"likeCount":0' "Unlike article (self)"
 
 # ============================================================================
 # [ARTICLES] DELETE /api/articles/:id — delete article

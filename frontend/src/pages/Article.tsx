@@ -102,7 +102,7 @@ export const Article = () => {
   const isOwnArticle = Boolean(currentUser && article && currentUser.id === article.authorId)
 
   const handleToggleLike = async () => {
-    if (!id || isLiking) {
+    if (!id || isLiking || isOwnArticle) {
       return
     }
 
@@ -385,7 +385,8 @@ export const Article = () => {
               <button
                 type="button"
                 onClick={handleToggleLike}
-                disabled={isLiking}
+                disabled={isLiking || isOwnArticle}
+                title={isOwnArticle ? "You can't like your own article" : undefined}
                 className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
                   isLiked
                     ? 'border-purple-300 bg-purple-100 text-purple-700'

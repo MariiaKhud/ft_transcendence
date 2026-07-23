@@ -258,6 +258,10 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
     throw new AppError(404, 'Article not found')
   }
 
+  if (article.authorId === userId) {
+    throw new AppError(400, "You can't like your own article")
+  }
+
   const existingLike = await prisma.articleLike.findUnique({
     where: { userId_articleId: { userId, articleId: article.id } },
   })
@@ -282,8 +286,8 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
     return { liked: true, likeCount: updated.likeCount }
   })
 
-  // Don't notify authors about their own likes, and only notify on the like transition.
-  if (liked && article.authorId !== userId) {
+  // Only notify on the like transition, not the unlike.
+  if (liked) {
     await createNotification(article.authorId, 'LIKE', `liked your article "${article.title}"`, article.id)
   }
 
