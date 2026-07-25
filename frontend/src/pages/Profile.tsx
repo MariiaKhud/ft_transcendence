@@ -4,6 +4,7 @@ import { getProfileArticles, getPublicProfile } from '@/api/users'
 import { useStore } from '@/store/store'
 import type { ProfileArticle, PublicProfile } from '@/types/profile'
 import { FriendButton } from '@/components/user/FriendButton'
+import { FollowButton } from '@/components/user/FollowButton'
 import type { FriendshipState } from '@shared/types/friendship'
 import { getFriendshipStatus } from '../api/friends';
 import { Button } from '@/components/ui/button'
@@ -63,6 +64,7 @@ export const Profile = () => {
   })
 
   const [profile, setProfile] = useState<PublicProfile | null>(null)
+  const [followerCount, setFollowerCount] = useState(0)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [profileError, setProfileError] = useState('')
 
@@ -93,6 +95,7 @@ export const Profile = () => {
 
           if (!ignore) {
             setProfile(loadedProfile)
+            setFollowerCount(loadedProfile.followerCount)
           }
         } catch (error) {
           if (!ignore) {
@@ -263,10 +266,19 @@ export const Profile = () => {
               Edit Profile
             </Button>
           ) : (
-            <FriendButton
-              targetUserId={profile.id}
-              initialState={friendshipState}
-            />
+            <div className="flex flex-col items-end gap-2">
+              <FollowButton
+                targetUserId={profile.id}
+                onFollowChange={(isFollowing) => {
+                  setFollowerCount((prev) => (isFollowing ? prev + 1 : prev - 1))
+                }}
+              />
+
+              <FriendButton
+                targetUserId={profile.id}
+                initialState={friendshipState}
+              />
+            </div>
           )}
         </div>
 
@@ -283,7 +295,7 @@ export const Profile = () => {
           </div>
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Followers</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{profile.followerCount}</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{followerCount}</p>
           </div>
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Following</p>
