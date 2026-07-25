@@ -10,7 +10,8 @@ export type FriendshipState =
   | 'none'
   | 'pending_sent'
   | 'pending_received'
-  | 'friends';
+  | 'friends'
+  | 'self';
 
 // Friendship relation record.
 export interface Friendship {

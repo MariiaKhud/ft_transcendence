@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma.js'
 import { createNotification } from './notifications.service';
 import { AppError } from '../middleware/error.middleware.js';
+import type { FriendshipState } from '../../../shared/types/friendship.js';
 
 export async function sendFriendRequest(requesterId: string, addresseeId: string) {
   if (requesterId === addresseeId) {
@@ -218,4 +219,28 @@ export async function cancelFriendRequest(requesterId: string, addresseeId: stri
       refId: requesterId,
     },
   });
+}
+
+export async function getFriendshipStatus(
+  currentUserId: string,
+  targetUserId: string
+): Promise<{ state: FriendshipState }> {
+  if (currentUserId === targetUserId) {
+    return { state: 'self' };  // profile page uses this to hide the button entirely
+  }
+
+  const friendship = await prisma.friendship.findFirst({
+    where: {
+      OR: [
+        { requesterId: currentUserId, addresseeId: targetUserId },
+        { requesterId: targetUserId, addresseeId: currentUserId },
+      ],
+    },
+  });
+
+  if (!friendship) return { state: 'none' };
+  if (friendship.status === 'ACCEPTED') return { state: 'friends' };
+  if (friendship.status === 'DECLINED') return { state: 'none' };
+  if (friendship.requesterId === currentUserId) return { state: 'pending_sent' };
+  return { state: 'pending_received' };
 }

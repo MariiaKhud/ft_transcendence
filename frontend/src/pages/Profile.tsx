@@ -5,11 +5,7 @@ import { useStore } from '@/store/store'
 import type { ProfileArticle, PublicProfile } from '@/types/profile'
 import { FriendButton } from '@/components/user/FriendButton'
 import type { FriendshipState } from '@shared/types/friendship'
-import {
-  getFriends,
-  getIncomingRequests,
-  getSentRequests,
-} from '@/api/friends'
+import { getFriendshipStatus } from '../api/friends';
 import { Button } from '@/components/ui/button'
 
 // Convert relative avatar path to full URL for browser image tag.
@@ -56,27 +52,6 @@ const formatDate = (isoDate: string) => {
     month: 'short',
     day: 'numeric',
   })
-}
-
-function getFriendshipState(
-  targetUserId: string,
-  friends: { id: string }[],
-  incoming: { requesterId: string }[],
-  sent: { addresseeId: string }[],
-): FriendshipState {
-  if (friends.some((f) => f.id === targetUserId)) {
-    return 'friends'
-  }
-
-  if (incoming.some((r) => r.requesterId === targetUserId)) {
-    return 'pending_received'
-  }
-
-  if (sent.some((r) => r.addresseeId === targetUserId)) {
-    return 'pending_sent'
-  }
-
-  return 'none'
 }
 
 export const Profile = () => {
@@ -209,37 +184,19 @@ export const Profile = () => {
   const [friendshipState, setFriendshipState] = useState<FriendshipState>('none')
 
   useEffect(() => {
-    async function loadFriendship() {
-      if (!profile || isOwnProfile) {
-        return
-      }
-
-      try {
-        const [
-          friendsResponse,
-          incomingResponse,
-          sentResponse,
-        ] = await Promise.all([
-          getFriends(),
-          getIncomingRequests(),
-          getSentRequests(),
-        ])
-
-        const state = getFriendshipState(
-          profile.id,
-          friendsResponse.data,
-          incomingResponse.data,
-          sentResponse.data,
-        )
-
-        setFriendshipState(state)
-      } catch {
-        setFriendshipState('none')
-      }
+    if (!profile) {
+      return
     }
 
-    void loadFriendship()
-  }, [profile, isOwnProfile])
+    if (!currentUser || currentUser.id === profile.id) {
+      setFriendshipState('self')
+      return
+    }
+
+    getFriendshipStatus(profile.id)
+      .then((res) => setFriendshipState(res.state))
+      .catch(() => setFriendshipState('none'))
+  }, [profile, currentUser])
 
   const navigate = useNavigate()
 
@@ -295,22 +252,6 @@ export const Profile = () => {
           </div>
 
           {/* Only show Edit button on your own profile. */}
-          {/* {isOwnProfile ? (
-            <button
-              type="button"
-              onClick={() => {
-                navigate('/settings/profile')
-              }}
-              className="flex-shrink-0 rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-xs font-semibold text-purple-700 transition-all hover:border-purple-300 hover:bg-white sm:px-5 sm:text-sm"
-            >
-              Edit Profile
-            </button>
-          ) : (
-            <FriendButton
-              targetUserId={profile.id}
-              initialState={friendshipState}
-            />
-          )} */}
           {isOwnProfile ? (
             <Button
               variant="profile"

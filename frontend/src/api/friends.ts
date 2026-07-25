@@ -1,3 +1,5 @@
+import type { FriendshipState } from '@shared/types/friendship';
+
 const BASE = '/api';
 
 export async function sendFriendRequest(userId: string) {
@@ -58,4 +60,13 @@ export async function getSentRequests() {
   if (!res.ok) throw await res.json()
 
   return res.json()
+}
+
+export async function getFriendshipStatus(userId: string): Promise<{ state: FriendshipState }> {
+  const res = await fetch(`/api/friends/status/${userId}`, {
+    credentials: 'include',
+  });
+  if (!res.ok) throw await res.json();
+  const json = await res.json();
+  return json.data;
 }

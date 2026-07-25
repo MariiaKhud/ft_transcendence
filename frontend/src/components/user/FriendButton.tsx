@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { FriendshipState } from '@shared/types/friendship';
 import {
   sendFriendRequest,
@@ -6,7 +6,7 @@ import {
   respondToFriendRequest,
   removeFriend,
 } from '../../api/friends';
-import { Button } from '@/components/ui/button'
+import { Button } from '@/components/ui/button';
 
 interface FriendButtonProps {
   targetUserId: string;
@@ -17,6 +17,10 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
   const [state, setState] = useState<FriendshipState>(initialState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setState(initialState);
+  }, [initialState]);
 
   async function handle(action: () => Promise<void>, nextState: FriendshipState) {
     setLoading(true);
@@ -36,11 +40,10 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
       <div className="flex flex-col items-start gap-1">
         <Button
           variant="profile"
-          onClick={() =>
-            handle(() => sendFriendRequest(targetUserId), 'pending_sent')
-          }
+          onClick={() => handle(() => sendFriendRequest(targetUserId), 'pending_sent')}
           disabled={loading}
           aria-label="Send friend request"
+          title="Click to send request"
         >
           {loading ? <Spinner /> : <PlusIcon />}
           Add Friend
@@ -55,14 +58,11 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
     return (
       <div className="flex flex-col items-start gap-1">
         <Button
-          variant="outline"
-          onClick={() =>
-            handle(() => cancelFriendRequest(targetUserId), 'none')
-          }
+          variant="profileSecondary"
+          onClick={() => handle(() => cancelFriendRequest(targetUserId), 'none')}
           disabled={loading}
           aria-label="Cancel friend request"
           title="Click to cancel request"
-          className="hover:border-red-300 hover:bg-red-50 hover:text-red-600"
         >
           {loading ? <Spinner /> : <ClockIcon />}
           Pending
@@ -78,30 +78,22 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
       <div className="flex flex-col items-start gap-1">
         <div className="flex gap-2">
           <Button
-            variant="default"
-            onClick={() =>
-              handle(
-                () => respondToFriendRequest(targetUserId, 'ACCEPTED'),
-                'friends',
-              )
-            }
+            variant="profileSuccess"
+            onClick={() => handle(() => respondToFriendRequest(targetUserId, 'ACCEPTED'), 'friends',)}
             disabled={loading}
             aria-label="Accept friend request"
+            title="Click to accept request"
           >
             {loading ? <Spinner /> : <CheckIcon />}
             Accept
           </Button>
 
           <Button
-            variant="outline"
-            onClick={() =>
-              handle(
-                () => respondToFriendRequest(targetUserId, 'DECLINED'),
-                'none',
-              )
-            }
+            variant="profileSecondary"
+            onClick={() => handle(() => respondToFriendRequest(targetUserId, 'DECLINED'), 'none',)}
             disabled={loading}
             aria-label="Decline friend request"
+            title="Click to decline request"
           >
             Decline
           </Button>
@@ -118,12 +110,11 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
   return (
     <div className="flex flex-col items-start gap-1">
       <Button
-        variant="outline"
+        variant="profileSecondary"
         onClick={() => handle(() => removeFriend(targetUserId), 'none')}
         disabled={loading}
         aria-label="Remove friend"
         title="Click to remove friend"
-        className="hover:border-red-300 hover:bg-red-50 hover:text-red-600"
       >
         {loading ? <Spinner /> : <CheckIcon />}
         Friends
