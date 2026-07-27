@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+.git
+.gitignore
+*.md
+frontend
+nginx
+backend/.env
+backend/.env.*
+backend/npm-debug.log
+cookies.txt

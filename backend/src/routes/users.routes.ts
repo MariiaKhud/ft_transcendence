@@ -8,13 +8,17 @@ import { authMiddleware } from '../middleware/auth.middleware.js'
 import {
   editableProfileSelect,
   mapUserToPublicProfile,
+  profileArticleSelect,
   publicProfileSelect,
+  userSearchResultSelect,
   validateEditProfileInput,
+  validateSearchQuery,
   validateUsernameParam,
   validateAvatarMimetype,
   generateAvatarFilename,
   getUploadsDir,
   deleteOldAvatar,
+  USER_SEARCH_RESULTS_LIMIT,
 } from './users.route-helpers.js'
 import type { EditableProfile } from './users.route-helpers.js'
 import { updateOnlineStatus } from '../controllers/users.controller.js';
@@ -44,6 +48,34 @@ const handleMulterError = (err: any, _req: Request, _res: Response, next: Functi
   next(err)
 }
 
+const searchUsersHandler = async (req: Request, res: Response) => {
+  const query = validateSearchQuery(req.query.q)
+
+  if (!query) {
+    res.status(200).json({ success: true, data: { users: [], hasMore: false } })
+    return
+  }
+
+  // Fetch one extra row so we can tell whether the match set was truncated,
+  // without a separate (and slower) count query.
+  const users = await prisma.user.findMany({
+    where: {
+      username: {
+        contains: query,
+        mode: 'insensitive',
+      },
+    },
+    select: userSearchResultSelect,
+    orderBy: { username: 'asc' },
+    take: USER_SEARCH_RESULTS_LIMIT + 1,
+  })
+
+  const hasMore = users.length > USER_SEARCH_RESULTS_LIMIT
+  const trimmedUsers = hasMore ? users.slice(0, USER_SEARCH_RESULTS_LIMIT) : users
+
+  res.status(200).json({ success: true, data: { users: trimmedUsers, hasMore } })
+}
+
 const getPublicProfileHandler = async (req: Request, res: Response) => {
   const username = validateUsernameParam(req.params.username)
 
@@ -60,6 +92,27 @@ const getPublicProfileHandler = async (req: Request, res: Response) => {
   const publicProfile = mapUserToPublicProfile(user)
 
   res.status(200).json({ success: true, data: publicProfile })
+}
+
+const getProfileArticlesHandler = async (req: Request, res: Response) => {
+  const username = validateUsernameParam(req.params.username)
+
+  const user = await prisma.user.findUnique({
+    where: { username },
+    select: {
+      articles: {
+        where: { isRemoved: false },
+        select: profileArticleSelect,
+        orderBy: { createdAt: 'desc' },
+      },
+    },
+  })
+
+  if (!user) {
+    throw new AppError(404, 'User not found')
+  }
+
+  res.status(200).json({ success: true, data: user.articles })
 }
 
 const editMyProfileHandler = async (req: Request, res: Response) => {
@@ -170,7 +223,10 @@ const deleteMyAvatarHandler = async (req: Request, res: Response) => {
 router.post('/me/avatar', authMiddleware, upload.single('avatar'), handleMulterError, handleAsyncErrors(uploadAvatarHandler))
 router.delete('/me/avatar', authMiddleware, handleAsyncErrors(deleteMyAvatarHandler))
 router.patch('/me', authMiddleware, handleAsyncErrors(editMyProfileHandler))
+// Must be registered before '/:username' so a search request isn't swallowed by the username route.
+router.get('/search', handleAsyncErrors(searchUsersHandler))
 router.get('/:username', handleAsyncErrors(getPublicProfileHandler))
+router.get('/:username/articles', handleAsyncErrors(getProfileArticlesHandler))
 router.patch('/me/online', authMiddleware, updateOnlineStatus);
 
 export default router

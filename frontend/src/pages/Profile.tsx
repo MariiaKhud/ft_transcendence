@@ -372,8 +372,12 @@ export const Profile = () => {
           <ul className="mt-5 space-y-3">
             {articles.map((article) => {
               return (
-                <li key={article.id} className="rounded-2xl border border-white/50 bg-white/60 p-4">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <li
+                  key={article.id}
+                  className="relative rounded-2xl border border-white/50 bg-white/60 p-4 transition-shadow hover:shadow-lg"
+                >
+                  <Link to={`/articles/${article.id}`} className="absolute inset-0" aria-label={article.title} />
+                  <div className="pointer-events-none flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <h3 className="text-lg font-semibold text-slate-900">{article.title}</h3>
                       <p className="mt-1 text-sm text-slate-600">{article.category}</p>

@@ -12,6 +12,33 @@ const requireResponseData = <TData>(payload: ApiResponse<TData>, fallbackMessage
   return payload.data
 }
 
+export interface UserSearchResult {
+  id: string
+  username: string
+  displayName: string | null
+  avatarUrl: string | null
+}
+
+export interface UserSearchResponse {
+  users: UserSearchResult[]
+  // True when the match set was capped server-side, i.e. there are more
+  // matches than the ones returned here.
+  hasMore: boolean
+}
+
+// Search users by (partial, case-insensitive) username. Returns an empty
+// list for a blank query rather than erroring.
+export const searchUsers = async (query: string): Promise<UserSearchResponse> => {
+  try {
+    const response = await apiClient.get<ApiResponse<UserSearchResponse>>('/users/search', {
+      params: { q: query },
+    })
+    return requireResponseData(response.data, 'Unable to search users')
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Unable to search users'))
+  }
+}
+
 // Load public profile by username.
 export const getPublicProfile = async (username: string) => {
   try {

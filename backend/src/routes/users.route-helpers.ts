@@ -5,6 +5,8 @@ import { AppError } from '../middleware/error.middleware.js'
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/
 const MAX_DISPLAY_NAME_LENGTH = 50
 const MAX_BIO_LENGTH = 500
+const MAX_SEARCH_QUERY_LENGTH = 50
+export const USER_SEARCH_RESULTS_LIMIT = 10
 const EDIT_PROFILE_ALLOWED_FIELDS = new Set(['displayName', 'bio'])
 const AVATAR_MAX_SIZE = 2 * 1024 * 1024
 const ALLOWED_AVATAR_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp'])
@@ -32,6 +34,21 @@ export interface PublicProfile {
   badges: PublicBadge[]
   level: number
   xp: number
+}
+
+export interface ProfileArticle {
+  id: string
+  title: string
+  category: string
+  likeCount: number
+  createdAt: Date
+}
+
+export interface UserSearchResult {
+  id: string
+  username: string
+  displayName: string | null
+  avatarUrl: string | null
 }
 
 export interface EditableProfile {
@@ -104,6 +121,24 @@ export const publicProfileSelect = {
   },
 } as const
 
+// Lighter shape for the profile page's article list (no content/author —
+// the profile page already shows the author).
+export const profileArticleSelect = {
+  id: true,
+  title: true,
+  category: true,
+  likeCount: true,
+  createdAt: true,
+} as const
+
+// Fields we return for username search results.
+export const userSearchResultSelect = {
+  id: true,
+  username: true,
+  displayName: true,
+  avatarUrl: true,
+} as const
+
 // Fields we return after profile update.
 export const editableProfileSelect = {
   id: true,
@@ -129,6 +164,26 @@ export const validateUsernameParam = (usernameParam: string) => {
   }
 
   return username
+}
+
+// Normalizes the `q` query param for GET /users/search. An empty/missing
+// query is valid (callers should just return no results for it).
+export const validateSearchQuery = (queryParam: unknown): string => {
+  if (queryParam === undefined) {
+    return ''
+  }
+
+  if (typeof queryParam !== 'string') {
+    throw new AppError(400, 'Validation failed: q must be a string')
+  }
+
+  const trimmed = queryParam.trim()
+
+  if (trimmed.length > MAX_SEARCH_QUERY_LENGTH) {
+    throw new AppError(400, `Validation failed: q must be at most ${MAX_SEARCH_QUERY_LENGTH} characters`)
+  }
+
+  return trimmed
 }
 
 export const validateEditProfileInput = (body: unknown) => {

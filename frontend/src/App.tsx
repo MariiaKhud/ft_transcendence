@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import { Footer } from '@/components/Footer'
+import { UserSearchBar } from '@/components/user/UserSearchBar'
 
 const App = () => {
   const navigate = useNavigate()
@@ -34,14 +35,24 @@ const App = () => {
         </svg>
       </div>
 
-      {/* Top bar. */}
-      <header className="relative z-10 border-b border-white/20 bg-white/10 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
+      {/* Top bar. Stacked above <main> (both are z-10 siblings; without this the
+          search dropdown below would render under the page content since main
+          comes later in DOM order). */}
+      <header className="relative z-20 border-b border-white/20 bg-white/10 backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-6 py-4">
           {/* App name link. */}
-          <Link to="/" className="text-xl font-semibold tracking-tight text-slate-900">
+          <Link to="/" className="shrink-0 text-xl font-semibold tracking-tight text-slate-900">
             Codamium
           </Link>
-          <div className="flex items-center gap-3">
+
+          {/* User search. */}
+          <div className="flex min-w-0 flex-1 justify-center">
+            <div className="w-full max-w-sm">
+              <UserSearchBar />
+            </div>
+          </div>
+
+          <div className="flex shrink-0 items-center gap-3">
             {/* Show text while checking login. */}
             {isLoading ? <span className="text-sm font-medium text-slate-700">Checking session...</span> : null}
 
