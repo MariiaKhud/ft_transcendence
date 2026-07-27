@@ -72,3 +72,18 @@ export async function unfollowUser(followerId: string, followingId: string) {
     },
   });
 }
+
+export async function getFollowStatus(
+  followerId: string,
+  followingId: string
+): Promise<boolean> {
+  if (followerId === followingId) return false;
+
+  const follow = await prisma.follow.findUnique({
+    where: {
+      followerId_followingId: { followerId, followingId },
+    },
+  });
+
+  return !!follow;
+}

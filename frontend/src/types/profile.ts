@@ -6,6 +6,7 @@ export interface PublicProfileBadge {
 }
 
 export interface PublicProfile {
+  id: string
   displayName: string | null
   username: string
   avatarUrl: string | null

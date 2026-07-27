@@ -5,6 +5,14 @@ import type { UserSummary } from './user'
 // Friend request states.
 export type FriendStatus = 'PENDING' | 'ACCEPTED' | 'DECLINED'
 
+// Frontend UI state for FriendButton
+export type FriendshipState =
+  | 'none'
+  | 'pending_sent'
+  | 'pending_received'
+  | 'friends'
+  | 'self';
+
 // Friendship relation record.
 export interface Friendship {
   id: string

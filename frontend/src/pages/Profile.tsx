@@ -3,6 +3,11 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getProfileArticles, getPublicProfile } from '@/api/users'
 import { useStore } from '@/store/store'
 import type { ProfileArticle, PublicProfile } from '@/types/profile'
+import { FriendButton } from '@/components/user/FriendButton'
+import { FollowButton } from '@/components/user/FollowButton'
+import type { FriendshipState } from '@shared/types/friendship'
+import { getFriendshipStatus } from '../api/friends';
+import { Button } from '@/components/ui/button'
 
 // Convert relative avatar path to full URL for browser image tag.
 const toSafeImageUrl = (avatarUrl: string | null) => {
@@ -59,6 +64,7 @@ export const Profile = () => {
   })
 
   const [profile, setProfile] = useState<PublicProfile | null>(null)
+  const [followerCount, setFollowerCount] = useState(0)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
   const [profileError, setProfileError] = useState('')
 
@@ -89,6 +95,7 @@ export const Profile = () => {
 
           if (!ignore) {
             setProfile(loadedProfile)
+            setFollowerCount(loadedProfile.followerCount)
           }
         } catch (error) {
           if (!ignore) {
@@ -177,6 +184,23 @@ export const Profile = () => {
     return currentUser.username.toLowerCase() === profile.username.toLowerCase()
   }, [currentUser, profile])
 
+  const [friendshipState, setFriendshipState] = useState<FriendshipState>('none')
+
+  useEffect(() => {
+    if (!profile) {
+      return
+    }
+
+    if (!currentUser || currentUser.id === profile.id) {
+      setFriendshipState('self')
+      return
+    }
+
+    getFriendshipStatus(profile.id)
+      .then((res) => setFriendshipState(res.state))
+      .catch(() => setFriendshipState('none'))
+  }, [profile, currentUser])
+
   const navigate = useNavigate()
 
   // Show this while profile data is still loading.
@@ -232,16 +256,30 @@ export const Profile = () => {
 
           {/* Only show Edit button on your own profile. */}
           {isOwnProfile ? (
-            <button
+            <Button
+              variant="profile"
               type="button"
               onClick={() => {
                 navigate('/settings/profile')
               }}
-              className="flex-shrink-0 rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-xs font-semibold text-purple-700 transition-all hover:border-purple-300 hover:bg-white sm:px-5 sm:text-sm"
             >
               Edit Profile
-            </button>
-          ) : null}
+            </Button>
+          ) : (
+            <div className="flex flex-col items-end gap-2">
+              <FollowButton
+                targetUserId={profile.id}
+                onFollowChange={(isFollowing) => {
+                  setFollowerCount((prev) => (isFollowing ? prev + 1 : prev - 1))
+                }}
+              />
+
+              <FriendButton
+                targetUserId={profile.id}
+                initialState={friendshipState}
+              />
+            </div>
+          )}
         </div>
 
         {/* Bio text or a default message if empty. */}
@@ -257,7 +295,7 @@ export const Profile = () => {
           </div>
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Followers</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{profile.followerCount}</p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">{followerCount}</p>
           </div>
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Following</p>

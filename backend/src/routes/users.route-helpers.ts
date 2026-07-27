@@ -21,6 +21,7 @@ export interface PublicBadge {
 }
 
 export interface PublicProfile {
+  id: string
   displayName: string | null
   username: string
   avatarUrl: string | null
@@ -50,6 +51,7 @@ export interface EditableProfile {
 }
 
 interface PublicProfileUserRecord {
+  id: string
   username: string
   displayName: string | null
   avatarUrl: string | null
@@ -71,6 +73,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
 
 // Keep `as const` so Prisma understands the exact selected fields.
 export const publicProfileSelect = {
+  id: true,
   username: true,
   displayName: true,
   avatarUrl: true,
@@ -191,6 +194,7 @@ export const validateEditProfileInput = (body: unknown) => {
 export const mapUserToPublicProfile = (user: PublicProfileUserRecord): PublicProfile => {
   // Build one clean API response object.
   return {
+    id: user.id,
     displayName: user.displayName,
     username: user.username,
     avatarUrl: user.avatarUrl,

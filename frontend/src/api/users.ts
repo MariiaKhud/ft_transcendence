@@ -31,6 +31,7 @@ export const getPublicProfile = async (username: string) => {
       badges: data.badges,
       level: data.level,
       experiencePoints: data.xp,
+      id: data.id,
     } satisfies PublicProfile
   } catch (error) {
     throw new Error(getApiErrorMessage(error, 'Unable to load profile'))
