@@ -12,7 +12,7 @@ export const ServerError = () => {
           An unexpected error occurred while loading this page. Please try again.
         </p>
       </div>
-      {/* Back to feed CTA */}
+      {/* Back home CTA */}
       <div className="flex justify-center pt-4">
         <Button asChild className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-3 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all">
           <Link to="/">Back to Feed</Link>

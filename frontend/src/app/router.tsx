@@ -21,56 +21,63 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
-    errorElement: <RouteErrorBoundary />,
     children: [
       {
-        index: true,
-        element: <Home />,
-      },
-      {
-        path: 'search',
-        element: <Search />,
-      },
-      {
-        path: 'login',
-        element: <Login />,
-      },
-      {
-        path: 'register',
-        element: <Register />,
-      },
-      {
-        // The global feed now lives at "/"; keep this as a redirect for old links/bookmarks.
-        path: 'feed',
-        element: <Navigate to="/" replace />,
-      },
-      {
-        path: 'profile/:username',
-        element: <Profile />,
-      },
-      {
-        path: 'articles/new',
-        element: <CreateArticle />,
-      },
-      {
-        path: 'articles/:id',
-        element: <Article />,
-      },
-      {
-        path: 'settings/profile',
-        element: <EditProfile />,
-      },
-      {
-        path: 'privacy-policy',
-        element: <PrivacyPolicy />,
-      },
-      {
-        path: 'terms-of-service',
-        element: <TermsOfService />,
-      },
-      {
-        path: '*',
-        element: <NotFound />,
+        // Pathless wrapper so a page crash only replaces the routed content
+        // (inside App's <Outlet>), keeping the header/footer chrome — same
+        // placement the 404 page already gets as a normal child route.
+        errorElement: <RouteErrorBoundary />,
+        children: [
+          {
+            index: true,
+            element: <Home />,
+          },
+          {
+            path: 'search',
+            element: <Search />,
+          },
+          {
+            path: 'login',
+            element: <Login />,
+          },
+          {
+            path: 'register',
+            element: <Register />,
+          },
+          {
+            // The global feed now lives at "/"; keep this as a redirect for old links/bookmarks.
+            path: 'feed',
+            element: <Navigate to="/" replace />,
+          },
+          {
+            path: 'profile/:username',
+            element: <Profile />,
+          },
+          {
+            path: 'articles/new',
+            element: <CreateArticle />,
+          },
+          {
+            path: 'articles/:id',
+            element: <Article />,
+          },
+          {
+            path: 'settings/profile',
+            element: <EditProfile />,
+          },
+          {
+            path: 'privacy-policy',
+            element: <PrivacyPolicy />,
+          },
+          {
+            path: 'terms-of-service',
+            element: <TermsOfService />,
+          },
+          {
+            path: '*',
+            element: <NotFound />,
+          },
+        ],
       },
     ],
   },
