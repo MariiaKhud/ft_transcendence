@@ -74,7 +74,7 @@ export const Home = () => {
   }, [page])
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-10">
       {/* Hero headline */}
       <section className="grid gap-8 text-center">
         <div className="mx-auto space-y-4">
@@ -90,12 +90,9 @@ export const Home = () => {
         </div>
 
         {!user && (
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex justify-center">
             <Button asChild className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
               <Link to="/login">Get Started</Link>
-            </Button>
-            <Button asChild variant="outline" className="rounded-full border-2 border-purple-300 px-8 py-3 text-base font-semibold hover:bg-purple-50">
-              <a href="#global-feed">Browse Articles</a>
             </Button>
           </div>
         )}
