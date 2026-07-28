@@ -1,6 +1,7 @@
 import { lazy } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from '@/App'
+import { RouteErrorBoundary } from '@/components/RouteErrorBoundary'
 
 // Lazily load each page so its code ships in its own chunk instead of the main bundle.
 const Home = lazy(() => import('@/pages/Home').then((m) => ({ default: m.Home })))
@@ -20,6 +21,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <App />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         index: true,

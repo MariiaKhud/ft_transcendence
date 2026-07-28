@@ -11,6 +11,7 @@ const validateEmail = (email: string) => {
 }
 
 export const Login = () => {
+  // throw new Error('TEMP_TEST_ERROR')  // Comment this out to test 500 error page
   // Move user to another page after login.
   const navigate = useNavigate()
 
