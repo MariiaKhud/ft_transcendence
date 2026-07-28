@@ -20,6 +20,7 @@ const CATEGORIES: { value: string; label: string }[] = [
 
 export const Home = () => {
   // Read current user from global store (guests get null, feed still loads).
+  // throw new Error('TEMP_TEST_ERROR')  // Comment this out to test 500 error page
   const user = useStore((state) => {
     return state.auth.currentUser
   })
