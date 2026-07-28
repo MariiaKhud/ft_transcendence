@@ -21,6 +21,21 @@
 | Database  | PostgreSQL + Prisma ORM                 |
 | Server    | Docker + Docker Compose + Nginx (HTTPS) |
 
+## Recent Updates
+
+- Frontend API layer now uses a shared fetch wrapper in `frontend/src/api/client.ts` with:
+	- `credentials: include` by default
+	- typed `ApiResponse<T>` parsing
+	- typed errors via `ApiClientError`
+- Frontend feed/search/article flows now include:
+	- article list, article detail, publish, edit, delete
+	- comments create/edit/delete
+	- article likes
+	- follow and friend actions on profile pages
+- Backend Prisma packages updated to:
+	- `prisma@7.9.1`
+	- `@prisma/client@7.9.1`
+
 ## Setup Instructions
 
 ### Prerequisites
@@ -123,14 +138,14 @@ ft_transcendence/
 - **Logout redirect UX** (logout from profile/edit pages redirects to login)
 - **Password requirement hints** (short helper text in login/register forms)
 - **Global articles feed** (paginated, searchable, filterable by category, sortable)
+- **Article publishing and detail pages** (create, view, edit, delete)
+- **Comments and likes** (create/edit/delete comments, toggle likes)
+- **Follow and friend actions** (profile follow/unfollow, friend request flows)
 - **Privacy Policy page** (static content, linked from footer, guest accessible)
 - **Terms of Service page** (acceptable use, content ownership, moderation policy, guest accessible)
 - **Minimal footer links** (Privacy Policy, Terms of Service, GitHub repo)
 
 ### In Progress
-- Article publishing
-- Comments and likes
-- Friend and follow systems
 - Direct messaging
 - Notifications
 - Gamification (badges, XP, leaderboard)

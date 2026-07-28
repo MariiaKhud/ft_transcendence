@@ -2,21 +2,42 @@
 
 Express + TypeScript API for ft_transcendence.
 
+## Dependency Notes
+
+- Prisma CLI: `7.9.1`
+- Prisma Client: `7.9.1`
+
+To update Prisma packages:
+
+```bash
+npm i --save-dev prisma@latest
+npm i @prisma/client@latest
+```
+
 ## What This Service Does
 
 ### Completed ✓
 - **User authentication** (`register`, `login`, `logout`, `me`)
 - **Public profile read** (`GET /api/users/:username`) — displayName, bio, stats
+- **Public profile article list** (`GET /api/users/:username/articles`)
 - **User profile updates** (`PATCH /api/users/me`) — displayName, bio with validation
 - **Avatar management** (`POST /api/users/me/avatar`) — upload PNG/JPG, max 2MB
 - **Avatar delete** (`DELETE /api/users/me/avatar`) — remove user avatar
 - **Global articles feed** (`GET /api/articles`) — paginated, searchable, filterable, sortable
+- **Article CRUD** (`POST/PATCH/DELETE /api/articles/:id` + `GET /api/articles/:id`)
+- **Article comments** (`GET/POST /api/articles/:id/comments`, `PATCH/DELETE /api/comments/:id`)
+- **Article likes** (`POST /api/articles/:id/like`)
+- **Friends API** (`/api/friends/*` request, respond, cancel, list, remove, status)
+- **Follows API** (`/api/follows/*` follow, unfollow, status)
+- **Messages API** (`GET/POST /api/messages/:userId`)
+- **Notifications API** (`GET /api/notifications`, mark one/all read)
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses
 
 ### In Progress
-- **Article authoring endpoints** (`POST /api/articles`, `PUT /api/articles/:id`, `DELETE /api/articles/:id`)
+- Gamification module routes
+- Admin moderation routes
 
 ## Run Modes
 
@@ -211,7 +232,7 @@ Validation and error behavior:
 
 Base path: `/api/articles`
 
-**Status:** In Progress - GET endpoint complete, POST/PUT/DELETE coming soon
+**Status:** Implemented (feed, detail, create, update, delete, comments, likes)
 
 ### GET /api/articles
 
@@ -283,11 +304,79 @@ curl 'http://localhost:3000/api/articles?search=typescript'
 curl 'http://localhost:3000/api/articles?page=2&limit=10'
 ```
 
+### GET /api/articles/:id
+
+Returns one article with full content, author info, comment count, and current-user like state (when authenticated).
+
+### POST /api/articles
+
+Creates a new article for authenticated users.
+
+### PATCH /api/articles/:id
+
+Updates title/content/category. Author-only.
+
+### DELETE /api/articles/:id
+
+Deletes an article. Author-only.
+
+### GET /api/articles/:id/comments
+
+Returns comments ordered oldest-first.
+
+### POST /api/articles/:id/comments
+
+Adds a comment to an article. Auth required.
+
+### POST /api/articles/:id/like
+
+Toggles like/unlike for the current user. Auth required.
+
+### PATCH /api/comments/:id
+
+Updates a comment. Author-only.
+
+### DELETE /api/comments/:id
+
+Author hard-deletes their own comment; moderator/admin can soft-remove with reason.
+
+## Social API
+
+### Friends (`/api/friends`)
+
+- `GET /requests`
+- `GET /`
+- `GET /status/:userId`
+- `POST /request/:userId`
+- `PATCH /request/:userId`
+- `DELETE /request/:userId`
+- `DELETE /:userId`
+
+### Follows (`/api/follows`)
+
+- `GET /status/:userId`
+- `POST /:userId`
+- `DELETE /:userId`
+
+### Messages (`/api/messages`)
+
+- `GET /:userId`
+- `POST /:userId`
+
+### Notifications (`/api/notifications`)
+
+- `GET /`
+- `PATCH /read-all`
+- `PATCH /:id/read`
+
 ## Test Flow Script
 
 The backend integration flow script lives in:
 
 - `scripts/test-backend-flow.sh`
+- `scripts/test-follows-flow.sh`
+- `scripts/test-friends-flow.sh`
+- `scripts/test-messages.sh`
 
 Run it with:
 
@@ -310,6 +399,17 @@ Current flow also checks:
   "error": "Error message"
 }
 ```
+
+Note: some social controllers still return legacy shape:
+
+```json
+{
+  "data": {},
+  "error": null
+}
+```
+
+The backend is gradually being standardized to the `success/data/error` envelope.
 
 ## Quick cURL Examples
 

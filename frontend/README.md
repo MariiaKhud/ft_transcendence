@@ -10,7 +10,7 @@ React + TypeScript + Vite frontend for ft_transcendence.
 - React Router
 - Tailwind CSS
 - Zustand (auth state)
-- Axios (API client)
+- Fetch API via shared wrapper (`src/api/client.ts`)
 
 ## Prerequisites
 
@@ -80,7 +80,18 @@ npm run test:frontend
 - `VITE_API_BASE_URL`
   - Default: `/api`
   - Recommended: keep this as `/api` so the browser stays same-origin and auth cookies work consistently on refresh
-  - When set, Axios uses this as base URL
+  - When set, `src/api/client.ts` uses this as base URL
+
+## API Client
+
+Frontend API wrappers in `src/api/*.ts` use the shared client in `src/api/client.ts`.
+
+Current behavior:
+
+- Always sends `credentials: include`
+- Parses backend `ApiResponse<T>` envelope
+- Throws typed `ApiClientError` with HTTP status and payload metadata
+- Supports JSON bodies, `FormData`, and query params
 
 - `VITE_DEV_API_PROXY_TARGET`
   - Used by Vite dev server proxy in `vite.config.ts`
@@ -91,10 +102,13 @@ npm run test:frontend
 Routes are configured in `src/app/router.tsx`:
 
 - `/` -> `Home` (includes the global articles feed)
+- `/search` -> `Search` (advanced article search)
 - `/login` -> `Login`
 - `/register` -> `Register`
 - `/feed` -> redirects to `/` (kept for old links/bookmarks)
 - `/profile/:username` -> `Profile` (read-only public profile)
+- `/articles/new` -> `CreateArticle` (auth required)
+- `/articles/:id` -> `Article` (detail, likes, comments, author actions)
 - `/settings/profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
 - `/privacy-policy` -> `PrivacyPolicy` ✓ (static policy page, guest accessible)
 - `/terms-of-service` -> `TermsOfService` ✓ (static terms page, guest accessible)
@@ -152,6 +166,36 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 
 **Implementation files:**
 - `src/pages/Home.tsx` — feed page component with filtering UI
+
+## Article Detail and Publishing ✓
+
+**Routes:** `/articles/new`, `/articles/:id`
+
+**Description:** Authenticated users can publish articles, and authors can edit/delete their own articles. Article detail pages include likes and comments.
+
+**Features:**
+- Publish article
+- View full article details
+- Edit/delete own article
+- Toggle likes (except own article)
+- Create, edit, and delete comments
+
+**API Integration:**
+- `POST /api/articles` — create article
+- `GET /api/articles/:id` — article detail
+- `PATCH /api/articles/:id` — update own article
+- `DELETE /api/articles/:id` — delete own article
+- `POST /api/articles/:id/like` — toggle like
+- `GET /api/articles/:id/comments` — list comments
+- `POST /api/articles/:id/comments` — create comment
+- `PATCH /api/comments/:id` — update own comment
+- `DELETE /api/comments/:id` — delete own comment or moderator removal
+
+**Implementation files:**
+- `src/pages/CreateArticle.tsx`
+- `src/pages/Article.tsx`
+- `src/components/ArticleForm.tsx`
+- `src/api/articles.ts`
 
 ## Privacy Policy Page ✓
 
@@ -211,6 +255,8 @@ Auth API calls live in:
 
 - `src/api/auth.ts`
 - `src/api/users.ts` (profile and profile-articles API wrappers)
+- `src/api/articles.ts` (feed/detail/publish/comment/like wrappers)
+- `src/api/follows.ts` and `src/api/friends.ts` (social actions on profile)
 
 Current auth actions via `useAuth` hook (`src/hooks/useAuth.ts`):
 
