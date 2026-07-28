@@ -6,8 +6,10 @@ import { PlusIcon, CheckIcon, Spinner, XIcon } from '@/components/ui/icons'
 
 interface FollowButtonProps {
   targetUserId: string;
-  initialIsFollowing?: boolean;  // optional — fetched if not provided
-  onFollowChange?: (isFollowing: boolean) => void;  // optional callback to update follower count on profile
+  // Optional: if omitted, status is fetched on mount.
+  initialIsFollowing?: boolean;
+  // Optional callback used by parent to update follower count.
+  onFollowChange?: (isFollowing: boolean) => void;
 }
 
 export function FollowButton({
@@ -21,18 +23,19 @@ export function FollowButton({
   const [loading, setLoading] = useState(initialIsFollowing === undefined);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch follow status on mount if not provided by parent
+  // Fetch follow status on mount when parent did not provide it.
   useEffect(() => {
     if (initialIsFollowing !== undefined) return;
     if (!currentUser || currentUser.id === targetUserId) return;
 
     getFollowStatus(targetUserId)
       .then((res) => setIsFollowing(res.isFollowing))
-      .catch(() => {})  // fail silently — guests just see Follow
+        // If status lookup fails, keep default label and avoid blocking UI.
+        .catch(() => {})
       .finally(() => setLoading(false));
   }, [targetUserId, currentUser, initialIsFollowing]);
 
-  // Hide on own profile or when not logged in
+      // Hide on own profile and for guests.
   if (!currentUser || currentUser.id === targetUserId) return null;
 
   async function handleClick() {
@@ -49,8 +52,8 @@ export function FollowButton({
         setIsFollowing(true);
         onFollowChange?.(true);
       }
-    } catch (err: any) {
-      setError(err?.error ?? 'Something went wrong');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Something went wrong')
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,4 @@
-import { apiClient, getApiErrorMessage, type ApiResponse } from '@/lib/api'
+import { apiRequest, apiRequestData } from '@/api/client'
 import type { AuthUser, LoginCredentials, RegisterCredentials } from '@/types/auth'
 
 // Read a cookie by name from the browser.
@@ -13,45 +13,29 @@ const getCookie = (name: string) => {
   return match ? decodeURIComponent(match[1]) : undefined
 }
 
-const requireResponseData = <TData>(payload: ApiResponse<TData>, fallbackMessage: string) => {
-  // Make sure API returned usable data.
-  if (!payload.success || payload.data === undefined || payload.data === null) {
-    throw new Error(payload.error ?? payload.message ?? fallbackMessage)
-  }
-
-  return payload.data
-}
-
 // Create a new account.
 export const registerUser = async (credentials: RegisterCredentials) => {
-  try {
-    // Trim text fields before sending them.
-    const response = await apiClient.post<ApiResponse<AuthUser>>('/auth/register', {
+  return apiRequestData<AuthUser>('/auth/register', {
+    method: 'POST',
+    body: {
       email: credentials.email.trim(),
       username: credentials.username.trim(),
       password: credentials.password,
-    })
-
-    return requireResponseData(response.data, 'Registration failed')
-  } catch (error) {
-    // Convert API errors into a readable message.
-    throw new Error(getApiErrorMessage(error, 'Registration failed'))
-  }
+    },
+    fallbackMessage: 'Registration failed',
+  })
 }
 
 // Sign in with email and password.
 export const loginUser = async (credentials: LoginCredentials) => {
-  try {
-    // Trim email to avoid login issues from extra spaces.
-    const response = await apiClient.post<ApiResponse<AuthUser>>('/auth/login', {
+  return apiRequestData<AuthUser>('/auth/login', {
+    method: 'POST',
+    body: {
       email: credentials.email.trim(),
       password: credentials.password,
-    })
-
-    return requireResponseData(response.data, 'Login failed')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Login failed'))
-  }
+    },
+    fallbackMessage: 'Login failed',
+  })
 }
 
 // Sign out current user.
@@ -59,25 +43,16 @@ export const logoutUser = async () => {
   // Backend expects CSRF token in header for logout.
   const csrfToken = getCookie('csrf_token')
 
-  try {
-    await apiClient.post<ApiResponse>(
-      '/auth/logout',
-      undefined,
-      {
-        headers: csrfToken ? { 'x-csrf-token': csrfToken } : undefined,
-      },
-    )
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Logout failed'))
-  }
+  await apiRequest('/auth/logout', {
+    method: 'POST',
+    headers: csrfToken ? { 'x-csrf-token': csrfToken } : undefined,
+    fallbackMessage: 'Logout failed',
+  })
 }
 
 // Get currently logged-in user from session cookie.
 export const getCurrentUser = async () => {
-  try {
-    const response = await apiClient.get<ApiResponse<AuthUser>>('/auth/me')
-    return requireResponseData(response.data, 'Unable to restore session')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to restore session'))
-  }
+  return apiRequestData<AuthUser>('/auth/me', {
+    fallbackMessage: 'Unable to restore session',
+  })
 }

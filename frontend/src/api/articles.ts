@@ -1,5 +1,4 @@
-import axios from 'axios'
-import { apiClient, getApiErrorMessage, type ApiResponse } from '@/lib/api'
+import { apiRequest, apiRequestData, ApiClientError, type ApiResponse } from '@/api/client'
 
 /**
  * Article item in the feed.
@@ -100,17 +99,15 @@ export interface GetArticlesParams {
  * @returns Articles data with pagination metadata
  */
 export const getArticles = async (params?: GetArticlesParams): Promise<ArticlesResponse> => {
-  const response = await apiClient.get<ArticlesResponse>('/articles', { params })
-  return response.data
-}
+  const data = await apiRequestData<ArticlesResponse['data']>('/articles', {
+    params: params as Record<string, unknown> | undefined,
+    fallbackMessage: 'Unable to load articles',
+  })
 
-// Make sure API returns valid data.
-const requireResponseData = <TData>(payload: ApiResponse<TData>, fallbackMessage: string) => {
-  if (!payload.success || payload.data === undefined || payload.data === null) {
-    throw new Error(payload.error ?? payload.message ?? fallbackMessage)
+  return {
+    success: true,
+    data,
   }
-
-  return payload.data
 }
 
 /**
@@ -118,12 +115,9 @@ const requireResponseData = <TData>(payload: ApiResponse<TData>, fallbackMessage
  * user's like status.
  */
 export const getArticle = async (id: string): Promise<ArticleDetail> => {
-  try {
-    const response = await apiClient.get<ApiResponse<ArticleDetail>>(`/articles/${id}`)
-    return requireResponseData(response.data, 'Unable to load article')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to load article'))
-  }
+  return apiRequestData<ArticleDetail>(`/articles/${id}`, {
+    fallbackMessage: 'Unable to load article',
+  })
 }
 
 /**
@@ -142,12 +136,11 @@ type CreatedArticle = Omit<ArticleDetail, 'isLikedByCurrentUser'>
  * Sends POST /api/articles to publish a new article. Requires authentication.
  */
 export const createArticle = async (input: CreateArticleInput): Promise<CreatedArticle> => {
-  try {
-    const response = await apiClient.post<ApiResponse<CreatedArticle>>('/articles', input)
-    return requireResponseData(response.data, 'Unable to publish article')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to publish article'))
-  }
+  return apiRequestData<CreatedArticle>('/articles', {
+    method: 'POST',
+    body: input,
+    fallbackMessage: 'Unable to publish article',
+  })
 }
 
 /**
@@ -163,23 +156,21 @@ export interface UpdateArticleInput {
  * Sends PATCH /api/articles/:id. Author-only.
  */
 export const updateArticle = async (id: string, updates: UpdateArticleInput): Promise<ArticleDetail> => {
-  try {
-    const response = await apiClient.patch<ApiResponse<ArticleDetail>>(`/articles/${id}`, updates)
-    return requireResponseData(response.data, 'Unable to update article')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to update article'))
-  }
+  return apiRequestData<ArticleDetail>(`/articles/${id}`, {
+    method: 'PATCH',
+    body: updates,
+    fallbackMessage: 'Unable to update article',
+  })
 }
 
 /**
  * Sends DELETE /api/articles/:id. Author-only.
  */
 export const deleteArticle = async (id: string): Promise<void> => {
-  try {
-    await apiClient.delete(`/articles/${id}`)
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to delete article'))
-  }
+  await apiRequest(`/articles/${id}`, {
+    method: 'DELETE',
+    fallbackMessage: 'Unable to delete article',
+  })
 }
 
 /**
@@ -187,12 +178,10 @@ export const deleteArticle = async (id: string): Promise<void> => {
  * unlikes it if already liked. Requires authentication.
  */
 export const toggleArticleLike = async (id: string): Promise<{ liked: boolean; likeCount: number }> => {
-  try {
-    const response = await apiClient.post<ApiResponse<{ liked: boolean; likeCount: number }>>(`/articles/${id}/like`)
-    return requireResponseData(response.data, 'Unable to update like')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to update like'))
-  }
+  return apiRequestData<{ liked: boolean; likeCount: number }>(`/articles/${id}/like`, {
+    method: 'POST',
+    fallbackMessage: 'Unable to update like',
+  })
 }
 
 /**
@@ -210,15 +199,16 @@ export interface GetCommentsResult {
  */
 export const getComments = async (articleId: string): Promise<GetCommentsResult> => {
   try {
-    const response = await apiClient.get<ApiResponse<Comment[]>>(`/articles/${articleId}/comments`)
-    const items = requireResponseData(response.data, 'Unable to load comments')
+    const items = await apiRequestData<Comment[]>(`/articles/${articleId}/comments`, {
+      fallbackMessage: 'Unable to load comments',
+    })
     return { items, isUnavailable: false }
   } catch (error) {
-    if (axios.isAxiosError(error) && error.response?.status === 404) {
+    if (error instanceof ApiClientError && error.status === 404) {
       return { items: [], isUnavailable: true }
     }
 
-    throw new Error(getApiErrorMessage(error, 'Unable to load comments'))
+    throw error
   }
 }
 
@@ -226,24 +216,22 @@ export const getComments = async (articleId: string): Promise<GetCommentsResult>
  * Posts a new comment on an article. Requires authentication.
  */
 export const createComment = async (articleId: string, content: string): Promise<Comment> => {
-  try {
-    const response = await apiClient.post<ApiResponse<Comment>>(`/articles/${articleId}/comments`, { content })
-    return requireResponseData(response.data, 'Unable to post comment')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to post comment'))
-  }
+  return apiRequestData<Comment>(`/articles/${articleId}/comments`, {
+    method: 'POST',
+    body: { content },
+    fallbackMessage: 'Unable to post comment',
+  })
 }
 
 /**
  * Sends PATCH /api/comments/:id. Author-only.
  */
 export const updateComment = async (id: string, content: string): Promise<Comment> => {
-  try {
-    const response = await apiClient.patch<ApiResponse<Comment>>(`/comments/${id}`, { content })
-    return requireResponseData(response.data, 'Unable to update comment')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to update comment'))
-  }
+  return apiRequestData<Comment>(`/comments/${id}`, {
+    method: 'PATCH',
+    body: { content },
+    fallbackMessage: 'Unable to update comment',
+  })
 }
 
 /**
@@ -252,12 +240,9 @@ export const updateComment = async (id: string, content: string): Promise<Commen
  * must supply a `reason`, getting back the updated (now-removed) comment.
  */
 export const deleteComment = async (id: string, reason?: string): Promise<{ id: string } | Comment> => {
-  try {
-    const response = await apiClient.delete<ApiResponse<{ id: string } | Comment>>(`/comments/${id}`, {
-      data: reason ? { reason } : undefined,
-    })
-    return requireResponseData(response.data, 'Unable to delete comment')
-  } catch (error) {
-    throw new Error(getApiErrorMessage(error, 'Unable to delete comment'))
-  }
+  return apiRequestData<{ id: string } | Comment>(`/comments/${id}`, {
+    method: 'DELETE',
+    body: reason ? { reason } : undefined,
+    fallbackMessage: 'Unable to delete comment',
+  })
 }

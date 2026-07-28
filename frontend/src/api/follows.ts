@@ -1,26 +1,24 @@
+import { apiRequest, apiRequestData } from '@/api/client'
+
+// Follow a user by id.
 export async function followUser(userId: string) {
-  const res = await fetch(`/api/follows/${userId}`, {
+  await apiRequest(`/follows/${userId}`, {
     method: 'POST',
-    credentials: 'include',
-  });
-  if (!res.ok) throw await res.json();
-  return res.json();
+    fallbackMessage: 'Unable to follow user',
+  })
 }
 
+// Unfollow a user by id.
 export async function unfollowUser(userId: string) {
-  const res = await fetch(`/api/follows/${userId}`, {
+  await apiRequest(`/follows/${userId}`, {
     method: 'DELETE',
-    credentials: 'include',
-  });
-  if (!res.ok) throw await res.json();
-  return res.json();
+    fallbackMessage: 'Unable to unfollow user',
+  })
 }
 
+// Read whether the current user follows target user.
 export async function getFollowStatus(userId: string): Promise<{ isFollowing: boolean }> {
-  const res = await fetch(`/api/follows/status/${userId}`, {
-    credentials: 'include',
-  });
-  if (!res.ok) throw await res.json();
-  const json = await res.json();
-  return json.data;
+  return apiRequestData<{ isFollowing: boolean }>(`/follows/status/${userId}`, {
+    fallbackMessage: 'Unable to load follow status',
+  })
 }

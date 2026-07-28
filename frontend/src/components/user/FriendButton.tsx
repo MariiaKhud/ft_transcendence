@@ -19,18 +19,20 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Keep local button state in sync when parent-provided state changes.
   useEffect(() => {
     setState(initialState);
   }, [initialState]);
 
+  // Run action, then transition to the expected next UI state.
   async function handle(action: () => Promise<void>, nextState: FriendshipState) {
     setLoading(true);
     setError(null);
     try {
       await action();
       setState(nextState);
-    } catch (err: any) {
-      setError(err?.error ?? 'Something went wrong');
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Something went wrong')
     } finally {
       setLoading(false);
     }
