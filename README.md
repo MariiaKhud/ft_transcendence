@@ -36,6 +36,20 @@
 	- `prisma@7.9.1`
 	- `@prisma/client@7.9.1`
 
+## OAuth Provider Decision
+
+- Chosen providers: GitHub, Google, and 42
+- GitHub OAuth app: `ft_transcendence`
+- GitHub OAuth app callback URL: `https://localhost:8443/api/auth/oauth/github/callback`
+- Google OAuth client callback URL: `https://localhost:8443/api/auth/oauth/google/callback`
+- 42 OAuth app: `ft_transcendence`
+- 42 OAuth app callback URL: `https://localhost:8443/api/auth/oauth/42/callback`
+- Production callback URLs to use after deployment:
+	- `https://<your-domain>/api/auth/oauth/github/callback`
+	- `https://<your-domain>/api/auth/oauth/google/callback`
+	- `https://<your-domain>/api/auth/oauth/42/callback`
+- Client ID and client secret are stored only in local environment files, not in Git
+
 ## Setup Instructions
 
 ### Prerequisites
@@ -66,6 +80,12 @@ BACKEND_PORT=3000
 FRONTEND_PORT=5173
 NODE_ENV=development
 UPLOAD_PATH=./uploads
+OAUTH_PROVIDER=google
+OAUTH_CLIENT_ID=your-google-client-id
+OAUTH_CLIENT_SECRET=your-google-client-secret
+OAUTH_CALLBACK_URL=https://localhost:8443/api/auth/oauth/google/callback
+OAUTH_SUCCESS_REDIRECT=https://localhost:8443/
+OAUTH_ERROR_REDIRECT=https://localhost:8443/login
 ```
 
 ### 3. Start the project
