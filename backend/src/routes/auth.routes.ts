@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
+import { randomBytes } from 'crypto'
 import passport from 'passport'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma.js'
@@ -24,6 +25,8 @@ import {
 const router = Router()
 
 const OAUTH_ERROR_CODE_PARAM = 'code'
+const OAUTH_STATE_COOKIE_NAME = 'oauth_state'
+const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000
 
 // Redirect the user back to the frontend with a small error code.
 const redirectWithError = (res: Response, baseUrl: string, code: string) => {
@@ -48,6 +51,21 @@ const assertConfiguredProvider = (providerParam: string) => {
   }
 
   return oauthConfig
+}
+
+// Generate a short-lived state token and bind it to the outgoing OAuth request.
+const createOAuthState = (provider: string) => {
+  return `${provider}:${randomBytes(32).toString('hex')}`
+}
+
+// Keep the state token in an httpOnly cookie so the callback can verify it later.
+const setOAuthStateCookie = (res: Response, state: string) => {
+  res.cookie(OAUTH_STATE_COOKIE_NAME, state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: OAUTH_STATE_MAX_AGE_MS,
+  })
 }
 
 // Create a new user account.
@@ -161,11 +179,16 @@ const meHandler = async (req: Request, res: Response) => {
 // OAuth login flow handlers. Passport handles the provider redirect and callback.
 const oauthStartHandler = (req: Request, res: Response, next: (error?: unknown) => void) => {
   const oauthConfig = assertConfiguredProvider(req.params.provider)
+  const oauthState = createOAuthState(oauthConfig.provider)
 
-  // Passport handles the provider redirect and stores no session state here.
+  setOAuthStateCookie(res, oauthState)
+
+  // Start the OAuth handshake by sending the browser to the provider's consent page.
+  // The generated state is attached to the outgoing request and verified later in the callback.
   passport.authenticate(oauthConfig.provider, {
     scope: ['user:email'],
     session: false,
+    state: oauthState,
   })(req, res, next)
 }
 
