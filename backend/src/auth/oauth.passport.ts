@@ -10,17 +10,23 @@ export interface NormalizedOAuthUser {
   provider: 'github' | 'google' | '42'
   providerId: string
   email: string | null
-  username: string | null
+  providerUsername: string | null
   displayName: string | null
   avatarUrl: string | null
+  emailVerified: boolean
 }
 
 let strategyInitialized = false
 
-const extractPrimaryEmail = (profile: Profile): string | null => {
+const extractPrimaryEmail = (profile: Profile): { email: string | null; verified: boolean } => {
   // GitHub profiles can expose multiple emails; we only need one stable login address.
-  const email = profile.emails?.[0]?.value
-  return typeof email === 'string' && email.trim().length > 0 ? email.toLowerCase() : null
+  const emailEntry = profile.emails?.[0] as { value?: string; verified?: boolean } | undefined
+  const email = emailEntry?.value
+
+  return {
+    email: typeof email === 'string' && email.trim().length > 0 ? email.toLowerCase() : null,
+    verified: Boolean(emailEntry?.verified),
+  }
 }
 
 const extractJsonField = (value: unknown, fieldName: string): string | null => {
@@ -36,24 +42,30 @@ const extractJsonField = (value: unknown, fieldName: string): string | null => {
 }
 
 const toNormalizedGithubUser = (profile: Profile): NormalizedOAuthUser => {
+  const { email, verified } = extractPrimaryEmail(profile)
+
   return {
     provider: 'github',
     providerId: profile.id,
-    email: extractPrimaryEmail(profile),
-    username: profile.username ?? null,
+    email,
+    providerUsername: profile.username ?? null,
     displayName: profile.displayName ?? profile.username ?? null,
     avatarUrl: profile.photos?.[0]?.value ?? null,
+    emailVerified: verified,
   }
 }
 
 const toNormalizedGoogleUser = (profile: Profile): NormalizedOAuthUser => {
+  const { email, verified } = extractPrimaryEmail(profile)
+
   return {
     provider: 'google',
     providerId: profile.id,
-    email: extractPrimaryEmail(profile),
-    username: profile.displayName ?? null,
+    email,
+    providerUsername: profile.displayName ?? null,
     displayName: profile.displayName ?? null,
     avatarUrl: profile.photos?.[0]?.value ?? null,
+    emailVerified: verified,
   }
 }
 
@@ -62,16 +74,17 @@ const toNormalizedFortyTwoUser = (rawProfile: unknown): NormalizedOAuthUser => {
   const userId = extractJsonField(profile, 'id') ?? extractJsonField(profile, 'login') ?? ''
   const email = extractJsonField(profile, 'email')
   const displayName = extractJsonField(profile, 'displayname') ?? extractJsonField(profile, 'usual_full_name')
-  const username = extractJsonField(profile, 'login') ?? displayName
+  const providerUsername = extractJsonField(profile, 'login') ?? displayName
   const avatarUrl = extractJsonField(profile, 'image',) ?? extractJsonField(profile, 'image_url')
 
   return {
     provider: '42',
     providerId: userId,
     email,
-    username,
+    providerUsername,
     displayName,
     avatarUrl,
+    emailVerified: false,
   }
 }
 

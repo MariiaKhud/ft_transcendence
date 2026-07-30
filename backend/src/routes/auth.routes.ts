@@ -8,6 +8,7 @@ import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 import { signAuthToken, verifyAuthToken } from '../lib/auth.utils.js'
 import type { NormalizedOAuthUser } from '../auth/oauth.passport.js'
 import { getOAuthConfig } from '../auth/oauth.config.js'
+import { resolveOAuthUser } from '../services/oauth-account.service.js'
 import {
   clearAuthCookies,
   generateCsrfToken,
@@ -265,23 +266,19 @@ const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknow
         return
       }
 
-      // Keep the first OAuth pass simple: we only complete login when the email already exists locally.
-      const existingUser = await prisma.user.findUnique({
-        where: { email: user.email },
-        select: publicUserSelect,
-      })
-
-      if (!existingUser) {
-        redirectWithError(res, oauthConfig.errorRedirect, 'oauth_account_not_linked')
-        return
-      }
+      const resolvedUser = await resolveOAuthUser(user)
 
       // Reuse the same cookie + CSRF session model as password login.
       const csrfToken = generateCsrfToken()
-      const token = signAuthToken(existingUser.id, existingUser.role, csrfToken)
+      const token = signAuthToken(resolvedUser.id, resolvedUser.role, csrfToken)
       setAuthCookies(res, token, csrfToken)
       res.redirect(oauthConfig.successRedirect)
     } catch (callbackError) {
+      if (callbackError instanceof AppError && callbackError.statusCode === 409) {
+        redirectWithError(res, oauthConfig.errorRedirect, 'oauth_account_conflict')
+        return
+      }
+
       next(callbackError)
     }
   })(req, res, next)

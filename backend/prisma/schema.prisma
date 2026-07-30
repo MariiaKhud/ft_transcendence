@@ -76,6 +76,7 @@ model User {
   articleLikes             ArticleLike[]
   notifications            Notification[]
   userBadges               UserBadge[]
+  oauthAccounts            OAuthAccount[]
 
   // Follow system (one-directional) — Person 3 builds these
   followers                Follow[]         @relation("following")
@@ -90,6 +91,21 @@ model User {
   receivedMessages         Message[]        @relation("receiver")
 
   @@map("users")
+}
+
+model OAuthAccount {
+  id                       String           @id @default(uuid())
+  provider                 String
+  providerId               String           @map("provider_id")
+  userId                   String           @map("user_id")
+  emailAtLinkTime          String?          @map("email_at_link_time")
+  createdAt                DateTime         @default(now()) @map("created_at")
+  updatedAt                DateTime         @updatedAt @map("updated_at")
+
+  user                     User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerId])
+  @@map("oauth_accounts")
 }
 
 // ─────────────────────────────────────────────
