@@ -27,14 +27,18 @@ const OAUTH_ERROR_CODE_PARAM = 'code'
 
 // Redirect the user back to the frontend with a small error code.
 const redirectWithError = (res: Response, baseUrl: string, code: string) => {
+  // Send a short code to the frontend instead of leaking provider details.
   const target = new URL(baseUrl)
   target.searchParams.set(OAUTH_ERROR_CODE_PARAM, code)
   res.redirect(target.toString())
 }
 
+// Ensure that OAuth is configured and the requested provider is enabled.
 const assertConfiguredProvider = (providerParam: string) => {
   const oauthConfig = getOAuthConfig()
 
+  // If OAuth is disabled or the requested provider differs from the configured one,
+  // we fail before redirecting the user to any external provider.
   if (!oauthConfig || !oauthConfig.enabled) {
     throw new AppError(404, 'OAuth is not configured')
   }
@@ -154,6 +158,7 @@ const meHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: user })
 }
 
+// OAuth login flow handlers. Passport handles the provider redirect and callback.
 const oauthStartHandler = (req: Request, res: Response, next: (error?: unknown) => void) => {
   const oauthConfig = assertConfiguredProvider(req.params.provider)
 
@@ -164,6 +169,7 @@ const oauthStartHandler = (req: Request, res: Response, next: (error?: unknown) 
   })(req, res, next)
 }
 
+// OAuth callback handler after provider redirects back to our server.
 const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknown) => void) => {
   const oauthConfig = assertConfiguredProvider(req.params.provider)
 
@@ -183,7 +189,7 @@ const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknow
         return
       }
 
-      // For now we only complete OAuth sign-in when the provider email matches an existing account.
+      // Keep the first OAuth pass simple: we only complete login when the email already exists locally.
       const existingUser = await prisma.user.findUnique({
         where: { email: user.email },
         select: publicUserSelect,
