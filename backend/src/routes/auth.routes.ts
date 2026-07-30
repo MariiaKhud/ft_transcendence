@@ -68,6 +68,48 @@ const setOAuthStateCookie = (res: Response, state: string) => {
   })
 }
 
+const clearOAuthStateCookie = (res: Response) => {
+  // Clear with the same cookie attributes used on set, so browsers remove it reliably.
+  res.clearCookie(OAUTH_STATE_COOKIE_NAME, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  })
+}
+
+const readQueryString = (value: unknown): string => {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+const validateOAuthCallbackRequest = (req: Request, provider: string): string | null => {
+  // Provider can return an error when the user denies consent.
+  const providerError = readQueryString(req.query.error)
+  if (providerError) {
+    return 'oauth_provider_denied'
+  }
+
+  // OAuth state must match query and cookie to prevent CSRF and forged callbacks.
+  const stateFromQuery = readQueryString(req.query.state)
+  const stateFromCookie = typeof req.cookies?.[OAUTH_STATE_COOKIE_NAME] === 'string'
+    ? req.cookies[OAUTH_STATE_COOKIE_NAME].trim()
+    : ''
+
+  if (!stateFromQuery || !stateFromCookie) {
+    return 'oauth_state_missing'
+  }
+
+  // Prefix check binds the callback to the expected provider.
+  if (!stateFromCookie.startsWith(`${provider}:`)) {
+    return 'oauth_state_invalid'
+  }
+
+  if (stateFromQuery !== stateFromCookie) {
+    return 'oauth_state_invalid'
+  }
+
+  return null
+}
+
 // Create a new user account.
 const registerHandler = async (req: Request, res: Response) => {
   const registerInput = validateRegisterInput(req.body)
@@ -195,6 +237,17 @@ const oauthStartHandler = (req: Request, res: Response, next: (error?: unknown) 
 // OAuth callback handler after provider redirects back to our server.
 const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknown) => void) => {
   const oauthConfig = assertConfiguredProvider(req.params.provider)
+
+  // Reject early on provider errors or invalid state before exchanging auth data.
+  const callbackValidationError = validateOAuthCallbackRequest(req, oauthConfig.provider)
+
+  // Always clear state after callback to reduce replay risk.
+  clearOAuthStateCookie(res)
+
+  if (callbackValidationError) {
+    redirectWithError(res, oauthConfig.errorRedirect, callbackValidationError)
+    return
+  }
 
   passport.authenticate(oauthConfig.provider, { session: false }, async (error: unknown, user?: NormalizedOAuthUser) => {
     try {
