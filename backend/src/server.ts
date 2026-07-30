@@ -6,6 +6,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { errorHandler } from './middleware/error.middleware.js'
 import { prisma } from './lib/prisma.js'
+import { initializeOAuthStrategy, passport } from './auth/oauth.passport.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
 import articleRoutes from './routes/articles.routes.js'
@@ -21,6 +22,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const app = express()
 const PORT = process.env.PORT || 3000
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://localhost'
+
+// Initialize auth integrations before routes mount so startup fails fast on bad config.
+initializeOAuthStrategy()
 
 const handleHealthCheck = (_req: express.Request, res: express.Response) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
@@ -89,6 +93,7 @@ app.use(
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ limit: '10mb', extended: true }))
 app.use(cookieParser())
+app.use(passport.initialize())
 
 // ─────────────────────────────────────────────
 // Static Files

@@ -1,9 +1,12 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
+import passport from 'passport'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 import { signAuthToken, verifyAuthToken } from '../lib/auth.utils.js'
+import type { NormalizedOAuthUser } from '../auth/oauth.passport.js'
+import { getOAuthConfig } from '../auth/oauth.config.js'
 import {
   clearAuthCookies,
   generateCsrfToken,
@@ -19,6 +22,29 @@ import {
 
 // Router for all auth endpoints.
 const router = Router()
+
+const OAUTH_ERROR_CODE_PARAM = 'code'
+
+// Redirect the user back to the frontend with a small error code.
+const redirectWithError = (res: Response, baseUrl: string, code: string) => {
+  const target = new URL(baseUrl)
+  target.searchParams.set(OAUTH_ERROR_CODE_PARAM, code)
+  res.redirect(target.toString())
+}
+
+const assertConfiguredProvider = (providerParam: string) => {
+  const oauthConfig = getOAuthConfig()
+
+  if (!oauthConfig || !oauthConfig.enabled) {
+    throw new AppError(404, 'OAuth is not configured')
+  }
+
+  if (oauthConfig.provider !== providerParam) {
+    throw new AppError(404, `OAuth provider '${providerParam}' is not enabled`)
+  }
+
+  return oauthConfig
+}
 
 // Create a new user account.
 const registerHandler = async (req: Request, res: Response) => {
@@ -128,10 +154,63 @@ const meHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: user })
 }
 
+const oauthStartHandler = (req: Request, res: Response, next: (error?: unknown) => void) => {
+  const oauthConfig = assertConfiguredProvider(req.params.provider)
+
+  // Passport handles the provider redirect and stores no session state here.
+  passport.authenticate(oauthConfig.provider, {
+    scope: ['user:email'],
+    session: false,
+  })(req, res, next)
+}
+
+const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknown) => void) => {
+  const oauthConfig = assertConfiguredProvider(req.params.provider)
+
+  passport.authenticate(oauthConfig.provider, { session: false }, async (error: unknown, user?: NormalizedOAuthUser) => {
+    try {
+      if (error) {
+        return next(error)
+      }
+
+      if (!user) {
+        redirectWithError(res, oauthConfig.errorRedirect, 'oauth_user_not_found')
+        return
+      }
+
+      if (!user.email) {
+        redirectWithError(res, oauthConfig.errorRedirect, 'oauth_email_missing')
+        return
+      }
+
+      // For now we only complete OAuth sign-in when the provider email matches an existing account.
+      const existingUser = await prisma.user.findUnique({
+        where: { email: user.email },
+        select: publicUserSelect,
+      })
+
+      if (!existingUser) {
+        redirectWithError(res, oauthConfig.errorRedirect, 'oauth_account_not_linked')
+        return
+      }
+
+      // Reuse the same cookie + CSRF session model as password login.
+      const csrfToken = generateCsrfToken()
+      const token = signAuthToken(existingUser.id, existingUser.role, csrfToken)
+      setAuthCookies(res, token, csrfToken)
+      res.redirect(oauthConfig.successRedirect)
+    } catch (callbackError) {
+      next(callbackError)
+    }
+  })(req, res, next)
+}
+
 // Auth endpoints.
 router.post('/register', handleAsyncErrors(registerHandler))
 router.post('/login', handleAsyncErrors(loginHandler))
 router.post('/logout', handleAsyncErrors(logoutHandler))
 router.get('/me', handleAsyncErrors(meHandler))
+router.get('/oauth/:provider', oauthStartHandler)
+router.get('/oauth/:provider/callback', oauthCallbackHandler)
 
 export default router

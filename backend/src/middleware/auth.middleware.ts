@@ -4,15 +4,13 @@ import { verifyAuthToken } from '../lib/auth.utils.js'
 import type { AuthRole } from '../lib/auth.utils.js'
 import { readAuthTokenFromCookie } from '../routes/auth.routes-helpers.js'
 
-// Add authenticated user data to req.user.
+// Add authenticated user data to Express.User so it works with passport typings.
 declare global {
   namespace Express {
-    interface Request {
-      user?: {
-        userId: string;
-        role: AuthRole;
-        csrfToken: string;
-      };
+    interface User {
+      userId: string
+      role: AuthRole
+      csrfToken: string
     }
   }
 }
