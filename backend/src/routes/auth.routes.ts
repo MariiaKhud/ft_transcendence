@@ -28,6 +28,8 @@ const router = Router()
 const OAUTH_ERROR_CODE_PARAM = 'code'
 const OAUTH_STATE_COOKIE_NAME = 'oauth_state'
 const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000
+const OAUTH_CALLBACK_INVALID_CODE = 'oauth_callback_invalid'
+const OAUTH_PROFILE_INVALID_CODE = 'oauth_profile_invalid'
 
 // Redirect the user back to the frontend with a small error code.
 const redirectWithError = (res: Response, baseUrl: string, code: string) => {
@@ -35,6 +37,12 @@ const redirectWithError = (res: Response, baseUrl: string, code: string) => {
   const target = new URL(baseUrl)
   target.searchParams.set(OAUTH_ERROR_CODE_PARAM, code)
   res.redirect(target.toString())
+}
+
+const redirectOAuthFailure = (res: Response, baseUrl: string, code: string) => {
+  // Clear any auth cookies so failed OAuth callbacks cannot leave partial session state.
+  clearAuthCookies(res)
+  redirectWithError(res, baseUrl, code)
 }
 
 // Ensure that OAuth is configured and the requested provider is enabled.
@@ -246,23 +254,24 @@ const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknow
   clearOAuthStateCookie(res)
 
   if (callbackValidationError) {
-    redirectWithError(res, oauthConfig.errorRedirect, callbackValidationError)
+    redirectOAuthFailure(res, oauthConfig.errorRedirect, callbackValidationError)
     return
   }
 
   passport.authenticate(oauthConfig.provider, { session: false }, async (error: unknown, user?: NormalizedOAuthUser) => {
     try {
       if (error) {
-        return next(error)
+        redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_CALLBACK_INVALID_CODE)
+        return
       }
 
       if (!user) {
-        redirectWithError(res, oauthConfig.errorRedirect, 'oauth_user_not_found')
+        redirectOAuthFailure(res, oauthConfig.errorRedirect, 'oauth_user_not_found')
         return
       }
 
       if (!user.email) {
-        redirectWithError(res, oauthConfig.errorRedirect, 'oauth_email_missing')
+        redirectOAuthFailure(res, oauthConfig.errorRedirect, 'oauth_email_missing')
         return
       }
 
@@ -275,11 +284,16 @@ const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknow
       res.redirect(oauthConfig.successRedirect)
     } catch (callbackError) {
       if (callbackError instanceof AppError && callbackError.statusCode === 409) {
-        redirectWithError(res, oauthConfig.errorRedirect, 'oauth_account_conflict')
+        redirectOAuthFailure(res, oauthConfig.errorRedirect, 'oauth_account_conflict')
         return
       }
 
-      next(callbackError)
+      if (callbackError instanceof AppError && callbackError.statusCode === 400) {
+        redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_PROFILE_INVALID_CODE)
+        return
+      }
+
+      redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_CALLBACK_INVALID_CODE)
     }
   })(req, res, next)
 }

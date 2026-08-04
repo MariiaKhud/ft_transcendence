@@ -1,5 +1,5 @@
-import { useState, type FormEvent } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useMemo, useState, type FormEvent } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -10,10 +10,34 @@ const validateEmail = (email: string) => {
   return emailRegex.test(email)
 }
 
+const getOAuthErrorMessage = (code: string) => {
+  switch (code) {
+    case 'oauth_provider_denied':
+      return 'You canceled OAuth sign in. Please try again and approve access.'
+    case 'oauth_state_missing':
+      return 'Your login session expired. Please start OAuth login again.'
+    case 'oauth_state_invalid':
+      return 'OAuth validation failed. Please retry login from the start.'
+    case 'oauth_email_missing':
+      return 'This provider did not return an email address. Use another provider or email/password login.'
+    case 'oauth_profile_invalid':
+      return 'We could not validate your OAuth profile. Please try a different account or provider.'
+    case 'oauth_account_conflict':
+      return 'This OAuth account is linked to a different user. Sign in with your original method.'
+    case 'oauth_callback_invalid':
+      return 'OAuth callback failed. Please try again.'
+    case 'oauth_user_not_found':
+      return 'We could not find your OAuth user profile. Please try again.'
+    default:
+      return ''
+  }
+}
+
 export const Login = () => {
   // throw new Error('TEMP_TEST_ERROR')  // Comment this out to test 500 error page
   // Move user to another page after login.
   const navigate = useNavigate()
+  const location = useLocation()
 
   const { login, isLoading } = useAuth()
 
@@ -24,6 +48,12 @@ export const Login = () => {
   const [passwordError, setPasswordError] = useState('')
   const [formError, setFormError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+
+  const oauthErrorMessage = useMemo(() => {
+    const params = new URLSearchParams(location.search)
+    const code = params.get('code')?.trim() ?? ''
+    return getOAuthErrorMessage(code)
+  }, [location.search])
 
   // Clear old errors.
   const clearErrors = () => {
@@ -197,6 +227,12 @@ export const Login = () => {
           </div>
           {passwordError.length > 0 ? <p className="text-xs font-medium text-red-500">{passwordError}</p> : null}
         </div>
+
+        {oauthErrorMessage.length > 0 ? (
+          <p className="rounded-lg bg-amber-50/90 px-4 py-3 text-sm font-medium text-amber-700 border border-amber-200/70">
+            {oauthErrorMessage}
+          </p>
+        ) : null}
 
         {formError.length > 0 ? <p className="rounded-lg bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600 border border-red-200/50">{formError}</p> : null}
 
