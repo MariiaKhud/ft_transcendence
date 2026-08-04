@@ -7,7 +7,8 @@ import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 import { signAuthToken, verifyAuthToken } from '../lib/auth.utils.js'
 import type { NormalizedOAuthUser } from '../auth/oauth.passport.js'
-import { getOAuthConfig } from '../auth/oauth.config.js'
+import { initializeOAuthStrategy } from '../auth/oauth.passport.js'
+import { getOAuthConfig, type OAuthProvider, type OAuthProviderConfig } from '../auth/oauth.config.js'
 import { resolveOAuthUser } from '../services/oauth-account.service.js'
 import {
   clearAuthCookies,
@@ -31,6 +32,75 @@ const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000
 // Fallback codes used when callback payload is malformed or passport fails unexpectedly.
 const OAUTH_CALLBACK_INVALID_CODE = 'oauth_callback_invalid'
 const OAUTH_PROFILE_INVALID_CODE = 'oauth_profile_invalid'
+const OAUTH_PROVIDER_UNAVAILABLE_CODE = 'oauth_provider_unavailable'
+const OAUTH_REDIRECT_URI_MISMATCH_CODE = 'oauth_redirect_uri_mismatch'
+const OAUTH_ACCESS_TOKEN_FAILED_CODE = 'oauth_access_token_failed'
+
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null
+}
+
+const getOAuthCallbackErrorCode = (error: unknown) => {
+  if (!isRecord(error)) {
+    return OAUTH_CALLBACK_INVALID_CODE
+  }
+
+  const oauthError = isRecord(error.oauthError) ? error.oauthError : null
+  const oauthDataRecord = isRecord(oauthError?.data) ? oauthError.data : null
+  const oauthDataText = typeof oauthError?.data === 'string' ? oauthError.data.toLowerCase() : ''
+  const errorDescription = typeof oauthDataRecord?.error_description === 'string'
+    ? oauthDataRecord.error_description.toLowerCase()
+    : ''
+  const errorCode = typeof oauthDataRecord?.error === 'string' ? oauthDataRecord.error.toLowerCase() : ''
+  const errorName = typeof error.name === 'string' ? error.name : ''
+  const errorMessage = typeof error.message === 'string' ? error.message.toLowerCase() : ''
+  const combined = `${errorDescription} ${errorCode} ${errorMessage} ${oauthDataText}`
+
+  if (errorName === 'TokenError') {
+    if (
+      combined.includes('redirect_uri') ||
+      combined.includes('redirect uri') ||
+      combined.includes('redirection uri')
+    ) {
+      return OAUTH_REDIRECT_URI_MISMATCH_CODE
+    }
+
+    return OAUTH_ACCESS_TOKEN_FAILED_CODE
+  }
+
+  if (
+    combined.includes('redirect_uri') ||
+    combined.includes('redirect uri') ||
+    combined.includes('redirection uri') ||
+    combined.includes('does not match the redirection uri')
+  ) {
+    return OAUTH_REDIRECT_URI_MISMATCH_CODE
+  }
+
+  if (
+    combined.includes('failed to obtain access token') ||
+    combined.includes('access token') ||
+    combined.includes('invalid_grant') ||
+    combined.includes('invalid grant')
+  ) {
+    return OAUTH_ACCESS_TOKEN_FAILED_CODE
+  }
+
+  return OAUTH_CALLBACK_INVALID_CODE
+}
+
+const getOAuthScopes = (provider: OAuthProvider) => {
+  if (provider === 'github') {
+    return ['user:email']
+  }
+
+  if (provider === 'google') {
+    return ['profile', 'email']
+  }
+
+  // 42 API v2 accepts the public scope for basic user profile access.
+  return ['public']
+}
 
 // Redirect the user back to the frontend with a small error code.
 const redirectWithError = (res: Response, baseUrl: string, code: string) => {
@@ -49,6 +119,10 @@ const redirectOAuthFailure = (res: Response, baseUrl: string, code: string) => {
 
 // Ensure that OAuth is configured and the requested provider is enabled.
 const assertConfiguredProvider = (providerParam: string) => {
+  // Strategy initialization is idempotent; calling here makes OAuth resilient
+  // even if startup happened before all env variables were available.
+  initializeOAuthStrategy()
+
   const oauthConfig = getOAuthConfig()
 
   // If OAuth is disabled or the requested provider differs from the configured one,
@@ -57,11 +131,18 @@ const assertConfiguredProvider = (providerParam: string) => {
     throw new AppError(404, 'OAuth is not configured')
   }
 
-  if (oauthConfig.provider !== providerParam) {
+  const provider = providerParam as OAuthProvider
+  const providerConfig = oauthConfig.providers[provider] as OAuthProviderConfig | undefined
+
+  if (!providerConfig) {
     throw new AppError(404, `OAuth provider '${providerParam}' is not enabled`)
   }
 
-  return oauthConfig
+  return {
+    ...oauthConfig,
+    provider,
+    providerConfig,
+  }
 }
 
 // Generate a short-lived state token and bind it to the outgoing OAuth request.
@@ -119,6 +200,18 @@ const validateOAuthCallbackRequest = (req: Request, provider: string): string | 
   }
 
   return null
+}
+
+const oauthProvidersHandler = (_req: Request, res: Response) => {
+  const oauthConfig = getOAuthConfig()
+
+  if (!oauthConfig?.enabled) {
+    res.status(200).json({ success: true, data: [] })
+    return
+  }
+
+  const providers = Object.keys(oauthConfig.providers)
+  res.status(200).json({ success: true, data: providers })
 }
 
 // Create a new user account.
@@ -232,17 +325,33 @@ const meHandler = async (req: Request, res: Response) => {
 // OAuth login flow handlers. Passport handles the provider redirect and callback.
 const oauthStartHandler = (req: Request, res: Response, next: (error?: unknown) => void) => {
   const oauthConfig = assertConfiguredProvider(req.params.provider)
+
   const oauthState = createOAuthState(oauthConfig.provider)
 
   setOAuthStateCookie(res, oauthState)
 
   // Start the OAuth handshake by sending the browser to the provider's consent page.
   // The generated state is attached to the outgoing request and verified later in the callback.
-  passport.authenticate(oauthConfig.provider, {
-    scope: ['user:email'],
-    session: false,
-    state: oauthState,
-  })(req, res, next)
+  try {
+    const middleware = passport.authenticate(oauthConfig.provider, {
+      scope: getOAuthScopes(oauthConfig.provider),
+      session: false,
+      state: oauthState,
+    })
+
+    middleware(req, res, (error?: unknown) => {
+      if (error) {
+        clearOAuthStateCookie(res)
+        redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_PROVIDER_UNAVAILABLE_CODE)
+        return
+      }
+
+      next()
+    })
+  } catch {
+    clearOAuthStateCookie(res)
+    redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_PROVIDER_UNAVAILABLE_CODE)
+  }
 }
 
 // OAuth callback handler after provider redirects back to our server.
@@ -260,46 +369,71 @@ const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknow
     return
   }
 
-  passport.authenticate(oauthConfig.provider, { session: false }, async (error: unknown, user?: NormalizedOAuthUser) => {
-    try {
+  try {
+    const middleware = passport.authenticate(oauthConfig.provider, { session: false }, async (error: unknown, user?: NormalizedOAuthUser) => {
+      try {
+        if (error) {
+          // Keep provider details out of browser responses but log server-side for debugging.
+          console.error('[oauth] callback error', {
+            provider: oauthConfig.provider,
+            message: error instanceof Error ? error.message : String(error),
+            raw: isRecord(error) ? {
+              name: typeof error.name === 'string' ? error.name : undefined,
+              oauthErrorData: isRecord(error.oauthError) || typeof error.oauthError === 'string'
+                ? error.oauthError
+                : undefined,
+            } : undefined,
+          })
+          redirectOAuthFailure(res, oauthConfig.errorRedirect, getOAuthCallbackErrorCode(error))
+          return
+        }
+
+        if (!user) {
+          redirectOAuthFailure(res, oauthConfig.errorRedirect, 'oauth_user_not_found')
+          return
+        }
+
+        // Resolve to a local user via linked provider account, verified email, or safe auto-create.
+        const resolvedUser = await resolveOAuthUser(user)
+
+        // Reuse the same cookie + CSRF session model as password login.
+        const csrfToken = generateCsrfToken()
+        const token = signAuthToken(resolvedUser.id, resolvedUser.role, csrfToken)
+        setAuthCookies(res, token, csrfToken)
+        res.redirect(oauthConfig.successRedirect)
+      } catch (callbackError) {
+        console.error('[oauth] post-auth error', {
+          provider: oauthConfig.provider,
+          message: callbackError instanceof Error ? callbackError.message : String(callbackError),
+          statusCode: callbackError instanceof AppError ? callbackError.statusCode : undefined,
+        })
+
+        if (callbackError instanceof AppError && callbackError.statusCode === 409) {
+          redirectOAuthFailure(res, oauthConfig.errorRedirect, 'oauth_account_conflict')
+          return
+        }
+
+        if (callbackError instanceof AppError && callbackError.statusCode === 400) {
+          redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_PROFILE_INVALID_CODE)
+          return
+        }
+
+        // Reuse callback error classification to avoid generic messages when possible.
+        redirectOAuthFailure(res, oauthConfig.errorRedirect, getOAuthCallbackErrorCode(callbackError))
+      }
+    })
+
+    middleware(req, res, (error?: unknown) => {
       if (error) {
-        redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_CALLBACK_INVALID_CODE)
+        redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_PROVIDER_UNAVAILABLE_CODE)
         return
       }
 
-      if (!user) {
-        redirectOAuthFailure(res, oauthConfig.errorRedirect, 'oauth_user_not_found')
-        return
-      }
-
-      if (!user.email) {
-        redirectOAuthFailure(res, oauthConfig.errorRedirect, 'oauth_email_missing')
-        return
-      }
-
-      // Resolve to a local user via linked provider account, verified email, or safe auto-create.
-      const resolvedUser = await resolveOAuthUser(user)
-
-      // Reuse the same cookie + CSRF session model as password login.
-      const csrfToken = generateCsrfToken()
-      const token = signAuthToken(resolvedUser.id, resolvedUser.role, csrfToken)
-      setAuthCookies(res, token, csrfToken)
-      res.redirect(oauthConfig.successRedirect)
-    } catch (callbackError) {
-      if (callbackError instanceof AppError && callbackError.statusCode === 409) {
-        redirectOAuthFailure(res, oauthConfig.errorRedirect, 'oauth_account_conflict')
-        return
-      }
-
-      if (callbackError instanceof AppError && callbackError.statusCode === 400) {
-        redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_PROFILE_INVALID_CODE)
-        return
-      }
-
-      // Any unexpected callback failure gets a generic safe code.
-      redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_CALLBACK_INVALID_CODE)
-    }
-  })(req, res, next)
+      next()
+    })
+  } catch {
+    redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_PROVIDER_UNAVAILABLE_CODE)
+  }
 }
 
 // Auth endpoints.
@@ -307,6 +441,7 @@ router.post('/register', handleAsyncErrors(registerHandler))
 router.post('/login', handleAsyncErrors(loginHandler))
 router.post('/logout', handleAsyncErrors(logoutHandler))
 router.get('/me', handleAsyncErrors(meHandler))
+router.get('/oauth/providers', oauthProvidersHandler)
 router.get('/oauth/:provider', oauthStartHandler)
 router.get('/oauth/:provider/callback', oauthCallbackHandler)
 

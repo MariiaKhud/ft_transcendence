@@ -71,11 +71,24 @@ const toNormalizedGoogleUser = (profile: Profile): NormalizedOAuthUser => {
 
 const toNormalizedFortyTwoUser = (rawProfile: unknown): NormalizedOAuthUser => {
   const profile = rawProfile as Record<string, unknown>
-  const userId = extractJsonField(profile, 'id') ?? extractJsonField(profile, 'login') ?? ''
+  const userIdValue = profile.id
+  const userId =
+    (typeof userIdValue === 'string' && userIdValue.trim().length > 0
+      ? userIdValue.trim()
+      : typeof userIdValue === 'number'
+        ? String(userIdValue)
+        : null) ??
+    extractJsonField(profile, 'login') ??
+    ''
   const email = extractJsonField(profile, 'email')
   const displayName = extractJsonField(profile, 'displayname') ?? extractJsonField(profile, 'usual_full_name')
   const providerUsername = extractJsonField(profile, 'login') ?? displayName
-  const avatarUrl = extractJsonField(profile, 'image',) ?? extractJsonField(profile, 'image_url')
+  const imageValue = profile.image
+  const imageLink =
+    imageValue && typeof imageValue === 'object'
+      ? extractJsonField(imageValue as Record<string, unknown>, 'link')
+      : null
+  const avatarUrl = imageLink ?? extractJsonField(profile, 'image_url')
 
   return {
     provider: '42',
@@ -90,7 +103,7 @@ const toNormalizedFortyTwoUser = (rawProfile: unknown): NormalizedOAuthUser => {
 
 const createFortyTwoStrategy = (clientId: string, clientSecret: string, callbackURL: string) => {
   // 42 uses standard OAuth2 endpoints, so we can reuse Passport's generic OAuth2 strategy.
-  return new OAuth2Strategy(
+  const strategy = new OAuth2Strategy(
     {
       authorizationURL: 'https://api.intra.42.fr/oauth/authorize',
       tokenURL: 'https://api.intra.42.fr/oauth/token',
@@ -99,19 +112,60 @@ const createFortyTwoStrategy = (clientId: string, clientSecret: string, callback
       callbackURL,
     },
     async (
-      _accessToken: string,
+      accessToken: string,
       _refreshToken: string,
-      _params: unknown,
-      profile: Profile,
+      profile: unknown,
       done: (error: Error | null, user?: Express.User | false) => void
     ) => {
       try {
+        // Ensure callback always receives normalized user data.
         done(null, toNormalizedFortyTwoUser(profile) as unknown as Express.User)
       } catch (error) {
         done(error as Error)
       }
     }
   )
+
+  // Passport's generic OAuth2 strategy does not know provider-specific profile endpoints,
+  // so we fetch /v2/me manually to obtain login/email/avatar fields.
+  ;(strategy as OAuth2Strategy & {
+    userProfile: (
+      accessToken: string,
+      done: (error: Error | null, profile?: unknown) => void
+    ) => void
+    _oauth2: {
+      get: (
+        url: string,
+        accessToken: string,
+        callback: (error: Error | null, body?: string) => void
+      ) => void
+    }
+  }).userProfile = (token, done) => {
+    ;(strategy as OAuth2Strategy & {
+      _oauth2: {
+        get: (
+          url: string,
+          accessToken: string,
+          callback: (error: Error | null, body?: string) => void
+        ) => void
+      }
+    })._oauth2.get('https://api.intra.42.fr/v2/me', token, (error, body) => {
+      if (error) {
+        done(error instanceof Error ? error : new Error('Failed to load 42 profile'))
+        return
+      }
+
+      try {
+        const payload = typeof body === 'string' ? body : body?.toString('utf-8') ?? '{}'
+        const profile = JSON.parse(payload) as unknown
+        done(null, profile)
+      } catch {
+        done(new AppError(400, 'Invalid 42 profile payload'))
+      }
+    })
+  }
+
+  return strategy
 }
 
 export const initializeOAuthStrategy = () => {
@@ -125,14 +179,16 @@ export const initializeOAuthStrategy = () => {
     return
   }
 
-  if (oauthConfig.provider === 'github') {
+  if (oauthConfig.providers.github) {
+    const providerConfig = oauthConfig.providers.github
+
     // GitHub's strategy gives us a normalized profile object with username, email, and avatar.
     passport.use(
       new GitHubStrategy(
         {
-          clientID: oauthConfig.clientId,
-          clientSecret: oauthConfig.clientSecret,
-          callbackURL: oauthConfig.callbackUrl,
+          clientID: providerConfig.clientId,
+          clientSecret: providerConfig.clientSecret,
+          callbackURL: providerConfig.callbackUrl,
         },
         (
           _accessToken: string,
@@ -150,14 +206,18 @@ export const initializeOAuthStrategy = () => {
         }
       )
     )
-  } else if (oauthConfig.provider === 'google') {
+  }
+
+  if (oauthConfig.providers.google) {
+    const providerConfig = oauthConfig.providers.google
+
     // Google uses the same Passport pattern, only the provider package changes.
     passport.use(
       new GoogleStrategy(
         {
-          clientID: oauthConfig.clientId,
-          clientSecret: oauthConfig.clientSecret,
-          callbackURL: oauthConfig.callbackUrl,
+          clientID: providerConfig.clientId,
+          clientSecret: providerConfig.clientSecret,
+          callbackURL: providerConfig.callbackUrl,
           passReqToCallback: false,
         },
         (
@@ -176,9 +236,13 @@ export const initializeOAuthStrategy = () => {
         }
       )
     )
-  } else if (oauthConfig.provider === '42') {
+  }
+
+  if (oauthConfig.providers['42']) {
+    const providerConfig = oauthConfig.providers['42']
+
     // 42 still flows through Passport, but with the generic OAuth2 adapter above.
-    passport.use(createFortyTwoStrategy(oauthConfig.clientId, oauthConfig.clientSecret, oauthConfig.callbackUrl))
+    passport.use('42', createFortyTwoStrategy(providerConfig.clientId, providerConfig.clientSecret, providerConfig.callbackUrl))
   }
 
   strategyInitialized = true

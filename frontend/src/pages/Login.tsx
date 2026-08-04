@@ -1,9 +1,19 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 
 const PASSWORD_HELP_TEXT = '8-72 chars, use lowercase, uppercase, and digits'
+const OAUTH_PROVIDERS = [
+  { key: 'google', label: 'Google' },
+  { key: 'github', label: 'GitHub' },
+  { key: '42', label: '42' },
+] as const
+
+type OAuthProvidersResponse = {
+  success: boolean
+  data?: string[]
+}
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -26,8 +36,14 @@ const getOAuthErrorMessage = (code: string) => {
       return 'This OAuth account is linked to a different user. Sign in with your original method.'
     case 'oauth_callback_invalid':
       return 'OAuth callback failed. Please try again.'
+    case 'oauth_access_token_failed':
+      return 'OAuth token exchange failed. Check provider app settings and try again.'
+    case 'oauth_redirect_uri_mismatch':
+      return 'OAuth redirect URI mismatch. Ensure provider callback URL exactly matches this app callback URL.'
     case 'oauth_user_not_found':
       return 'We could not find your OAuth user profile. Please try again.'
+    case 'oauth_provider_unavailable':
+      return 'This OAuth provider is not available right now. Try another provider or sign in with email/password.'
     default:
       return ''
   }
@@ -48,12 +64,75 @@ export const Login = () => {
   const [passwordError, setPasswordError] = useState('')
   const [formError, setFormError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [oauthLoadingProvider, setOAuthLoadingProvider] = useState<string | null>(null)
+  const [enabledOAuthProviders, setEnabledOAuthProviders] = useState<string[]>([])
 
   const oauthErrorMessage = useMemo(() => {
     const params = new URLSearchParams(location.search)
     const code = params.get('code')?.trim() ?? ''
     return getOAuthErrorMessage(code)
   }, [location.search])
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search)
+    if (!params.has('code')) {
+      return
+    }
+
+    // Keep OAuth errors visible briefly, then clear stale query state.
+    const timeoutId = window.setTimeout(() => {
+      const nextParams = new URLSearchParams(location.search)
+      nextParams.delete('code')
+      const nextSearch = nextParams.toString()
+
+      navigate(
+        {
+          pathname: location.pathname,
+          search: nextSearch.length > 0 ? `?${nextSearch}` : '',
+        },
+        { replace: true }
+      )
+    }, 4000)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [location.pathname, location.search, navigate])
+
+  // If user comes back from provider callback (success or failure),
+  // ensure OAuth buttons become active again.
+  useEffect(() => {
+    setOAuthLoadingProvider(null)
+  }, [location.pathname, location.search])
+
+  useEffect(() => {
+    let cancelled = false
+
+    const loadEnabledProviders = async () => {
+      try {
+        const response = await fetch('/api/auth/oauth/providers', {
+          credentials: 'include',
+        })
+
+        if (!response.ok) {
+          return
+        }
+
+        const payload = (await response.json()) as OAuthProvidersResponse
+        if (!cancelled && payload.success && Array.isArray(payload.data)) {
+          setEnabledOAuthProviders(payload.data)
+        }
+      } catch {
+        // Keep default state when provider list is unavailable.
+      }
+    }
+
+    void loadEnabledProviders()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   // Clear old errors.
   const clearErrors = () => {
@@ -135,6 +214,11 @@ export const Login = () => {
 
       setFormError('Unable to connect to the server')
     }
+  }
+
+  const handleOAuthLogin = (provider: string) => {
+    setOAuthLoadingProvider(provider)
+    window.location.href = `/api/auth/oauth/${encodeURIComponent(provider)}`
   }
 
   return (
@@ -239,6 +323,33 @@ export const Login = () => {
         <Button className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 py-3 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50" type="submit" disabled={isLoading}>
           {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
+
+        <div className="space-y-3">
+          {OAUTH_PROVIDERS.map((provider) => (
+            (() => {
+              const isEnabled = enabledOAuthProviders.includes(provider.key)
+              const isBusy = oauthLoadingProvider !== null
+
+              return (
+            <Button
+              key={provider.key}
+              type="button"
+              onClick={() => {
+                handleOAuthLogin(provider.key)
+              }}
+              disabled={isLoading || isBusy || !isEnabled}
+              className="w-full rounded-lg border border-purple-300/60 bg-white/80 py-3 font-semibold text-purple-800 shadow-sm hover:bg-white disabled:opacity-50"
+            >
+              {oauthLoadingProvider === provider.key
+                ? `Redirecting to ${provider.label}...`
+                : isEnabled
+                  ? `Continue with ${provider.label}`
+                  : `${provider.label} is not configured`}
+            </Button>
+              )
+            })()
+          ))}
+        </div>
 
         <p className="text-center text-sm text-slate-600">
           Don't have an account?{' '}
