@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
@@ -9,6 +9,8 @@ const OAUTH_PROVIDERS = [
   { key: 'github', label: 'GitHub' },
   { key: '42', label: '42' },
 ] as const
+
+type OAuthProviderKey = (typeof OAUTH_PROVIDERS)[number]['key']
 
 type OAuthProvidersResponse = {
   success: boolean
@@ -47,6 +49,48 @@ const getOAuthErrorMessage = (code: string) => {
     default:
       return ''
   }
+}
+
+const getOAuthProviderIcon = (provider: OAuthProviderKey): ReactNode => {
+  if (provider === 'google') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5">
+        <path
+          d="M21.35 11.1H12v2.98h5.35a4.58 4.58 0 01-1.98 3.01v2.5h3.21c1.87-1.72 2.95-4.25 2.95-7.2 0-.45-.05-.88-.13-1.3z"
+          fill="#4285F4"
+        />
+        <path
+          d="M12 22c2.67 0 4.92-.88 6.56-2.41l-3.21-2.5c-.89.6-2.03.96-3.35.96-2.57 0-4.75-1.73-5.53-4.07H3.15v2.56A9.99 9.99 0 0012 22z"
+          fill="#34A853"
+        />
+        <path
+          d="M6.47 13.98A6 6 0 016.17 12c0-.68.12-1.34.3-1.98V7.46H3.15A9.99 9.99 0 002 12c0 1.61.38 3.13 1.15 4.54l3.32-2.56z"
+          fill="#FBBC05"
+        />
+        <path
+          d="M12 5.95c1.46 0 2.77.5 3.8 1.47l2.84-2.84C16.91 2.98 14.66 2 12 2A9.99 9.99 0 003.15 7.46l3.32 2.56c.78-2.34 2.96-4.07 5.53-4.07z"
+          fill="#EA4335"
+        />
+      </svg>
+    )
+  }
+
+  if (provider === 'github') {
+    return (
+      <svg viewBox="0 0 24 24" aria-hidden="true" className="h-5 w-5 fill-current">
+        <path d="M12 2a10 10 0 00-3.16 19.49c.5.09.68-.21.68-.48v-1.68c-2.77.6-3.35-1.19-3.35-1.19-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.54 1.03 1.54 1.03.89 1.52 2.34 1.08 2.91.82.09-.64.35-1.08.63-1.33-2.21-.25-4.53-1.11-4.53-4.93 0-1.09.39-1.98 1.03-2.68-.11-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02A9.53 9.53 0 0112 6.8c.85 0 1.7.11 2.5.33 1.9-1.29 2.74-1.02 2.74-1.02.55 1.37.21 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.83-2.32 4.67-4.54 4.92.36.31.68.91.68 1.84v2.82c0 .27.18.57.69.48A10 10 0 0012 2z" />
+      </svg>
+    )
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className="inline-flex h-5 w-5 items-center justify-center rounded-sm border border-current text-xs font-extrabold leading-none"
+    >
+      42
+    </span>
+  )
 }
 
 export const Login = () => {
@@ -364,11 +408,16 @@ export const Login = () => {
               disabled={isLoading || isBusy || !isEnabled}
               className="w-full rounded-lg border border-purple-300/60 bg-white/80 py-3 font-semibold text-purple-800 shadow-sm hover:bg-white disabled:opacity-50"
             >
-              {oauthLoadingProvider === provider.key
-                ? `Redirecting to ${provider.label}...`
-                : isEnabled
-                  ? `Continue with ${provider.label}`
-                  : `${provider.label} is not configured`}
+              <span className="inline-flex items-center gap-2">
+                {getOAuthProviderIcon(provider.key)}
+                <span>
+                  {oauthLoadingProvider === provider.key
+                    ? `Redirecting to ${provider.label}...`
+                    : isEnabled
+                      ? `Continue with ${provider.label}`
+                      : `${provider.label} is not configured`}
+                </span>
+              </span>
             </Button>
               )
             })()
