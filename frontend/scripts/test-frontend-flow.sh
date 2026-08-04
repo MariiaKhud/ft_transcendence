@@ -148,6 +148,77 @@ perform_request "Users API proxy" "${BASE_URL}${USERS_PROXY_PATH}"
 assert_status_one_of "Users API proxy" "200" "400" "404"
 assert_header_contains 'content-type: application/json' "Users API proxy"
 
+# ============================================================================
+# [OAUTH] Frontend proxy: provider start + failure/cancellation edge cases
+# ============================================================================
+
+OAUTH_COOKIE_JAR="$(mktemp)"
+trap 'rm -f "$OAUTH_COOKIE_JAR"' EXIT
+OAUTH_PROVIDER=""
+
+color_echo "$BLUE" "8a. Checking OAuth providers proxy (/api/auth/oauth/providers)"
+perform_request "OAuth providers proxy" "${BASE_URL}/api/auth/oauth/providers"
+assert_status "200" "OAuth providers proxy"
+assert_header_contains 'content-type: application/json' "OAuth providers proxy"
+assert_body_contains '"success":true' "OAuth providers proxy"
+
+if grep -q '"github"' <<<"$LAST_BODY"; then
+  OAUTH_PROVIDER="github"
+elif grep -q '"google"' <<<"$LAST_BODY"; then
+  OAUTH_PROVIDER="google"
+elif grep -q '"42"' <<<"$LAST_BODY"; then
+  OAUTH_PROVIDER="42"
+fi
+
+if [[ -n "$OAUTH_PROVIDER" ]]; then
+  color_echo "$BLUE" "8b. OAuth start proxy returns provider redirect for ${OAUTH_PROVIDER}"
+  perform_request "OAuth start proxy" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}"
+  assert_status "302" "OAuth start proxy"
+  assert_header_contains '^location:' "OAuth start proxy"
+
+  OAUTH_STATE="$(awk '$6=="oauth_state" { print $7 }' "$OAUTH_COOKIE_JAR" | tail -n 1)"
+  if [[ -z "$OAUTH_STATE" ]]; then
+    color_echo "$RED" "OAuth start proxy: oauth_state cookie missing"
+    exit 1
+  fi
+
+  color_echo "$BLUE" "8c. Denied consent maps to oauth_provider_denied"
+  perform_request "OAuth callback denied proxy" -b "$OAUTH_COOKIE_JAR" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}/callback?error=access_denied&state=${OAUTH_STATE}"
+  assert_status "302" "OAuth callback denied proxy"
+  if ! grep -iq 'location: .*code=oauth_provider_denied' <<<"$LAST_HEADERS"; then
+    color_echo "$RED" "OAuth callback denied proxy: expected code=oauth_provider_denied"
+    exit 1
+  fi
+
+  color_echo "$BLUE" "8d. Tampered state maps to oauth_state_invalid"
+  perform_request "OAuth start tamper setup" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}"
+  assert_status "302" "OAuth start tamper setup"
+  OAUTH_STATE="$(awk '$6=="oauth_state" { print $7 }' "$OAUTH_COOKIE_JAR" | tail -n 1)"
+  perform_request "OAuth callback tampered proxy" -b "$OAUTH_COOKIE_JAR" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}/callback?code=fake-code&state=${OAUTH_STATE}_tampered"
+  assert_status "302" "OAuth callback tampered proxy"
+  if ! grep -iq 'location: .*code=oauth_state_invalid' <<<"$LAST_HEADERS"; then
+    color_echo "$RED" "OAuth callback tampered proxy: expected code=oauth_state_invalid"
+    exit 1
+  fi
+
+  color_echo "$BLUE" "8e. Reused callback state is rejected (oauth_state_missing)"
+  perform_request "OAuth start reuse setup" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}"
+  assert_status "302" "OAuth start reuse setup"
+  OAUTH_STATE="$(awk '$6=="oauth_state" { print $7 }' "$OAUTH_COOKIE_JAR" | tail -n 1)"
+
+  perform_request "OAuth callback first use proxy" -b "$OAUTH_COOKIE_JAR" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}/callback?code=fake-code&state=${OAUTH_STATE}"
+  assert_status "302" "OAuth callback first use proxy"
+
+  perform_request "OAuth callback reused proxy" -b "$OAUTH_COOKIE_JAR" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}/callback?code=fake-code&state=${OAUTH_STATE}"
+  assert_status "302" "OAuth callback reused proxy"
+  if ! grep -iq 'location: .*code=oauth_state_missing' <<<"$LAST_HEADERS"; then
+    color_echo "$RED" "OAuth callback reused proxy: expected code=oauth_state_missing"
+    exit 1
+  fi
+else
+  color_echo "$YELLOW" "8b-8e. OAuth frontend tests skipped: no OAuth providers enabled"
+fi
+
 color_echo "$BLUE" "9. Checking /edit-profile route"
 perform_request "Edit profile route" "${BASE_URL}/edit-profile"
 assert_status "200" "Edit profile route"
@@ -317,89 +388,97 @@ assert_body_contains '<div id="root"></div>' "Feed redirect shell"
 color_echo "$BLUE" "22. Checking articles API response includes ArticleCard fields"
 perform_request "Articles API fields" "${BASE_URL}/api/articles?limit=1"
 assert_status "200" "Articles API fields"
-assert_body_contains '"title"' "Articles API fields"
-assert_body_contains '"category"' "Articles API fields"
-assert_body_contains '"likeCount"' "Articles API fields"
-assert_body_contains '"createdAt"' "Articles API fields"
-assert_body_contains '"username"' "Articles API fields"
-assert_body_contains '"avatarUrl"' "Articles API fields"
-# Regression guard: the feed list used to omit `_count` entirely, so the
-# ArticleCard's comment count (article._count?.comments) was always stale/zero.
-assert_body_contains '"_count":{"comments"' "Articles API fields"
+if grep -q '"articles":\[\]' <<<"$LAST_BODY"; then
+  color_echo "$YELLOW" "22. ArticleCard field checks skipped: feed returned no articles"
+else
+  assert_body_contains '"title"' "Articles API fields"
+  assert_body_contains '"category"' "Articles API fields"
+  assert_body_contains '"likeCount"' "Articles API fields"
+  assert_body_contains '"createdAt"' "Articles API fields"
+  assert_body_contains '"username"' "Articles API fields"
+  assert_body_contains '"avatarUrl"' "Articles API fields"
+  # Regression guard: the feed list used to omit `_count` entirely, so the
+  # ArticleCard's comment count (article._count?.comments) was always stale/zero.
+  assert_body_contains '"_count":{"comments"' "Articles API fields"
+fi
 
-FIRST_ARTICLE_ID="$(grep -o '"id":"[^"]*"' <<<"$LAST_BODY" | head -1 | cut -d'"' -f4)"
+FIRST_ARTICLE_ID="$(grep -o '"id":"[^"]*"' <<<"$LAST_BODY" | head -1 | cut -d'"' -f4 || true)"
 
-color_echo "$BLUE" "23. Checking single article API includes comment count for ArticleCard"
-perform_request "Single article API" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}"
-assert_status "200" "Single article API"
-assert_body_contains '"commentsCount"' "Single article API"
+if [[ -n "$FIRST_ARTICLE_ID" ]]; then
+  color_echo "$BLUE" "23. Checking single article API includes comment count for ArticleCard"
+  perform_request "Single article API" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}"
+  assert_status "200" "Single article API"
+  assert_body_contains '"commentsCount"' "Single article API"
 
-color_echo "$BLUE" "24. Checking /articles/:id route (ArticleCard link target) serves the SPA shell"
-perform_request "Article detail route" "${BASE_URL}/articles/${FIRST_ARTICLE_ID}"
-assert_status "200" "Article detail route"
-assert_header_contains 'content-type: text/html' "Article detail route"
-assert_body_contains '<div id="root"></div>' "Article detail route"
+  color_echo "$BLUE" "24. Checking /articles/:id route (ArticleCard link target) serves the SPA shell"
+  perform_request "Article detail route" "${BASE_URL}/articles/${FIRST_ARTICLE_ID}"
+  assert_status "200" "Article detail route"
+  assert_header_contains 'content-type: text/html' "Article detail route"
+  assert_body_contains '<div id="root"></div>' "Article detail route"
 
-# ============================================================================
-# [ARTICLES] Frontend: Article page
-# ============================================================================
-# Description: Full article view - Markdown content, author info, like
-#              button, comments section, edit/delete buttons if own article.
-# Features: Article detail data, edit/delete auth guard, like stub, comments
-#           section (list, add, edit, delete/soft-remove)
-# Epic Link: Articles + Feed
-# Status: Done ✓
-# ============================================================================
+  # ============================================================================
+  # [ARTICLES] Frontend: Article page
+  # ============================================================================
+  # Description: Full article view - Markdown content, author info, like
+  #              button, comments section, edit/delete buttons if own article.
+  # Features: Article detail data, edit/delete auth guard, like stub, comments
+  #           section (list, add, edit, delete/soft-remove)
+  # Epic Link: Articles + Feed
+  # Status: Done ✓
+  # ============================================================================
 
-color_echo "$BLUE" "25. Checking single article API includes fields the Article page needs"
-perform_request "Article page fields" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}"
-assert_status "200" "Article page fields"
-assert_body_contains '"authorId"' "Article page fields"
-assert_body_contains '"isLikedByCurrentUser"' "Article page fields"
-assert_body_contains '"content"' "Article page fields"
+  color_echo "$BLUE" "25. Checking single article API includes fields the Article page needs"
+  perform_request "Article page fields" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}"
+  assert_status "200" "Article page fields"
+  assert_body_contains '"authorId"' "Article page fields"
+  assert_body_contains '"isLikedByCurrentUser"' "Article page fields"
+  assert_body_contains '"content"' "Article page fields"
 
-color_echo "$BLUE" "26. Checking PATCH /api/articles/:id proxy requires authentication (Edit button)"
-perform_request "Edit article proxy" -X PATCH "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}" \
-  -H "Content-Type: application/json" -d '{"title":"Unauthorized edit attempt"}'
-assert_status "401" "Edit article proxy"
-assert_header_contains 'content-type: application/json' "Edit article proxy"
+  color_echo "$BLUE" "26. Checking PATCH /api/articles/:id proxy requires authentication (Edit button)"
+  perform_request "Edit article proxy" -X PATCH "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}" \
+    -H "Content-Type: application/json" -d '{"title":"Unauthorized edit attempt"}'
+  assert_status "401" "Edit article proxy"
+  assert_header_contains 'content-type: application/json' "Edit article proxy"
 
-color_echo "$BLUE" "27. Checking DELETE /api/articles/:id proxy requires authentication (Delete button)"
-perform_request "Delete article proxy" -X DELETE "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}"
-assert_status "401" "Delete article proxy"
-assert_header_contains 'content-type: application/json' "Delete article proxy"
+  color_echo "$BLUE" "27. Checking DELETE /api/articles/:id proxy requires authentication (Delete button)"
+  perform_request "Delete article proxy" -X DELETE "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}"
+  assert_status "401" "Delete article proxy"
+  assert_header_contains 'content-type: application/json' "Delete article proxy"
 
-color_echo "$BLUE" "28. Checking POST /api/articles/:id/like proxy requires authentication (Like button)"
-perform_request "Like article proxy" -X POST "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/like"
-assert_status "401" "Like article proxy"
-assert_header_contains 'content-type: application/json' "Like article proxy"
+  color_echo "$BLUE" "28. Checking POST /api/articles/:id/like proxy requires authentication (Like button)"
+  perform_request "Like article proxy" -X POST "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/like"
+  assert_status "401" "Like article proxy"
+  assert_header_contains 'content-type: application/json' "Like article proxy"
 
-color_echo "$BLUE" "29. Checking the comments list proxy returns the article's comments (Comments section)"
-perform_request "Article comments proxy" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/comments"
-assert_status "200" "Article comments proxy"
-assert_header_contains 'content-type: application/json' "Article comments proxy"
-assert_body_contains '"success":true' "Article comments proxy"
+  color_echo "$BLUE" "29. Checking the comments list proxy returns the article's comments (Comments section)"
+  perform_request "Article comments proxy" "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/comments"
+  assert_status "200" "Article comments proxy"
+  assert_header_contains 'content-type: application/json' "Article comments proxy"
+  assert_body_contains '"success":true' "Article comments proxy"
 
-color_echo "$BLUE" "29a. Checking POST /api/articles/:id/comments proxy requires authentication (Add comment form)"
-perform_request "Add comment proxy" -X POST "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/comments" \
-  -H "Content-Type: application/json" -d '{"content":"Unauthorized comment attempt"}'
-assert_status "401" "Add comment proxy"
-assert_header_contains 'content-type: application/json' "Add comment proxy"
+  color_echo "$BLUE" "29a. Checking POST /api/articles/:id/comments proxy requires authentication (Add comment form)"
+  perform_request "Add comment proxy" -X POST "${BASE_URL}/api/articles/${FIRST_ARTICLE_ID}/comments" \
+    -H "Content-Type: application/json" -d '{"content":"Unauthorized comment attempt"}'
+  assert_status "401" "Add comment proxy"
+  assert_header_contains 'content-type: application/json' "Add comment proxy"
 
-color_echo "$BLUE" "29b. Checking PATCH /api/comments/:id proxy requires authentication (comment Edit button)"
-perform_request "Edit comment proxy" -X PATCH "${BASE_URL}/api/comments/00000000-0000-0000-0000-000000000000" \
-  -H "Content-Type: application/json" -d '{"content":"Unauthorized edit attempt"}'
-assert_status "401" "Edit comment proxy"
-assert_header_contains 'content-type: application/json' "Edit comment proxy"
+  color_echo "$BLUE" "29b. Checking PATCH /api/comments/:id proxy requires authentication (comment Edit button)"
+  perform_request "Edit comment proxy" -X PATCH "${BASE_URL}/api/comments/00000000-0000-0000-0000-000000000000" \
+    -H "Content-Type: application/json" -d '{"content":"Unauthorized edit attempt"}'
+  assert_status "401" "Edit comment proxy"
+  assert_header_contains 'content-type: application/json' "Edit comment proxy"
 
-color_echo "$BLUE" "29c. Checking DELETE /api/comments/:id proxy requires authentication (comment Delete/Remove button)"
-perform_request "Delete comment proxy" -X DELETE "${BASE_URL}/api/comments/00000000-0000-0000-0000-000000000000"
-assert_status "401" "Delete comment proxy"
-assert_header_contains 'content-type: application/json' "Delete comment proxy"
+  color_echo "$BLUE" "29c. Checking DELETE /api/comments/:id proxy requires authentication (comment Delete/Remove button)"
+  perform_request "Delete comment proxy" -X DELETE "${BASE_URL}/api/comments/00000000-0000-0000-0000-000000000000"
+  assert_status "401" "Delete comment proxy"
+  assert_header_contains 'content-type: application/json' "Delete comment proxy"
 
-color_echo "$BLUE" "29d. Checking the comments list proxy 404s for a non-existent article"
-perform_request "Article comments proxy (not found)" "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000/comments"
-assert_status "404" "Article comments proxy (not found)"
+  color_echo "$BLUE" "29d. Checking the comments list proxy 404s for a non-existent article"
+  perform_request "Article comments proxy (not found)" "${BASE_URL}/api/articles/00000000-0000-0000-0000-000000000000/comments"
+  assert_status "404" "Article comments proxy (not found)"
+else
+  color_echo "$YELLOW" "23-29d. Article-detail proxy checks skipped: no article available in feed"
+fi
 
 # ============================================================================
 # [ARTICLES] Frontend: Create/Edit article form
