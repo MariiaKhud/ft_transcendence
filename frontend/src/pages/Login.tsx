@@ -105,6 +105,30 @@ export const Login = () => {
     setOAuthLoadingProvider(null)
   }, [location.pathname, location.search])
 
+  // Browser back/forward cache can restore the old component state after
+  // returning from OAuth provider pages. Reset loading when page becomes active.
+  useEffect(() => {
+    const resetOAuthLoading = () => {
+      setOAuthLoadingProvider(null)
+    }
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        resetOAuthLoading()
+      }
+    }
+
+    window.addEventListener('pageshow', resetOAuthLoading)
+    window.addEventListener('focus', resetOAuthLoading)
+    document.addEventListener('visibilitychange', onVisibilityChange)
+
+    return () => {
+      window.removeEventListener('pageshow', resetOAuthLoading)
+      window.removeEventListener('focus', resetOAuthLoading)
+      document.removeEventListener('visibilitychange', onVisibilityChange)
+    }
+  }, [])
+
   useEffect(() => {
     let cancelled = false
 
