@@ -28,6 +28,7 @@ const router = Router()
 const OAUTH_ERROR_CODE_PARAM = 'code'
 const OAUTH_STATE_COOKIE_NAME = 'oauth_state'
 const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000
+// Fallback codes used when callback payload is malformed or passport fails unexpectedly.
 const OAUTH_CALLBACK_INVALID_CODE = 'oauth_callback_invalid'
 const OAUTH_PROFILE_INVALID_CODE = 'oauth_profile_invalid'
 
@@ -42,6 +43,7 @@ const redirectWithError = (res: Response, baseUrl: string, code: string) => {
 const redirectOAuthFailure = (res: Response, baseUrl: string, code: string) => {
   // Clear any auth cookies so failed OAuth callbacks cannot leave partial session state.
   clearAuthCookies(res)
+  // Keep frontend behavior consistent by always redirecting with a compact error code.
   redirectWithError(res, baseUrl, code)
 }
 
@@ -275,6 +277,7 @@ const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknow
         return
       }
 
+      // Resolve to a local user via linked provider account, verified email, or safe auto-create.
       const resolvedUser = await resolveOAuthUser(user)
 
       // Reuse the same cookie + CSRF session model as password login.
@@ -293,6 +296,7 @@ const oauthCallbackHandler = (req: Request, res: Response, next: (error?: unknow
         return
       }
 
+      // Any unexpected callback failure gets a generic safe code.
       redirectOAuthFailure(res, oauthConfig.errorRedirect, OAUTH_CALLBACK_INVALID_CODE)
     }
   })(req, res, next)
