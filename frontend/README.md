@@ -58,6 +58,7 @@ Default behavior:
 - Checks `/`, `/login`, `/register`, `/feed`, `/profile/:username`, `/privacy-policy`, and unknown route fallback
 - Checks API proxy via `/api/auth/me`
 - Checks users proxy path via `/api/users/smoke_user`
+- Checks OAuth proxy flow (`/api/auth/oauth/providers`, start redirect, denied consent, tampered state, reused state)
 - Runs `npm run build`
 
 Optional env overrides:
@@ -81,6 +82,16 @@ npm run test:frontend
   - Default: `/api`
   - Recommended: keep this as `/api` so the browser stays same-origin and auth cookies work consistently on refresh
   - When set, `src/api/client.ts` uses this as base URL
+
+OAuth frontend behavior depends on backend variables in root or backend env:
+
+- `OAUTH_*_CLIENT_ID`
+- `OAUTH_*_CLIENT_SECRET`
+- `OAUTH_*_CALLBACK_URL`
+- `OAUTH_SUCCESS_REDIRECT`
+- `OAUTH_ERROR_REDIRECT`
+
+Frontend discovers enabled providers from backend at `GET /api/auth/oauth/providers`.
 
 ## API Client
 
@@ -270,6 +281,69 @@ Current auth UX behavior:
 - Logout redirects users to `/login` from profile/edit flows.
 - `EditProfile` redirects unauthenticated access to `/login`.
 - Login/Register forms show a short password hint: `8-72 chars, use lowercase, uppercase, and digits.`
+
+## OAuth Login UX
+
+OAuth providers currently supported in the login page:
+
+- Google
+- GitHub
+- 42
+
+Frontend OAuth behavior:
+
+1. `Login` page calls `GET /api/auth/oauth/providers` and enables only configured providers.
+2. Clicking provider button sends browser to `GET /api/auth/oauth/:provider`.
+3. Callback results are returned to `/login?code=...` on failure or `/` on success.
+4. Login page maps known error codes to user-friendly messages.
+
+Handled OAuth error codes in UI:
+
+- `oauth_provider_denied`
+- `oauth_state_missing`
+- `oauth_state_invalid`
+- `oauth_email_missing`
+- `oauth_profile_invalid`
+- `oauth_account_conflict`
+- `oauth_callback_invalid`
+- `oauth_access_token_failed`
+- `oauth_redirect_uri_mismatch`
+- `oauth_user_not_found`
+- `oauth_provider_unavailable`
+
+Resilience behavior:
+
+- OAuth loading state is reset when users return from provider pages (back/forward cache or visibility events), so buttons do not stay stuck.
+
+## OAuth Evaluator Evidence (Frontend)
+
+Use these checks through the HTTPS frontend origin:
+
+1. Providers list available via proxy:
+
+```bash
+curl -k -i https://localhost:8443/api/auth/oauth/providers
+```
+
+2. OAuth start returns redirect:
+
+```bash
+curl -k -i -c /tmp/oauth.cookies https://localhost:8443/api/auth/oauth/github
+```
+
+3. Denied consent should result in `code=oauth_provider_denied`.
+4. Tampered state should result in `code=oauth_state_invalid`.
+5. Reused callback state should result in `code=oauth_state_missing`.
+
+Automated coverage lives in:
+
+- `scripts/test-frontend-flow.sh`
+
+Run:
+
+```bash
+npm run test:frontend
+```
 
 ## Project Structure
 
