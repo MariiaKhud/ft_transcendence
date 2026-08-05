@@ -333,7 +333,7 @@ This section tracks only modules that are implemented and currently claimable.
 | Web             | Advanced search functionality (filters, sorting, pagination)        | Minor | 1      |
 | Web             | Allow users to interact with other users (chat + profile + friends) | Major | 2      |
 | User Management | Standard user management and authentication                         | Major | 2      |
-| User Management | OAuth 2.0 remote authentication (Google/GitHub/42)                  | Minor | 1      |
+| User Management | OAuth 2.0 remote authentication (GitHub, Google, 42)                | Minor | 1      |
 | Web             | File upload and management system                                   | Minor | 1      |
 
 **Claimed subtotal: 10 points**
@@ -352,13 +352,14 @@ Evidence used for this checklist:
 
 ### Planned Modules to Reach 14 (from team summary)
 
-| Category                   | Module                                                      | Type  | Points | Current Status |
-|----------------------------|-------------------------------------------------------------|-------|--------|----------------|
-| User Management            | Advanced permissions system                                 | Major | 2      | In progress    |
-| Web                        | Complete notification system (create/update/delete actions) | Minor | 1      | In progress    |
-| Gaming and User Experience | Gamification system (persistent, at least 3 features)       | Minor | 1      | In progress    |
+| Category                   | Module                                                          | Type  | Points | Current Status |
+|----------------------------|-----------------------------------------------------------------|-------|--------|----------------|
+| User Management            | Advanced permissions system                                     | Major | 2      | In progress    |
+| Web                        | Complete notification system (create/update/delete actions)     | Minor | 1      | In progress    |
+| Gaming and User Experience | Gamification system (persistent, at least 3 features)           | Minor | 1      | In progress    |
+| Web                        | PWA support (installable app, service worker, offline fallback) | Minor | 1      | Planned        |
 
-Optional modules (not required for this 14-point plan): Progressive Web App (PWA), real-time WebSockets, i18n, browser compatibility.
+Optional modules (not required for this 14-point plan): real-time WebSockets, i18n, browser compatibility.
 
 ### Point Summary
 
