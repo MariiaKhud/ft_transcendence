@@ -237,16 +237,32 @@ OAUTH_SUCCESS_REDIRECT=https://localhost:8443/
 OAUTH_ERROR_REDIRECT=https://localhost:8443/login
 ```
 
-### 3. Start the project
+### 3. Generate a local HTTPS certificate
+
+For local browser testing, generate a localhost certificate and install the local CA where supported:
+
+```bash
+make setup-local-cert
+```
+
+Then restart nginx:
+
+```bash
+docker compose restart nginx
+```
+
+> The setup script now bootstraps mkcert automatically when needed, generates the certificate files locally, and keeps them out of Git. If your browser still warns about the certificate, trust the CA from ~/.mkcert/rootCA.pem in your browser or OS certificate store.
+
+### 4. Start the project
 
 ```bash
 make up
 ```
 
-### 4. Open the app
+### 5. Open the app
 
-- https://localhost:8443
-- http://localhost:8080 (redirects to HTTPS)
+- http://127.0.0.1:8080
+- https://localhost:8443 (if you want the HTTPS endpoint)
 
 ## Available Commands
 

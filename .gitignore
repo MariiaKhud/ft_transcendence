@@ -46,3 +46,10 @@ Thumbs.db
 
 # Local cookie jar files (may contain auth tokens)
 cookies.txt
+
+# Local HTTPS certificates and CA artifacts (generated for development)
+nginx/certs/*.pem
+nginx/certs/*.cert
+nginx/certs/*.key
+.ngcert/
+.mkcert/
