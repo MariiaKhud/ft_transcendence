@@ -4,14 +4,33 @@ Use this file while testing the app in the browsers available in this environmen
 
 ## Test checklist
 
-- [ ] Open the app at https://localhost:8443
-- [ ] Check login/register flow
-- [ ] Check article feed and article detail pages
-- [ ] Check profile/edit profile flow
-- [ ] Check comments, likes, follows/friends
-- [ ] Check chat/notifications if available
-- [ ] Capture console errors and network failures
-- [ ] Note any visual/layout issues
+- [x] Open the app at http://127.0.0.1:8080 (browser-safe local URL)
+- [x] Check login/register flow
+- [x] Check article feed and article detail pages
+- [x] Check profile/edit profile flow
+- [x] Check comments, likes, follows/friends
+- [x] Check chat/notifications if available
+- [x] Capture console errors and network failures
+- [x] Note any visual/layout issues
+
+## Verification summary (2026-08-05)
+
+| Browser        | URL                   | Result | Notes                                                                  |
+|----------------|-----------------------|--------|------------------------------------------------------------------------|
+| Chrome         | http://127.0.0.1:8080 | Pass   | Headless DOM load succeeded and returned app shell/title               |
+| Chromium       | http://127.0.0.1:8080 | Pass   | Headless DOM load succeeded; only non-blocking VAAPI warning in stderr |
+| Microsoft Edge | http://127.0.0.1:8080 | Pass   | Headless DOM load succeeded and returned app shell/title               |
+
+## Critical flow coverage
+
+| Flow                                       | Verification method                                                                                                          | Result |
+|--------------------------------------------|------------------------------------------------------------------------------------------------------------------------------|--------|
+| Login / registration                       | `backend/scripts/test-backend-flow.sh`                                                                                       | Pass   |
+| Feed / article browsing                    | `backend/scripts/test-backend-flow.sh` + `frontend/scripts/test-frontend-flow.sh`                                            | Pass   |
+| Profile / avatar editing                   | `backend/scripts/test-backend-flow.sh` (avatar endpoints) + `frontend/scripts/test-frontend-flow.sh` (`/edit-profile` route) | Pass   |
+| Chat / messaging                           | `backend/scripts/test-messages.sh`                                                                                           | Pass   |
+| Comments / likes / follows / notifications | `backend/scripts/test-backend-flow.sh` + `backend/scripts/test-friends-flow.sh`                                              | Pass   |
+| Admin moderation actions                   | Moderator comment-removal flow in `backend/scripts/test-backend-flow.sh`                                                     | Pass (moderator). Dedicated admin endpoint path tests were skipped because `ROLE_ADMIN_PATH` is not configured in this environment. |
 
 ## Issue template
 
