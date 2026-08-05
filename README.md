@@ -333,9 +333,10 @@ This section tracks only modules that are implemented and currently claimable.
 | Web             | Advanced search functionality (filters, sorting, pagination)        | Minor | 1      |
 | Web             | Allow users to interact with other users (chat + profile + friends) | Major | 2      |
 | User Management | Standard user management and authentication                         | Major | 2      |
-| User Management | OAuth 2.0 remote authentication (Google/GitHub/42)                 | Minor | 1      |
+| User Management | OAuth 2.0 remote authentication (Google/GitHub/42)                  | Minor | 1      |
+| Web             | File upload and management system                                   | Minor | 1      |
 
-**Claimed subtotal: 9 points**
+**Claimed subtotal: 10 points**
 
 Evidence used for this checklist:
 - Email/password authentication with hashed passwords, session cookies, and `/api/auth/me`
@@ -343,6 +344,7 @@ Evidence used for this checklist:
 - OAuth callback state validation and error-code redirects
 - Account linking via `oauth_accounts` with verified-email resolution
 - Profile system (public profile page, edit profile, avatar upload/remove)
+- File upload and management system (avatar upload, validation, storage, display, delete)
 - Friends system (send/accept/decline/remove + status checks)
 - Online status backend flow (`/api/users/me/online`, friend records include `isOnline` and `lastSeenAt`)
 - Basic chat API (send/receive conversation endpoints)
@@ -353,7 +355,6 @@ Evidence used for this checklist:
 | Category                   | Module                                                      | Type  | Points | Current Status |
 |----------------------------|-------------------------------------------------------------|-------|--------|----------------|
 | User Management            | Advanced permissions system                                 | Major | 2      | In progress    |
-| Web                        | File upload and management system                           | Minor | 1      | In progress    |
 | Web                        | Complete notification system (create/update/delete actions) | Minor | 1      | In progress    |
 | Gaming and User Experience | Gamification system (persistent, at least 3 features)       | Minor | 1      | In progress    |
 
@@ -362,8 +363,8 @@ Optional modules (not required for this 14-point plan): Progressive Web App (PWA
 ### Point Summary
 
 - Mandatory target: **14 points**
-- Currently claimed: **9 points**
-- Remaining to reach target: **5 points**
+- Currently claimed: **10 points**
+- Remaining to reach target: **4 points**
 
 > Important: We only claim modules during evaluation when all required criteria in the subject are fully met and demonstrable.
 
