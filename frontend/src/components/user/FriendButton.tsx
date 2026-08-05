@@ -8,6 +8,7 @@ import {
 } from '../../api/friends';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, ClockIcon, CheckIcon, Spinner } from '@/components/ui/icons'
+import { useAuth } from '@/hooks/useAuth'
 
 interface FriendButtonProps {
   targetUserId: string;
@@ -15,6 +16,7 @@ interface FriendButtonProps {
 }
 
 export function FriendButton({ targetUserId, initialState }: FriendButtonProps) {
+  const { currentUser } = useAuth();
   const [state, setState] = useState<FriendshipState>(initialState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,6 +25,9 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
   useEffect(() => {
     setState(initialState);
   }, [initialState]);
+
+  // Hide for guests and own profile.
+  if (!currentUser || currentUser.id === targetUserId) return null;
 
   // Run action, then transition to the expected next UI state.
   async function handle(action: () => Promise<void>, nextState: FriendshipState) {
