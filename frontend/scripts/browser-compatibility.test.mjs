@@ -15,3 +15,9 @@ test('shared stylesheet provides safe fallback colors for older browsers', () =>
   assert.match(css, /--border:\s*#e5e7eb;/);
   assert.match(css, /@supports \(color: oklch\(1 0 0\)\)/);
 });
+
+test('shared stylesheet includes responsive and browser-safe base rules', () => {
+  assert.match(css, /box-sizing:\s*border-box;/);
+  assert.match(css, /overflow-x:\s*hidden;/);
+  assert.match(css, /max-width:\s*100%;/);
+});
