@@ -264,6 +264,27 @@ make up
 - http://127.0.0.1:8080
 - https://localhost:8443 (if you want the HTTPS endpoint)
 
+## Browser Compatibility
+
+Tested browsers in this environment:
+
+- Google Chrome
+- Chromium
+- Microsoft Edge
+
+Current compatibility status:
+
+- Critical user flows were verified against the local app URL at `http://127.0.0.1:8080`.
+- Login/registration, feed/article browsing, profile/avatar editing, chat/messaging, and follows/notifications were re-tested successfully.
+- Moderator moderation behavior was verified through the automated backend flow.
+
+Known limitations:
+
+- `https://localhost:8443` can still show a certificate warning until the local mkcert CA is trusted in the OS or browser certificate store.
+- In this environment, `http://127.0.0.1:8080` is the recommended browser URL for manual testing; `localhost` may be less reliable depending on local browser/network setup.
+- Firefox and Safari were not available in this environment, so they were not part of the verified browser matrix.
+- Dedicated admin endpoint-path checks depend on local environment configuration (`ROLE_ADMIN_PATH`) and were not fully exercised here.
+
 ## Available Commands
 
 ```bash
@@ -342,17 +363,18 @@ This section tracks only modules that are implemented and currently claimable.
 
 ### Claimed Modules
 
-| Category        | Module                                                              | Type  | Points |
-|-----------------|---------------------------------------------------------------------|-------|--------|
-| Web             | Use a framework for both frontend and backend                       | Major | 2      |
-| Web             | Use an ORM for the database                                         | Minor | 1      |
-| Web             | Advanced search functionality (filters, sorting, pagination)        | Minor | 1      |
-| Web             | Allow users to interact with other users (chat + profile + friends) | Major | 2      |
-| User Management | Standard user management and authentication                         | Major | 2      |
-| User Management | OAuth 2.0 remote authentication (GitHub, Google, 42)                | Minor | 1      |
-| Web             | File upload and management system                                   | Minor | 1      |
+| Category                               | Module                                                              | Type  | Points |
+|----------------------------------------|---------------------------------------------------------------------|-------|--------|
+| Web                                    | Use a framework for both frontend and backend                       | Major | 2      |
+| Web                                    | Use an ORM for the database                                         | Minor | 1      |
+| Web                                    | Advanced search functionality (filters, sorting, pagination)        | Minor | 1      |
+| Web                                    | Allow users to interact with other users (chat + profile + friends) | Major | 2      |
+| User Management                        | Standard user management and authentication                         | Major | 2      |
+| User Management                        | OAuth 2.0 remote authentication (GitHub, Google, 42)                | Minor | 1      |
+| Web                                    | File upload and management system                                   | Minor | 1      |
+| Accessibility and Internationalization | Support for additional browsers                                     | Minor | 1      |
 
-**Claimed subtotal: 10 points**
+**Claimed subtotal: 11 points**
 
 Evidence used for this checklist:
 - Email/password authentication with hashed passwords, session cookies, and `/api/auth/me`
@@ -365,6 +387,8 @@ Evidence used for this checklist:
 - Online status backend flow (`/api/users/me/online`, friend records include `isOnline` and `lastSeenAt`)
 - Basic chat API (send/receive conversation endpoints)
 - Backend integration scripts for friends/messages/follows flows
+- Browser compatibility verification across Chrome, Chromium, and Microsoft Edge
+- Browser compatibility documentation and known limitations in the README
 
 ### Planned Modules to Reach 14 (from team summary)
 
@@ -375,13 +399,13 @@ Evidence used for this checklist:
 | Gaming and User Experience | Gamification system (persistent, at least 3 features)           | Minor | 1      | In progress    |
 | Web                        | PWA support (installable app, service worker, offline fallback) | Minor | 1      | Planned        |
 
-Optional modules (not required for this 14-point plan): real-time WebSockets, i18n, browser compatibility.
+Optional modules (not required for this 14-point plan): real-time WebSockets, i18n.
 
 ### Point Summary
 
 - Mandatory target: **14 points**
-- Currently claimed: **10 points**
-- Remaining to reach target: **4 points**
+- Currently claimed: **11 points**
+- Remaining to reach target: **3 points**
 
 > Important: We only claim modules during evaluation when all required criteria in the subject are fully met and demonstrable.
 
