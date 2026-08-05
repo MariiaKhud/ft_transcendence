@@ -45,10 +45,12 @@ const App = () => {
             Codamium
           </Link>
 
-          {/* User search. */}
+          {/* User search. Keyed on the current user so logging out (or
+              switching accounts) remounts it with a clean slate instead of
+              leaving the previous session's search term on screen. */}
           <div className="flex min-w-0 flex-1 justify-center">
             <div className="w-full max-w-sm">
-              <UserSearchBar />
+              <UserSearchBar key={currentUser?.id ?? 'guest'} />
             </div>
           </div>
 
