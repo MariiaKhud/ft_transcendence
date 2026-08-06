@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import * as friendsService from '../services/friends.service.js';
 import { AppError } from '../middleware/error.middleware.js';
+import { sendSuccess, sendError } from '../utils/api-response.js'
 
 export async function sendFriendRequest(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return res.status(401).json({ data: null, error: 'Unauthorized' });
+      return sendError(res, new Error('Unauthorized'), 401);
     }
 
     const requesterId = req.user.userId;
@@ -13,28 +14,24 @@ export async function sendFriendRequest(req: Request, res: Response) {
 
     const friendship = await friendsService.sendFriendRequest(requesterId, addresseeId);
 
-    res.status(201).json({ data: friendship, error: null });
-  } catch (err: any) {
-    const status = err instanceof AppError ? err.statusCode : 500;
-    res.status(status).json({ data: null, error: err.message });
+    return sendSuccess(res, 201, friendship);
+  } catch (err) {
+    return sendError(res, err);
   }
 }
 
 export async function respondToFriendRequest(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return res.status(401).json({ data: null, error: 'Unauthorized' });
+      return sendError(res, new Error('Unauthorized'), 401);
     }
 
-    const addresseeId = req.user.userId;      // the person responding (must be addressee)
-    const requesterId = req.params.userId;    // the person who sent the request
-    const { action } = req.body;              // expect "ACCEPTED" or "DECLINED"
+    const addresseeId = req.user.userId;
+    const requesterId = req.params.userId;
+    const { action } = req.body;
 
     if (action !== 'ACCEPTED' && action !== 'DECLINED') {
-      return res.status(400).json({
-        data: null,
-        error: 'Action must be ACCEPTED or DECLINED',
-      });
+      throw new AppError(400, 'Action must be ACCEPTED or DECLINED');
     }
 
     const friendship = await friendsService.respondToFriendRequest(
@@ -43,76 +40,75 @@ export async function respondToFriendRequest(req: Request, res: Response) {
       action
     );
 
-    res.status(200).json({ data: friendship, error: null });
-  } catch (err: any) {
-    const status = err instanceof AppError ? err.statusCode : 400;
-    res.status(status).json({ data: null, error: err.message });
+    return sendSuccess(res, 200, friendship);
+  } catch (err) {
+    return sendError(res, err, 400);
   }
 }
 
 export async function getIncomingRequests(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return res.status(401).json({ data: null, error: 'Unauthorized' });
+      return sendError(res, new Error('Unauthorized'), 401);
     }
 
     const requests = await friendsService.getIncomingRequests(req.user.userId);
-    res.status(200).json({ data: requests, error: null });
-  } catch (err: any) {
-    const status = err instanceof AppError ? err.statusCode : 500;
-    res.status(status).json({ data: null, error: err.message });
+
+    return sendSuccess(res, 200, requests);
+  } catch (err) {
+    return sendError(res, err);
   }
 }
 
 export async function getFriends(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return res.status(401).json({ data: null, error: 'Unauthorized' });
+      return sendError(res, new Error('Unauthorized'), 401);
     }
 
     const friends = await friendsService.getFriends(req.user.userId);
-    res.status(200).json({ data: friends, error: null });
-  } catch (err: any) {
-    const status = err instanceof AppError ? err.statusCode : 500;
-    res.status(status).json({ data: null, error: err.message });
+
+    return sendSuccess(res, 200, friends);
+  } catch (err) {
+    return sendError(res, err);
   }
 }
 
 export async function removeFriend(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return res.status(401).json({ data: null, error: 'Unauthorized' });
+      return sendError(res, new Error('Unauthorized'), 401);
     }
 
     const currentUserId = req.user.userId;
     const friendId = req.params.userId;
 
     await friendsService.removeFriend(currentUserId, friendId);
-    res.status(200).json({ data: { message: 'Friend removed' }, error: null });
-  } catch (err: any) {
-    const status = err instanceof AppError ? err.statusCode : 500;
-    res.status(status).json({ data: null, error: err.message });
+
+    return sendSuccess(res, 200, { message: 'Friend removed', });
+  } catch (err) {
+    return sendError(res, err);
   }
 }
 
 export async function cancelFriendRequest(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return res.status(401).json({ data: null, error: 'Unauthorized' });
+      return sendError(res, new Error('Unauthorized'), 401);
     }
 
     await friendsService.cancelFriendRequest(req.user.userId, req.params.userId);
-    res.status(200).json({ data: { message: 'Friend request cancelled' }, error: null });
-  } catch (err: any) {
-    const status = err instanceof AppError ? err.statusCode : 500;
-    res.status(status).json({ data: null, error: err.message });
+
+    return sendSuccess(res, 200, { message: 'Friend request cancelled', });
+  } catch (err) {
+    return sendError(res, err);
   }
 }
 
 export async function getFriendshipStatus(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return res.status(401).json({ data: null, error: 'Unauthorized' });
+      return sendError(res, new Error('Unauthorized'), 401);
     }
 
     const status = await friendsService.getFriendshipStatus(
@@ -120,9 +116,8 @@ export async function getFriendshipStatus(req: Request, res: Response) {
       req.params.userId
     );
 
-    res.status(200).json({ data: status, error: null });
-  } catch (err: any) {
-    const status = err instanceof AppError ? err.statusCode : 500;
-    res.status(status).json({ data: null, error: err.message });
+    return sendSuccess(res, 200, status);
+  } catch (err) {
+    return sendError(res, err);
   }
 }
