@@ -42,6 +42,9 @@
     "termsOfService": "Умови використання",
     "githubRepo": "Репозиторій GitHub"
   },
+  "languageSwitcher": {
+    "label": "Мова"
+  },
   "nav": {
     "write": "Написати",
     "login": "Увійти",

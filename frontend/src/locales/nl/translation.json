@@ -42,6 +42,9 @@
     "termsOfService": "Servicevoorwaarden",
     "githubRepo": "GitHub-repository"
   },
+  "languageSwitcher": {
+    "label": "Taal"
+  },
   "nav": {
     "write": "Schrijven",
     "login": "Inloggen",

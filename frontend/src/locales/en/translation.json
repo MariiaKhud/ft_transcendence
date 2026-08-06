@@ -42,6 +42,9 @@
     "termsOfService": "Terms of Service",
     "githubRepo": "GitHub repo"
   },
+  "languageSwitcher": {
+    "label": "Language"
+  },
   "nav": {
     "write": "Write",
     "login": "Login",

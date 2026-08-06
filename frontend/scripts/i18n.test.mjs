@@ -16,6 +16,7 @@ const uk = JSON.parse(readFileSync(path.join(localesDir, 'uk/translation.json'),
 const i18nConfig = readFileSync(path.join(frontendRoot, 'src/lib/i18n.ts'), 'utf8');
 const mainEntry = readFileSync(path.join(frontendRoot, 'src/main.tsx'), 'utf8');
 const footer = readFileSync(path.join(frontendRoot, 'src/components/Footer.tsx'), 'utf8');
+const languageSwitcher = readFileSync(path.join(frontendRoot, 'src/components/LanguageSwitcher.tsx'), 'utf8');
 const packageJson = JSON.parse(readFileSync(path.join(frontendRoot, 'package.json'), 'utf8'));
 
 const CYRILLIC_RE = /[Ѐ-ӿ]/;
@@ -227,4 +228,89 @@ test('Privacy Policy and Terms of Service pages read their content from i18n, no
 
   assert.match(privacyPolicySource, /t\('privacyPolicy\.title'\)/);
   assert.match(termsOfServiceSource, /t\('termsOfService\.title'\)/);
+});
+
+test('LanguageSwitcher offers every supported language and calls i18n.changeLanguage', () => {
+  assert.match(languageSwitcher, /import \{ useTranslation \} from 'react-i18next'/);
+  assert.match(languageSwitcher, /void i18n\.changeLanguage\(event\.target\.value\)/);
+  assert.match(languageSwitcher, /aria-label=\{t\('languageSwitcher\.label'\)\}/);
+
+  for (const language of ['en', 'nl', 'uk']) {
+    assert.match(languageSwitcher, new RegExp(`LANGUAGE_NAMES[\\s\\S]*${language}:`));
+  }
+});
+
+test('Footer renders the language switcher on every page', () => {
+  assert.match(footer, /import \{ LanguageSwitcher \} from '@\/components\/LanguageSwitcher'/);
+  assert.match(footer, /<LanguageSwitcher \/>/);
+});
+
+test('changing the i18next language updates resolved translations and persists to localStorage', async () => {
+  // Exercises the exact mechanism LanguageSwitcher's onChange relies on
+  // (i18next-browser-languagedetector's automatic localStorage caching),
+  // using a minimal in-memory localStorage instead of a full browser/DOM.
+  const store = {};
+  const fakeWindow = {
+    localStorage: {
+      getItem: (key) => (key in store ? store[key] : null),
+      setItem: (key, value) => {
+        store[key] = String(value);
+      },
+      removeItem: (key) => {
+        delete store[key];
+      },
+    },
+    navigator: { languages: ['en-US'], language: 'en-US' },
+    document: {},
+  };
+
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  // Node 21+ defines a built-in `navigator` as a getter-only accessor
+  // property, so a plain assignment throws — redefine it instead, and
+  // restore the original descriptor afterwards.
+  const previousNavigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  globalThis.window = fakeWindow;
+  Object.defineProperty(globalThis, 'navigator', {
+    value: fakeWindow.navigator,
+    configurable: true,
+    writable: true,
+  });
+  globalThis.document = fakeWindow.document;
+
+  try {
+    // Import fresh CJS instances so this doesn't share state with any other
+    // i18next instance created elsewhere in the process.
+    const { createRequire } = await import('node:module');
+    const require = createRequire(import.meta.url);
+    delete require.cache[require.resolve('i18next')];
+    delete require.cache[require.resolve('i18next-browser-languagedetector')];
+    const i18next = require('i18next');
+    const LanguageDetector = require('i18next-browser-languagedetector');
+
+    await i18next.use(LanguageDetector).init({
+      resources: { en: { translation: en }, nl: { translation: nl }, uk: { translation: uk } },
+      supportedLngs: ['en', 'nl', 'uk'],
+      fallbackLng: 'en',
+      interpolation: { escapeValue: false },
+      detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'], lookupLocalStorage: 'i18nextLng' },
+    });
+
+    assert.equal(i18next.resolvedLanguage, 'en');
+    assert.equal(i18next.t('login.title'), en.login.title);
+
+    await i18next.changeLanguage('uk');
+
+    assert.equal(i18next.resolvedLanguage, 'uk');
+    assert.equal(i18next.t('login.title'), uk.login.title);
+    assert.equal(store.i18nextLng, 'uk', 'language choice was not cached to localStorage');
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.document = previousDocument;
+    if (previousNavigatorDescriptor) {
+      Object.defineProperty(globalThis, 'navigator', previousNavigatorDescriptor);
+    } else {
+      delete globalThis.navigator;
+    }
+  }
 });
