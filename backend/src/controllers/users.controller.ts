@@ -1,17 +1,18 @@
 import { Request, Response } from 'express';
 import * as usersService from '../services/users.service.js';
 import { AppError } from '../middleware/error.middleware.js';
+import { sendSuccess, sendError } from '../utils/api-response.js';
 
 export async function updateOnlineStatus(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return res.status(401).json({ data: null, error: 'Unauthorized' });
+      return sendError(res, new AppError(401, 'Unauthorized'));
     }
 
     await usersService.setUserOnline(req.user.userId);
-    res.status(200).json({ data: { isOnline: true }, error: null });
-  } catch (err: any) {
-    const status = err instanceof AppError ? err.statusCode : 500;
-    res.status(status).json({ data: null, error: err.message });
+
+    return sendSuccess(res, 200, { isOnline: true, });
+  } catch (err) {
+    return sendError(res, err);
   }
 }
