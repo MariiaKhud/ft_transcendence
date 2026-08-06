@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { getProfileArticles, getPublicProfile } from '@/api/users'
 import { useStore } from '@/store/store'
 import type { ProfileArticle, PublicProfile } from '@/types/profile'
@@ -41,11 +42,11 @@ const getInitials = (profile: PublicProfile) => {
 }
 
 // Show readable date like "Jun 25, 2026".
-const formatDate = (isoDate: string) => {
+const formatDate = (isoDate: string, unknownDateLabel: string) => {
   const date = new Date(isoDate)
 
   if (Number.isNaN(date.getTime())) {
-    return 'Unknown date'
+    return unknownDateLabel
   }
 
   return date.toLocaleDateString(undefined, {
@@ -56,6 +57,7 @@ const formatDate = (isoDate: string) => {
 }
 
 export const Profile = () => {
+  const { t } = useTranslation()
   // Read :username from route /profile/:username.
   const { username } = useParams<{ username: string }>()
 
@@ -80,7 +82,7 @@ export const Profile = () => {
       if (!normalizedUsername) {
         setProfile(null)
         setIsLoadingProfile(false)
-        setProfileError('Profile username is missing')
+        setProfileError(t('profile.usernameMissing'))
         return
       }
 
@@ -102,7 +104,7 @@ export const Profile = () => {
             if (error instanceof Error) {
               setProfileError(error.message)
             } else {
-              setProfileError('Unable to load profile')
+              setProfileError(t('profile.unableToLoad'))
             }
             setProfile(null)
           }
@@ -154,7 +156,7 @@ export const Profile = () => {
             if (error instanceof Error) {
               setArticlesError(error.message)
             } else {
-              setArticlesError('Unable to load articles')
+              setArticlesError(t('profile.articlesUnableToLoad'))
             }
             setArticles([])
           }
@@ -207,8 +209,8 @@ export const Profile = () => {
   if (isLoadingProfile) {
     return (
       <section className="mx-auto w-full max-w-5xl rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">Profile</p>
-        <p className="mt-4 text-slate-700">Loading profile...</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('profile.eyebrow')}</p>
+        <p className="mt-4 text-slate-700">{t('profile.loading')}</p>
       </section>
     )
   }
@@ -217,9 +219,9 @@ export const Profile = () => {
   if (profileError.length > 0 || !profile) {
     return (
       <section className="mx-auto w-full max-w-5xl rounded-2xl border border-red-200/50 bg-red-50/80 p-8 shadow-xl backdrop-blur-md">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-600">Profile</p>
-        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">Unable to load profile</h1>
-        <p className="mt-2 text-slate-700">{profileError || 'This profile does not exist or is currently unavailable.'}</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-600">{t('profile.eyebrow')}</p>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{t('profile.unableToLoad')}</h1>
+        <p className="mt-2 text-slate-700">{profileError || t('profile.unavailable')}</p>
       </section>
     )
   }
@@ -248,7 +250,7 @@ export const Profile = () => {
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">Profile</p>
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('profile.eyebrow')}</p>
               <h1 className="mt-1 break-words text-2xl font-bold tracking-tight text-slate-900 md:text-4xl">{displayName}</h1>
               <p className="break-words text-slate-600">@{profile.username}</p>
             </div>
@@ -263,7 +265,7 @@ export const Profile = () => {
                 navigate('/settings/profile')
               }}
             >
-              Edit Profile
+              {t('profile.editProfile')}
             </Button>
           ) : (
             <div className="flex flex-col items-end gap-2">
@@ -284,29 +286,29 @@ export const Profile = () => {
 
         {/* Bio text or a default message if empty. */}
         <p className="relative mt-6 break-words whitespace-pre-wrap text-slate-700">
-          {profile.bio ?? 'No bio yet. This user has not added a profile bio.'}
+          {profile.bio ?? t('profile.noBio')}
         </p>
 
         {/* Stats row: articles, followers, following, level, experience. */}
         <div className="relative mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Articles</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statArticles')}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{profile.articleCount}</p>
           </div>
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Followers</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statFollowers')}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{followerCount}</p>
           </div>
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Following</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statFollowing')}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{profile.followingCount}</p>
           </div>
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Level</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statLevel')}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{profile.level}</p>
           </div>
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Experience</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statExperience')}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{profile.experiencePoints}</p>
           </div>
         </div>
@@ -315,8 +317,8 @@ export const Profile = () => {
       {/* Badges section. */}
       <div className="rounded-3xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-slate-900">Badges</h2>
-          <span className="text-sm font-semibold text-slate-500">{profile.badges.length} collected</span>
+          <h2 className="text-2xl font-bold text-slate-900">{t('profile.badges')}</h2>
+          <span className="text-sm font-semibold text-slate-500">{t('profile.badgesCollected', { count: profile.badges.length })}</span>
         </div>
 
         <div className="mt-5 flex flex-wrap gap-3">
@@ -333,7 +335,7 @@ export const Profile = () => {
               )
             })
           ) : (
-            <p className="text-slate-600">No badges unlocked yet.</p>
+            <p className="text-slate-600">{t('profile.noBadges')}</p>
           )}
         </div>
       </div>
@@ -341,12 +343,12 @@ export const Profile = () => {
       {/* Articles section. */}
       <div className="rounded-3xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
         <div className="flex items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-slate-900">Articles</h2>
-          <span className="text-sm font-semibold text-slate-500">{articles.length} shown</span>
+          <h2 className="text-2xl font-bold text-slate-900">{t('profile.articlesHeading')}</h2>
+          <span className="text-sm font-semibold text-slate-500">{t('profile.articlesShown', { count: articles.length })}</span>
         </div>
 
         {/* Still loading. */}
-        {isLoadingArticles ? <p className="mt-5 text-slate-700">Loading articles...</p> : null}
+        {isLoadingArticles ? <p className="mt-5 text-slate-700">{t('profile.loadingArticles')}</p> : null}
 
         {/* Loading failed. */}
         {!isLoadingArticles && articlesError.length > 0 ? (
@@ -358,13 +360,13 @@ export const Profile = () => {
         {/* Backend endpoint not ready yet — show soft message instead of error. */}
         {!isLoadingArticles && articlesError.length === 0 && articlesUnavailable ? (
           <p className="mt-5 rounded-lg border border-blue-200/50 bg-blue-50/80 px-4 py-3 text-sm font-medium text-blue-700">
-            Article listing endpoint is not available yet. This section is ready and will auto-render once the API is added.
+            {t('profile.articlesUnavailable')}
           </p>
         ) : null}
 
         {/* No articles written yet. */}
         {!isLoadingArticles && articlesError.length === 0 && !articlesUnavailable && articles.length === 0 ? (
-          <p className="mt-5 text-slate-600">No published articles yet.</p>
+          <p className="mt-5 text-slate-600">{t('profile.noArticlesYet')}</p>
         ) : null}
 
         {/* Article list. */}
@@ -383,8 +385,8 @@ export const Profile = () => {
                       <p className="mt-1 text-sm text-slate-600">{article.category}</p>
                     </div>
                     <div className="text-sm text-slate-500">
-                      <p>{formatDate(article.createdAt)}</p>
-                      <p>{article.likeCount} likes</p>
+                      <p>{formatDate(article.createdAt, t('profile.unknownDate'))}</p>
+                      <p>{t('profile.likes', { count: article.likeCount })}</p>
                     </div>
                   </div>
                 </li>
@@ -395,7 +397,7 @@ export const Profile = () => {
 
         <div className="mt-6">
           <Link to="/" className="text-sm font-semibold text-purple-700 hover:text-purple-900">
-            Back to Feed
+            {t('common.backToFeed')}
           </Link>
         </div>
       </div>

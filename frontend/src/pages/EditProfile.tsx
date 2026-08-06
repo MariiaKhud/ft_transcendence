@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { Link, Navigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { deleteMyAvatar, updateMyProfile, uploadMyAvatar } from '@/api/users'
 import { useAuth } from '@/hooks/useAuth'
@@ -41,6 +42,7 @@ const MAX_FILE_SIZE_MB = 2
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 
 export const EditProfile = () => {
+  const { t } = useTranslation()
   const { hasRestoredSession, isLoading } = useAuth({ restoreOnMount: true })
 
   const currentUser = useStore((state) => {
@@ -95,12 +97,12 @@ export const EditProfile = () => {
     const trimmedDisplayName = displayName.trim()
 
     if (trimmedDisplayName.length > MAX_DISPLAY_NAME_LENGTH) {
-      setDisplayNameError(`Display name must be ${MAX_DISPLAY_NAME_LENGTH} characters or fewer`)
+      setDisplayNameError(t('editProfile.errors.displayNameMaxLength', { max: MAX_DISPLAY_NAME_LENGTH }))
       isValid = false
     }
 
     if (bio.length > MAX_BIO_LENGTH) {
-      setBioError(`Bio must be ${MAX_BIO_LENGTH} characters or fewer`)
+      setBioError(t('editProfile.errors.bioMaxLength', { max: MAX_BIO_LENGTH }))
       isValid = false
     }
 
@@ -144,14 +146,14 @@ export const EditProfile = () => {
       })
 
       setCurrentUser(updatedUser)
-      setProfileSuccess('Profile updated successfully')
+      setProfileSuccess(t('editProfile.success.profileUpdated'))
     } catch (error) {
       if (error instanceof Error) {
         applyProfileApiError(error.message)
         return
       }
 
-      setProfileFormError('Unable to connect to the server')
+      setProfileFormError(t('common.unableToConnect'))
     } finally {
       setIsSubmittingProfile(false)
     }
@@ -172,12 +174,12 @@ export const EditProfile = () => {
     }
 
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
-      setAvatarError('Please choose a JPEG, PNG, or WebP image')
+      setAvatarError(t('editProfile.errors.invalidImageType'))
       return
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
-      setAvatarError(`Image must be ${MAX_FILE_SIZE_MB} MB or smaller`)
+      setAvatarError(t('editProfile.errors.imageTooLarge', { maxMb: MAX_FILE_SIZE_MB }))
       return
     }
 
@@ -211,14 +213,14 @@ export const EditProfile = () => {
 
       setPreviewUrl(null)
       setPendingFile(null)
-      setAvatarSuccess('Avatar uploaded successfully')
+      setAvatarSuccess(t('editProfile.success.avatarUploaded'))
     } catch (error) {
       if (error instanceof Error) {
         setAvatarError(error.message)
         return
       }
 
-      setAvatarError('Unable to connect to the server')
+      setAvatarError(t('common.unableToConnect'))
     } finally {
       setIsUploadingAvatar(false)
     }
@@ -251,14 +253,14 @@ export const EditProfile = () => {
     try {
       const updatedUser = await deleteMyAvatar()
       setCurrentUser(updatedUser)
-      setAvatarSuccess('Avatar removed successfully')
+      setAvatarSuccess(t('editProfile.success.avatarRemoved'))
     } catch (error) {
       if (error instanceof Error) {
         setAvatarError(error.message)
         return
       }
 
-      setAvatarError('Unable to connect to the server')
+      setAvatarError(t('common.unableToConnect'))
     } finally {
       setIsDeletingAvatar(false)
     }
@@ -269,8 +271,8 @@ export const EditProfile = () => {
     return (
       <section className="mx-auto w-full max-w-md space-y-8">
         <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">Edit Profile</p>
-          <p className="mt-3 text-slate-700">Checking your session...</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('editProfile.title')}</p>
+          <p className="mt-3 text-slate-700">{t('common.checkingSession')}</p>
         </div>
       </section>
     )
@@ -286,13 +288,13 @@ export const EditProfile = () => {
     <section className="mx-auto w-full max-w-md space-y-8">
       {/* Page header */}
       <div className="space-y-3 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">Edit Profile</h1>
-        <p className="text-slate-600">Update your display name, bio, and avatar</p>
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900">{t('editProfile.title')}</h1>
+        <p className="text-slate-600">{t('editProfile.subtitle')}</p>
       </div>
 
       {/* ── Avatar block: preview, pick file, upload, remove ── */}
       <div className="space-y-6 rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
-        <h2 className="text-xl font-bold text-slate-900">Avatar</h2>
+        <h2 className="text-xl font-bold text-slate-900">{t('editProfile.avatarHeading')}</h2>
 
         {/* Avatar preview */}
         <div className="flex items-center gap-5">
@@ -306,9 +308,9 @@ export const EditProfile = () => {
 
           <div className="min-w-0 space-y-1">
             <p className="truncate text-sm font-semibold text-slate-900">
-              {pendingFile ? pendingFile.name : 'No file chosen'}
+              {pendingFile ? pendingFile.name : t('editProfile.noFileChosen')}
             </p>
-            <p className="text-xs text-slate-500">JPEG, PNG or WebP · max {MAX_FILE_SIZE_MB} MB</p>
+            <p className="text-xs text-slate-500">{t('editProfile.fileHint', { maxMb: MAX_FILE_SIZE_MB })}</p>
           </div>
         </div>
 
@@ -318,7 +320,7 @@ export const EditProfile = () => {
           type="file"
           accept="image/jpeg,image/png,image/webp"
           className="sr-only"
-          aria-label="Choose avatar image"
+          aria-label={t('editProfile.chooseAvatarAria')}
           onChange={handleFileChange}
         />
 
@@ -331,7 +333,7 @@ export const EditProfile = () => {
             className="rounded-lg border border-purple-200 bg-white/70 px-4 py-2 text-sm font-semibold text-purple-700 transition-all hover:border-purple-300 hover:bg-white disabled:opacity-50"
             disabled={isUploadingAvatar || isDeletingAvatar}
           >
-            Choose image
+            {t('editProfile.chooseImage')}
           </button>
 
           {/* Show upload button only when a file is pending. */}
@@ -343,7 +345,7 @@ export const EditProfile = () => {
                 disabled={isUploadingAvatar}
                 className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50"
               >
-                {isUploadingAvatar ? 'Uploading...' : 'Upload'}
+                {isUploadingAvatar ? t('editProfile.uploading') : t('editProfile.upload')}
               </Button>
 
               <button
@@ -352,7 +354,7 @@ export const EditProfile = () => {
                 disabled={isUploadingAvatar}
                 className="rounded-lg border border-slate-200 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white disabled:opacity-50"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </>
           ) : null}
@@ -365,7 +367,7 @@ export const EditProfile = () => {
               disabled={isDeletingAvatar}
               className="rounded-lg border border-red-200 bg-red-50/70 px-4 py-2 text-sm font-semibold text-red-600 transition-all hover:bg-red-100 disabled:opacity-50"
             >
-              {isDeletingAvatar ? 'Removing...' : 'Remove avatar'}
+              {isDeletingAvatar ? t('editProfile.removing') : t('editProfile.removeAvatar')}
             </button>
           ) : null}
         </div>
@@ -389,11 +391,11 @@ export const EditProfile = () => {
         onSubmit={handleProfileSubmit}
         noValidate
       >
-        <h2 className="text-xl font-bold text-slate-900">Profile Details</h2>
+        <h2 className="text-xl font-bold text-slate-900">{t('editProfile.detailsHeading')}</h2>
 
         <div className="space-y-2">
           <label htmlFor="displayName" className="block text-sm font-semibold text-slate-900">
-            Display Name
+            {t('editProfile.displayNameLabel')}
           </label>
           <input
             id="displayName"
@@ -406,10 +408,10 @@ export const EditProfile = () => {
             }}
             maxLength={MAX_DISPLAY_NAME_LENGTH}
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
-            placeholder="Your display name (optional)"
+            placeholder={t('editProfile.displayNamePlaceholder')}
           />
           <p className="text-right text-xs text-slate-400">
-            {displayName.length} / {MAX_DISPLAY_NAME_LENGTH}
+            {t('common.counter', { count: displayName.length, max: MAX_DISPLAY_NAME_LENGTH })}
           </p>
           {displayNameError.length > 0 ? (
             <p className="text-xs font-medium text-red-500">{displayNameError}</p>
@@ -418,7 +420,7 @@ export const EditProfile = () => {
 
         <div className="space-y-2">
           <label htmlFor="bio" className="block text-sm font-semibold text-slate-900">
-            Bio
+            {t('editProfile.bioLabel')}
           </label>
           <textarea
             id="bio"
@@ -430,10 +432,10 @@ export const EditProfile = () => {
             }}
             maxLength={MAX_BIO_LENGTH}
             className="w-full resize-none rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
-            placeholder="Tell people a little about yourself (optional)"
+            placeholder={t('editProfile.bioPlaceholder')}
           />
           <p className="text-right text-xs text-slate-400">
-            {bio.length} / {MAX_BIO_LENGTH}
+            {t('common.counter', { count: bio.length, max: MAX_BIO_LENGTH })}
           </p>
           {bioError.length > 0 ? <p className="text-xs font-medium text-red-500">{bioError}</p> : null}
         </div>
@@ -455,7 +457,7 @@ export const EditProfile = () => {
           disabled={isSubmittingProfile}
           className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 py-3 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50"
         >
-          {isSubmittingProfile ? 'Saving...' : 'Save Changes'}
+          {isSubmittingProfile ? t('common.saving') : t('editProfile.saveChanges')}
         </Button>
 
         <p className="text-center text-sm text-slate-600">
@@ -463,7 +465,7 @@ export const EditProfile = () => {
             to={`/profile/${currentUser.username}`}
             className="font-semibold text-purple-700 hover:text-purple-900"
           >
-            ← Back to your profile
+            {t('editProfile.backToProfile')}
           </Link>
         </p>
       </form>

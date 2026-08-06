@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
 
-const PASSWORD_HELP_TEXT = '8-72 chars, use lowercase, uppercase, and digits'
 const OAUTH_PROVIDERS = [
   { key: 'google', label: 'Google' },
   { key: 'github', label: 'GitHub' },
@@ -22,33 +23,26 @@ const validateEmail = (email: string) => {
   return emailRegex.test(email)
 }
 
-const getOAuthErrorMessage = (code: string) => {
-  switch (code) {
-    case 'oauth_provider_denied':
-      return 'You canceled OAuth sign in. Please try again and approve access.'
-    case 'oauth_state_missing':
-      return 'Your login session expired. Please start OAuth login again.'
-    case 'oauth_state_invalid':
-      return 'OAuth validation failed. Please retry login from the start.'
-    case 'oauth_email_missing':
-      return 'This provider did not return an email address. Use another provider or email/password login.'
-    case 'oauth_profile_invalid':
-      return 'We could not validate your OAuth profile. Please try a different account or provider.'
-    case 'oauth_account_conflict':
-      return 'This OAuth account is linked to a different user. Sign in with your original method.'
-    case 'oauth_callback_invalid':
-      return 'OAuth callback failed. Please try again.'
-    case 'oauth_access_token_failed':
-      return 'OAuth token exchange failed. Check provider app settings and try again.'
-    case 'oauth_redirect_uri_mismatch':
-      return 'OAuth redirect URI mismatch. Ensure provider callback URL exactly matches this app callback URL.'
-    case 'oauth_user_not_found':
-      return 'We could not find your OAuth user profile. Please try again.'
-    case 'oauth_provider_unavailable':
-      return 'This OAuth provider is not available right now. Try another provider or sign in with email/password.'
-    default:
-      return ''
+const OAUTH_ERROR_CODES = new Set([
+  'oauth_provider_denied',
+  'oauth_state_missing',
+  'oauth_state_invalid',
+  'oauth_email_missing',
+  'oauth_profile_invalid',
+  'oauth_account_conflict',
+  'oauth_callback_invalid',
+  'oauth_access_token_failed',
+  'oauth_redirect_uri_mismatch',
+  'oauth_user_not_found',
+  'oauth_provider_unavailable',
+])
+
+const getOAuthErrorMessage = (t: TFunction, code: string) => {
+  if (!OAUTH_ERROR_CODES.has(code)) {
+    return ''
   }
+
+  return t(`login.oauthErrors.${code}`)
 }
 
 const getOAuthProviderIcon = (provider: OAuthProviderKey): ReactNode => {
@@ -95,6 +89,7 @@ const getOAuthProviderIcon = (provider: OAuthProviderKey): ReactNode => {
 
 export const Login = () => {
   // throw new Error('TEMP_TEST_ERROR')  // Comment this out to test 500 error page
+  const { t } = useTranslation()
   // Move user to another page after login.
   const navigate = useNavigate()
   const location = useLocation()
@@ -114,8 +109,8 @@ export const Login = () => {
   const oauthErrorMessage = useMemo(() => {
     const params = new URLSearchParams(location.search)
     const code = params.get('code')?.trim() ?? ''
-    return getOAuthErrorMessage(code)
-  }, [location.search])
+    return getOAuthErrorMessage(t, code)
+  }, [location.search, t])
 
   useEffect(() => {
     const params = new URLSearchParams(location.search)
@@ -215,15 +210,15 @@ export const Login = () => {
     const trimmedEmail = email.trim()
 
     if (trimmedEmail.length === 0) {
-      setEmailError('Email is required')
+      setEmailError(t('auth.errors.emailRequired'))
       isValid = false
     } else if (!validateEmail(trimmedEmail)) {
-      setEmailError('Please enter a valid email')
+      setEmailError(t('auth.errors.emailInvalid'))
       isValid = false
     }
 
     if (password.length === 0) {
-      setPasswordError('Password is required')
+      setPasswordError(t('auth.errors.passwordRequired'))
       isValid = false
     }
 
@@ -235,8 +230,8 @@ export const Login = () => {
     const lowerMessage = message.toLowerCase()
 
     if (lowerMessage.includes('invalid email or password')) {
-      setEmailError('Invalid email or password')
-      setPasswordError('Invalid email or password')
+      setEmailError(t('login.errors.invalidCredentials'))
+      setPasswordError(t('login.errors.invalidCredentials'))
       return
     }
 
@@ -280,7 +275,7 @@ export const Login = () => {
         return
       }
 
-      setFormError('Unable to connect to the server')
+      setFormError(t('common.unableToConnect'))
     }
   }
 
@@ -293,15 +288,15 @@ export const Login = () => {
     <section className="mx-auto w-full max-w-md space-y-8">
       {/* Login header */}
       <div className="space-y-3 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">Welcome Back</h1>
-        <p className="text-slate-600">Sign in to your account to continue</p>
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900">{t('login.title')}</h1>
+        <p className="text-slate-600">{t('login.subtitle')}</p>
       </div>
 
       {/* Login form */}
       <form className="space-y-6 rounded-2xl border border-white/30 bg-white/40 p-8 backdrop-blur-md shadow-xl" onSubmit={handleSubmit} noValidate>
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-semibold text-slate-900">
-            Email Address
+            {t('auth.emailLabel')}
           </label>
           <input
             id="email"
@@ -313,15 +308,15 @@ export const Login = () => {
               setEmail(event.target.value)
             }}
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
           />
-          <p className="text-xs text-slate-500">Valid email format required (e.g., user@example.com)</p>
+          <p className="text-xs text-slate-500">{t('auth.emailHint')}</p>
           {emailError.length > 0 ? <p className="text-xs font-medium text-red-500">{emailError}</p> : null}
         </div>
 
         <div className="space-y-2">
           <label htmlFor="password" className="block text-sm font-semibold text-slate-900">
-            Password
+            {t('auth.passwordLabel')}
           </label>
           <div className="relative">
             <input
@@ -334,7 +329,7 @@ export const Login = () => {
                 setPassword(event.target.value)
               }}
               className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 pr-20 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
-              placeholder="Enter your password"
+              placeholder={t('auth.passwordPlaceholder')}
             />
             <button
               type="button"
@@ -342,7 +337,7 @@ export const Login = () => {
                 setShowPassword(!showPassword)
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-700 hover:text-purple-900"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
             >
               {showPassword ? (
                 <svg
@@ -374,8 +369,8 @@ export const Login = () => {
             </button>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">{PASSWORD_HELP_TEXT}</p>
-            <p className="text-xs text-slate-400">{password.length} / 72</p>
+            <p className="text-xs text-slate-500">{t('auth.passwordHelp')}</p>
+            <p className="text-xs text-slate-400">{t('common.counter', { count: password.length, max: 72 })}</p>
           </div>
           {passwordError.length > 0 ? <p className="text-xs font-medium text-red-500">{passwordError}</p> : null}
         </div>
@@ -389,7 +384,7 @@ export const Login = () => {
         {formError.length > 0 ? <p className="rounded-lg bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600 border border-red-200/50">{formError}</p> : null}
 
         <Button className="w-full rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 py-3 font-semibold text-white shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50" type="submit" disabled={isLoading}>
-          {isLoading ? 'Signing in...' : 'Sign In'}
+          {isLoading ? t('login.signingIn') : t('login.signIn')}
         </Button>
 
         <div className="space-y-3">
@@ -412,10 +407,10 @@ export const Login = () => {
                 {getOAuthProviderIcon(provider.key)}
                 <span>
                   {oauthLoadingProvider === provider.key
-                    ? `Redirecting to ${provider.label}...`
+                    ? t('login.redirectingTo', { provider: provider.label })
                     : isEnabled
-                      ? `Continue with ${provider.label}`
-                      : `${provider.label} is not configured`}
+                      ? t('login.continueWith', { provider: provider.label })
+                      : t('login.notConfigured', { provider: provider.label })}
                 </span>
               </span>
             </Button>
@@ -425,9 +420,9 @@ export const Login = () => {
         </div>
 
         <p className="text-center text-sm text-slate-600">
-          Don't have an account?{' '}
+          {t('login.noAccount')}{' '}
           <Link to="/register" className="font-semibold text-purple-700 hover:text-purple-900">
-            Register
+            {t('login.registerLink')}
           </Link>
         </p>
       </form>

@@ -1,10 +1,12 @@
 import { Suspense } from 'react'
 import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { Footer } from '@/components/Footer'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
 
 const App = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
 
   // Get user info and logout function.
@@ -56,7 +58,7 @@ const App = () => {
 
           <div className="flex shrink-0 items-center gap-3">
             {/* Show text while checking login. */}
-            {isLoading ? <span className="text-sm font-medium text-slate-700">Checking session...</span> : null}
+            {isLoading ? <span className="text-sm font-medium text-slate-700">{t('nav.checkingSession')}</span> : null}
 
             {currentUser ? (
               <>
@@ -65,7 +67,7 @@ const App = () => {
                   to="/articles/new"
                   className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
                 >
-                  Write
+                  {t('nav.write')}
                 </Link>
                 {/* Open your profile. */}
                 <Link
@@ -88,7 +90,7 @@ const App = () => {
                   }}
                   className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
                 >
-                  Logout
+                  {t('nav.logout')}
                 </button>
               </>
             ) : hasRestoredSession ? (
@@ -97,7 +99,7 @@ const App = () => {
                 to="/login"
                 className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
               >
-                Login
+                {t('nav.login')}
               </Link>
             ) : null}
           </div>

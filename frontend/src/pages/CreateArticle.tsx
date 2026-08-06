@@ -1,10 +1,12 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
 import { createArticle } from '@/api/articles'
 import { useAuth } from '@/hooks/useAuth'
 
 export const CreateArticle = () => {
+  const { t } = useTranslation()
   const navigate = useNavigate()
   const { currentUser, hasRestoredSession, isLoading } = useAuth({ restoreOnMount: true })
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -24,7 +26,7 @@ export const CreateArticle = () => {
     return (
       <section className="mx-auto w-full max-w-3xl space-y-8">
         <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
-          <p className="text-slate-700">Checking your session...</p>
+          <p className="text-slate-700">{t('common.checkingSession')}</p>
         </div>
       </section>
     )
@@ -37,12 +39,12 @@ export const CreateArticle = () => {
   return (
     <section className="mx-auto w-full max-w-3xl space-y-8">
       <div className="space-y-3 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">Write an Article</h1>
-        <p className="text-slate-600">Share something with the community</p>
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900">{t('createArticle.title')}</h1>
+        <p className="text-slate-600">{t('createArticle.subtitle')}</p>
       </div>
 
       <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
-        <ArticleForm submitLabel="Publish" isSubmitting={isSubmitting} onSubmit={handleSubmit} />
+        <ArticleForm submitLabel={t('createArticle.publish')} isSubmitting={isSubmitting} onSubmit={handleSubmit} />
       </div>
     </section>
   )

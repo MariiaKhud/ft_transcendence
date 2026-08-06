@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
 import { useStore } from '@/store/store'
@@ -19,6 +20,7 @@ import {
 } from '@/api/articles'
 
 export const Article = () => {
+  const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const currentUser = useStore((state) => state.auth.currentUser)
@@ -72,7 +74,7 @@ export const Article = () => {
         setLikeCount(data.likeCount)
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : 'Unable to load article')
+        setError(err instanceof Error ? err.message : t('article.errors.loadFailed'))
       })
       .finally(() => {
         setLoading(false)
@@ -141,7 +143,7 @@ export const Article = () => {
       setArticle((prev) => (prev ? { ...prev, commentsCount: prev.commentsCount + 1 } : prev))
       setNewComment('')
     } catch (err) {
-      setCommentError(err instanceof Error ? err.message : 'Unable to post comment')
+      setCommentError(err instanceof Error ? err.message : t('article.errors.postCommentFailed'))
     } finally {
       setIsSubmittingComment(false)
     }
@@ -173,7 +175,7 @@ export const Article = () => {
     } catch (err) {
       setCommentActionErrors((prev) => ({
         ...prev,
-        [commentId]: err instanceof Error ? err.message : 'Unable to update comment',
+        [commentId]: err instanceof Error ? err.message : t('article.errors.updateCommentFailed'),
       }))
     } finally {
       setIsSavingCommentEdit(false)
@@ -186,11 +188,11 @@ export const Article = () => {
 
     let reason: string | undefined
     if (isOwnComment) {
-      if (!window.confirm('Delete this comment? This cannot be undone.')) {
+      if (!window.confirm(t('article.deleteCommentConfirm'))) {
         return
       }
     } else {
-      const promptedReason = window.prompt('Reason for removing this comment:')
+      const promptedReason = window.prompt(t('article.removeCommentReasonPrompt'))
       if (promptedReason === null || promptedReason.trim().length === 0) {
         return
       }
@@ -213,7 +215,7 @@ export const Article = () => {
     } catch (err) {
       setCommentActionErrors((prev) => ({
         ...prev,
-        [comment.id]: err instanceof Error ? err.message : 'Unable to delete comment',
+        [comment.id]: err instanceof Error ? err.message : t('article.errors.deleteCommentFailed'),
       }))
     } finally {
       setDeletingCommentId(null)
@@ -249,7 +251,7 @@ export const Article = () => {
       return
     }
 
-    if (!window.confirm('Delete this article? This cannot be undone.')) {
+    if (!window.confirm(t('article.deleteArticleConfirm'))) {
       return
     }
 
@@ -260,7 +262,7 @@ export const Article = () => {
       await deleteArticle(id)
       navigate('/')
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : 'Unable to delete article')
+      setDeleteError(err instanceof Error ? err.message : t('article.errors.deleteArticleFailed'))
       setIsDeleting(false)
     }
   }
@@ -269,7 +271,7 @@ export const Article = () => {
     return (
       <div className="mx-auto w-full max-w-3xl">
         <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md text-center">
-          <p className="text-slate-700">Loading article...</p>
+          <p className="text-slate-700">{t('article.loading')}</p>
         </div>
       </div>
     )
@@ -279,9 +281,9 @@ export const Article = () => {
     return (
       <div className="mx-auto w-full max-w-3xl">
         <div className="rounded-2xl border border-red-300/30 bg-red-50/40 p-8 shadow-xl backdrop-blur-md">
-          <p className="text-red-700">{error ?? 'Article not found'}</p>
+          <p className="text-red-700">{error ?? t('article.notFound')}</p>
           <Link to="/" className="mt-4 inline-block text-purple-700 hover:text-purple-900 font-semibold">
-            ← Back to feed
+            {t('article.backToFeed')}
           </Link>
         </div>
       </div>
@@ -307,7 +309,7 @@ export const Article = () => {
                   onClick={handleStartEdit}
                   className="rounded-lg border border-slate-300 bg-white/70 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-white"
                 >
-                  Edit
+                  {t('common.edit')}
                 </button>
                 <button
                   type="button"
@@ -315,7 +317,7 @@ export const Article = () => {
                   disabled={isDeleting}
                   className="rounded-lg border border-red-200 bg-red-50/70 px-3 py-1 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
                 >
-                  {isDeleting ? 'Deleting...' : 'Delete'}
+                  {isDeleting ? t('common.deleting') : t('common.delete')}
                 </button>
               </div>
             )}
@@ -328,7 +330,7 @@ export const Article = () => {
           <div className="mt-4">
             <ArticleForm
               initialValues={{ title: article.title, content: article.content, category: article.category }}
-              submitLabel="Save changes"
+              submitLabel={t('article.saveChanges')}
               isSubmitting={isSaving}
               onSubmit={handleSaveEdit}
               onCancel={handleCancelEdit}
@@ -388,9 +390,9 @@ export const Article = () => {
                 disabled={isLiking || isOwnArticle || !currentUser}
                 title={
                   !currentUser
-                    ? 'Log in to like articles'
+                    ? t('article.loginToLikeTitle')
                     : isOwnArticle
-                      ? "You can't like your own article"
+                      ? t('article.cantLikeOwn')
                       : undefined
                 }
                 className={`flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 ${
@@ -399,10 +401,10 @@ export const Article = () => {
                     : 'border-slate-300 bg-white/70 text-slate-700 hover:bg-white'
                 }`}
               >
-                👍 {likeCount} {isLiked ? 'Liked' : 'Like'}
+                👍 {likeCount} {isLiked ? t('article.likedLabel') : t('article.likeLabel')}
               </button>
               {!currentUser && (
-                <span className="text-sm text-slate-500">Log in to like articles.</span>
+                <span className="text-sm text-slate-500">{t('article.loginToLikeSentence')}</span>
               )}
             </div>
           </>
@@ -411,7 +413,7 @@ export const Article = () => {
 
       {/* Comments section */}
       <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
-        <h2 className="text-xl font-bold text-slate-900">Comments ({article.commentsCount})</h2>
+        <h2 className="text-xl font-bold text-slate-900">{t('article.comments', { count: article.commentsCount })}</h2>
 
         {currentUser ? (
           <form className="mt-4 space-y-2" onSubmit={handleSubmitComment}>
@@ -419,7 +421,7 @@ export const Article = () => {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               rows={3}
-              placeholder="Add a comment..."
+              placeholder={t('article.addCommentPlaceholder')}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-900 focus:border-purple-500 focus:outline-none"
             />
             {commentError.length > 0 && <p className="text-sm font-medium text-red-600">{commentError}</p>}
@@ -428,25 +430,25 @@ export const Article = () => {
               disabled={isSubmittingComment || newComment.trim().length === 0}
               className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
             >
-              {isSubmittingComment ? 'Posting...' : 'Post comment'}
+              {isSubmittingComment ? t('article.posting') : t('article.postComment')}
             </Button>
           </form>
         ) : (
           <p className="mt-4 text-sm text-slate-600">
             <Link to="/login" className="font-semibold text-purple-700 hover:text-purple-900">
-              Log in
+              {t('article.loginLink')}
             </Link>{' '}
-            to leave a comment.
+            {t('article.loginToCommentSuffix')}
           </p>
         )}
 
         <div className="mt-6 space-y-4">
           {commentsLoading ? (
-            <p className="text-sm text-slate-600">Loading comments...</p>
+            <p className="text-sm text-slate-600">{t('article.loadingComments')}</p>
           ) : commentsUnavailable ? (
-            <p className="text-sm text-slate-500">Comments aren't available yet.</p>
+            <p className="text-sm text-slate-500">{t('article.commentsUnavailable')}</p>
           ) : comments.length === 0 ? (
-            <p className="text-sm text-slate-600">No comments yet. Be the first to comment!</p>
+            <p className="text-sm text-slate-600">{t('article.noComments')}</p>
           ) : (
             comments.map((comment) => {
               const isStaff = currentUser?.role === 'MODERATOR' || currentUser?.role === 'ADMIN'
@@ -489,7 +491,7 @@ export const Article = () => {
                             disabled={deletingCommentId === comment.id}
                             className="ml-auto text-xs font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
                           >
-                            {deletingCommentId === comment.id ? 'Removing...' : 'Remove'}
+                            {deletingCommentId === comment.id ? t('article.commentRemoving') : t('article.commentRemove')}
                           </button>
                         )}
 
@@ -500,7 +502,7 @@ export const Article = () => {
                               onClick={() => handleStartEditComment(comment)}
                               className="text-xs font-semibold text-slate-600 hover:text-purple-700"
                             >
-                              Edit
+                              {t('common.edit')}
                             </button>
                             <button
                               type="button"
@@ -508,14 +510,14 @@ export const Article = () => {
                               disabled={deletingCommentId === comment.id}
                               className="text-xs font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
                             >
-                              {deletingCommentId === comment.id ? 'Deleting...' : 'Delete'}
+                              {deletingCommentId === comment.id ? t('article.commentDeleting') : t('common.delete')}
                             </button>
                           </div>
                         )}
                       </div>
 
                       {showRemovedPlaceholder ? (
-                        <p className="mt-1 text-sm italic text-slate-400">[removed]</p>
+                        <p className="mt-1 text-sm italic text-slate-400">{t('article.removedPlaceholder')}</p>
                       ) : editingCommentId === comment.id ? (
                         <div className="mt-2 space-y-2">
                           <textarea
@@ -531,7 +533,7 @@ export const Article = () => {
                               disabled={isSavingCommentEdit || editingCommentContent.trim().length === 0}
                               className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-3 py-1 text-xs font-semibold text-white shadow disabled:opacity-50"
                             >
-                              {isSavingCommentEdit ? 'Saving...' : 'Save'}
+                              {isSavingCommentEdit ? t('common.saving') : t('common.save')}
                             </Button>
                             <button
                               type="button"
@@ -539,7 +541,7 @@ export const Article = () => {
                               disabled={isSavingCommentEdit}
                               className="rounded-lg border border-slate-200 bg-white/70 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-white disabled:opacity-50"
                             >
-                              Cancel
+                              {t('common.cancel')}
                             </button>
                           </div>
                         </div>
@@ -550,7 +552,9 @@ export const Article = () => {
                           </p>
                           {comment.isRemoved && isStaff && (
                             <p className="mt-1 text-xs italic text-red-500">
-                              Removed{comment.removedReason ? `: ${comment.removedReason}` : ''}
+                              {comment.removedReason
+                                ? t('article.removedWithReason', { reason: comment.removedReason })
+                                : t('article.removedLabel')}
                             </p>
                           )}
                         </>

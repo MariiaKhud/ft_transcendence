@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import type { FriendshipState } from '@shared/types/friendship';
 import {
   sendFriendRequest,
@@ -15,6 +16,7 @@ interface FriendButtonProps {
 }
 
 export function FriendButton({ targetUserId, initialState }: FriendButtonProps) {
+  const { t } = useTranslation();
   const [state, setState] = useState<FriendshipState>(initialState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,7 +34,7 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
       await action();
       setState(nextState);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Something went wrong')
+      setError(error instanceof Error ? error.message : t('common.somethingWrong'))
     } finally {
       setLoading(false);
     }
@@ -45,11 +47,11 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
           variant="profile"
           onClick={() => handle(() => sendFriendRequest(targetUserId), 'pending_sent')}
           disabled={loading}
-          aria-label="Send friend request"
-          title="Click to send request"
+          aria-label={t('friendButton.sendAria')}
+          title={t('friendButton.sendTitle')}
         >
           {loading ? <Spinner /> : <PlusIcon />}
-          Add Friend
+          {t('friendButton.addFriend')}
         </Button>
 
         {error && <p className="text-xs text-red-500">{error}</p>}
@@ -64,11 +66,11 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
           variant="profileSecondary"
           onClick={() => handle(() => cancelFriendRequest(targetUserId), 'none')}
           disabled={loading}
-          aria-label="Cancel friend request"
-          title="Click to cancel request"
+          aria-label={t('friendButton.cancelAria')}
+          title={t('friendButton.cancelTitle')}
         >
           {loading ? <Spinner /> : <ClockIcon />}
-          Pending
+          {t('friendButton.pending')}
         </Button>
 
         {error && <p className="text-xs text-red-500">{error}</p>}
@@ -84,21 +86,21 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
             variant="profileSuccess"
             onClick={() => handle(() => respondToFriendRequest(targetUserId, 'ACCEPTED'), 'friends',)}
             disabled={loading}
-            aria-label="Accept friend request"
-            title="Click to accept request"
+            aria-label={t('friendButton.acceptAria')}
+            title={t('friendButton.acceptTitle')}
           >
             {loading ? <Spinner /> : <CheckIcon />}
-            Accept
+            {t('friendButton.accept')}
           </Button>
 
           <Button
             variant="profileSecondary"
             onClick={() => handle(() => respondToFriendRequest(targetUserId, 'DECLINED'), 'none',)}
             disabled={loading}
-            aria-label="Decline friend request"
-            title="Click to decline request"
+            aria-label={t('friendButton.declineAria')}
+            title={t('friendButton.declineTitle')}
           >
-            Decline
+            {t('friendButton.decline')}
           </Button>
         </div>
 
@@ -116,11 +118,11 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
         variant="profileSecondary"
         onClick={() => handle(() => removeFriend(targetUserId), 'none')}
         disabled={loading}
-        aria-label="Remove friend"
-        title="Click to remove friend"
+        aria-label={t('friendButton.removeAria')}
+        title={t('friendButton.removeTitle')}
       >
         {loading ? <Spinner /> : <CheckIcon />}
-        Friends
+        {t('friendButton.friends')}
       </Button>
 
       {error && (
