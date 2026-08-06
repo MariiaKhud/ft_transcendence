@@ -76,6 +76,40 @@ Default local URL:
 | `JWT_SECRET`   | secret for signing auth tokens        | `long-random-value`                                                    |
 | `UPLOAD_PATH`  | file upload path                      | `./uploads`                                                            |
 
+### OAuth 2.0 Variables (Google, GitHub, 42)
+
+Recommended multi-provider format:
+
+```env
+OAUTH_GOOGLE_CLIENT_ID=replace-with-google-client-id
+OAUTH_GOOGLE_CLIENT_SECRET=replace-with-google-client-secret
+OAUTH_GOOGLE_CALLBACK_URL=https://localhost:8443/api/auth/oauth/google/callback
+
+# If you are not enabling GitHub yet, comment out all 3 GitHub lines.
+OAUTH_GITHUB_CLIENT_ID=replace-with-github-client-id
+OAUTH_GITHUB_CLIENT_SECRET=replace-with-github-client-secret
+OAUTH_GITHUB_CALLBACK_URL=https://localhost:8443/api/auth/oauth/github/callback
+
+OAUTH_42_CLIENT_ID=replace-with-42-client-id
+OAUTH_42_CLIENT_SECRET=replace-with-42-client-secret
+OAUTH_42_CALLBACK_URL=https://localhost:8443/api/auth/oauth/42/callback
+
+OAUTH_SUCCESS_REDIRECT=https://localhost:8443/
+OAUTH_ERROR_REDIRECT=https://localhost:8443/login
+```
+
+Provider console callback URLs must match exactly:
+
+- GitHub: `https://localhost:8443/api/auth/oauth/github/callback`
+- Google: `https://localhost:8443/api/auth/oauth/google/callback`
+- 42: `https://localhost:8443/api/auth/oauth/42/callback`
+
+Notes:
+
+- Partially configured providers are treated as invalid and not enabled.
+- For GitHub, either set all 3 GitHub variables or comment all 3.
+- Keep OAuth secrets in local env files only.
+
 ## NPM Scripts
 
 ```bash
@@ -165,6 +199,95 @@ Note: frontend behavior is to redirect to `/login` after logout.
 ### GET /api/auth/me
 
 Returns currently authenticated user from session cookie.
+
+## OAuth 2.0 API
+
+Base path: `/api/auth`
+
+Implemented providers:
+
+- `github`
+- `google`
+- `42`
+
+### GET /api/auth/oauth/providers
+
+Returns enabled OAuth providers.
+
+Success: `200`
+
+```json
+{
+  "success": true,
+  "data": ["42", "github", "google"]
+}
+```
+
+### GET /api/auth/oauth/:provider
+
+Starts OAuth authorization flow for the provider.
+
+Behavior:
+
+- creates and stores short-lived `oauth_state` cookie
+- redirects (`302`) to provider authorization URL
+
+### GET /api/auth/oauth/:provider/callback
+
+Handles provider callback.
+
+Behavior:
+
+- validates `state` query against `oauth_state` cookie
+- rejects provider-denied callbacks before token exchange
+- resolves local user by linked account or verified email
+- creates local account if safe and needed
+- sets `auth_token` and `csrf_token` cookies
+- redirects to success or error URL
+
+Error redirect codes (to `OAUTH_ERROR_REDIRECT?code=...`):
+
+- `oauth_provider_denied`
+- `oauth_state_missing`
+- `oauth_state_invalid`
+- `oauth_profile_invalid`
+- `oauth_account_conflict`
+- `oauth_callback_invalid`
+- `oauth_access_token_failed`
+- `oauth_redirect_uri_mismatch`
+- `oauth_user_not_found`
+- `oauth_provider_unavailable`
+
+## OAuth Evaluator Evidence
+
+Use these checks for the OAuth minor module validation.
+
+1. Verify providers endpoint:
+
+```bash
+curl -k -i https://localhost:8443/api/auth/oauth/providers
+```
+
+2. Verify provider start redirect:
+
+```bash
+curl -k -i -c /tmp/oauth.cookies https://localhost:8443/api/auth/oauth/github
+```
+
+3. Denied consent should redirect to `code=oauth_provider_denied`.
+4. Tampered callback state should redirect to `code=oauth_state_invalid`.
+5. Reused callback state should redirect to `code=oauth_state_missing`.
+6. Existing verified-email account should be linked (no duplicate user).
+
+Automated coverage is included in:
+
+- `scripts/test-backend-flow.sh`
+
+Run:
+
+```bash
+npm run test:backend
+```
 
 ## Users API
 

@@ -1,4 +1,5 @@
 // Shared display helpers for articles and their authors.
+import i18n from '@/lib/i18n'
 
 interface AuthorLike {
   username: string
@@ -33,11 +34,14 @@ export const getInitials = (author: AuthorLike) => {
     .join('')
 }
 
-// Turn "STUDY_NOTES" into "Study Notes" for display.
+// Translated category label, e.g. "STUDY_NOTES" -> "Study Notes". Falls back
+// to a naive title-case of the raw category key if no translation exists.
 export const formatCategoryLabel = (category: string) => {
-  return category
+  const fallback = category
     .toLowerCase()
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ')
+
+  return i18n.t(`common.categories.${category}`, { defaultValue: fallback })
 }

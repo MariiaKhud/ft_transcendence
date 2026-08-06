@@ -13,11 +13,15 @@ USERNAME2="auth2_${RUN_ID}"
 EMAIL2="auth2.${RUN_ID}@example.com"
 PASSWORD="strongPass123"
 DISPLAY_NAME="Auth Test User"
+OAUTH_LINK_EMAIL="oauth.link.${RUN_ID}@example.com"
+OAUTH_LINK_USERNAME="oauth_link_${RUN_ID}"
+OAUTH_LINK_PROVIDER_ID="oauth-link-${RUN_ID}"
 ROLE_MOD_PATH="${ROLE_MOD_PATH:-}"
 ROLE_ADMIN_PATH="${ROLE_ADMIN_PATH:-}"
 
 LAST_STATUS=""
 LAST_BODY=""
+LAST_HEADERS=""
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -36,9 +40,10 @@ cleanup() {
   rm -f "$EMPTY_COOKIE_JAR"
   rm -f "$COOKIE_JAR2"
   rm -f "$COOKIE_JAR_MOD"
+  rm -f "${OAUTH_COOKIE_JAR:-}"
 
   if command -v docker >/dev/null 2>&1 && [[ -f "../docker-compose.yml" ]]; then
-    docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"DELETE FROM users WHERE email IN ('${EMAIL}', '${EMAIL2}');\"" >/dev/null 2>&1 || true
+    docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"DELETE FROM oauth_accounts WHERE provider_id IN ('${OAUTH_LINK_PROVIDER_ID}'); DELETE FROM users WHERE email IN ('${EMAIL}', '${EMAIL2}', '${OAUTH_LINK_EMAIL}');\"" >/dev/null 2>&1 || true
   fi
 }
 
@@ -49,13 +54,16 @@ perform_request() {
   shift
 
   local response_file
+  local headers_file
   response_file="$(mktemp)"
+  headers_file="$(mktemp)"
 
   local status
-  status="$(curl -sS -o "$response_file" -w '%{http_code}' "$@")"
+  status="$(curl -sS -D "$headers_file" -o "$response_file" -w '%{http_code}' "$@")"
 
   LAST_STATUS="$status"
   LAST_BODY="$(cat "$response_file")"
+  LAST_HEADERS="$(cat "$headers_file")"
 
   if [[ "$status" =~ ^2 ]]; then
     color_echo "$GREEN" "${label}: HTTP ${status}"
@@ -67,7 +75,7 @@ perform_request() {
   printf "%s" "$LAST_BODY"
   echo
 
-  rm -f "$response_file"
+  rm -f "$response_file" "$headers_file"
 }
 
 assert_status() {
@@ -98,6 +106,20 @@ assert_body_not_contains() {
     color_echo "$RED" "${label}: response unexpectedly contained '${needle}'"
     exit 1
   fi
+}
+
+assert_header_contains() {
+  local needle="$1"
+  local label="$2"
+
+  if ! grep -iq "$needle" <<<"$LAST_HEADERS"; then
+    color_echo "$RED" "${label}: headers did not contain '${needle}'"
+    exit 1
+  fi
+}
+
+get_location_header() {
+  awk 'BEGIN{IGNORECASE=1} /^Location:/ {sub(/^Location:[[:space:]]*/, ""); gsub(/\r/, ""); print; exit}' <<<"$LAST_HEADERS"
 }
 
 color_echo "$BLUE" "1. Registering test user: ${EMAIL}"
@@ -159,6 +181,103 @@ else
   color_echo "$RED" "Me (after logout): unexpected HTTP ${LAST_STATUS}"
   exit 1
 fi
+
+# ============================================================================
+# [OAUTH] Backend: OAuth flow edge cases + account linking integration checks
+# ============================================================================
+# Description: Exercises provider start, denied consent, tampered state,
+# reused callback state, missing profile identifier, and existing-account linking.
+# ============================================================================
+
+OAUTH_COOKIE_JAR="$(mktemp)"
+OAUTH_PROVIDER=""
+
+color_echo "$BLUE" "8a. GET /api/auth/oauth/providers"
+perform_request "OAuth providers" "${BASE_URL}/api/auth/oauth/providers"
+assert_status "200" "OAuth providers"
+assert_body_contains '"success":true' "OAuth providers"
+
+if grep -q '"github"' <<<"$LAST_BODY"; then
+  OAUTH_PROVIDER="github"
+elif grep -q '"google"' <<<"$LAST_BODY"; then
+  OAUTH_PROVIDER="google"
+elif grep -q '"42"' <<<"$LAST_BODY"; then
+  OAUTH_PROVIDER="42"
+fi
+
+if [[ -n "$OAUTH_PROVIDER" ]]; then
+  color_echo "$BLUE" "8b. OAuth start for provider '${OAUTH_PROVIDER}' returns redirect + state cookie"
+  perform_request "OAuth start" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}"
+  assert_status "302" "OAuth start"
+  assert_header_contains '^location:' "OAuth start"
+
+  OAUTH_STATE="$(awk '$6=="oauth_state" { print $7 }' "$OAUTH_COOKIE_JAR" | tail -n 1)"
+  if [[ -z "$OAUTH_STATE" ]]; then
+    color_echo "$RED" "OAuth start: missing oauth_state cookie"
+    exit 1
+  fi
+
+  color_echo "$BLUE" "8c. OAuth callback denied consent returns oauth_provider_denied"
+  perform_request "OAuth callback denied" -b "$OAUTH_COOKIE_JAR" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}/callback?error=access_denied&state=${OAUTH_STATE}"
+  assert_status "302" "OAuth callback denied"
+  DENIED_LOCATION="$(get_location_header)"
+  if [[ "$DENIED_LOCATION" != *"code=oauth_provider_denied"* ]]; then
+    color_echo "$RED" "OAuth callback denied: expected code=oauth_provider_denied, got ${DENIED_LOCATION}"
+    exit 1
+  fi
+
+  color_echo "$BLUE" "8d. OAuth callback with tampered state returns oauth_state_invalid"
+  perform_request "OAuth start (tampered state setup)" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}"
+  assert_status "302" "OAuth start (tampered state setup)"
+  OAUTH_STATE="$(awk '$6=="oauth_state" { print $7 }' "$OAUTH_COOKIE_JAR" | tail -n 1)"
+  perform_request "OAuth callback tampered state" -b "$OAUTH_COOKIE_JAR" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}/callback?code=fake-code&state=${OAUTH_STATE}_tampered"
+  assert_status "302" "OAuth callback tampered state"
+  TAMPERED_LOCATION="$(get_location_header)"
+  if [[ "$TAMPERED_LOCATION" != *"code=oauth_state_invalid"* ]]; then
+    color_echo "$RED" "OAuth callback tampered state: expected code=oauth_state_invalid, got ${TAMPERED_LOCATION}"
+    exit 1
+  fi
+
+  color_echo "$BLUE" "8e. Reused callback state is rejected after first callback"
+  perform_request "OAuth start (reuse-state setup)" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}"
+  assert_status "302" "OAuth start (reuse-state setup)"
+  OAUTH_STATE="$(awk '$6=="oauth_state" { print $7 }' "$OAUTH_COOKIE_JAR" | tail -n 1)"
+
+  perform_request "OAuth callback first use" -b "$OAUTH_COOKIE_JAR" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}/callback?code=fake-code&state=${OAUTH_STATE}"
+  assert_status "302" "OAuth callback first use"
+
+  perform_request "OAuth callback reused state" -b "$OAUTH_COOKIE_JAR" -c "$OAUTH_COOKIE_JAR" "${BASE_URL}/api/auth/oauth/${OAUTH_PROVIDER}/callback?code=fake-code&state=${OAUTH_STATE}"
+  assert_status "302" "OAuth callback reused state"
+  REUSED_LOCATION="$(get_location_header)"
+  if [[ "$REUSED_LOCATION" != *"code=oauth_state_missing"* ]]; then
+    color_echo "$RED" "OAuth callback reused state: expected code=oauth_state_missing, got ${REUSED_LOCATION}"
+    exit 1
+  fi
+
+  if command -v docker >/dev/null 2>&1 && [[ -f "../docker-compose.yml" ]]; then
+    color_echo "$BLUE" "8f. resolveOAuthUser missing profile identifier returns profile error"
+    OAUTH_PROFILE_OUTPUT="$(docker compose exec -T backend sh -lc "cd /app && npx tsx -e \"import { resolveOAuthUser } from './src/services/oauth-account.service.ts'; import { AppError } from './src/middleware/error.middleware.ts'; (async () => { try { await resolveOAuthUser({ provider: 'github', providerId: '', email: null, providerUsername: null, displayName: null, avatarUrl: null, emailVerified: false }); console.log('UNEXPECTED_OK'); process.exit(1); } catch (error) { if (error instanceof AppError && error.statusCode === 400) { console.log('EXPECTED_PROFILE_ERROR'); return; } console.error(error); process.exit(1); } })();\"" 2>&1)"
+    if ! grep -q 'EXPECTED_PROFILE_ERROR' <<<"$OAUTH_PROFILE_OUTPUT"; then
+      color_echo "$RED" "resolveOAuthUser missing profile id test failed"
+      printf "%s\n" "$OAUTH_PROFILE_OUTPUT"
+      exit 1
+    fi
+
+    color_echo "$BLUE" "8g. resolveOAuthUser links an existing verified-email account"
+    OAUTH_LINK_OUTPUT="$(docker compose exec -T -e OAUTH_LINK_EMAIL="$OAUTH_LINK_EMAIL" -e OAUTH_LINK_USERNAME="$OAUTH_LINK_USERNAME" -e OAUTH_LINK_PROVIDER_ID="$OAUTH_LINK_PROVIDER_ID" backend sh -lc "cd /app && npx tsx -e \"import bcrypt from 'bcryptjs'; import { prisma } from './src/lib/prisma.ts'; import { resolveOAuthUser } from './src/services/oauth-account.service.ts'; (async () => { const email = process.env.OAUTH_LINK_EMAIL; const username = process.env.OAUTH_LINK_USERNAME; const providerId = process.env.OAUTH_LINK_PROVIDER_ID; if (!email || !username || !providerId) { throw new Error('Missing oauth test env'); } const passwordHash = await bcrypt.hash('temp-pass-123', 10); await prisma.user.upsert({ where: { email }, update: {}, create: { email, username, passwordHash, displayName: 'OAuth Link Target' } }); const first = await resolveOAuthUser({ provider: 'github', providerId, email, providerUsername: 'oauth_link_user', displayName: 'OAuth Link User', avatarUrl: null, emailVerified: true }); const second = await resolveOAuthUser({ provider: 'github', providerId, email, providerUsername: 'oauth_link_user', displayName: 'OAuth Link User', avatarUrl: null, emailVerified: true }); const link = await prisma.oAuthAccount.findUnique({ where: { provider_providerId: { provider: 'github', providerId } } }); if (!link) { throw new Error('Missing oauth account link'); } if (first.id !== second.id || first.email !== email) { throw new Error('Resolved user mismatch across repeated callbacks'); } console.log('EXPECTED_LINK_BEHAVIOR'); })().catch((error) => { console.error(error); process.exit(1); });\"" 2>&1)"
+    if ! grep -q 'EXPECTED_LINK_BEHAVIOR' <<<"$OAUTH_LINK_OUTPUT"; then
+      color_echo "$RED" "resolveOAuthUser existing-account linking test failed"
+      printf "%s\n" "$OAUTH_LINK_OUTPUT"
+      exit 1
+    fi
+  else
+    color_echo "$YELLOW" "8f-8g. resolveOAuthUser integration checks skipped (docker unavailable)"
+  fi
+else
+  color_echo "$YELLOW" "8b-8g. OAuth tests skipped: no OAuth provider enabled"
+fi
+
+rm -f "$OAUTH_COOKIE_JAR"
 
 # Re-login for profile edit and avatar tests
 color_echo "$BLUE" "9. Re-logging in for profile edit and avatar tests"

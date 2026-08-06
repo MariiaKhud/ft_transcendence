@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { followUser, unfollowUser, getFollowStatus } from '../../api/follows';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,7 @@ export function FollowButton({
   initialIsFollowing,
   onFollowChange,
 }: FollowButtonProps) {
+  const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [isFollowing, setIsFollowing] = useState(initialIsFollowing ?? false);
   const [isHovered, setIsHovered] = useState(false);
@@ -53,7 +55,7 @@ export function FollowButton({
         onFollowChange?.(true);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Something went wrong')
+      setError(error instanceof Error ? error.message : t('common.somethingWrong'))
     } finally {
       setLoading(false);
     }
@@ -70,7 +72,7 @@ export function FollowButton({
         disabled={loading}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        aria-label={isFollowing ? 'Unfollow' : 'Follow'}
+        aria-label={isFollowing ? t('followButton.unfollow') : t('followButton.follow')}
         aria-pressed={isFollowing}
       >
         {loading ? (
@@ -81,7 +83,7 @@ export function FollowButton({
           <PlusIcon />
         )}
 
-        {isFollowing ? (isHovered ? 'Unfollow' : 'Following') : 'Follow'}
+        {isFollowing ? (isHovered ? t('followButton.unfollow') : t('followButton.following')) : t('followButton.follow')}
       </Button>
 
       {error && <p className="text-xs text-red-500" role="alert">{error}</p>}

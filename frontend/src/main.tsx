@@ -1,7 +1,9 @@
 import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'	
+import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
+import { I18nextProvider } from 'react-i18next'
 import { router } from '@/app/router'
+import i18n from '@/lib/i18n'
 import './index.css'
 
 // Show a clear error if #root is missing.
@@ -11,6 +13,8 @@ if (!rootEl) throw new Error('Root element #root not found in index.html')
 // Start the app with the router.
 createRoot(rootEl).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <I18nextProvider i18n={i18n}>
+      <RouterProvider router={router} />
+    </I18nextProvider>
   </StrictMode>,
 )

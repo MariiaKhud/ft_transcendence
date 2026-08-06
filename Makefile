@@ -1,4 +1,4 @@
-.PHONY: up down clean logs migrate seed test-backend test-frontend help
+.PHONY: up down clean logs migrate seed test-backend test-frontend test-browser-compat test-i18n setup-local-cert help
 
 CYAN := \033[0;34m
 GREEN := \033[0;32m
@@ -15,6 +15,9 @@ help:
 	@printf "  $(GREEN)make seed$(RESET)     - Seed database with test data\n"
 	@printf "  $(GREEN)make test-backend$(RESET)  - Run backend flow tests\n"
 	@printf "  $(GREEN)make test-frontend$(RESET) - Run frontend smoke tests\n"
+	@printf "  $(GREEN)make test-browser-compat$(RESET) - Run browser compatibility regression test\n"
+	@printf "  $(GREEN)make test-i18n$(RESET) - Run i18n module regression test\n"
+	@printf "  $(GREEN)make setup-local-cert$(RESET) - Generate a trusted local HTTPS certificate for localhost\n"
 	@printf "  $(GREEN)make test-friends$(RESET)  - Run friends flow integration test\n"
 	@printf "  $(GREEN)make test-follows$(RESET)  - Run follows flow integration test\n"
 	@printf "  $(GREEN)make test-messages$(RESET) - Run messages integration test\n"
@@ -40,11 +43,20 @@ migrate:
 seed:
 	docker compose exec backend npx prisma db seed
 
+setup-local-cert:
+	./scripts/setup-local-cert.sh
+
 test-backend:
 	cd backend && npm run test:backend
 
 test-frontend:
 	cd frontend && npm run test:frontend
+
+test-browser-compat:
+	cd frontend && node --test scripts/browser-compatibility.test.mjs
+
+test-i18n:
+	cd frontend && node --test scripts/i18n.test.mjs
 
 test-friends:
 	cd backend && ./scripts/test-friends-flow.sh

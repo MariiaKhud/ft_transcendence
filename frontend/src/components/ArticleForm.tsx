@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react'
 import ReactMarkdown from 'react-markdown'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { formatCategoryLabel } from '@/lib/article-display'
 
@@ -27,6 +28,7 @@ interface ArticleFormProps {
  * select, and a Markdown textarea with a write/preview toggle.
  */
 export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit, onCancel }: ArticleFormProps) => {
+  const { t } = useTranslation()
   const [title, setTitle] = useState(initialValues?.title ?? '')
   const [content, setContent] = useState(initialValues?.content ?? '')
   const [category, setCategory] = useState(initialValues?.category ?? CATEGORIES[0])
@@ -59,18 +61,18 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
     const trimmedContent = content.trim()
 
     if (trimmedTitle.length === 0) {
-      setTitleError('Title is required')
+      setTitleError(t('articleForm.errors.titleRequired'))
       isValid = false
     } else if (trimmedTitle.length > TITLE_MAX_LENGTH) {
-      setTitleError(`Title must be at most ${TITLE_MAX_LENGTH} characters`)
+      setTitleError(t('articleForm.errors.titleMaxLength', { max: TITLE_MAX_LENGTH }))
       isValid = false
     }
 
     if (trimmedContent.length === 0) {
-      setContentError('Content is required')
+      setContentError(t('articleForm.errors.contentRequired'))
       isValid = false
     } else if (trimmedContent.length < CONTENT_MIN_LENGTH) {
-      setContentError(`Content must be at least ${CONTENT_MIN_LENGTH} characters`)
+      setContentError(t('articleForm.errors.contentMinLength', { min: CONTENT_MIN_LENGTH }))
       isValid = false
     }
 
@@ -91,7 +93,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
     try {
       await onSubmit({ title: title.trim(), content: content.trim(), category })
     } catch (err) {
-      applyApiError(err instanceof Error ? err.message : 'Unable to save article')
+      applyApiError(err instanceof Error ? err.message : t('articleForm.errors.unableToSave'))
     }
   }
 
@@ -99,7 +101,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
     <form className="space-y-4" onSubmit={handleSubmit} noValidate>
       <div className="space-y-2">
         <label htmlFor="article-title" className="block text-sm font-semibold text-slate-900">
-          Title
+          {t('articleForm.titleLabel')}
         </label>
         <input
           id="article-title"
@@ -110,18 +112,18 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
             setTitleError('')
           }}
           maxLength={TITLE_MAX_LENGTH}
-          placeholder="Give your article a title"
+          placeholder={t('articleForm.titlePlaceholder')}
           className="w-full rounded-lg border border-slate-300 px-4 py-2 text-lg font-semibold text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none"
         />
         <p className="text-right text-xs text-slate-400">
-          {title.length} / {TITLE_MAX_LENGTH}
+          {t('common.counter', { count: title.length, max: TITLE_MAX_LENGTH })}
         </p>
         {titleError.length > 0 && <p className="text-xs font-medium text-red-500">{titleError}</p>}
       </div>
 
       <div className="space-y-2">
         <label htmlFor="article-category" className="block text-sm font-semibold text-slate-900">
-          Category
+          {t('articleForm.categoryLabel')}
         </label>
         <select
           id="article-category"
@@ -140,7 +142,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <label htmlFor="article-content" className="block text-sm font-semibold text-slate-900">
-            Content
+            {t('articleForm.contentLabel')}
           </label>
           <div className="flex rounded-lg border border-slate-300 p-0.5 text-sm">
             <button
@@ -150,7 +152,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
                 !showPreview ? 'bg-purple-100 text-purple-700' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
-              Write
+              {t('articleForm.write')}
             </button>
             <button
               type="button"
@@ -159,7 +161,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
                 showPreview ? 'bg-purple-100 text-purple-700' : 'text-slate-600 hover:bg-slate-100'
               }`}
             >
-              Preview
+              {t('articleForm.preview')}
             </button>
           </div>
         </div>
@@ -169,7 +171,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
             {content.trim().length > 0 ? (
               <ReactMarkdown>{content}</ReactMarkdown>
             ) : (
-              <p className="text-slate-400">Nothing to preview yet.</p>
+              <p className="text-slate-400">{t('articleForm.nothingToPreview')}</p>
             )}
           </div>
         ) : (
@@ -181,12 +183,12 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
               setContentError('')
             }}
             rows={14}
-            placeholder="Write your article in Markdown..."
+            placeholder={t('articleForm.contentPlaceholder')}
             className="w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-900 placeholder:text-slate-400 focus:border-purple-500 focus:outline-none"
           />
         )}
         <p className="text-right text-xs text-slate-400">
-          {content.trim().length} / {CONTENT_MIN_LENGTH} minimum
+          {t('articleForm.contentCounter', { count: content.trim().length, min: CONTENT_MIN_LENGTH })}
         </p>
         {contentError.length > 0 && <p className="text-xs font-medium text-red-500">{contentError}</p>}
       </div>
@@ -203,7 +205,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
           disabled={isSubmitting}
           className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-semibold text-white shadow-lg disabled:opacity-50"
         >
-          {isSubmitting ? 'Saving...' : submitLabel}
+          {isSubmitting ? t('articleForm.saving') : submitLabel}
         </Button>
         {onCancel && (
           <button
@@ -212,7 +214,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
             disabled={isSubmitting}
             className="rounded-lg border border-slate-200 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-white disabled:opacity-50"
           >
-            Cancel
+            {t('articleForm.cancel')}
           </button>
         )}
       </div>

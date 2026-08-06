@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ArticleCard } from '@/components/ArticleCard'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { getArticles, type Article, type ArticlesResponse } from '@/api/articles'
@@ -8,15 +9,7 @@ type SortOption = 'newest' | 'oldest' | 'most_liked'
 
 const SORT_OPTIONS: SortOption[] = ['newest', 'oldest', 'most_liked']
 
-const CATEGORIES: { value: string; label: string }[] = [
-  { value: '', label: 'All Categories' },
-  { value: 'PROGRAMMING', label: 'Programming' },
-  { value: 'CAREER', label: 'Career' },
-  { value: 'STUDY_NOTES', label: 'Study Notes' },
-  { value: 'PROJECTS', label: 'Projects' },
-  { value: 'LIFE', label: 'Life' },
-  { value: 'OPINION', label: 'Opinion' },
-]
+const CATEGORY_VALUES = ['', 'PROGRAMMING', 'CAREER', 'STUDY_NOTES', 'PROJECTS', 'LIFE', 'OPINION']
 
 interface FieldFilters {
   title: string
@@ -40,6 +33,7 @@ const readFieldFilters = (params: URLSearchParams): FieldFilters => ({
 // separate fields (title/author/content/date range) that are ANDed
 // together, for narrowing down results precisely rather than a broad match.
 export const Search = () => {
+  const { t } = useTranslation()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const [fields, setFields] = useState<FieldFilters>(() => readFieldFilters(searchParams))
@@ -86,11 +80,11 @@ export const Search = () => {
         setArticles(response.data.articles)
         setTotalPages(response.data.pagination.totalPages)
       } else {
-        setError('Failed to load articles')
+        setError(t('common.errors.loadArticlesFailed'))
       }
     } catch (err) {
       console.error('Error searching articles:', err)
-      setError('Failed to load articles. Please try again.')
+      setError(t('common.errors.loadArticlesFailedRetry'))
     } finally {
       setLoading(false)
     }
@@ -158,9 +152,9 @@ export const Search = () => {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8">
       <div className="space-y-2 text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">Advanced Search</p>
-        <h1 className="text-3xl font-bold tracking-tight text-slate-900">Find Articles by Field</h1>
-        <p className="text-slate-600">Narrow results by title, author, content, or when it was posted.</p>
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('search.eyebrow')}</p>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t('search.title')}</h1>
+        <p className="text-slate-600">{t('search.subtitle')}</p>
       </div>
 
       {/* Filters */}
@@ -168,12 +162,12 @@ export const Search = () => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="field-title" className="mb-2 block text-sm font-medium text-slate-700">
-              Title
+              {t('search.titleLabel')}
             </label>
             <input
               id="field-title"
               type="text"
-              placeholder="e.g. Getting started"
+              placeholder={t('search.titlePlaceholder')}
               value={fields.title}
               onChange={(e) => updateField('title', e.target.value)}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
@@ -182,12 +176,12 @@ export const Search = () => {
 
           <div>
             <label htmlFor="field-author" className="mb-2 block text-sm font-medium text-slate-700">
-              Author
+              {t('search.authorLabel')}
             </label>
             <input
               id="field-author"
               type="text"
-              placeholder="e.g. alice"
+              placeholder={t('search.authorPlaceholder')}
               value={fields.author}
               onChange={(e) => updateField('author', e.target.value)}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
@@ -197,12 +191,12 @@ export const Search = () => {
 
         <div>
           <label htmlFor="field-content" className="mb-2 block text-sm font-medium text-slate-700">
-            Content
+            {t('search.contentLabel')}
           </label>
           <input
             id="field-content"
             type="text"
-            placeholder="Words that appear in the article body"
+            placeholder={t('search.contentPlaceholder')}
             value={fields.content}
             onChange={(e) => updateField('content', e.target.value)}
             className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
@@ -212,7 +206,7 @@ export const Search = () => {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="field-posted-from" className="mb-2 block text-sm font-medium text-slate-700">
-              Posted after
+              {t('search.postedAfter')}
             </label>
             <input
               id="field-posted-from"
@@ -225,7 +219,7 @@ export const Search = () => {
 
           <div>
             <label htmlFor="field-posted-to" className="mb-2 block text-sm font-medium text-slate-700">
-              Posted before
+              {t('search.postedBefore')}
             </label>
             <input
               id="field-posted-to"
@@ -240,7 +234,7 @@ export const Search = () => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="search-sort-select" className="mb-2 block text-sm font-medium text-slate-700">
-              Sort by
+              {t('common.sortBy')}
             </label>
             <select
               id="search-sort-select"
@@ -248,15 +242,15 @@ export const Search = () => {
               onChange={(e) => setSort(e.target.value as SortOption)}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-purple-500 focus:outline-none"
             >
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="most_liked">Most Liked</option>
+              <option value="newest">{t('common.sortNewest')}</option>
+              <option value="oldest">{t('common.sortOldest')}</option>
+              <option value="most_liked">{t('common.sortMostLiked')}</option>
             </select>
           </div>
 
           <div>
             <label htmlFor="search-category-select" className="mb-2 block text-sm font-medium text-slate-700">
-              Category
+              {t('common.category')}
             </label>
             <select
               id="search-category-select"
@@ -264,9 +258,9 @@ export const Search = () => {
               onChange={(e) => setCategory(e.target.value)}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-purple-500 focus:outline-none"
             >
-              {CATEGORIES.map((cat) => (
-                <option key={cat.value || 'all'} value={cat.value}>
-                  {cat.label}
+              {CATEGORY_VALUES.map((value) => (
+                <option key={value || 'all'} value={value}>
+                  {t(`common.categories.${value || 'ALL'}`)}
                 </option>
               ))}
             </select>
@@ -276,7 +270,7 @@ export const Search = () => {
         {hasAnyFilterInput && (
           <div className="text-right">
             <button onClick={clearFilters} className="text-sm font-medium text-purple-600 hover:text-purple-700">
-              Clear all filters
+              {t('search.clearFilters')}
             </button>
           </div>
         )}
@@ -285,7 +279,7 @@ export const Search = () => {
       {/* Results */}
       {loading ? (
         <div className="rounded-2xl border border-white/30 bg-white/40 p-8 text-center shadow-xl backdrop-blur-md">
-          <p className="text-slate-700">Searching...</p>
+          <p className="text-slate-700">{t('search.searching')}</p>
         </div>
       ) : error ? (
         <div className="rounded-2xl border border-red-300/30 bg-red-50/40 p-8 shadow-xl backdrop-blur-md">
@@ -294,12 +288,12 @@ export const Search = () => {
             onClick={() => fetchArticles(page)}
             className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
           >
-            Retry
+            {t('common.retry')}
           </button>
         </div>
       ) : articles.length === 0 ? (
         <div className="rounded-2xl border border-white/30 bg-white/40 p-8 text-center shadow-xl backdrop-blur-md">
-          <p className="text-slate-700">No articles match your filters. Try adjusting the fields above.</p>
+          <p className="text-slate-700">{t('search.noResults')}</p>
         </div>
       ) : (
         <>
@@ -316,17 +310,17 @@ export const Search = () => {
                 disabled={page === 1}
                 className="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:bg-slate-300"
               >
-                Previous
+                {t('common.previous')}
               </button>
               <span className="font-medium text-slate-700">
-                Page {page} of {totalPages}
+                {t('common.pageOf', { page, totalPages })}
               </span>
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
                 className="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:bg-slate-300"
               >
-                Next
+                {t('common.next')}
               </button>
             </div>
           )}
