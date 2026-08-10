@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { registerUser } from '@/api/auth'
+import { translateApiError } from '@/lib/api-errors'
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -133,7 +134,7 @@ export const Register = () => {
       navigate('/login', { replace: true })
     } catch (error) {
       if (error instanceof Error) {
-        applyApiError(error.message)
+        applyApiError(translateApiError(error, error.message))
         return
       }
 

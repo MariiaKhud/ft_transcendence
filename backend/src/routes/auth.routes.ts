@@ -5,6 +5,7 @@ import passport from 'passport'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 import { signAuthToken, verifyAuthToken } from '../lib/auth.utils.js'
 import type { NormalizedOAuthUser } from '../auth/oauth.passport.js'
 import { initializeOAuthStrategy } from '../auth/oauth.passport.js'
@@ -128,14 +129,14 @@ const assertConfiguredProvider = (providerParam: string) => {
   // If OAuth is disabled or the requested provider differs from the configured one,
   // we fail before redirecting the user to any external provider.
   if (!oauthConfig || !oauthConfig.enabled) {
-    throw new AppError(404, 'OAuth is not configured')
+    throw new AppError(404, ErrorCode.OAUTH_NOT_CONFIGURED, 'OAuth is not configured')
   }
 
   const provider = providerParam as OAuthProvider
   const providerConfig = oauthConfig.providers[provider] as OAuthProviderConfig | undefined
 
   if (!providerConfig) {
-    throw new AppError(404, `OAuth provider '${providerParam}' is not enabled`)
+    throw new AppError(404, ErrorCode.OAUTH_PROVIDER_NOT_ENABLED, `OAuth provider '${providerParam}' is not enabled`)
   }
 
   return {
@@ -226,11 +227,11 @@ const registerHandler = async (req: Request, res: Response) => {
   ])
 
   if (existingEmailUser) {
-    throw new AppError(409, 'Email already taken')
+    throw new AppError(409, ErrorCode.EMAIL_TAKEN, 'Email already taken')
   }
 
   if (existingUsernameUser) {
-    throw new AppError(409, 'Username already taken')
+    throw new AppError(409, ErrorCode.USERNAME_TAKEN, 'Username already taken')
   }
 
   const passwordHash = await bcrypt.hash(password, 10)
@@ -251,7 +252,7 @@ const registerHandler = async (req: Request, res: Response) => {
   } catch (error) {
     // Safety check if a unique field was taken between checks.
     if (isPrismaUniqueConstraintError(error)) {
-      throw new AppError(409, 'Email or username already taken')
+      throw new AppError(409, ErrorCode.EMAIL_OR_USERNAME_TAKEN, 'Email or username already taken')
     }
 
     throw error
@@ -268,13 +269,13 @@ const loginHandler = async (req: Request, res: Response) => {
   })
 
   if (!user) {
-    throw new AppError(401, 'Invalid email or password')
+    throw new AppError(401, ErrorCode.INVALID_CREDENTIALS, 'Invalid email or password')
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.passwordHash)
 
   if (!isPasswordValid) {
-    throw new AppError(401, 'Invalid email or password')
+    throw new AppError(401, ErrorCode.INVALID_CREDENTIALS, 'Invalid email or password')
   }
 
   // Create CSRF token and auth token for this session.
@@ -316,7 +317,7 @@ const meHandler = async (req: Request, res: Response) => {
   })
 
   if (!user) {
-    throw new AppError(401, 'Invalid or expired session')
+    throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
   }
 
   res.status(200).json({ success: true, data: user })

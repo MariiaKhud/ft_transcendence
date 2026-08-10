@@ -1,6 +1,7 @@
 import { promises as fs } from 'fs'
 import { randomUUID } from 'crypto'
 import { AppError } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/
 const MAX_DISPLAY_NAME_LENGTH = 50
@@ -160,7 +161,7 @@ export const validateUsernameParam = (usernameParam: string) => {
   const username = usernameParam.trim()
 
   if (!USERNAME_REGEX.test(username)) {
-    throw new AppError(400, 'Validation failed: invalid username format')
+    throw new AppError(400, ErrorCode.VALIDATION_USERNAME_FORMAT, 'Validation failed: invalid username format')
   }
 
   return username
@@ -174,13 +175,13 @@ export const validateSearchQuery = (queryParam: unknown): string => {
   }
 
   if (typeof queryParam !== 'string') {
-    throw new AppError(400, 'Validation failed: q must be a string')
+    throw new AppError(400, ErrorCode.VALIDATION_SEARCH_QUERY_INVALID, 'Validation failed: q must be a string')
   }
 
   const trimmed = queryParam.trim()
 
   if (trimmed.length > MAX_SEARCH_QUERY_LENGTH) {
-    throw new AppError(400, `Validation failed: q must be at most ${MAX_SEARCH_QUERY_LENGTH} characters`)
+    throw new AppError(400, ErrorCode.VALIDATION_SEARCH_QUERY_MAX_LENGTH, `Validation failed: q must be at most ${MAX_SEARCH_QUERY_LENGTH} characters`)
   }
 
   return trimmed
@@ -188,20 +189,20 @@ export const validateSearchQuery = (queryParam: unknown): string => {
 
 export const validateEditProfileInput = (body: unknown) => {
   if (!isRecord(body)) {
-    throw new AppError(400, 'Validation failed: displayName and/or bio must be provided')
+    throw new AppError(400, ErrorCode.VALIDATION_PROFILE_FIELDS_REQUIRED, 'Validation failed: displayName and/or bio must be provided')
   }
 
   // Allow only displayName and bio in PATCH.
   const unknownFields = Object.keys(body).filter((key) => !EDIT_PROFILE_ALLOWED_FIELDS.has(key))
   if (unknownFields.length > 0) {
-    throw new AppError(400, `Validation failed: unknown field(s): ${unknownFields.join(', ')}`)
+    throw new AppError(400, ErrorCode.VALIDATION_PROFILE_UNKNOWN_FIELDS, `Validation failed: unknown field(s): ${unknownFields.join(', ')}`)
   }
 
   const hasDisplayName = Object.prototype.hasOwnProperty.call(body, 'displayName')
   const hasBio = Object.prototype.hasOwnProperty.call(body, 'bio')
 
   if (!hasDisplayName && !hasBio) {
-    throw new AppError(400, 'Validation failed: displayName and/or bio must be provided')
+    throw new AppError(400, ErrorCode.VALIDATION_PROFILE_FIELDS_REQUIRED, 'Validation failed: displayName and/or bio must be provided')
   }
 
   let displayName: string | null | undefined
@@ -213,12 +214,12 @@ export const validateEditProfileInput = (body: unknown) => {
       const trimmedDisplayName = body.displayName.trim()
 
       if (trimmedDisplayName.length > MAX_DISPLAY_NAME_LENGTH) {
-        throw new AppError(400, `Validation failed: displayName must be at most ${MAX_DISPLAY_NAME_LENGTH} characters`)
+        throw new AppError(400, ErrorCode.VALIDATION_DISPLAY_NAME_MAX_LENGTH, `Validation failed: displayName must be at most ${MAX_DISPLAY_NAME_LENGTH} characters`)
       }
 
       displayName = trimmedDisplayName.length > 0 ? trimmedDisplayName : null
     } else {
-      throw new AppError(400, 'Validation failed: displayName must be a string or null')
+      throw new AppError(400, ErrorCode.VALIDATION_DISPLAY_NAME_INVALID, 'Validation failed: displayName must be a string or null')
     }
   }
 
@@ -231,12 +232,12 @@ export const validateEditProfileInput = (body: unknown) => {
       const trimmedBio = body.bio.trim()
 
       if (trimmedBio.length > MAX_BIO_LENGTH) {
-        throw new AppError(400, `Validation failed: bio must be at most ${MAX_BIO_LENGTH} characters`)
+        throw new AppError(400, ErrorCode.VALIDATION_BIO_MAX_LENGTH, `Validation failed: bio must be at most ${MAX_BIO_LENGTH} characters`)
       }
 
       bio = trimmedBio.length > 0 ? trimmedBio : null
     } else {
-      throw new AppError(400, 'Validation failed: bio must be a string or null')
+      throw new AppError(400, ErrorCode.VALIDATION_BIO_INVALID, 'Validation failed: bio must be a string or null')
     }
   }
 
@@ -272,7 +273,7 @@ export const mapUserToPublicProfile = (user: PublicProfileUserRecord): PublicPro
 // Validate avatar file mimetype.
 export const validateAvatarMimetype = (mimetype: string | undefined) => {
   if (!mimetype || !ALLOWED_AVATAR_MIMES.has(mimetype)) {
-    throw new AppError(400, 'Validation failed: avatar must be jpg, png, or webp')
+    throw new AppError(400, ErrorCode.VALIDATION_AVATAR_FORMAT, 'Validation failed: avatar must be jpg, png, or webp')
   }
 }
 

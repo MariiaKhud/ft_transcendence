@@ -18,6 +18,11 @@ const mainEntry = readFileSync(path.join(frontendRoot, 'src/main.tsx'), 'utf8');
 const footer = readFileSync(path.join(frontendRoot, 'src/components/Footer.tsx'), 'utf8');
 const languageSwitcher = readFileSync(path.join(frontendRoot, 'src/components/LanguageSwitcher.tsx'), 'utf8');
 const packageJson = JSON.parse(readFileSync(path.join(frontendRoot, 'package.json'), 'utf8'));
+const apiErrorsSource = readFileSync(path.join(frontendRoot, 'src/lib/api-errors.ts'), 'utf8');
+const errorCodesSource = readFileSync(
+  path.join(frontendRoot, '../backend/src/lib/error-codes.ts'),
+  'utf8',
+);
 
 const CYRILLIC_RE = /[Ѐ-ӿ]/;
 const LATIN_LETTER_RE = /[A-Za-z]/;
@@ -312,5 +317,56 @@ test('changing the i18next language updates resolved translations and persists t
     } else {
       delete globalThis.navigator;
     }
+  }
+});
+
+test('every backend ErrorCode has a matching api.errors.<code> translation key in every language', () => {
+  const codeMatches = [...errorCodesSource.matchAll(/^\s*[A-Z_]+:\s*'([a-z_]+)'/gm)];
+  const backendCodes = codeMatches.map((match) => match[1]);
+
+  assert.ok(backendCodes.length > 0, 'expected to find at least one ErrorCode entry in backend/src/lib/error-codes.ts');
+
+  for (const [lang, bundle] of [['en', en], ['nl', nl], ['uk', uk]]) {
+    for (const code of backendCodes) {
+      assert.ok(bundle.api?.errors?.[code], `${lang}.api.errors.${code} is missing`);
+    }
+  }
+
+  // Catch the reverse too: a translation key with no backing backend code
+  // would be silent dead weight that nobody maintains.
+  const translatedCodes = Object.keys(en.api.errors);
+  for (const code of translatedCodes) {
+    assert.ok(backendCodes.includes(code), `en.api.errors.${code} has no matching ErrorCode in the backend`);
+  }
+});
+
+test('translateApiError prefers the backend code and falls back to the given message', () => {
+  assert.match(apiErrorsSource, /export const translateApiError/);
+  assert.match(apiErrorsSource, /i18n\.exists\(`api\.errors\.\$\{code\}`\)/);
+  assert.match(apiErrorsSource, /i18n\.t\(`api\.errors\.\$\{code\}`\)/);
+  assert.match(apiErrorsSource, /return fallbackMessage/);
+});
+
+test('frontend catch sites route API errors through translateApiError instead of raw err.message', () => {
+  const filesThatMustUseIt = [
+    'src/pages/Login.tsx',
+    'src/pages/Register.tsx',
+    'src/pages/EditProfile.tsx',
+    'src/pages/Profile.tsx',
+    'src/pages/Article.tsx',
+    'src/components/ArticleForm.tsx',
+    'src/components/user/FollowButton.tsx',
+    'src/components/user/FriendButton.tsx',
+    'src/components/user/UserSearchBar.tsx',
+  ];
+
+  for (const relativePath of filesThatMustUseIt) {
+    const source = readFileSync(path.join(frontendRoot, relativePath), 'utf8');
+    assert.match(
+      source,
+      /import \{ translateApiError \} from '@\/lib\/api-errors'/,
+      `${relativePath} does not import translateApiError`,
+    );
+    assert.match(source, /translateApiError\(/, `${relativePath} imports but never calls translateApiError`);
   }
 });

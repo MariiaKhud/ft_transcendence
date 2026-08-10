@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
 import { useStore } from '@/store/store'
 import { formatCategoryLabel, getInitials, toSafeImageUrl } from '@/lib/article-display'
+import { translateApiError } from '@/lib/api-errors'
 import {
   createComment,
   deleteArticle,
@@ -74,7 +75,7 @@ export const Article = () => {
         setLikeCount(data.likeCount)
       })
       .catch((err) => {
-        setError(err instanceof Error ? err.message : t('article.errors.loadFailed'))
+        setError(translateApiError(err, err instanceof Error ? err.message : t('article.errors.loadFailed')))
       })
       .finally(() => {
         setLoading(false)
@@ -143,7 +144,7 @@ export const Article = () => {
       setArticle((prev) => (prev ? { ...prev, commentsCount: prev.commentsCount + 1 } : prev))
       setNewComment('')
     } catch (err) {
-      setCommentError(err instanceof Error ? err.message : t('article.errors.postCommentFailed'))
+      setCommentError(translateApiError(err, err instanceof Error ? err.message : t('article.errors.postCommentFailed')))
     } finally {
       setIsSubmittingComment(false)
     }
@@ -175,7 +176,7 @@ export const Article = () => {
     } catch (err) {
       setCommentActionErrors((prev) => ({
         ...prev,
-        [commentId]: err instanceof Error ? err.message : t('article.errors.updateCommentFailed'),
+        [commentId]: translateApiError(err, err instanceof Error ? err.message : t('article.errors.updateCommentFailed')),
       }))
     } finally {
       setIsSavingCommentEdit(false)
@@ -215,7 +216,7 @@ export const Article = () => {
     } catch (err) {
       setCommentActionErrors((prev) => ({
         ...prev,
-        [comment.id]: err instanceof Error ? err.message : t('article.errors.deleteCommentFailed'),
+        [comment.id]: translateApiError(err, err instanceof Error ? err.message : t('article.errors.deleteCommentFailed')),
       }))
     } finally {
       setDeletingCommentId(null)
@@ -262,7 +263,7 @@ export const Article = () => {
       await deleteArticle(id)
       navigate('/')
     } catch (err) {
-      setDeleteError(err instanceof Error ? err.message : t('article.errors.deleteArticleFailed'))
+      setDeleteError(translateApiError(err, err instanceof Error ? err.message : t('article.errors.deleteArticleFailed')))
       setIsDeleting(false)
     }
   }

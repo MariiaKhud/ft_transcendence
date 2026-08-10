@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { searchUsers, type UserSearchResult } from '@/api/users'
 import { getInitials, toSafeImageUrl } from '@/lib/article-display'
+import { translateApiError } from '@/lib/api-errors'
 import { SearchIcon } from '@/components/ui/icons'
 
 // Username search box for the top nav: type a full or partial username and
@@ -53,7 +54,7 @@ export const UserSearchBar = () => {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : t('userSearch.unableToSearch'))
+          setError(translateApiError(err, err instanceof Error ? err.message : t('userSearch.unableToSearch')))
         }
       })
       .finally(() => {

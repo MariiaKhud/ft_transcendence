@@ -1,6 +1,7 @@
 import { prisma } from '../lib/prisma.js'
 import { NotificationType } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware.js';
+import { ErrorCode } from '../lib/error-codes.js';
 
 export async function createNotification(
   userId: string,
@@ -47,12 +48,12 @@ export async function markOneAsRead(notificationId: string, userId: string) {
   });
 
   if (!notification) {
-    throw new AppError(404, 'Notification not found');
+    throw new AppError(404, ErrorCode.NOTIFICATION_NOT_FOUND, 'Notification not found');
   }
 
   // Check ownership — must be your own notification
   if (notification.userId !== userId) {
-    throw new AppError(403, 'You cannot mark another user\'s notification as read');
+    throw new AppError(403, ErrorCode.NOTIFICATION_MARK_READ_FORBIDDEN, 'You cannot mark another user\'s notification as read');
   }
 
   // If already read, just return it — no need to update or throw

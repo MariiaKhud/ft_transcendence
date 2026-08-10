@@ -1,27 +1,28 @@
 import { prisma } from '../lib/prisma.js';
 import { AppError } from '../middleware/error.middleware.js';
+import { ErrorCode } from '../lib/error-codes.js';
 
 const MAX_LENGTH = 2000;
 
 export async function sendMessage(senderId: string, receiverId: string, content: string) {
   // Can't message yourself
   if (senderId === receiverId) {
-    throw new AppError(400, "You can't send a message to yourself");
+    throw new AppError(400, ErrorCode.MESSAGE_SELF_FORBIDDEN, "You can't send a message to yourself");
   }
 
   // Validate content exists and is a string
   if (!content || typeof content !== 'string') {
-    throw new AppError(400, 'Message content is required');
+    throw new AppError(400, ErrorCode.VALIDATION_MESSAGE_CONTENT_REQUIRED, 'Message content is required');
   }
 
   const trimmed = content.trim();
 
   if (trimmed.length === 0) {
-    throw new AppError(400, 'Message cannot be empty');
+    throw new AppError(400, ErrorCode.VALIDATION_MESSAGE_CONTENT_EMPTY, 'Message cannot be empty');
   }
 
   if (trimmed.length > MAX_LENGTH) {
-    throw new AppError(400, `Message cannot exceed ${MAX_LENGTH} characters`);
+    throw new AppError(400, ErrorCode.VALIDATION_MESSAGE_CONTENT_MAX_LENGTH, `Message cannot exceed ${MAX_LENGTH} characters`);
   }
 
   // Check receiver exists
@@ -31,7 +32,7 @@ export async function sendMessage(senderId: string, receiverId: string, content:
   });
 
   if (!receiver) {
-    throw new AppError(404, 'User not found');
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found');
   }
 
   const message = await prisma.message.create({
@@ -64,7 +65,7 @@ export async function getConversation(currentUserId: string, otherUserId: string
   });
 
   if (!otherUser) {
-    throw new AppError(404, 'User not found');
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found');
   }
 
   // Fetch messages in both directions between the two users

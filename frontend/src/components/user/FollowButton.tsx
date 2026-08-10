@@ -4,6 +4,7 @@ import { followUser, unfollowUser, getFollowStatus } from '../../api/follows';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, CheckIcon, Spinner, XIcon } from '@/components/ui/icons'
+import { translateApiError } from '@/lib/api-errors'
 
 interface FollowButtonProps {
   targetUserId: string;
@@ -55,7 +56,7 @@ export function FollowButton({
         onFollowChange?.(true);
       }
     } catch (error) {
-      setError(error instanceof Error ? error.message : t('common.somethingWrong'))
+      setError(translateApiError(error, error instanceof Error ? error.message : t('common.somethingWrong')))
     } finally {
       setLoading(false);
     }

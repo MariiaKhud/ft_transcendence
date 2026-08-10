@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken'
 import { AppError } from '../middleware/error.middleware.js'
+import { ErrorCode } from './error-codes.js'
 
 // Allowed user roles.
 export type AuthRole = 'USER' | 'MODERATOR' | 'ADMIN'
@@ -21,7 +22,7 @@ const getJwtSecret = () => {
   const jwtSecret = process.env.JWT_SECRET
 
   if (!jwtSecret) {
-    throw new AppError(500, 'Server misconfiguration: JWT secret is missing')
+    throw new AppError(500, ErrorCode.SERVER_MISCONFIGURED, 'Server misconfiguration: JWT secret is missing')
   }
 
   return jwtSecret
@@ -38,16 +39,16 @@ export const verifyAuthToken = (token: string) => {
     const decoded = jwt.verify(token, getJwtSecret())
 
     if (!isRecord(decoded)) {
-      throw new AppError(401, 'Invalid or expired session')
+      throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
     }
 
     const { userId, role, csrfToken } = decoded
     if (typeof userId !== 'string' || typeof csrfToken !== 'string') {
-      throw new AppError(401, 'Invalid or expired session')
+      throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
     }
 
     if (typeof role !== 'string' || !isAuthRole(role)) {
-      throw new AppError(401, 'Invalid or expired session')
+      throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
     }
 
     return {
@@ -60,6 +61,6 @@ export const verifyAuthToken = (token: string) => {
       throw error
     }
 
-    throw new AppError(401, 'Invalid or expired session')
+    throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
   }
 }
