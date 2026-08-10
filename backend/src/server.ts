@@ -79,6 +79,9 @@ const allowedOrigins = [
   'https://127.0.0.1:8443',
 ]
 
+// ─────────────────────────────────────────────
+// CORS Middleware
+// ─────────────────────────────────────────────
 app.use(
   cors({
     origin: (origin, callback) => {
