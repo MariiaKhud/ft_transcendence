@@ -1,18 +1,4 @@
-// import { Prisma } from '@prisma/client'
 import { prisma } from '../lib/prisma.js'
-
-// type BadgeRow = Prisma.BadgeGetPayload<{
-//   select: {
-//     id: true
-//     name: true
-//   }
-// }>
-
-// type EarnedBadgeRow = Prisma.UserBadgeGetPayload<{
-//   select: {
-//     badgeId: true
-//   }
-// }>
 
 export function calculateLevel(xp: number): number {
   if (xp >= 1000) return 5
@@ -64,48 +50,6 @@ function getBadgeCondition(badgeName: string, articleCount: number, totalLikes: 
       return false
   }
 }
-
-// export async function checkAndAwardBadges(userId: string) {
-//   const [articleCount, likesAggregate, allBadges, earnedBadges] = await Promise.all([
-//     prisma.article.count({
-//       where: { authorId: userId, isRemoved: false },
-//     }),
-//     prisma.article.aggregate({
-//       where: { authorId: userId, isRemoved: false },
-//       _sum: { likeCount: true },
-//     }),
-//     prisma.badge.findMany({
-//       select: { id: true, name: true },
-//     }),
-//     prisma.userBadge.findMany({
-//       where: { userId },
-//       select: { badgeId: true },
-//     }),
-//   ])
-
-//   const totalLikes = likesAggregate._sum.likeCount ?? 0
-//   const earnedBadgeIds = new Set(earnedBadges.map((entry: EarnedBadgeRow) => entry.badgeId))
-
-//   const eligibleBadges = allBadges.filter((badge: BadgeRow) =>
-//     getBadgeCondition(badge.name, articleCount, totalLikes),
-//   )
-
-//   const newBadges = eligibleBadges.filter((badge: BadgeRow) => !earnedBadgeIds.has(badge.id))
-
-//   if (newBadges.length === 0) {
-//     return { awardedCount: 0 }
-//   }
-
-//   const result = await prisma.userBadge.createMany({
-//     data: newBadges.map((badge: BadgeRow) => ({
-//       userId,
-//       badgeId: badge.id,
-//     })),
-//     skipDuplicates: true,
-//   })
-
-//   return { awardedCount: result.count }
-// }
 
 export async function checkAndAwardBadges(userId: string) {
   const [articleCount, likesAggregate, allBadges, earnedBadges] = await Promise.all([

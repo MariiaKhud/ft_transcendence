@@ -2,17 +2,22 @@
 set -uo pipefail
 
 
+
 # ============================================================
 # Gamification API Integration Tests
 # TRAN-62: XP and level logic via article create/delete flow
+# TRAN-63: Badge award & idempotency checks
 # ============================================================
+
 
 
 BASE_URL="${BACKEND_BASE_URL:-http://localhost:3000}"
 
 
+
 COOKIE_A="$(mktemp)"
 RUN_ID="$(date +%s | tail -c 5)"
+
 
 
 USERNAME_A="gamify_a_${RUN_ID}"
@@ -20,8 +25,10 @@ EMAIL_A="${USERNAME_A}@example.com"
 PASSWORD="Password123!"
 
 
+
 LAST_STATUS=""
 LAST_BODY=""
+
 
 
 RED='\033[0;31m'
@@ -33,14 +40,17 @@ CYAN_HI='\033[0;96m'
 RESET='\033[0m'
 
 
+
 PASS=0
 FAIL=0
+
 
 
 XP_REWARD_CREATE_ARTICLE=25
 TARGET_XP_TO_LEVEL_2=100
 ARTICLES_FOR_LEVEL_2=$(( (TARGET_XP_TO_LEVEL_2 + XP_REWARD_CREATE_ARTICLE - 1) / XP_REWARD_CREATE_ARTICLE ))
 ARTICLE_CONTENT="Testing XP award on article creation. This article is intentionally long enough to satisfy validation rules and should trigger the gamification reward flow in the backend."
+
 
 
 check() {
@@ -55,6 +65,7 @@ check() {
 }
 
 
+
 color_echo() {
   local color="$1"
   shift
@@ -62,8 +73,10 @@ color_echo() {
 }
 
 
+
 cleanup() {
   rm -f "$COOKIE_A"
+
 
 
   docker compose exec -T postgres sh -lc \
@@ -78,7 +91,9 @@ DELETE FROM users WHERE email='${EMAIL_A}';
 }
 
 
+
 trap cleanup EXIT
+
 
 
 perform_request() {
@@ -86,8 +101,10 @@ perform_request() {
   shift
 
 
+
   local response
   response="$(mktemp)"
+
 
 
   LAST_STATUS="$(curl -sS \
@@ -96,8 +113,10 @@ perform_request() {
     "$@")"
 
 
+
   LAST_BODY="$(cat "$response")"
   rm "$response"
+
 
 
   if [[ "$LAST_STATUS" =~ ^2 ]]; then
@@ -109,9 +128,11 @@ perform_request() {
   fi
 
 
+
   echo "$LAST_BODY"
   echo
 }
+
 
 
 query_db() {
@@ -124,15 +145,18 @@ query_db() {
 }
 
 
+
 extract_article_id() {
   echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4
 }
+
 
 
 color_echo "$BLUE" "==========================================="
 color_echo "$BLUE" "     Gamification API integration tests    "
 color_echo "$BLUE" "==========================================="
 echo
+
 
 
 ###########################################################
@@ -146,9 +170,11 @@ check "Health check returns 200" "$LAST_STATUS" "200"
 echo
 
 
+
 ###########################################################
 color_echo "$CYAN_HI" "============== Auth flow =============="
 ###########################################################
+
 
 
 color_echo "$CYAN_L" "Check #2"
@@ -166,6 +192,7 @@ check "Register User A returns 201" "$LAST_STATUS" "201"
 echo
 
 
+
 color_echo "$CYAN_L" "Check #3"
 perform_request \
   "Login User A" \
@@ -181,9 +208,11 @@ check "Login User A returns 200" "$LAST_STATUS" "200"
 echo
 
 
+
 ###########################################################
 color_echo "$CYAN_HI" "============== DB lookup =============="
 ###########################################################
+
 
 
 color_echo "$CYAN_L" "Lookup user id"
@@ -193,9 +222,11 @@ color_echo "$BLUE" "User A: $USER_A_ID"
 echo
 
 
+
 ###########################################################
 color_echo "$CYAN_HI" "============== Initial state =============="
 ###########################################################
+
 
 
 color_echo "$CYAN_L" "Check #4"
@@ -206,9 +237,11 @@ check "Initial level is 1" "$INITIAL_LEVEL" "1"
 echo
 
 
+
 ###########################################################
 color_echo "$CYAN_HI" "============== Article create XP =============="
 ###########################################################
+
 
 
 color_echo "$CYAN_L" "Check #5"
@@ -229,6 +262,7 @@ ARTICLE_1_ID="$(extract_article_id)"
 echo
 
 
+
 color_echo "$CYAN_L" "Check #6"
 XP_AFTER_ONE="$(query_db "SELECT xp FROM users WHERE id='${USER_A_ID}';" | tr -d '\n' | xargs)"
 LEVEL_AFTER_ONE="$(query_db "SELECT level FROM users WHERE id='${USER_A_ID}';" | tr -d '\n' | xargs)"
@@ -239,9 +273,30 @@ check "Level remains 1 after first article" "$LEVEL_AFTER_ONE" "$EXPECTED_LEVEL_
 echo
 
 
+
+###########################################################
+color_echo "$CYAN_HI" "============== Badges: First Post =============="
+###########################################################
+
+
+
+color_echo "$CYAN_L" "Check #6a"
+FIRST_POST_BADGE_COUNT_AFTER_ONE="$(query_db "
+  SELECT COUNT(*)
+  FROM user_badges ub
+  JOIN badges b ON b.id = ub.badge_id
+  WHERE ub.user_id='${USER_A_ID}'
+    AND b.name='First Post';
+" | tr -d '\n' | xargs)"
+check "User has exactly one 'First Post' badge after first article" "$FIRST_POST_BADGE_COUNT_AFTER_ONE" "1"
+echo
+
+
+
 ###########################################################
 color_echo "$CYAN_HI" "============== Threshold crossing =============="
 ###########################################################
+
 
 
 for ((i=2; i<=ARTICLES_FOR_LEVEL_2; i++)); do
@@ -259,7 +314,8 @@ for ((i=2; i<=ARTICLES_FOR_LEVEL_2; i++)); do
     }"
   check "Create article $i returns 201" "$LAST_STATUS" "201"
   echo
- done
+done
+
 
 
 color_echo "$CYAN_L" "Check #7"
@@ -271,9 +327,24 @@ check "Level becomes 2 at 100 XP" "$LEVEL_AFTER_LEVEL2" "2"
 echo
 
 
+
+color_echo "$CYAN_L" "Check #7a"
+FIRST_POST_BADGE_COUNT_AFTER_MANY="$(query_db "
+  SELECT COUNT(*)
+  FROM user_badges ub
+  JOIN badges b ON b.id = ub.badge_id
+  WHERE ub.user_id='${USER_A_ID}'
+    AND b.name='First Post';
+" | tr -d '\n' | xargs)"
+check "'First Post' badge remains unique after multiple articles" "$FIRST_POST_BADGE_COUNT_AFTER_MANY" "1"
+echo
+
+
+
 ###########################################################
 color_echo "$CYAN_HI" "============== Article delete XP rollback =============="
 ###########################################################
+
 
 
 color_echo "$CYAN_L" "Check #8"
@@ -286,6 +357,7 @@ check "Delete article returns 200" "$LAST_STATUS" "200"
 echo
 
 
+
 color_echo "$CYAN_L" "Check #9"
 XP_AFTER_DELETE="$(query_db "SELECT xp FROM users WHERE id='${USER_A_ID}';" | tr -d '\n' | xargs)"
 LEVEL_AFTER_DELETE="$(query_db "SELECT level FROM users WHERE id='${USER_A_ID}';" | tr -d '\n' | xargs)"
@@ -295,9 +367,11 @@ check "Level stays valid after delete" "$LEVEL_AFTER_DELETE" "1"
 echo
 
 
+
 ###########################################################
 color_echo "$CYAN_HI" "============== No auth validation =============="
 ###########################################################
+
 
 
 color_echo "$CYAN_L" "Check #10"
@@ -315,15 +389,18 @@ check "No auth create returns 401" "$LAST_STATUS" "401"
 echo
 
 
+
 ###########################################################
 color_echo "$CYAN_HI" "============== Cleanup verification =============="
 ###########################################################
+
 
 
 color_echo "$CYAN_L" "Check #11"
 REMAINING_ARTICLES="$(query_db "SELECT COUNT(*) FROM articles WHERE author_id='${USER_A_ID}';" | tr -d '\n' | xargs)"
 check "Remaining article count matches expected" "$REMAINING_ARTICLES" "$((ARTICLES_FOR_LEVEL_2 - 1))"
 echo
+
 
 
 echo

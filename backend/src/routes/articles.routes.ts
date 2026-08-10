@@ -18,6 +18,7 @@ import {
   XP_REWARD_CREATE_ARTICLE,
 } from './articles.route-helpers.js'
 import { commentWithAuthorSelect, validateCreateCommentInput } from './comments.route-helpers.js'
+import { checkAndAwardBadges } from '../services/gamification.service.js'
 
 const router = Router()
 
@@ -55,6 +56,9 @@ const createArticleHandler = async (req: Request, res: Response) => {
 
     return created
   })
+
+  // After article + XP are committed, check and award badges.
+  await checkAndAwardBadges(authorId)
 
   res.status(201).json({ success: true, data: { ...article, commentsCount: 0 } })
 }
