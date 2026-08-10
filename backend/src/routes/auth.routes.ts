@@ -170,6 +170,22 @@ const clearOAuthStateCookie = (res: Response) => {
   })
 }
 
+const shouldRedirectToOAuthCanonicalOrigin = (req: Request, canonicalUrl: URL) => {
+  return req.hostname !== canonicalUrl.hostname
+}
+
+const buildOAuthCanonicalStartUrl = (req: Request, canonicalUrl: URL) => {
+  const target = new URL(req.originalUrl, canonicalUrl.origin)
+
+  for (const [key, value] of Object.entries(req.query)) {
+    if (typeof value === 'string') {
+      target.searchParams.set(key, value)
+    }
+  }
+
+  return target.toString()
+}
+
 const readQueryString = (value: unknown): string => {
   return typeof value === 'string' ? value.trim() : ''
 }
@@ -326,6 +342,15 @@ const meHandler = async (req: Request, res: Response) => {
 // OAuth login flow handlers. Passport handles the provider redirect and callback.
 const oauthStartHandler = (req: Request, res: Response, next: (error?: unknown) => void) => {
   const oauthConfig = assertConfiguredProvider(req.params.provider)
+
+  // OAuth callback URLs are host-bound at the provider level. If OAuth starts from a
+  // different local host (e.g. 127.0.0.1), the state cookie won't be available on the
+  // callback host and the flow fails with oauth_state_missing.
+  const canonicalUrl = new URL(oauthConfig.successRedirect)
+  if (shouldRedirectToOAuthCanonicalOrigin(req, canonicalUrl)) {
+    res.redirect(buildOAuthCanonicalStartUrl(req, canonicalUrl))
+    return
+  }
 
   const oauthState = createOAuthState(oauthConfig.provider)
 

@@ -64,22 +64,34 @@ app.use(helmet())
 const allowedOrigins = [
   FRONTEND_URL,
   'http://localhost',
+  'http://127.0.0.1',
   'http://localhost:5173', // Vite dev server
   'http://localhost:5174',
   'http://localhost:8080', // nginx HTTP port
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:8080',
   'https://localhost',
+  'https://127.0.0.1',
   'https://localhost:443',
   'https://localhost:3000',
   'https://localhost:8443', // nginx HTTPS port
+  'https://127.0.0.1:443',
+  'https://127.0.0.1:3000',
+  'https://127.0.0.1:8443',
 ]
 
+// ─────────────────────────────────────────────
+// CORS Middleware
+// ─────────────────────────────────────────────
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true)
       } else {
-        callback(new Error('Not allowed by CORS'))
+        // Return no CORS headers for unknown origins without turning it into a 500.
+        callback(null, false)
       }
     },
     credentials: true,
