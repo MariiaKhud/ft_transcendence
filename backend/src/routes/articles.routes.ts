@@ -292,6 +292,7 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
 
   // Only notify on the like transition, not the unlike.
   if (liked) {
+    await checkAndAwardBadges(article.authorId)
     await createNotification(article.authorId, 'LIKE', `liked your article "${article.title}"`, article.id)
   }
 
