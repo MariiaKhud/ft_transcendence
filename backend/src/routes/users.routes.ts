@@ -1,4 +1,5 @@
 import { Router } from 'express'
+import { Prisma } from '@prisma/client'
 import type { Request, Response } from 'express'
 import multer from 'multer'
 import { promises as fs } from 'fs'
@@ -74,6 +75,100 @@ const searchUsersHandler = async (req: Request, res: Response) => {
   const trimmedUsers = hasMore ? users.slice(0, USER_SEARCH_RESULTS_LIMIT) : users
 
   res.status(200).json({ success: true, data: { users: trimmedUsers, hasMore } })
+}
+
+interface LeaderboardRow {
+  id: string
+  username: string
+  avatarUrl: string | null
+  level: number
+  articleCount: number
+  totalLikes: number
+}
+
+const getLeaderboardHandler = async (_req: Request, res: Response) => {
+  const users = await prisma.$queryRaw<LeaderboardRow[]>(
+    Prisma.sql`
+      SELECT
+        u.id,
+        u.username,
+        u.avatar_url AS "avatarUrl",
+        u.level,
+        COUNT(a.id)::int AS "articleCount",
+        COALESCE(SUM(a.like_count), 0)::int AS "totalLikes"
+      FROM users u
+      LEFT JOIN articles a
+        ON a.author_id = u.id
+       AND a.is_removed = false
+      GROUP BY
+        u.id,
+        u.username,
+        u.avatar_url,
+        u.level
+      ORDER BY
+        "totalLikes" DESC,
+        u.username ASC
+      LIMIT 50
+    `,
+  )
+
+  const userIds = users.map((user) => user.id)
+
+  const userBadges =
+    userIds.length > 0
+      ? await prisma.userBadge.findMany({
+          where: {
+            userId: {
+              in: userIds,
+            },
+          },
+          select: {
+            userId: true,
+            earnedAt: true,
+            badge: {
+              select: {
+                id: true,
+                name: true,
+                icon: true,
+              },
+            },
+          },
+          orderBy: {
+            earnedAt: 'asc',
+          },
+        })
+      : []
+
+  const badgesByUser = new Map<
+    string,
+    Array<{ id: string; name: string; icon: string }>
+  >()
+
+  for (const userBadge of userBadges) {
+    const badges = badgesByUser.get(userBadge.userId) ?? []
+
+    badges.push({
+      id: userBadge.badge.id,
+      name: userBadge.badge.name,
+      icon: userBadge.badge.icon,
+    })
+
+    badgesByUser.set(userBadge.userId, badges)
+  }
+
+  const leaderboard = users.map((user) => ({
+    username: user.username,
+    avatarUrl: user.avatarUrl,
+    articleCount: user.articleCount,
+    totalLikes: user.totalLikes,
+    badges: badgesByUser.get(user.id) ?? [],
+    level: user.level,
+  }))
+
+  res.status(200).json({
+    success: true,
+    data: leaderboard,
+  })
 }
 
 const getPublicProfileHandler = async (req: Request, res: Response) => {
@@ -225,6 +320,7 @@ router.delete('/me/avatar', authMiddleware, handleAsyncErrors(deleteMyAvatarHand
 router.patch('/me', authMiddleware, handleAsyncErrors(editMyProfileHandler))
 // Must be registered before '/:username' so a search request isn't swallowed by the username route.
 router.get('/search', handleAsyncErrors(searchUsersHandler))
+router.get('/leaderboard', handleAsyncErrors(getLeaderboardHandler))
 router.get('/:username', handleAsyncErrors(getPublicProfileHandler))
 router.get('/:username/articles', handleAsyncErrors(getProfileArticlesHandler))
 router.patch('/me/online', authMiddleware, updateOnlineStatus);
