@@ -21,6 +21,7 @@ help:
 	@printf "  $(GREEN)make test-friends$(RESET)  - Run friends flow integration test\n"
 	@printf "  $(GREEN)make test-follows$(RESET)  - Run follows flow integration test\n"
 	@printf "  $(GREEN)make test-messages$(RESET) - Run messages integration test\n"
+	@printf "  $(GREEN)make test-gamification$(RESET) - Run gamification integration test\n"
 
 up:
 	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"
@@ -65,5 +66,8 @@ test-follows:
 
 test-messages:
 	cd backend && ./scripts/test-messages.sh
+
+test-gamification:
+	cd backend && ./scripts/test-gamification-flow.sh
 
 .DEFAULT_GOAL := help

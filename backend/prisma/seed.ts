@@ -94,6 +94,50 @@ const main = async () => {
 
   console.log('✅ Users created')
 
+    // Create badges
+    await prisma.badge.createMany({
+      data: [
+        {
+          name: 'First Post',
+          description: 'Write 1 article',
+          icon: 'sparkles',
+          xpReward: 10,
+        },
+        {
+          name: 'Consistent Writer',
+          description: 'Write 5 articles',
+          icon: 'pen',
+          xpReward: 20,
+        },
+        {
+          name: 'Prolific Author',
+          description: 'Write 20 articles',
+          icon: 'book-open',
+          xpReward: 50,
+        },
+        {
+          name: 'First Like',
+          description: 'Receive 1 like',
+          icon: 'heart',
+          xpReward: 10,
+        },
+        {
+          name: 'Rising Voice',
+          description: 'Receive 10 likes',
+          icon: 'trending-up',
+          xpReward: 20,
+        },
+        {
+          name: 'Popular Writer',
+          description: 'Receive 50 likes',
+          icon: 'trophy',
+          xpReward: 50,
+        },
+      ],
+    })
+  
+    console.log('✅ Badges created')
+
   // Create articles
   const article1 = await prisma.article.create({
     data: {
