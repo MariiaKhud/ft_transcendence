@@ -27,7 +27,8 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV:-development}
       PORT: ${BACKEND_PORT:-3000}
-      DATABASE_URL: ${DATABASE_URL:-postgresql://transcendence:transcendence@postgres:5432/transcendence}
+      DATABASE_URL: postgresql://transcendence:transcendence@postgres:5432/transcendence # temp for Mac m1 debug
+      # DATABASE_URL: ${DATABASE_URL:-postgresql://transcendence:transcendence@postgres:5432/transcendence}
       JWT_SECRET: ${JWT_SECRET:-change-me}
       UPLOAD_PATH: ${UPLOAD_PATH:-./uploads}
       OAUTH_GOOGLE_CLIENT_ID: ${OAUTH_GOOGLE_CLIENT_ID:-}
