@@ -9,6 +9,7 @@ import { prisma } from './lib/prisma.js'
 import { initializeOAuthStrategy, passport } from './auth/oauth.passport.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
+import adminRoutes from './routes/admin.routes.js'
 import articleRoutes from './routes/articles.routes.js'
 import commentRoutes from './routes/comments.routes.js'
 import friendsRoutes from './routes/friends.routes.js';
@@ -130,6 +131,7 @@ app.get('/health', handleHealthCheck)
 
 app.use('/api/auth', authRoutes)                       // Authentication routes (register, login, logout, etc.)
 app.use('/api/users', userRoutes)                      // User routes (profile management, user listing, etc.)
+app.use('/api/admin', adminRoutes)                     // Admin routes (admin dashboard)
 app.use('/api/articles', articleRoutes)                // Articles routes (global feed, search, filtering)
 app.use('/api/comments', commentRoutes)                // Comments routes (edit comment)
 app.use('/api/friends', friendsRoutes);                // Friend system (send/accept requests, list friends, remove friends)
