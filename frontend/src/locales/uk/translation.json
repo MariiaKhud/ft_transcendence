@@ -94,6 +94,7 @@
       "validation_bio_invalid": "Біографія має бути текстом або null.",
       "validation_avatar_required": "Потрібен файл аватара.",
       "validation_avatar_format": "Аватар має бути зображенням у форматі JPEG, PNG або WebP.",
+      "validation_preferred_language_invalid": "Ця мова не підтримується.",
       "file_too_large": "Цей файл занадто великий.",
       "validation_message_content_required": "Зміст повідомлення обов'язковий.",
       "validation_message_content_empty": "Повідомлення не може бути порожнім.",

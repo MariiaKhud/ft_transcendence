@@ -94,6 +94,7 @@
       "validation_bio_invalid": "Bio must be a string or null.",
       "validation_avatar_required": "An avatar file is required.",
       "validation_avatar_format": "Avatar must be a JPEG, PNG, or WebP image.",
+      "validation_preferred_language_invalid": "That language isn't supported.",
       "file_too_large": "That file is too large.",
       "validation_message_content_required": "Message content is required.",
       "validation_message_content_empty": "Message cannot be empty.",

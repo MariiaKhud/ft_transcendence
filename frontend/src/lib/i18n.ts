@@ -30,4 +30,19 @@ void i18n
     },
   })
 
+// Switch to a logged-in user's saved language preference, so it carries
+// across devices/browsers instead of relying only on this browser's
+// localStorage. Guests (and accounts with no preference set) keep whatever
+// localStorage/browser-detection already resolved — see LanguageDetector
+// above. Called after login and after session restore.
+export const applyPreferredLanguage = (preferredLanguage: string | null | undefined) => {
+  if (
+    preferredLanguage &&
+    supportedLanguages.includes(preferredLanguage as SupportedLanguage) &&
+    i18n.language !== preferredLanguage
+  ) {
+    void i18n.changeLanguage(preferredLanguage)
+  }
+}
+
 export default i18n

@@ -86,6 +86,7 @@ const publicUserSelect = {
   avatarUrl: true,
   bio: true,
   role: true,
+  preferredLanguage: true,
   xp: true,
   level: true,
   isOnline: true,

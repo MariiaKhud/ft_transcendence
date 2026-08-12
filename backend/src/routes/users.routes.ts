@@ -127,6 +127,7 @@ const editMyProfileHandler = async (req: Request, res: Response) => {
   const data: {
     displayName?: string | null
     bio?: string | null
+    preferredLanguage?: string | null
   } = {}
 
   // Only include keys that were sent by the client to keep PATCH behavior truly partial.
@@ -136,6 +137,10 @@ const editMyProfileHandler = async (req: Request, res: Response) => {
 
   if (updates.bio !== undefined) {
     data.bio = updates.bio
+  }
+
+  if (updates.preferredLanguage !== undefined) {
+    data.preferredLanguage = updates.preferredLanguage
   }
 
   // Update the user's profile in the database and return the updated profile data based on the editableProfileSelect fields.

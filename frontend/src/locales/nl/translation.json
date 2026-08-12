@@ -94,6 +94,7 @@
       "validation_bio_invalid": "Bio moet een tekst of null zijn.",
       "validation_avatar_required": "Een avatarbestand is verplicht.",
       "validation_avatar_format": "Avatar moet een JPEG-, PNG- of WebP-afbeelding zijn.",
+      "validation_preferred_language_invalid": "Die taal wordt niet ondersteund.",
       "file_too_large": "Dat bestand is te groot.",
       "validation_message_content_required": "Berichtinhoud is verplicht.",
       "validation_message_content_empty": "Bericht mag niet leeg zijn.",

@@ -370,3 +370,23 @@ test('frontend catch sites route API errors through translateApiError instead of
     assert.match(source, /translateApiError\(/, `${relativePath} imports but never calls translateApiError`);
   }
 });
+
+test('LanguageSwitcher syncs the choice to the account when authenticated', () => {
+  assert.match(languageSwitcher, /import \{ updateMyProfile \} from '@\/api\/users'/);
+  assert.match(languageSwitcher, /updateMyProfile\(\{ preferredLanguage: event\.target\.value \}\)/);
+});
+
+test('useAuth applies a logged-in user\'s preferredLanguage on login and session restore', () => {
+  const useAuthSource = readFileSync(path.join(frontendRoot, 'src/hooks/useAuth.ts'), 'utf8');
+  assert.match(useAuthSource, /import \{ applyPreferredLanguage \} from '@\/lib\/i18n'/);
+
+  const applyCallCount = (useAuthSource.match(/applyPreferredLanguage\(user\.preferredLanguage\)/g) ?? []).length;
+  assert.equal(applyCallCount, 2, 'expected applyPreferredLanguage to be called after both login and session restore');
+});
+
+test('applyPreferredLanguage only switches for a supported, different language', () => {
+  const i18nSource = readFileSync(path.join(frontendRoot, 'src/lib/i18n.ts'), 'utf8');
+  assert.match(i18nSource, /export const applyPreferredLanguage/);
+  assert.match(i18nSource, /supportedLanguages\.includes\(preferredLanguage as SupportedLanguage\)/);
+  assert.match(i18nSource, /i18n\.language !== preferredLanguage/);
+});

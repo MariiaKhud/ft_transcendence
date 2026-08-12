@@ -8,7 +8,9 @@ const MAX_DISPLAY_NAME_LENGTH = 50
 const MAX_BIO_LENGTH = 500
 const MAX_SEARCH_QUERY_LENGTH = 50
 export const USER_SEARCH_RESULTS_LIMIT = 10
-const EDIT_PROFILE_ALLOWED_FIELDS = new Set(['displayName', 'bio'])
+// Keep in sync with frontend/src/lib/i18n.ts's `supportedLanguages`.
+const SUPPORTED_LANGUAGES = new Set(['en', 'nl', 'uk'])
+const EDIT_PROFILE_ALLOWED_FIELDS = new Set(['displayName', 'bio', 'preferredLanguage'])
 const AVATAR_MAX_SIZE = 2 * 1024 * 1024
 const ALLOWED_AVATAR_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const AVATAR_MIME_TO_EXT: Record<string, string> = {
@@ -60,6 +62,7 @@ export interface EditableProfile {
   avatarUrl: string | null
   bio: string | null
   role: 'USER' | 'MODERATOR' | 'ADMIN'
+  preferredLanguage: string | null
   xp: number
   level: number
   isOnline: boolean
@@ -149,6 +152,7 @@ export const editableProfileSelect = {
   avatarUrl: true,
   bio: true,
   role: true,
+  preferredLanguage: true,
   xp: true,
   level: true,
   isOnline: true,
@@ -192,7 +196,7 @@ export const validateEditProfileInput = (body: unknown) => {
     throw new AppError(400, ErrorCode.VALIDATION_PROFILE_FIELDS_REQUIRED, 'Validation failed: displayName and/or bio must be provided')
   }
 
-  // Allow only displayName and bio in PATCH.
+  // Allow only displayName, bio, and preferredLanguage in PATCH.
   const unknownFields = Object.keys(body).filter((key) => !EDIT_PROFILE_ALLOWED_FIELDS.has(key))
   if (unknownFields.length > 0) {
     throw new AppError(400, ErrorCode.VALIDATION_PROFILE_UNKNOWN_FIELDS, `Validation failed: unknown field(s): ${unknownFields.join(', ')}`)
@@ -200,8 +204,9 @@ export const validateEditProfileInput = (body: unknown) => {
 
   const hasDisplayName = Object.prototype.hasOwnProperty.call(body, 'displayName')
   const hasBio = Object.prototype.hasOwnProperty.call(body, 'bio')
+  const hasPreferredLanguage = Object.prototype.hasOwnProperty.call(body, 'preferredLanguage')
 
-  if (!hasDisplayName && !hasBio) {
+  if (!hasDisplayName && !hasBio && !hasPreferredLanguage) {
     throw new AppError(400, ErrorCode.VALIDATION_PROFILE_FIELDS_REQUIRED, 'Validation failed: displayName and/or bio must be provided')
   }
 
@@ -241,9 +246,26 @@ export const validateEditProfileInput = (body: unknown) => {
     }
   }
 
+  let preferredLanguage: string | null | undefined
+  if (hasPreferredLanguage) {
+    if (body.preferredLanguage === null) {
+      // null means: clear the preference and fall back to browser detection.
+      preferredLanguage = null
+    } else if (typeof body.preferredLanguage === 'string' && SUPPORTED_LANGUAGES.has(body.preferredLanguage)) {
+      preferredLanguage = body.preferredLanguage
+    } else {
+      throw new AppError(
+        400,
+        ErrorCode.VALIDATION_PREFERRED_LANGUAGE_INVALID,
+        `Validation failed: preferredLanguage must be one of ${Array.from(SUPPORTED_LANGUAGES).join(', ')}, or null`,
+      )
+    }
+  }
+
   return {
     displayName,
     bio,
+    preferredLanguage,
   }
 }
 
