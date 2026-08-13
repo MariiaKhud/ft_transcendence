@@ -4,6 +4,9 @@ import { prisma } from '../lib/prisma.js'
 import { authMiddleware } from '../middleware/auth.middleware.js'
 import { requireRole } from '../middleware/role.middleware.js'
 import { handleAsyncErrors } from '../middleware/error.middleware.js'
+import * as notificationsService from '../services/notifications.service.js'
+import { NotificationType } from '@prisma/client'
+
 
 const router = Router()
 
@@ -46,9 +49,7 @@ const getAdminUsersHandler = async (req: Request, res: Response) => {
   })
 }
 
-
-
-const changeUserRole = async (req: Request, res: Response) => {
+const changeUserRoleHandler = async (req: Request, res: Response) => {
   const { id } = req.params
   const { role } = req.body as { role?: string }
 
@@ -122,8 +123,124 @@ const changeUserRole = async (req: Request, res: Response) => {
   })
 }
 
+const getAdminArticlesHandler = async (req: Request, res: Response) => {
+  const articles = await prisma.article.findMany({
+    select: {
+      id: true,
+      title: true,
+      category: true,
+      likeCount: true,
+      isRemoved: true,
+      removedReason:true,
+      removedAt: true,
+      createdAt: true,
+      updatedAt: true,
+      author: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+        },
+      },
+      _count: {
+        select: {comments: true,}
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  })
+
+  const data = articles.map((article) => ({
+    id: article.id,
+    title: article.title,
+    category: article.category,
+    likeCount: article.likeCount,
+    isRemoved: article.isRemoved,
+    removedReason: article.removedReason,
+    removedAt: article.removedAt,
+    createdAt: article.createdAt,
+    updatedAt: article.updatedAt,
+    commentsCount: article._count.comments,
+    author: article.author,
+  }))
+
+  res.status(200).json({
+    success: true,
+    data,
+  })
+
+}
+
+const removeArticleHandler = async (req: Request, res: Response) => {
+  const { id } = req.params
+  const { removedReason } = req.body as { removedReason?: string }
+
+  if (
+    typeof removedReason !== 'string' ||
+    removedReason.trim().length === 0
+  ) {
+    res.status(400).json({
+      success: false,
+      error: 'Removal reason is required',
+    })
+    return
+  }
+
+  const article = await prisma.article.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      authorId: true,
+      isRemoved: true,
+    },
+  })
+
+  if (!article) {
+    res.status(404).json({
+      success: false,
+      error: 'Article not found',
+    })
+    return
+  }
+
+  const updatedArticle = await prisma.article.update({
+    where: { id },
+    data: {
+      isRemoved: true,
+      removedReason: removedReason.trim(),
+      removedAt: new Date(),
+    },
+    select: {
+      id: true,
+      title: true,
+      isRemoved: true,
+      removedReason: true,
+      removedAt: true,
+    },
+  })
+
+  await notificationsService.createNotification(
+    article.authorId,
+    NotificationType.CONTENT_REMOVED,
+    `Your article "${updatedArticle.title}" was removed by a moderator.`,
+    updatedArticle.id,
+  )
+
+  res.status(200).json({
+    success: true,
+    data: updatedArticle,
+  })
+
+
+}
+
 // Admin routes: user management, role management, and content moderation.
 router.get('/users', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(getAdminUsersHandler),)
-router.patch('/users/:id/role', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(changeUserRole),)
+router.patch('/users/:id/role', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(changeUserRoleHandler),)
+router.get('/articles', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(getAdminArticlesHandler),)
+router.patch('/articles/:id/remove', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(removeArticleHandler),)
+
 
 export default router
