@@ -9,6 +9,7 @@ export interface AuthUser {
   avatarUrl: string | null
   bio: string | null
   role: UserRole
+  preferredLanguage: string | null
   xp: number
   level: number
   isOnline: boolean

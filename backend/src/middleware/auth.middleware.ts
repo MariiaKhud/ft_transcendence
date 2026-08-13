@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express'
 import { AppError } from './error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 import { verifyAuthToken } from '../lib/auth.utils.js'
 import type { AuthRole } from '../lib/auth.utils.js'
 import { readAuthTokenFromCookie } from '../routes/auth.routes-helpers.js'
@@ -51,7 +52,7 @@ const authMiddleware = (req: Request, _res: Response, next: NextFunction): void 
     }
 
     // Fallback for unknown token errors.
-    throw new AppError(401, 'Invalid or expired token')
+    throw new AppError(401, ErrorCode.INVALID_TOKEN, 'Invalid or expired token')
   }
 }
 

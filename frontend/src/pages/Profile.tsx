@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getProfileArticles, getPublicProfile } from '@/api/users'
+import { translateApiError } from '@/lib/api-errors'
 import { useStore } from '@/store/store'
 import type { ProfileArticle, PublicProfile } from '@/types/profile'
 import { FriendButton } from '@/components/user/FriendButton'
@@ -102,7 +103,7 @@ export const Profile = () => {
         } catch (error) {
           if (!ignore) {
             if (error instanceof Error) {
-              setProfileError(error.message)
+              setProfileError(translateApiError(error, error.message))
             } else {
               setProfileError(t('profile.unableToLoad'))
             }
@@ -154,7 +155,7 @@ export const Profile = () => {
         } catch (error) {
           if (!ignore) {
             if (error instanceof Error) {
-              setArticlesError(error.message)
+              setArticlesError(translateApiError(error, error.message))
             } else {
               setArticlesError(t('profile.articlesUnableToLoad'))
             }

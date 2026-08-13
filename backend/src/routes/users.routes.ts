@@ -5,6 +5,7 @@ import multer from 'multer'
 import { promises as fs } from 'fs'
 import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 import { authMiddleware } from '../middleware/auth.middleware.js'
 import {
   editableProfileSelect,
@@ -43,7 +44,7 @@ const upload = multer({
 const handleMulterError = (err: any, _req: Request, _res: Response, next: Function) => {
   if (err instanceof multer.MulterError) {
     if (err.code === 'LIMIT_FILE_SIZE') {
-      return _res.status(413).json({ success: false, error: 'File too large' })
+      return _res.status(413).json({ success: false, code: ErrorCode.FILE_TOO_LARGE, error: 'File too large' })
     }
   }
   next(err)
@@ -180,7 +181,7 @@ const getPublicProfileHandler = async (req: Request, res: Response) => {
   })
 
   if (!user) {
-    throw new AppError(404, 'User not found')
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found')
   }
 
   // Map the user data to the public profile format before sending the response
@@ -204,7 +205,7 @@ const getProfileArticlesHandler = async (req: Request, res: Response) => {
   })
 
   if (!user) {
-    throw new AppError(404, 'User not found')
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found')
   }
 
   res.status(200).json({ success: true, data: user.articles })
@@ -212,7 +213,7 @@ const getProfileArticlesHandler = async (req: Request, res: Response) => {
 
 const editMyProfileHandler = async (req: Request, res: Response) => {
   if (!req.user?.userId) {
-    throw new AppError(401, 'Authentication required')
+    throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
   }
 
   // Validation normalizes values and preserves undefined for fields that were not provided.
@@ -221,6 +222,7 @@ const editMyProfileHandler = async (req: Request, res: Response) => {
   const data: {
     displayName?: string | null
     bio?: string | null
+    preferredLanguage?: string | null
   } = {}
 
   // Only include keys that were sent by the client to keep PATCH behavior truly partial.
@@ -230,6 +232,10 @@ const editMyProfileHandler = async (req: Request, res: Response) => {
 
   if (updates.bio !== undefined) {
     data.bio = updates.bio
+  }
+
+  if (updates.preferredLanguage !== undefined) {
+    data.preferredLanguage = updates.preferredLanguage
   }
 
   // Update the user's profile in the database and return the updated profile data based on the editableProfileSelect fields.
@@ -244,12 +250,12 @@ const editMyProfileHandler = async (req: Request, res: Response) => {
 
 const uploadAvatarHandler = async (req: FileRequest, res: Response) => {
   if (!req.user?.userId) {
-    throw new AppError(401, 'Authentication required')
+    throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
   }
 
   // Check if file was uploaded.
   if (!req.file) {
-    throw new AppError(400, 'Validation failed: avatar file is required')
+    throw new AppError(400, ErrorCode.VALIDATION_AVATAR_REQUIRED, 'Validation failed: avatar file is required')
   }
 
   // Validate file mimetype.
@@ -270,7 +276,7 @@ const uploadAvatarHandler = async (req: FileRequest, res: Response) => {
   })
 
   if (!currentUser) {
-    throw new AppError(404, 'User not found')
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found')
   }
 
   // Delete old avatar file if it exists.
@@ -289,7 +295,7 @@ const uploadAvatarHandler = async (req: FileRequest, res: Response) => {
 
 const deleteMyAvatarHandler = async (req: Request, res: Response) => {
   if (!req.user?.userId) {
-    throw new AppError(401, 'Authentication required')
+    throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
   }
 
   // Load the current avatar path for this user.
@@ -299,7 +305,7 @@ const deleteMyAvatarHandler = async (req: Request, res: Response) => {
   })
 
   if (!currentUser) {
-    throw new AppError(404, 'User not found')
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found')
   }
 
   // Remove the avatar file from /uploads when it exists.

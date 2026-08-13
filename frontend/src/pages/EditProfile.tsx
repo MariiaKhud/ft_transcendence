@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { deleteMyAvatar, updateMyProfile, uploadMyAvatar } from '@/api/users'
 import { useAuth } from '@/hooks/useAuth'
 import { useStore } from '@/store/store'
+import { translateApiError } from '@/lib/api-errors'
 
 // Convert relative avatar path to full URL for browser image tag.
 const toSafeImageUrl = (avatarUrl: string | null) => {
@@ -149,7 +150,7 @@ export const EditProfile = () => {
       setProfileSuccess(t('editProfile.success.profileUpdated'))
     } catch (error) {
       if (error instanceof Error) {
-        applyProfileApiError(error.message)
+        applyProfileApiError(translateApiError(error, error.message))
         return
       }
 
@@ -216,7 +217,7 @@ export const EditProfile = () => {
       setAvatarSuccess(t('editProfile.success.avatarUploaded'))
     } catch (error) {
       if (error instanceof Error) {
-        setAvatarError(error.message)
+        setAvatarError(translateApiError(error, error.message))
         return
       }
 
@@ -256,7 +257,7 @@ export const EditProfile = () => {
       setAvatarSuccess(t('editProfile.success.avatarRemoved'))
     } catch (error) {
       if (error instanceof Error) {
-        setAvatarError(error.message)
+        setAvatarError(translateApiError(error, error.message))
         return
       }
 

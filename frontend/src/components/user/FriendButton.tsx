@@ -9,6 +9,7 @@ import {
 } from '../../api/friends';
 import { Button } from '@/components/ui/button';
 import { PlusIcon, ClockIcon, CheckIcon, Spinner } from '@/components/ui/icons'
+import { translateApiError } from '@/lib/api-errors'
 
 interface FriendButtonProps {
   targetUserId: string;
@@ -34,7 +35,7 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
       await action();
       setState(nextState);
     } catch (error) {
-      setError(error instanceof Error ? error.message : t('common.somethingWrong'))
+      setError(translateApiError(error, error instanceof Error ? error.message : t('common.somethingWrong')))
     } finally {
       setLoading(false);
     }

@@ -40,6 +40,11 @@
 	- secure state-cookie validation in callback flow
 	- OAuth account linking via `oauth_accounts`
 	- frontend error mapping for evaluator-visible failure modes
+- Internationalization (i18n) is now fully integrated with:
+	- English, Dutch, and Ukrainian translations covering all application UI
+	- a footer language switcher with immediate, no-reload switching
+	- account-level persistence (`User.preferredLanguage`) synced across devices, with `localStorage`/browser-detection fallback for guests
+	- backend API errors carrying a stable `code` field the frontend translates, instead of raw English error text
 
 ## OAuth 2.0 Minor Module (Implemented)
 
@@ -193,6 +198,54 @@ Service-level OAuth documentation:
 
 - Backend OAuth API and evidence: `backend/README.md`
 - Frontend OAuth UX and evidence: `frontend/README.md`
+
+## Internationalization (i18n) Minor Module (Implemented)
+
+This project implements the "Support for multiple languages" minor module with:
+
+- English (`en`) — default / fallback
+- Dutch (`nl`) — Nederlands
+- Ukrainian (`uk`) — Українська, including correct CLDR plural forms (one/few/many/other)
+
+### Language Switcher
+
+- A dropdown in the footer, reachable from every page, guest or logged in.
+- Switching language updates all visible text immediately — no reload.
+- The choice is cached to `localStorage` (`i18nextLng`), so it survives a refresh.
+- For logged-in users, the choice also syncs to the account (`User.preferredLanguage`, via `PATCH /api/users/me`), so it carries across devices/browsers and is re-applied automatically on the next login or session restore.
+- Guests, and accounts with no saved preference, fall back to browser language detection, then English.
+
+### Translation Coverage
+
+- All application UI chrome: navigation, forms, buttons, validation messages, empty states, and the Privacy Policy / Terms of Service pages.
+- Backend API error responses include a stable, machine-readable `code` field (e.g. `user_not_found`, `validation_password_length`) alongside the English `error` text. The frontend translates the `code`, so API-originated errors — not just client-side validation — respect the active language.
+- User-generated content (article titles/bodies, comments, display names) is intentionally left untranslated, as is the platform's brand name — only application UI chrome is translated.
+
+### Evaluator Validation Steps (Module Evidence)
+
+1. Open the app and use the language dropdown in the footer to switch between English / Nederlands / Українська. Confirm visible text changes immediately (no reload) across the home feed, login/register forms, search, and the Privacy Policy / Terms of Service pages.
+2. Refresh the page after switching. Confirm the chosen language persists.
+3. Register or log in, switch language while logged in, then check that the preference was saved to the account:
+
+```bash
+curl -k -s -b /tmp/i18n.cookies https://localhost:8443/api/auth/me
+```
+
+Expect the `preferredLanguage` field in the response to match your last selection. Logging in again (or from a different browser with the same account) re-applies it automatically.
+
+4. Trigger a validation error in Dutch or Ukrainian — for example submit the login form empty, or register with a username that is already taken — and confirm the error message is translated, not English.
+5. Run the automated i18n test suite:
+
+```bash
+cd frontend && node --test scripts/i18n.test.mjs
+```
+
+Covers: key parity across all three language bundles, correct Ukrainian plural forms, translated Privacy Policy/Terms of Service content, and that every backend error `code` has a matching translation in all three languages.
+
+### Known Limitations
+
+- Dutch and Ukrainian translations (including the legal pages) were produced by the development team without a native-speaker or legal review pass; content and structure are complete and consistent across all three languages, but wording has not been professionally reviewed.
+- Backend-generated notification text (e.g. "started following you") is not yet localized — there is no frontend UI surfacing notifications yet, so this was deferred rather than translated speculatively ahead of that feature.
 
 ## Setup Instructions
 
@@ -350,6 +403,7 @@ ft_transcendence/
 - **Privacy Policy page** (static content, linked from footer, guest accessible)
 - **Terms of Service page** (acceptable use, content ownership, moderation policy, guest accessible)
 - **Minimal footer links** (Privacy Policy, Terms of Service, GitHub repo)
+- **Internationalization** (English, Dutch, Ukrainian — full UI coverage, footer language switcher, account-level persistence, translated API error codes)
 
 ### In Progress
 - Direct messaging
@@ -373,8 +427,9 @@ This section tracks only modules that are implemented and currently claimable.
 | User Management                        | OAuth 2.0 remote authentication (GitHub, Google, 42)                | Minor | 1      |
 | Web                                    | File upload and management system                                   | Minor | 1      |
 | Accessibility and Internationalization | Support for additional browsers                                     | Minor | 1      |
+| Accessibility and Internationalization | Support for multiple languages (English, Dutch, Ukrainian)          | Minor | 1      |
 
-**Claimed subtotal: 11 points**
+**Claimed subtotal: 12 points**
 
 Evidence used for this checklist:
 - Email/password authentication with hashed passwords, session cookies, and `/api/auth/me`
@@ -389,6 +444,8 @@ Evidence used for this checklist:
 - Backend integration scripts for friends/messages/follows flows
 - Browser compatibility verification across Chrome, Chromium, and Microsoft Edge
 - Browser compatibility documentation and known limitations in the README
+- i18n: 3 complete languages (English, Dutch, Ukrainian), footer language switcher, `localStorage` + account-level (`preferredLanguage`) persistence, translated backend API error codes
+- Automated i18n regression suite (`frontend/scripts/i18n.test.mjs`) plus a live multi-language, multi-page QA pass (see Internationalization section above)
 
 ### Planned Modules to Reach 14 (from team summary)
 
@@ -399,13 +456,13 @@ Evidence used for this checklist:
 | Gaming and User Experience | Gamification system (persistent, at least 3 features)           | Minor | 1      | In progress    |
 | Web                        | PWA support (installable app, service worker, offline fallback) | Minor | 1      | Planned        |
 
-Optional modules (not required for this 14-point plan): real-time WebSockets, i18n.
+Optional modules (not required for this 14-point plan): real-time WebSockets.
 
 ### Point Summary
 
 - Mandatory target: **14 points**
-- Currently claimed: **11 points**
-- Remaining to reach target: **3 points**
+- Currently claimed: **12 points**
+- Remaining to reach target: **2 points**
 
 > Important: We only claim modules during evaluation when all required criteria in the subject are fully met and demonstrable.
 

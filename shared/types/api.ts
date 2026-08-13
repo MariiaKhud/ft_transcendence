@@ -7,6 +7,10 @@ export interface ApiResponse<T = unknown> {
   message?: string
   data?: T
   error?: string
+  // Stable, machine-readable identifier for `error` (e.g. "user_not_found"),
+  // used by the frontend to render a translated message instead of the
+  // English `error` text. Absent on success responses.
+  code?: string
 }
 
 // Paging info for list endpoints.

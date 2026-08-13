@@ -5,6 +5,7 @@ import helmet from 'helmet'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { errorHandler } from './middleware/error.middleware.js'
+import { ErrorCode } from './lib/error-codes.js'
 import { prisma } from './lib/prisma.js'
 import { initializeOAuthStrategy, passport } from './auth/oauth.passport.js'
 import authRoutes from './routes/auth.routes.js'
@@ -34,6 +35,7 @@ const handleHealthCheck = (_req: express.Request, res: express.Response) => {
 const handleNotFound = (_req: express.Request, res: express.Response) => {
   res.status(404).json({
     success: false,
+    code: ErrorCode.ROUTE_NOT_FOUND,
     error: 'Route not found',
   })
 }

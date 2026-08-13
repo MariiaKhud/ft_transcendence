@@ -1,11 +1,12 @@
 import { prisma } from '../lib/prisma.js'
 import { createNotification } from './notifications.service';
 import { AppError } from '../middleware/error.middleware.js';
+import { ErrorCode } from '../lib/error-codes.js';
 import type { FriendshipState } from '../../../shared/types/friendship.js';
 
 export async function sendFriendRequest(requesterId: string, addresseeId: string) {
   if (requesterId === addresseeId) {
-    throw new AppError(400, "You can't friend yourself");
+    throw new AppError(400, ErrorCode.FRIEND_SELF_FORBIDDEN, "You can't friend yourself");
   }
 
   const existing = await prisma.friendship.findFirst({
@@ -18,9 +19,9 @@ export async function sendFriendRequest(requesterId: string, addresseeId: string
   });
 
   if (existing) {
-    if (existing.status === 'ACCEPTED') throw new AppError(409, 'Already friends');
-    if (existing.status === 'PENDING') throw new AppError(409, 'Friend request already pending');
-    if (existing.status === 'DECLINED') throw new AppError(409, 'Friend request was declined');
+    if (existing.status === 'ACCEPTED') throw new AppError(409, ErrorCode.FRIEND_ALREADY, 'Already friends');
+    if (existing.status === 'PENDING') throw new AppError(409, ErrorCode.FRIEND_REQUEST_ALREADY_PENDING, 'Friend request already pending');
+    if (existing.status === 'DECLINED') throw new AppError(409, ErrorCode.FRIEND_REQUEST_DECLINED, 'Friend request was declined');
   }
 
   const friendship = await prisma.friendship.create({
@@ -43,7 +44,7 @@ export async function respondToFriendRequest(
 ) {
   // 403 — user is trying to respond to their own sent request
   if (requesterId === addresseeId) {
-    throw new AppError(403, 'You cannot respond to your own friend request');
+    throw new AppError(403, ErrorCode.FRIEND_RESPOND_SELF_FORBIDDEN, 'You cannot respond to your own friend request');
   }
 
   const friendship = await prisma.friendship.findFirst({
@@ -66,13 +67,13 @@ export async function respondToFriendRequest(
     });
 
     if (!exists) {
-      throw new AppError(404, 'Friend request not found');
+      throw new AppError(404, ErrorCode.FRIEND_REQUEST_NOT_FOUND, 'Friend request not found');
     }
 
     // Row exists but not PENDING — so it's already been responded to
     // Also covers the case where User A tries to accept User B's request
     // using User A's own cookie (wrong role — addressee mismatch)
-    throw new AppError(403, 'You are not the addressee of this request');
+    throw new AppError(403, ErrorCode.FRIEND_NOT_ADDRESSEE, 'You are not the addressee of this request');
   }
 
   const updated = await prisma.friendship.update({
@@ -166,7 +167,7 @@ export async function getFriends(userId: string) {
 
 export async function removeFriend(currentUserId: string, friendId: string) {
   if (currentUserId === friendId) {
-    throw new AppError(400, "You can't remove yourself");
+    throw new AppError(400, ErrorCode.FRIEND_REMOVE_SELF_FORBIDDEN, "You can't remove yourself");
   }
 
   // Find in both directions — either user could have been the original requester
@@ -181,7 +182,7 @@ export async function removeFriend(currentUserId: string, friendId: string) {
   });
 
   if (!friendship) {
-    throw new AppError(404, 'Friendship not found');
+    throw new AppError(404, ErrorCode.FRIENDSHIP_NOT_FOUND, 'Friendship not found');
   }
 
   await prisma.friendship.delete({
@@ -191,7 +192,7 @@ export async function removeFriend(currentUserId: string, friendId: string) {
 
 export async function cancelFriendRequest(requesterId: string, addresseeId: string) {
   if (requesterId === addresseeId) {
-    throw new AppError(400, "You can't cancel a request to yourself");
+    throw new AppError(400, ErrorCode.FRIEND_CANCEL_SELF_FORBIDDEN, "You can't cancel a request to yourself");
   }
 
   const friendship = await prisma.friendship.findFirst({
@@ -203,7 +204,7 @@ export async function cancelFriendRequest(requesterId: string, addresseeId: stri
   });
 
   if (!friendship) {
-    throw new AppError(404, 'Pending friend request not found');
+    throw new AppError(404, ErrorCode.FRIEND_REQUEST_NOT_FOUND, 'Pending friend request not found');
   }
 
   // Remove the pending friendship

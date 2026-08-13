@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Button } from '@/components/ui/button'
 import { useAuth } from '@/hooks/useAuth'
+import { translateApiError } from '@/lib/api-errors'
 
 const OAUTH_PROVIDERS = [
   { key: 'google', label: 'Google' },
@@ -271,7 +272,7 @@ export const Login = () => {
       navigate('/', { replace: true })
     } catch (error) {
       if (error instanceof Error) {
-        applyApiError(error.message)
+        applyApiError(translateApiError(error, error.message))
         return
       }
 

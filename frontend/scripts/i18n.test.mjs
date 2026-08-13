@@ -16,7 +16,13 @@ const uk = JSON.parse(readFileSync(path.join(localesDir, 'uk/translation.json'),
 const i18nConfig = readFileSync(path.join(frontendRoot, 'src/lib/i18n.ts'), 'utf8');
 const mainEntry = readFileSync(path.join(frontendRoot, 'src/main.tsx'), 'utf8');
 const footer = readFileSync(path.join(frontendRoot, 'src/components/Footer.tsx'), 'utf8');
+const languageSwitcher = readFileSync(path.join(frontendRoot, 'src/components/LanguageSwitcher.tsx'), 'utf8');
 const packageJson = JSON.parse(readFileSync(path.join(frontendRoot, 'package.json'), 'utf8'));
+const apiErrorsSource = readFileSync(path.join(frontendRoot, 'src/lib/api-errors.ts'), 'utf8');
+const errorCodesSource = readFileSync(
+  path.join(frontendRoot, '../backend/src/lib/error-codes.ts'),
+  'utf8',
+);
 
 const CYRILLIC_RE = /[Ѐ-ӿ]/;
 const LATIN_LETTER_RE = /[A-Za-z]/;
@@ -227,4 +233,160 @@ test('Privacy Policy and Terms of Service pages read their content from i18n, no
 
   assert.match(privacyPolicySource, /t\('privacyPolicy\.title'\)/);
   assert.match(termsOfServiceSource, /t\('termsOfService\.title'\)/);
+});
+
+test('LanguageSwitcher offers every supported language and calls i18n.changeLanguage', () => {
+  assert.match(languageSwitcher, /import \{ useTranslation \} from 'react-i18next'/);
+  assert.match(languageSwitcher, /void i18n\.changeLanguage\(event\.target\.value\)/);
+  assert.match(languageSwitcher, /aria-label=\{t\('languageSwitcher\.label'\)\}/);
+
+  for (const language of ['en', 'nl', 'uk']) {
+    assert.match(languageSwitcher, new RegExp(`LANGUAGE_NAMES[\\s\\S]*${language}:`));
+  }
+});
+
+test('Footer renders the language switcher on every page', () => {
+  assert.match(footer, /import \{ LanguageSwitcher \} from '@\/components\/LanguageSwitcher'/);
+  assert.match(footer, /<LanguageSwitcher \/>/);
+});
+
+test('changing the i18next language updates resolved translations and persists to localStorage', async () => {
+  // Exercises the exact mechanism LanguageSwitcher's onChange relies on
+  // (i18next-browser-languagedetector's automatic localStorage caching),
+  // using a minimal in-memory localStorage instead of a full browser/DOM.
+  const store = {};
+  const fakeWindow = {
+    localStorage: {
+      getItem: (key) => (key in store ? store[key] : null),
+      setItem: (key, value) => {
+        store[key] = String(value);
+      },
+      removeItem: (key) => {
+        delete store[key];
+      },
+    },
+    navigator: { languages: ['en-US'], language: 'en-US' },
+    document: {},
+  };
+
+  const previousWindow = globalThis.window;
+  const previousDocument = globalThis.document;
+  // Node 21+ defines a built-in `navigator` as a getter-only accessor
+  // property, so a plain assignment throws — redefine it instead, and
+  // restore the original descriptor afterwards.
+  const previousNavigatorDescriptor = Object.getOwnPropertyDescriptor(globalThis, 'navigator');
+  globalThis.window = fakeWindow;
+  Object.defineProperty(globalThis, 'navigator', {
+    value: fakeWindow.navigator,
+    configurable: true,
+    writable: true,
+  });
+  globalThis.document = fakeWindow.document;
+
+  try {
+    // Import fresh CJS instances so this doesn't share state with any other
+    // i18next instance created elsewhere in the process.
+    const { createRequire } = await import('node:module');
+    const require = createRequire(import.meta.url);
+    delete require.cache[require.resolve('i18next')];
+    delete require.cache[require.resolve('i18next-browser-languagedetector')];
+    const i18next = require('i18next');
+    const LanguageDetector = require('i18next-browser-languagedetector');
+
+    await i18next.use(LanguageDetector).init({
+      resources: { en: { translation: en }, nl: { translation: nl }, uk: { translation: uk } },
+      supportedLngs: ['en', 'nl', 'uk'],
+      fallbackLng: 'en',
+      interpolation: { escapeValue: false },
+      detection: { order: ['localStorage', 'navigator'], caches: ['localStorage'], lookupLocalStorage: 'i18nextLng' },
+    });
+
+    assert.equal(i18next.resolvedLanguage, 'en');
+    assert.equal(i18next.t('login.title'), en.login.title);
+
+    await i18next.changeLanguage('uk');
+
+    assert.equal(i18next.resolvedLanguage, 'uk');
+    assert.equal(i18next.t('login.title'), uk.login.title);
+    assert.equal(store.i18nextLng, 'uk', 'language choice was not cached to localStorage');
+  } finally {
+    globalThis.window = previousWindow;
+    globalThis.document = previousDocument;
+    if (previousNavigatorDescriptor) {
+      Object.defineProperty(globalThis, 'navigator', previousNavigatorDescriptor);
+    } else {
+      delete globalThis.navigator;
+    }
+  }
+});
+
+test('every backend ErrorCode has a matching api.errors.<code> translation key in every language', () => {
+  const codeMatches = [...errorCodesSource.matchAll(/^\s*[A-Z_]+:\s*'([a-z_]+)'/gm)];
+  const backendCodes = codeMatches.map((match) => match[1]);
+
+  assert.ok(backendCodes.length > 0, 'expected to find at least one ErrorCode entry in backend/src/lib/error-codes.ts');
+
+  for (const [lang, bundle] of [['en', en], ['nl', nl], ['uk', uk]]) {
+    for (const code of backendCodes) {
+      assert.ok(bundle.api?.errors?.[code], `${lang}.api.errors.${code} is missing`);
+    }
+  }
+
+  // Catch the reverse too: a translation key with no backing backend code
+  // would be silent dead weight that nobody maintains.
+  const translatedCodes = Object.keys(en.api.errors);
+  for (const code of translatedCodes) {
+    assert.ok(backendCodes.includes(code), `en.api.errors.${code} has no matching ErrorCode in the backend`);
+  }
+});
+
+test('translateApiError prefers the backend code and falls back to the given message', () => {
+  assert.match(apiErrorsSource, /export const translateApiError/);
+  assert.match(apiErrorsSource, /i18n\.exists\(`api\.errors\.\$\{code\}`\)/);
+  assert.match(apiErrorsSource, /i18n\.t\(`api\.errors\.\$\{code\}`\)/);
+  assert.match(apiErrorsSource, /return fallbackMessage/);
+});
+
+test('frontend catch sites route API errors through translateApiError instead of raw err.message', () => {
+  const filesThatMustUseIt = [
+    'src/pages/Login.tsx',
+    'src/pages/Register.tsx',
+    'src/pages/EditProfile.tsx',
+    'src/pages/Profile.tsx',
+    'src/pages/Article.tsx',
+    'src/components/ArticleForm.tsx',
+    'src/components/user/FollowButton.tsx',
+    'src/components/user/FriendButton.tsx',
+    'src/components/user/UserSearchBar.tsx',
+  ];
+
+  for (const relativePath of filesThatMustUseIt) {
+    const source = readFileSync(path.join(frontendRoot, relativePath), 'utf8');
+    assert.match(
+      source,
+      /import \{ translateApiError \} from '@\/lib\/api-errors'/,
+      `${relativePath} does not import translateApiError`,
+    );
+    assert.match(source, /translateApiError\(/, `${relativePath} imports but never calls translateApiError`);
+  }
+});
+
+test('LanguageSwitcher syncs the choice to the account when authenticated', () => {
+  assert.match(languageSwitcher, /import \{ updateMyProfile \} from '@\/api\/users'/);
+  assert.match(languageSwitcher, /updateMyProfile\(\{ preferredLanguage: event\.target\.value \}\)/);
+});
+
+test('useAuth applies a logged-in user\'s preferredLanguage on login and session restore', () => {
+  const useAuthSource = readFileSync(path.join(frontendRoot, 'src/hooks/useAuth.ts'), 'utf8');
+  assert.match(useAuthSource, /import \{ applyPreferredLanguage \} from '@\/lib\/i18n'/);
+
+  const applyCallCount = (useAuthSource.match(/applyPreferredLanguage\(user\.preferredLanguage\)/g) ?? []).length;
+  assert.equal(applyCallCount, 2, 'expected applyPreferredLanguage to be called after both login and session restore');
+});
+
+test('applyPreferredLanguage only switches for a supported, different language', () => {
+  const i18nSource = readFileSync(path.join(frontendRoot, 'src/lib/i18n.ts'), 'utf8');
+  assert.match(i18nSource, /export const applyPreferredLanguage/);
+  assert.match(i18nSource, /supportedLanguages\.includes\(preferredLanguage as SupportedLanguage\)/);
+  assert.match(i18nSource, /i18n\.language !== preferredLanguage/);
 });
