@@ -2,6 +2,7 @@ import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 import { authMiddleware } from '../middleware/auth.middleware.js'
 import {
   commentWithAuthorSelect,
@@ -14,7 +15,7 @@ const router = Router()
 // Update a comment's content. Author only.
 const updateCommentHandler = async (req: Request, res: Response) => {
   if (!req.user?.userId) {
-    throw new AppError(401, 'Authentication required')
+    throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
   }
 
   const existing = await prisma.comment.findUnique({
@@ -23,11 +24,11 @@ const updateCommentHandler = async (req: Request, res: Response) => {
   })
 
   if (!existing || existing.isRemoved) {
-    throw new AppError(404, 'Comment not found')
+    throw new AppError(404, ErrorCode.COMMENT_NOT_FOUND, 'Comment not found')
   }
 
   if (existing.authorId !== req.user.userId) {
-    throw new AppError(403, 'Only the author can edit this comment')
+    throw new AppError(403, ErrorCode.COMMENT_EDIT_FORBIDDEN, 'Only the author can edit this comment')
   }
 
   const { content } = validateCreateCommentInput(req.body)
@@ -45,7 +46,7 @@ const updateCommentHandler = async (req: Request, res: Response) => {
 // soft-removes someone else's comment with a reason instead.
 const deleteCommentHandler = async (req: Request, res: Response) => {
   if (!req.user?.userId) {
-    throw new AppError(401, 'Authentication required')
+    throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
   }
 
   const existing = await prisma.comment.findUnique({
@@ -54,7 +55,7 @@ const deleteCommentHandler = async (req: Request, res: Response) => {
   })
 
   if (!existing || existing.isRemoved) {
-    throw new AppError(404, 'Comment not found')
+    throw new AppError(404, ErrorCode.COMMENT_NOT_FOUND, 'Comment not found')
   }
 
   if (existing.authorId === req.user.userId) {
@@ -64,7 +65,7 @@ const deleteCommentHandler = async (req: Request, res: Response) => {
   }
 
   if (req.user.role !== 'MODERATOR' && req.user.role !== 'ADMIN') {
-    throw new AppError(403, 'Only the author or a moderator can delete this comment')
+    throw new AppError(403, ErrorCode.COMMENT_DELETE_FORBIDDEN, 'Only the author or a moderator can delete this comment')
   }
 
   const { reason } = validateRemoveCommentInput(req.body)

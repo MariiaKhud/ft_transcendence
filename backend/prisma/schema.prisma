@@ -58,6 +58,7 @@ model User {
   avatarUrl                String?          @map("avatar_url")
   bio                      String?
   role                     Role             @default(USER)
+  preferredLanguage        String?          @map("preferred_language")
 
   // Gamification
   xp                       Int              @default(0)

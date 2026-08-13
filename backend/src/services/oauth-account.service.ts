@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
 import { prisma } from '../lib/prisma.js'
 import { AppError } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 import { publicUserSelect } from '../routes/auth.routes-helpers.js'
 import type { NormalizedOAuthUser } from '../auth/oauth.passport.js'
 
@@ -101,7 +102,7 @@ const createUniqueUsername = async (provider: NormalizedOAuthUser) => {
 
 export const resolveOAuthUser = async (profile: NormalizedOAuthUser) => {
   if (!profile.providerId) {
-    throw new AppError(400, 'OAuth profile is missing a provider identifier')
+    throw new AppError(400, ErrorCode.OAUTH_PROFILE_MISSING_PROVIDER_ID, 'OAuth profile is missing a provider identifier')
   }
 
   const normalizedEmail = normalizeEmail(profile.email)
@@ -155,7 +156,7 @@ export const resolveOAuthUser = async (profile: NormalizedOAuthUser) => {
           })
 
           if (oauthAccount.userId !== existingUser.id) {
-            throw new AppError(409, 'OAuth account is already linked to another user')
+            throw new AppError(409, ErrorCode.OAUTH_ACCOUNT_ALREADY_LINKED, 'OAuth account is already linked to another user')
           }
 
           return existingUser
@@ -201,14 +202,14 @@ export const resolveOAuthUser = async (profile: NormalizedOAuthUser) => {
       })
 
       if (oauthAccount.userId !== user.id) {
-        throw new AppError(409, 'OAuth account is already linked to another user')
+        throw new AppError(409, ErrorCode.OAUTH_ACCOUNT_ALREADY_LINKED, 'OAuth account is already linked to another user')
       }
 
       return user
     })
   } catch (error) {
     if (isPrismaUniqueConstraintError(error)) {
-      throw new AppError(409, 'OAuth account could not be linked due to a duplicate account')
+      throw new AppError(409, ErrorCode.OAUTH_ACCOUNT_LINK_DUPLICATE, 'OAuth account could not be linked due to a duplicate account')
     }
 
     throw error

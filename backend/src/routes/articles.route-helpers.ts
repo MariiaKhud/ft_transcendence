@@ -1,4 +1,5 @@
 import { AppError } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 import type { Category, Prisma } from '@prisma/client'
 
 const TITLE_MAX_LENGTH = 120
@@ -27,31 +28,31 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
 
 export const validateCreateArticleInput = (body: unknown): CreateArticleInput => {
   if (!isRecord(body)) {
-    throw new AppError(400, 'Validation failed: title, content, and category are required')
+    throw new AppError(400, ErrorCode.VALIDATION_ARTICLE_FIELDS_REQUIRED, 'Validation failed: title, content, and category are required')
   }
 
   const { title, content, category } = body
 
   if (typeof title !== 'string' || title.trim().length === 0) {
-    throw new AppError(400, 'Validation failed: title is required')
+    throw new AppError(400, ErrorCode.VALIDATION_TITLE_REQUIRED, 'Validation failed: title is required')
   }
 
   const trimmedTitle = title.trim()
   if (trimmedTitle.length > TITLE_MAX_LENGTH) {
-    throw new AppError(400, `Validation failed: title must be at most ${TITLE_MAX_LENGTH} characters`)
+    throw new AppError(400, ErrorCode.VALIDATION_TITLE_MAX_LENGTH, `Validation failed: title must be at most ${TITLE_MAX_LENGTH} characters`)
   }
 
   if (typeof content !== 'string' || content.trim().length === 0) {
-    throw new AppError(400, 'Validation failed: content is required')
+    throw new AppError(400, ErrorCode.VALIDATION_CONTENT_REQUIRED, 'Validation failed: content is required')
   }
 
   const trimmedContent = content.trim()
   if (trimmedContent.length < CONTENT_MIN_LENGTH) {
-    throw new AppError(400, `Validation failed: content must be at least ${CONTENT_MIN_LENGTH} characters`)
+    throw new AppError(400, ErrorCode.VALIDATION_CONTENT_MIN_LENGTH, `Validation failed: content must be at least ${CONTENT_MIN_LENGTH} characters`)
   }
 
   if (typeof category !== 'string' || !VALID_CATEGORIES.has(category)) {
-    throw new AppError(400, `Validation failed: category must be one of ${Array.from(VALID_CATEGORIES).join(', ')}`)
+    throw new AppError(400, ErrorCode.VALIDATION_CATEGORY_INVALID, `Validation failed: category must be one of ${Array.from(VALID_CATEGORIES).join(', ')}`)
   }
 
   return {
@@ -70,7 +71,7 @@ export interface UpdateArticleInput {
 // Partial update: only validates fields that are present, but requires at least one.
 export const validateUpdateArticleInput = (body: unknown): UpdateArticleInput => {
   if (!isRecord(body)) {
-    throw new AppError(400, 'Validation failed: at least one of title, content, category is required')
+    throw new AppError(400, ErrorCode.VALIDATION_ARTICLE_UPDATE_FIELDS_REQUIRED, 'Validation failed: at least one of title, content, category is required')
   }
 
   const { title, content, category } = body
@@ -78,12 +79,12 @@ export const validateUpdateArticleInput = (body: unknown): UpdateArticleInput =>
 
   if (title !== undefined) {
     if (typeof title !== 'string' || title.trim().length === 0) {
-      throw new AppError(400, 'Validation failed: title must be a non-empty string')
+      throw new AppError(400, ErrorCode.VALIDATION_TITLE_INVALID, 'Validation failed: title must be a non-empty string')
     }
 
     const trimmedTitle = title.trim()
     if (trimmedTitle.length > TITLE_MAX_LENGTH) {
-      throw new AppError(400, `Validation failed: title must be at most ${TITLE_MAX_LENGTH} characters`)
+      throw new AppError(400, ErrorCode.VALIDATION_TITLE_MAX_LENGTH, `Validation failed: title must be at most ${TITLE_MAX_LENGTH} characters`)
     }
 
     result.title = trimmedTitle
@@ -91,12 +92,12 @@ export const validateUpdateArticleInput = (body: unknown): UpdateArticleInput =>
 
   if (content !== undefined) {
     if (typeof content !== 'string' || content.trim().length === 0) {
-      throw new AppError(400, 'Validation failed: content must be a non-empty string')
+      throw new AppError(400, ErrorCode.VALIDATION_CONTENT_INVALID, 'Validation failed: content must be a non-empty string')
     }
 
     const trimmedContent = content.trim()
     if (trimmedContent.length < CONTENT_MIN_LENGTH) {
-      throw new AppError(400, `Validation failed: content must be at least ${CONTENT_MIN_LENGTH} characters`)
+      throw new AppError(400, ErrorCode.VALIDATION_CONTENT_MIN_LENGTH, `Validation failed: content must be at least ${CONTENT_MIN_LENGTH} characters`)
     }
 
     result.content = trimmedContent
@@ -104,14 +105,14 @@ export const validateUpdateArticleInput = (body: unknown): UpdateArticleInput =>
 
   if (category !== undefined) {
     if (typeof category !== 'string' || !VALID_CATEGORIES.has(category)) {
-      throw new AppError(400, `Validation failed: category must be one of ${Array.from(VALID_CATEGORIES).join(', ')}`)
+      throw new AppError(400, ErrorCode.VALIDATION_CATEGORY_INVALID, `Validation failed: category must be one of ${Array.from(VALID_CATEGORIES).join(', ')}`)
     }
 
     result.category = category as Category
   }
 
   if (Object.keys(result).length === 0) {
-    throw new AppError(400, 'Validation failed: at least one of title, content, category is required')
+    throw new AppError(400, ErrorCode.VALIDATION_ARTICLE_UPDATE_FIELDS_REQUIRED, 'Validation failed: at least one of title, content, category is required')
   }
 
   return result
@@ -142,7 +143,7 @@ const parseDateParam = (value: unknown, label: string): Date | undefined => {
 
   const date = new Date(String(value))
   if (Number.isNaN(date.getTime())) {
-    throw new Error(`Invalid ${label} parameter: must be a valid date`)
+    throw new AppError(400, ErrorCode.VALIDATION_DATE_INVALID, `Invalid ${label} parameter: must be a valid date`)
   }
 
   return date
@@ -159,7 +160,7 @@ export const validateArticlesQuery = (query: Record<string, any>) => {
   const content = query.content ? String(query.content).trim() : undefined
 
   if (!['newest', 'oldest', 'most_liked'].includes(sort)) {
-    throw new Error('Invalid sort parameter: must be newest, oldest, or most_liked')
+    throw new AppError(400, ErrorCode.VALIDATION_SORT_INVALID, 'Invalid sort parameter: must be newest, oldest, or most_liked')
   }
 
   const postedFrom = parseDateParam(query.postedFrom, 'postedFrom')

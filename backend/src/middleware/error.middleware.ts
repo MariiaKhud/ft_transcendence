@@ -1,8 +1,12 @@
 import type { Request, Response, NextFunction } from 'express'
+import { ErrorCode, type ErrorCodeValue } from '../lib/error-codes.js'
 
 
 export class AppError extends Error {
-  constructor(public statusCode: number, message: string) {
+  // `code` is a stable, machine-readable identifier the frontend maps to a
+  // translated message; `message` is the English text (used for server logs
+  // and as the API's `error` field, kept for backward compatibility).
+  constructor(public statusCode: number, public code: ErrorCodeValue, message: string) {
     super(message)
     Error.captureStackTrace(this, this.constructor)
   }
@@ -16,6 +20,7 @@ export const errorHandler = (err: Error | AppError, _req: Request, res: Response
 
     return res.status(err.statusCode).json({
       success: false,
+      code: err.code,
       error: err.message,
     })
   }
@@ -24,6 +29,7 @@ export const errorHandler = (err: Error | AppError, _req: Request, res: Response
 
   res.status(500).json({
     success: false,
+    code: ErrorCode.INTERNAL_SERVER_ERROR,
     error: 'Internal server error',
   })
 }

@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto'
 import type { Request, Response } from 'express'
 import { AppError } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/
@@ -29,7 +30,7 @@ const isPrismaUniqueConstraintError = (error: unknown) => {
 // Keep password length in bcrypt's safe range.
 const validatePasswordLength = (password: string) => {
   if (password.length < 8 || password.length > 72) {
-    throw new AppError(400, 'Validation failed: password must be between 8 and 72 characters')
+    throw new AppError(400, ErrorCode.VALIDATION_PASSWORD_LENGTH, 'Validation failed: password must be between 8 and 72 characters')
   }
 }
 
@@ -38,7 +39,7 @@ const readAuthTokenFromCookie = (req: Request) => {
   const token = req.cookies?.[AUTH_COOKIE_NAME]
 
   if (typeof token !== 'string' || token.length === 0) {
-    throw new AppError(401, 'Authentication required')
+    throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
   }
 
   return token
@@ -85,6 +86,7 @@ const publicUserSelect = {
   avatarUrl: true,
   bio: true,
   role: true,
+  preferredLanguage: true,
   xp: true,
   level: true,
   isOnline: true,
@@ -107,11 +109,11 @@ const generateCsrfToken = () => {
 // Validate and normalize register payload.
 const validateRegisterInput = (body: unknown) => {
   if (!isRecord(body)) {
-    throw new AppError(400, 'Validation failed: email, username, and password are required')
+    throw new AppError(400, ErrorCode.VALIDATION_REGISTER_FIELDS_REQUIRED, 'Validation failed: email, username, and password are required')
   }
 
   if (typeof body.email !== 'string' || typeof body.username !== 'string' || typeof body.password !== 'string') {
-    throw new AppError(400, 'Validation failed: email, username, and password are required')
+    throw new AppError(400, ErrorCode.VALIDATION_REGISTER_FIELDS_REQUIRED, 'Validation failed: email, username, and password are required')
   }
 
   const email = normalizeEmail(body.email)
@@ -119,11 +121,11 @@ const validateRegisterInput = (body: unknown) => {
   const password = body.password
 
   if (!EMAIL_REGEX.test(email)) {
-    throw new AppError(400, 'Validation failed: invalid email format')
+    throw new AppError(400, ErrorCode.VALIDATION_EMAIL_INVALID, 'Validation failed: invalid email format')
   }
 
   if (!USERNAME_REGEX.test(username)) {
-    throw new AppError(400, 'Validation failed: username must be 3-20 characters and contain only letters, numbers, or _')
+    throw new AppError(400, ErrorCode.VALIDATION_USERNAME_INVALID, 'Validation failed: username must be 3-20 characters and contain only letters, numbers, or _')
   }
 
   validatePasswordLength(password)
@@ -140,18 +142,18 @@ const validateRegisterInput = (body: unknown) => {
 // Validate and normalize login payload.
 const validateLoginInput = (body: unknown) => {
   if (!isRecord(body)) {
-    throw new AppError(400, 'Validation failed: email and password are required')
+    throw new AppError(400, ErrorCode.VALIDATION_LOGIN_FIELDS_REQUIRED, 'Validation failed: email and password are required')
   }
 
   if (typeof body.email !== 'string' || typeof body.password !== 'string') {
-    throw new AppError(400, 'Validation failed: email and password are required')
+    throw new AppError(400, ErrorCode.VALIDATION_LOGIN_FIELDS_REQUIRED, 'Validation failed: email and password are required')
   }
 
   const email = normalizeEmail(body.email)
   const password = body.password
 
   if (!EMAIL_REGEX.test(email)) {
-    throw new AppError(400, 'Validation failed: invalid email format')
+    throw new AppError(400, ErrorCode.VALIDATION_EMAIL_INVALID, 'Validation failed: invalid email format')
   }
 
   return { email, password }
@@ -163,11 +165,11 @@ const validateCsrfToken = (req: Request, tokenCsrf: string) => {
   const csrfHeader = req.header(CSRF_HEADER_NAME)
 
   if (typeof csrfCookie !== 'string' || typeof csrfHeader !== 'string') {
-    throw new AppError(403, 'CSRF validation failed')
+    throw new AppError(403, ErrorCode.CSRF_INVALID, 'CSRF validation failed')
   }
 
   if (csrfCookie !== csrfHeader || csrfCookie !== tokenCsrf) {
-    throw new AppError(403, 'CSRF validation failed')
+    throw new AppError(403, ErrorCode.CSRF_INVALID, 'CSRF validation failed')
   }
 }
 

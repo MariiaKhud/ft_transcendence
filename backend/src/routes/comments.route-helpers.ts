@@ -1,4 +1,5 @@
 import { AppError } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 
 const CONTENT_MIN_LENGTH = 1
 const CONTENT_MAX_LENGTH = 1000
@@ -14,18 +15,18 @@ export interface CreateCommentInput {
 
 export const validateCreateCommentInput = (body: unknown): CreateCommentInput => {
   if (!isRecord(body)) {
-    throw new AppError(400, 'Validation failed: content is required')
+    throw new AppError(400, ErrorCode.VALIDATION_COMMENT_CONTENT_REQUIRED, 'Validation failed: content is required')
   }
 
   const { content } = body
 
   if (typeof content !== 'string' || content.trim().length < CONTENT_MIN_LENGTH) {
-    throw new AppError(400, 'Validation failed: content is required')
+    throw new AppError(400, ErrorCode.VALIDATION_COMMENT_CONTENT_REQUIRED, 'Validation failed: content is required')
   }
 
   const trimmedContent = content.trim()
   if (trimmedContent.length > CONTENT_MAX_LENGTH) {
-    throw new AppError(400, `Validation failed: content must be at most ${CONTENT_MAX_LENGTH} characters`)
+    throw new AppError(400, ErrorCode.VALIDATION_COMMENT_CONTENT_MAX_LENGTH, `Validation failed: content must be at most ${CONTENT_MAX_LENGTH} characters`)
   }
 
   return { content: trimmedContent }
@@ -38,18 +39,18 @@ export interface RemoveCommentInput {
 // Moderator/admin soft-removal requires a reason (1-500 chars).
 export const validateRemoveCommentInput = (body: unknown): RemoveCommentInput => {
   if (!isRecord(body)) {
-    throw new AppError(400, 'Validation failed: reason is required')
+    throw new AppError(400, ErrorCode.VALIDATION_REMOVE_REASON_REQUIRED, 'Validation failed: reason is required')
   }
 
   const { reason } = body
 
   if (typeof reason !== 'string' || reason.trim().length === 0) {
-    throw new AppError(400, 'Validation failed: reason is required')
+    throw new AppError(400, ErrorCode.VALIDATION_REMOVE_REASON_REQUIRED, 'Validation failed: reason is required')
   }
 
   const trimmedReason = reason.trim()
   if (trimmedReason.length > REMOVE_REASON_MAX_LENGTH) {
-    throw new AppError(400, `Validation failed: reason must be at most ${REMOVE_REASON_MAX_LENGTH} characters`)
+    throw new AppError(400, ErrorCode.VALIDATION_REMOVE_REASON_MAX_LENGTH, `Validation failed: reason must be at most ${REMOVE_REASON_MAX_LENGTH} characters`)
   }
 
   return { reason: trimmedReason }

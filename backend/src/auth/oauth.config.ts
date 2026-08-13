@@ -1,4 +1,5 @@
 import { AppError } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 
 export type OAuthProvider = 'github' | 'google' | '42'
 
@@ -30,7 +31,7 @@ const assertUrl = (value: string, fieldName: string) => {
     // Throws when value is not a valid absolute URL.
     new URL(value)
   } catch {
-    throw new AppError(500, `Server misconfiguration: ${fieldName} must be a valid URL`)
+    throw new AppError(500, ErrorCode.SERVER_MISCONFIGURED, `Server misconfiguration: ${fieldName} must be a valid URL`)
   }
 }
 
@@ -54,7 +55,7 @@ const readProviderConfig = (provider: OAuthProvider): OAuthProviderConfig | null
   }
 
   if (!clientId || !clientSecret || !callbackUrl) {
-    throw new AppError(500, `Server misconfiguration: ${prefix}_* variables are incomplete`)
+    throw new AppError(500, ErrorCode.SERVER_MISCONFIGURED, `Server misconfiguration: ${prefix}_* variables are incomplete`)
   }
 
   assertUrl(callbackUrl, `${prefix}_CALLBACK_URL`)
@@ -116,11 +117,11 @@ export const getOAuthConfig = (): OAuthConfig | null => {
   // Backward compatibility: support the original single-provider env format.
   if (providerRaw || clientId || clientSecret || callbackUrl) {
     if (!isOAuthProvider(providerRaw)) {
-      throw new AppError(500, 'Server misconfiguration: OAUTH_PROVIDER must be one of github, google, 42')
+      throw new AppError(500, ErrorCode.SERVER_MISCONFIGURED, 'Server misconfiguration: OAUTH_PROVIDER must be one of github, google, 42')
     }
 
     if (!clientId || !clientSecret || !callbackUrl) {
-      throw new AppError(500, 'Server misconfiguration: OAuth environment variables are incomplete')
+      throw new AppError(500, ErrorCode.SERVER_MISCONFIGURED, 'Server misconfiguration: OAuth environment variables are incomplete')
     }
 
     assertUrl(callbackUrl, 'OAUTH_CALLBACK_URL')
@@ -132,11 +133,11 @@ export const getOAuthConfig = (): OAuthConfig | null => {
   }
 
   if (!successRedirect || !errorRedirect) {
-    throw new AppError(500, 'Server misconfiguration: OAUTH_SUCCESS_REDIRECT and OAUTH_ERROR_REDIRECT are required')
+    throw new AppError(500, ErrorCode.SERVER_MISCONFIGURED, 'Server misconfiguration: OAUTH_SUCCESS_REDIRECT and OAUTH_ERROR_REDIRECT are required')
   }
 
   if (Object.keys(providers).length === 0) {
-    throw new AppError(500, 'Server misconfiguration: No OAuth providers are configured')
+    throw new AppError(500, ErrorCode.SERVER_MISCONFIGURED, 'Server misconfiguration: No OAuth providers are configured')
   }
 
   // Validate redirect targets early so startup fails before any login attempt.

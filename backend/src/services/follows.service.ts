@@ -1,10 +1,11 @@
 import { prisma } from '../lib/prisma.js';
 import { AppError } from '../middleware/error.middleware.js';
+import { ErrorCode } from '../lib/error-codes.js';
 import { createNotification } from './notifications.service.js';
 
 export async function followUser(followerId: string, followingId: string) {
   if (followerId === followingId) {
-    throw new AppError(400, "You can't follow yourself");
+    throw new AppError(400, ErrorCode.FOLLOW_SELF_FORBIDDEN, "You can't follow yourself");
   }
 
   // Check target user exists
@@ -14,7 +15,7 @@ export async function followUser(followerId: string, followingId: string) {
   });
 
   if (!targetUser) {
-    throw new AppError(404, 'User not found');
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found');
   }
 
   // Check not already following
@@ -28,7 +29,7 @@ export async function followUser(followerId: string, followingId: string) {
   });
 
   if (existing) {
-    throw new AppError(409, 'Already following this user');
+    throw new AppError(409, ErrorCode.FOLLOW_ALREADY, 'Already following this user');
   }
 
   const follow = await prisma.follow.create({
@@ -47,7 +48,7 @@ export async function followUser(followerId: string, followingId: string) {
 
 export async function unfollowUser(followerId: string, followingId: string) {
   if (followerId === followingId) {
-    throw new AppError(400, "You can't unfollow yourself");
+    throw new AppError(400, ErrorCode.FOLLOW_UNFOLLOW_SELF_FORBIDDEN, "You can't unfollow yourself");
   }
 
   const follow = await prisma.follow.findUnique({
@@ -60,7 +61,7 @@ export async function unfollowUser(followerId: string, followingId: string) {
   });
 
   if (!follow) {
-    throw new AppError(404, 'You are not following this user');
+    throw new AppError(404, ErrorCode.FOLLOW_NOT_FOLLOWING, 'You are not following this user');
   }
 
   await prisma.follow.delete({

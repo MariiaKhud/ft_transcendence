@@ -4,6 +4,7 @@ import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
 import { Strategy as OAuth2Strategy } from 'passport-oauth2'
 import type { Profile } from 'passport-github2'
 import { AppError } from '../middleware/error.middleware.js'
+import { ErrorCode } from '../lib/error-codes.js'
 import { getOAuthConfig } from './oauth.config.js'
 
 export interface NormalizedOAuthUser {
@@ -160,7 +161,7 @@ const createFortyTwoStrategy = (clientId: string, clientSecret: string, callback
         const profile = JSON.parse(payload) as unknown
         done(null, profile)
       } catch {
-        done(new AppError(400, 'Invalid 42 profile payload'))
+        done(new AppError(400, ErrorCode.OAUTH_PROFILE_INVALID_PAYLOAD, 'Invalid 42 profile payload'))
       }
     })
   }
