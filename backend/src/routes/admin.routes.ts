@@ -7,6 +7,9 @@ import { handleAsyncErrors } from '../middleware/error.middleware.js'
 import * as notificationsService from '../services/notifications.service.js'
 import { NotificationType } from '@prisma/client'
 
+import * as notificationsService from '../services/notifications.service.js'
+import { NotificationType } from '@prisma/client'
+
 
 const router = Router()
 
@@ -232,8 +235,78 @@ const removeArticleHandler = async (req: Request, res: Response) => {
     success: true,
     data: updatedArticle,
   })
+}
 
 
+const removeCommentHandler = async (req: Request, res: Response) => {
+  const { id } = req.params
+  const { removedReason } = req.body as {
+    removedReason?: string
+  }
+
+  if (
+    typeof removedReason !== 'string' ||
+    removedReason.trim().length === 0
+  ) {
+    res.status(400).json({
+      success: false,
+      error: 'Removal reason is required',
+    })
+    return
+  }
+
+  const comment = await prisma.comment.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      authorId: true,
+      isRemoved: true,
+    },
+  })
+
+  if (!comment) {
+    res.status(404).json({
+      success: false,
+      error: 'Comment not found',
+    })
+    return
+  }
+
+  if (comment.isRemoved) {
+    res.status(400).json({
+      success: false,
+      error: 'Comment is already removed',
+    })
+    return
+  }
+
+  const updatedComment = await prisma.comment.update({
+    where: { id },
+    data: {
+      isRemoved: true,
+      removedReason: removedReason.trim(),
+      removedAt: new Date(),
+    },
+    select: {
+      id: true,
+      content: true,
+      isRemoved: true,
+      removedReason: true,
+      removedAt: true,
+    },
+  })
+
+  await notificationsService.createNotification(
+    comment.authorId,
+    NotificationType.CONTENT_REMOVED,
+    'Your comment was removed by a moderator.',
+    updatedComment.id,
+  )
+
+  res.status(200).json({
+    success: true,
+    data: updatedComment,
+  })
 }
 
 // Admin routes: user management, role management, and content moderation.
@@ -241,6 +314,6 @@ router.get('/users', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(get
 router.patch('/users/:id/role', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(changeUserRoleHandler),)
 router.get('/articles', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(getAdminArticlesHandler),)
 router.patch('/articles/:id/remove', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(removeArticleHandler),)
-
+router.patch('/comments/:id/remove', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(removeCommentHandler),)
 
 export default router
