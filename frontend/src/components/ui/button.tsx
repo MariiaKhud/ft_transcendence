@@ -67,17 +67,17 @@ const buttonVariants = cva(
         profileSuccess:
                   'rounded-full \
                   border \
-                  border-teal-200 \
-                  bg-teal-50 \
+                  border-emerald-200 \
+                  bg-emerald-50 \
                   px-4 \
                   py-2 \
                   text-xs \
                   font-semibold \
-                  text-teal-700 \
+                  text-emerald-700 \
                   transition-all \
-                  hover:border-teal-300 \
-                  hover:bg-teal-100 \
-                  hover:text-teal-800 \
+                  hover:border-emerald-300 \
+                  hover:bg-emerald-100 \
+                  hover:text-emerald-800 \
                   sm:px-5 \
                   sm:text-sm',
       },
@@ -85,6 +85,7 @@ const buttonVariants = cva(
       size: {
         default: 'h-9 px-4 py-2',
         sm: 'h-8 rounded-md px-3 text-xs',
+        notification: 'px-3 py-1 text-xs',
       },
     },
 

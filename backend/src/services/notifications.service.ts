@@ -35,8 +35,31 @@ export async function getNotifications(userId: string, unreadOnly: boolean) {
     }),
   ]);
 
+  const notificationsWithUsers = await Promise.all(
+    notifications.map(async (notification) => {
+      if (!notification.refId) {
+        return notification;
+      }
+
+      const actor = await prisma.user.findUnique({
+        where: { id: notification.refId },
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+        },
+      });
+
+      return {
+        ...notification,
+        actor,
+      };
+    })
+  );
+
   return {
-    notifications,
+    notifications: notificationsWithUsers,
     unreadCount,
   };
 }
