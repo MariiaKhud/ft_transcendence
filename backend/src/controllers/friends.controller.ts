@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import * as friendsService from '../services/friends.service.js';
 import { AppError } from '../middleware/error.middleware.js';
 import { sendSuccess, sendError } from '../utils/api-response.js'
+import { ErrorCode } from '../lib/error-codes.js';
 
 export async function sendFriendRequest(req: Request, res: Response) {
   try {
@@ -31,7 +32,11 @@ export async function respondToFriendRequest(req: Request, res: Response) {
     const { action } = req.body;
 
     if (action !== 'ACCEPTED' && action !== 'DECLINED') {
-      throw new AppError(400, 'Action must be ACCEPTED or DECLINED');
+      throw new AppError(
+        400,
+        ErrorCode.VALIDATION_FRIEND_ACTION_INVALID,
+        'Action must be ACCEPTED or DECLINED'
+      );
     }
 
     const friendship = await friendsService.respondToFriendRequest(

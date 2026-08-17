@@ -46,8 +46,12 @@ export const getPublicProfile = async (username: string) => {
   } satisfies PublicProfile
 }
 
-// Send PATCH /users/me with displayName and/or bio.
-export const updateMyProfile = async (updates: { displayName?: string | null; bio?: string | null }) => {
+// Send PATCH /users/me with displayName, bio, and/or preferredLanguage.
+export const updateMyProfile = async (updates: {
+  displayName?: string | null
+  bio?: string | null
+  preferredLanguage?: string | null
+}) => {
   return apiRequestData<import('@/types/auth').AuthUser>('/users/me', {
     method: 'PATCH',
     body: updates,

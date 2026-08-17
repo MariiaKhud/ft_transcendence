@@ -2,11 +2,15 @@ import { Request, Response } from 'express';
 import * as followsService from '../services/follows.service.js';
 import { AppError } from '../middleware/error.middleware.js';
 import { sendSuccess, sendError } from '../utils/api-response.js';
+import { ErrorCode } from '../lib/error-codes.js'
 
 export async function followUser(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, new AppError(401, 'Unauthorized'));
+      return sendError(
+        res,
+        new AppError(401, ErrorCode.AUTH_REQUIRED, 'Unauthorized')
+      );
     }
 
     const followerId = req.user.userId;
@@ -23,7 +27,10 @@ export async function followUser(req: Request, res: Response) {
 export async function unfollowUser(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, new AppError(401, 'Unauthorized'));
+      return sendError(
+        res,
+        new AppError(401, ErrorCode.AUTH_REQUIRED, 'Unauthorized')
+      );
     }
 
     const followerId = req.user.userId;
@@ -40,7 +47,10 @@ export async function unfollowUser(req: Request, res: Response) {
 export async function getFollowStatus(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, new AppError(401, 'Unauthorized'));
+      return sendError(
+        res,
+        new AppError(401, ErrorCode.AUTH_REQUIRED, 'Unauthorized')
+      );
     }
 
     const isFollowing = await followsService.getFollowStatus(

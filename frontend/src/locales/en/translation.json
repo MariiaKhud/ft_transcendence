@@ -1,0 +1,523 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "retry": "Retry",
+    "cancel": "Cancel",
+    "save": "Save",
+    "saving": "Saving...",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "backToFeed": "Back to Feed",
+    "checkingSession": "Checking your session...",
+    "unableToConnect": "Unable to connect to the server",
+    "somethingWrong": "Something went wrong",
+    "sortBy": "Sort by",
+    "sortNewest": "Newest",
+    "sortOldest": "Oldest",
+    "sortMostLiked": "Most Liked",
+    "category": "Category",
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{totalPages}}",
+    "counter": "{{count}} / {{max}}",
+    "categories": {
+      "ALL": "All Categories",
+      "PROGRAMMING": "Programming",
+      "CAREER": "Career",
+      "STUDY_NOTES": "Study Notes",
+      "PROJECTS": "Projects",
+      "LIFE": "Life",
+      "OPINION": "Opinion"
+    },
+    "errors": {
+      "loadArticlesFailed": "Failed to load articles",
+      "loadArticlesFailedRetry": "Failed to load articles. Please try again."
+    }
+  },
+  "footer": {
+    "copyright": "© {{year}} Codamium. All rights reserved.",
+    "navAriaLabel": "Footer links",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "githubRepo": "GitHub repo"
+  },
+  "languageSwitcher": {
+    "label": "Language"
+  },
+  "api": {
+    "errors": {
+      "internal_server_error": "Something went wrong on our end. Please try again.",
+      "route_not_found": "That page or resource doesn't exist.",
+      "server_misconfigured": "The server is temporarily misconfigured. Please try again later.",
+      "auth_required": "Please log in to continue.",
+      "invalid_token": "Your session is invalid or has expired. Please log in again.",
+      "invalid_session": "Your session is invalid or has expired. Please log in again.",
+      "forbidden_role": "You don't have permission to do that.",
+      "invalid_credentials": "Invalid email or password.",
+      "email_already_taken": "That email is already registered.",
+      "username_already_taken": "That username is already taken.",
+      "email_or_username_already_taken": "That email or username is already taken.",
+      "csrf_invalid": "Your session could not be verified. Please refresh the page and try again.",
+      "validation_email_required": "Email is required.",
+      "validation_email_invalid": "Please enter a valid email.",
+      "validation_username_required": "Username is required.",
+      "validation_username_invalid": "Username must be 3-20 characters and contain only letters, numbers, or underscores.",
+      "validation_password_required": "Password is required.",
+      "validation_password_length": "Password must be between 8 and 72 characters.",
+      "validation_register_fields_required": "Email, username, and password are required.",
+      "validation_login_fields_required": "Email and password are required.",
+      "validation_title_required": "Title is required.",
+      "validation_title_invalid": "Title must be a non-empty string.",
+      "validation_title_max_length": "Title must be at most 120 characters.",
+      "validation_content_required": "Content is required.",
+      "validation_content_invalid": "Content must be a non-empty string.",
+      "validation_content_min_length": "Content must be at least 100 characters.",
+      "validation_category_required": "Category is required.",
+      "validation_category_invalid": "Please choose a valid category.",
+      "validation_article_fields_required": "Title, content, and category are required.",
+      "validation_article_update_fields_required": "At least one of title, content, or category is required.",
+      "validation_sort_invalid": "Invalid sort option.",
+      "validation_date_invalid": "Please enter a valid date.",
+      "validation_comment_content_required": "Comment content is required.",
+      "validation_comment_content_max_length": "Comment must be at most 1000 characters.",
+      "validation_remove_reason_required": "A reason is required.",
+      "validation_remove_reason_max_length": "Reason must be at most 500 characters.",
+      "validation_username_format": "Invalid username format.",
+      "validation_search_query_invalid": "Invalid search query.",
+      "validation_search_query_max_length": "Search query must be at most 50 characters.",
+      "validation_profile_fields_required": "Display name and/or bio must be provided.",
+      "validation_profile_unknown_fields": "That profile update includes unsupported fields.",
+      "validation_display_name_max_length": "Display name must be at most 50 characters.",
+      "validation_display_name_invalid": "Display name must be a string or null.",
+      "validation_bio_max_length": "Bio must be at most 500 characters.",
+      "validation_bio_invalid": "Bio must be a string or null.",
+      "validation_avatar_required": "An avatar file is required.",
+      "validation_avatar_format": "Avatar must be a JPEG, PNG, or WebP image.",
+      "validation_preferred_language_invalid": "That language isn't supported.",
+      "file_too_large": "That file is too large.",
+      "validation_message_content_required": "Message content is required.",
+      "validation_message_content_empty": "Message cannot be empty.",
+      "validation_message_content_max_length": "Message cannot exceed 2000 characters.",
+      "article_not_found": "Article not found.",
+      "comment_not_found": "Comment not found.",
+      "user_not_found": "User not found.",
+      "notification_not_found": "Notification not found.",
+      "friend_request_not_found": "Friend request not found.",
+      "friendship_not_found": "Friendship not found.",
+      "article_edit_forbidden": "Only the author can edit this article.",
+      "article_delete_forbidden": "Only the author can delete this article.",
+      "article_like_own_forbidden": "You can't like your own article.",
+      "comment_edit_forbidden": "Only the author can edit this comment.",
+      "comment_delete_forbidden": "Only the author or a moderator can delete this comment.",
+      "notification_mark_read_forbidden": "You cannot mark another user's notification as read.",
+      "friend_self_forbidden": "You can't friend yourself.",
+      "friend_already": "You're already friends.",
+      "friend_request_already_pending": "A friend request is already pending.",
+      "friend_request_declined": "This friend request was declined.",
+      "friend_respond_self_forbidden": "You cannot respond to your own friend request.",
+      "friend_not_addressee": "You are not the addressee of this request.",
+      "friend_remove_self_forbidden": "You can't remove yourself.",
+      "friend_cancel_self_forbidden": "You can't cancel a request to yourself.",
+      "follow_self_forbidden": "You can't follow yourself.",
+      "follow_already": "You're already following this user.",
+      "follow_unfollow_self_forbidden": "You can't unfollow yourself.",
+      "follow_not_following": "You are not following this user.",
+      "message_self_forbidden": "You can't message yourself.",
+      "validation_friend_action_invalid": "That action isn't valid.",
+      "oauth_profile_missing_provider_id": "The OAuth profile is missing required information.",
+      "oauth_account_already_linked": "This OAuth account is already linked to another user.",
+      "oauth_account_link_duplicate": "This OAuth account could not be linked due to a conflict.",
+      "oauth_profile_invalid_payload": "The OAuth profile data was invalid.",
+      "oauth_not_configured": "OAuth sign-in is not configured.",
+      "oauth_provider_not_enabled": "That sign-in provider is not enabled."
+    }
+  },
+  "nav": {
+    "write": "Write",
+    "login": "Login",
+    "logout": "Logout",
+    "checkingSession": "Checking session..."
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Page Not Found",
+    "description": "The page you are looking for does not exist or may have been moved."
+  },
+  "serverError": {
+    "code": "500",
+    "title": "Something Went Wrong",
+    "description": "An unexpected error occurred while loading this page. Please try again."
+  },
+  "userSearch": {
+    "placeholder": "Search users...",
+    "ariaLabel": "Search users by username",
+    "searching": "Searching...",
+    "noResults": "No users found.",
+    "showingTop_one": "Showing top {{count}} result — refine your search to narrow it down.",
+    "showingTop_other": "Showing top {{count}} results — refine your search to narrow it down.",
+    "unableToSearch": "Unable to search users"
+  },
+  "articleForm": {
+    "titleLabel": "Title",
+    "titlePlaceholder": "Give your article a title",
+    "categoryLabel": "Category",
+    "contentLabel": "Content",
+    "write": "Write",
+    "preview": "Preview",
+    "nothingToPreview": "Nothing to preview yet.",
+    "contentPlaceholder": "Write your article in Markdown...",
+    "contentCounter": "{{count}} / {{min}} minimum",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "errors": {
+      "titleRequired": "Title is required",
+      "titleMaxLength": "Title must be at most {{max}} characters",
+      "contentRequired": "Content is required",
+      "contentMinLength": "Content must be at least {{min}} characters",
+      "unableToSave": "Unable to save article"
+    }
+  },
+  "followButton": {
+    "follow": "Follow",
+    "following": "Following",
+    "unfollow": "Unfollow"
+  },
+  "friendButton": {
+    "addFriend": "Add Friend",
+    "pending": "Pending",
+    "accept": "Accept",
+    "decline": "Decline",
+    "friends": "Friends",
+    "sendAria": "Send friend request",
+    "sendTitle": "Click to send request",
+    "cancelAria": "Cancel friend request",
+    "cancelTitle": "Click to cancel request",
+    "acceptAria": "Accept friend request",
+    "acceptTitle": "Click to accept request",
+    "declineAria": "Decline friend request",
+    "declineTitle": "Click to decline request",
+    "removeAria": "Remove friend",
+    "removeTitle": "Click to remove friend"
+  },
+  "createArticle": {
+    "title": "Write an Article",
+    "subtitle": "Share something with the community",
+    "publish": "Publish"
+  },
+  "editProfile": {
+    "title": "Edit Profile",
+    "subtitle": "Update your display name, bio, and avatar",
+    "avatarHeading": "Avatar",
+    "noFileChosen": "No file chosen",
+    "fileHint": "JPEG, PNG or WebP · max {{maxMb}} MB",
+    "chooseImage": "Choose image",
+    "chooseAvatarAria": "Choose avatar image",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "removeAvatar": "Remove avatar",
+    "removing": "Removing...",
+    "detailsHeading": "Profile Details",
+    "displayNameLabel": "Display Name",
+    "displayNamePlaceholder": "Your display name (optional)",
+    "bioLabel": "Bio",
+    "bioPlaceholder": "Tell people a little about yourself (optional)",
+    "saveChanges": "Save Changes",
+    "backToProfile": "← Back to your profile",
+    "errors": {
+      "invalidImageType": "Please choose a JPEG, PNG, or WebP image",
+      "imageTooLarge": "Image must be {{maxMb}} MB or smaller",
+      "displayNameMaxLength": "Display name must be {{max}} characters or fewer",
+      "bioMaxLength": "Bio must be {{max}} characters or fewer"
+    },
+    "success": {
+      "profileUpdated": "Profile updated successfully",
+      "avatarUploaded": "Avatar uploaded successfully",
+      "avatarRemoved": "Avatar removed successfully"
+    }
+  },
+  "auth": {
+    "emailLabel": "Email Address",
+    "emailPlaceholder": "you@example.com",
+    "emailHint": "Valid email format required (e.g., user@example.com)",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "Enter your password",
+    "passwordHelp": "8-72 chars, use lowercase, uppercase, and digits",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "errors": {
+      "emailRequired": "Email is required",
+      "emailInvalid": "Please enter a valid email",
+      "passwordRequired": "Password is required"
+    }
+  },
+  "login": {
+    "title": "Welcome Back",
+    "subtitle": "Sign in to your account to continue",
+    "signIn": "Sign In",
+    "signingIn": "Signing in...",
+    "noAccount": "Don't have an account?",
+    "registerLink": "Register",
+    "continueWith": "Continue with {{provider}}",
+    "redirectingTo": "Redirecting to {{provider}}...",
+    "notConfigured": "{{provider}} is not configured",
+    "errors": {
+      "invalidCredentials": "Invalid email or password"
+    },
+    "oauthErrors": {
+      "oauth_provider_denied": "You canceled OAuth sign in. Please try again and approve access.",
+      "oauth_state_missing": "Your login session expired. Please start OAuth login again.",
+      "oauth_state_invalid": "OAuth validation failed. Please retry login from the start.",
+      "oauth_email_missing": "This provider did not return an email address. Use another provider or email/password login.",
+      "oauth_profile_invalid": "We could not validate your OAuth profile. Please try a different account or provider.",
+      "oauth_account_conflict": "This OAuth account is linked to a different user. Sign in with your original method.",
+      "oauth_callback_invalid": "OAuth callback failed. Please try again.",
+      "oauth_access_token_failed": "OAuth token exchange failed. Check provider app settings and try again.",
+      "oauth_redirect_uri_mismatch": "OAuth redirect URI mismatch. Ensure provider callback URL exactly matches this app callback URL.",
+      "oauth_user_not_found": "We could not find your OAuth user profile. Please try again.",
+      "oauth_provider_unavailable": "This OAuth provider is not available right now. Try another provider or sign in with email/password."
+    }
+  },
+  "register": {
+    "title": "Create Account",
+    "subtitle": "Register to start using the platform",
+    "usernameLabel": "Username",
+    "usernamePlaceholder": "your_username",
+    "usernameHint": "3-20 chars, letters, numbers, or underscore",
+    "confirmPasswordLabel": "Confirm Password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "createAccount": "Create Account",
+    "creatingAccount": "Creating account...",
+    "haveAccount": "Already have an account?",
+    "signInLink": "Sign in",
+    "errors": {
+      "usernameRequired": "Username is required",
+      "usernameInvalid": "Username must be 3-20 chars and only letters, numbers, or _",
+      "passwordLength": "Password must be between 8 and 72 characters",
+      "confirmRequired": "Please confirm your password",
+      "passwordMismatch": "Passwords do not match"
+    }
+  },
+  "home": {
+    "eyebrow": "Welcome",
+    "headline": "Connect. Share. Grow.",
+    "heroGuest": "A transcendent experience built with modern web technologies and designed for the future.",
+    "heroUser": "Hello {{name}}, discover the latest activity from your network.",
+    "getStarted": "Get Started",
+    "feedEyebrow": "Global Feed",
+    "latestArticles": "Latest Articles",
+    "searchPlaceholder": "Search articles...",
+    "advancedSearch": "Advanced Search",
+    "loadingArticles": "Loading articles...",
+    "noArticles": "No articles found. Try a different category."
+  },
+  "search": {
+    "eyebrow": "Advanced Search",
+    "title": "Find Articles by Field",
+    "subtitle": "Narrow results by title, author, content, or when it was posted.",
+    "titleLabel": "Title",
+    "titlePlaceholder": "e.g. Getting started",
+    "authorLabel": "Author",
+    "authorPlaceholder": "e.g. alice",
+    "contentLabel": "Content",
+    "contentPlaceholder": "Words that appear in the article body",
+    "postedAfter": "Posted after",
+    "postedBefore": "Posted before",
+    "clearFilters": "Clear all filters",
+    "searching": "Searching...",
+    "noResults": "No articles match your filters. Try adjusting the fields above."
+  },
+  "profile": {
+    "eyebrow": "Profile",
+    "loading": "Loading profile...",
+    "unableToLoad": "Unable to load profile",
+    "unavailable": "This profile does not exist or is currently unavailable.",
+    "usernameMissing": "Profile username is missing",
+    "editProfile": "Edit Profile",
+    "noBio": "No bio yet. This user has not added a profile bio.",
+    "statArticles": "Articles",
+    "statFollowers": "Followers",
+    "statFollowing": "Following",
+    "statLevel": "Level",
+    "statExperience": "Experience",
+    "badges": "Badges",
+    "badgesCollected": "{{count}} collected",
+    "noBadges": "No badges unlocked yet.",
+    "articlesHeading": "Articles",
+    "articlesShown": "{{count}} shown",
+    "loadingArticles": "Loading articles...",
+    "articlesUnableToLoad": "Unable to load articles",
+    "articlesUnavailable": "Article listing endpoint is not available yet. This section is ready and will auto-render once the API is added.",
+    "noArticlesYet": "No published articles yet.",
+    "likes_one": "{{count}} like",
+    "likes_other": "{{count}} likes",
+    "unknownDate": "Unknown date"
+  },
+  "article": {
+    "loading": "Loading article...",
+    "notFound": "Article not found",
+    "saveChanges": "Save changes",
+    "comments": "Comments ({{count}})",
+    "addCommentPlaceholder": "Add a comment...",
+    "postComment": "Post comment",
+    "posting": "Posting...",
+    "loginLink": "Log in",
+    "loginToCommentSuffix": "to leave a comment.",
+    "loadingComments": "Loading comments...",
+    "commentsUnavailable": "Comments aren't available yet.",
+    "noComments": "No comments yet. Be the first to comment!",
+    "likeLabel": "Like",
+    "likedLabel": "Liked",
+    "loginToLikeTitle": "Log in to like articles",
+    "loginToLikeSentence": "Log in to like articles.",
+    "cantLikeOwn": "You can't like your own article",
+    "backToFeed": "← Back to feed",
+    "commentRemove": "Remove",
+    "commentRemoving": "Removing...",
+    "commentDeleting": "Deleting...",
+    "removedPlaceholder": "[removed]",
+    "removedLabel": "Removed",
+    "removedWithReason": "Removed: {{reason}}",
+    "deleteCommentConfirm": "Delete this comment? This cannot be undone.",
+    "removeCommentReasonPrompt": "Reason for removing this comment:",
+    "deleteArticleConfirm": "Delete this article? This cannot be undone.",
+    "errors": {
+      "loadFailed": "Unable to load article",
+      "postCommentFailed": "Unable to post comment",
+      "updateCommentFailed": "Unable to update comment",
+      "deleteCommentFailed": "Unable to delete comment",
+      "deleteArticleFailed": "Unable to delete article"
+    }
+  },
+  "privacyPolicy": {
+    "title": "Privacy Policy",
+    "lastUpdated": "Last updated: July 2026",
+    "intro": {
+      "heading": "Introduction",
+      "p1": "Codamium (\"we\", \"our\", or \"us\") is committed to protecting your privacy. This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you visit our platform.",
+      "p2": "Please read this Privacy Policy carefully. If you do not agree with our policies and practices, please do not use our platform."
+    },
+    "collect": {
+      "heading": "1. Information We Collect",
+      "account": { "heading": "Account Information", "body": "When you create an account, we collect information such as your email address, username, display name, profile picture, and bio. We also store your password in hashed form for authentication purposes." },
+      "content": { "heading": "User-Generated Content", "body": "We collect and store the articles, comments, and other content you create on our platform, including metadata such as publication date, category, and engagement metrics." },
+      "usage": { "heading": "Usage and Analytics Data", "body": "We automatically collect information about your interactions with our platform, including pages visited, content viewed, time spent on pages, and click patterns. This information is used to improve our services and understand user behavior." },
+      "device": { "heading": "Device Information", "body": "We collect information about the devices you use to access our platform, including device type, operating system, browser type, and IP address." }
+    },
+    "cookies": {
+      "heading": "2. Cookies and Authentication",
+      "jwt": { "heading": "JWT Tokens", "body": "We use JSON Web Tokens (JWT) for authentication and authorization. These tokens contain encrypted information about your session and are stored securely in your browser. JWTs allow you to stay logged in across pages without repeatedly entering your credentials." },
+      "session": { "heading": "Session Cookies", "body": "We may use session cookies to maintain your logged-in state and provide personalized experiences. These cookies are deleted when you close your browser or explicitly log out." },
+      "preference": { "heading": "Preference Cookies", "body": "We use preference cookies to remember your settings and preferences, such as display language, theme selection, and notification preferences." }
+    },
+    "usage": {
+      "heading": "3. How We Use Your Information",
+      "intro": "We use the information we collect for the following purposes:",
+      "list": [
+        "To provide, maintain, and improve our platform and services",
+        "To authenticate your identity and manage your account",
+        "To personalize your experience and deliver targeted content",
+        "To communicate with you about updates, announcements, and promotional offers",
+        "To monitor and analyze trends and usage patterns for platform improvements",
+        "To enforce our Terms of Service and other agreements",
+        "To protect against fraudulent, malicious, or illegal activity"
+      ]
+    },
+    "sharing": {
+      "heading": "4. Information Sharing",
+      "intro": "We do not sell your personal information to third parties. We may share your information in the following circumstances:",
+      "list": [
+        { "label": "Service Providers:", "text": "With trusted third-party service providers who assist us in operating our platform, subject to confidentiality agreements" },
+        { "label": "Legal Compliance:", "text": "When required by law or government requests" },
+        { "label": "Safety and Protection:", "text": "To protect our rights, privacy, safety, or property" },
+        { "label": "Public Profiles:", "text": "Your public profile information (username, display name, bio) is visible to all users" }
+      ]
+    },
+    "security": {
+      "heading": "5. Data Security",
+      "intro": "We implement appropriate technical, administrative, and physical safeguards to protect your personal information against unauthorized access, alteration, disclosure, or destruction. Our security measures include:",
+      "list": [
+        "HTTPS encryption for all data transmitted between your browser and our servers",
+        "Password hashing using industry-standard algorithms",
+        "Secure JWT token generation and validation",
+        "Regular security audits and vulnerability assessments"
+      ],
+      "outro": "However, no method of transmission over the internet is 100% secure. While we strive to protect your information, we cannot guarantee absolute security."
+    },
+    "rights": {
+      "heading": "6. Your Rights",
+      "intro": "You have the following rights regarding your personal information:",
+      "list": [
+        { "label": "Access:", "text": "You can request access to the personal information we hold about you" },
+        { "label": "Correction:", "text": "You can update or correct your account information through your profile settings" },
+        { "label": "Deletion:", "text": "You can request deletion of your account and associated data" },
+        { "label": "Opt-out:", "text": "You can opt out of promotional communications at any time" }
+      ]
+    },
+    "retention": { "heading": "7. Data Retention", "body": "We retain your personal information for as long as necessary to provide our services and fulfill the purposes outlined in this Privacy Policy. When you delete your account, we delete or anonymize your personal data within 30 days, except where legal obligations require us to retain it." },
+    "children": { "heading": "8. Children's Privacy", "body": "Our platform is not intended for children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected personal information from a child under 13, we will take steps to delete such information promptly." },
+    "changes": { "heading": "9. Changes to This Privacy Policy", "body": "We may update this Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. We will notify you of any material changes by updating the \"Last updated\" date at the top of this page. Your continued use of our platform following such changes constitutes your acceptance of the updated Privacy Policy." },
+    "contact": {
+      "heading": "10. Contact Us",
+      "intro": "If you have questions, concerns, or requests regarding this Privacy Policy or our privacy practices, please contact us at:",
+      "teamName": "Codamium Privacy Team",
+      "email": "Email: privacy@codamium.com",
+      "responseTime": "Response time: We aim to respond within 7 business days"
+    }
+  },
+  "termsOfService": {
+    "title": "Terms of Service",
+    "lastUpdated": "Last updated: July 2026",
+    "intro": {
+      "heading": "Introduction",
+      "p1": "Welcome to Codamium. By accessing or using our platform, you agree to be bound by these Terms of Service (\"Terms\"). Please read them carefully before using the platform.",
+      "p2": "If you do not agree to these Terms, you may not access or use Codamium. We reserve the right to update these Terms at any time, and your continued use of the platform constitutes acceptance of any changes."
+    },
+    "acceptableUse": {
+      "heading": "1. Acceptable Use",
+      "intro": "You agree to use Codamium only for lawful purposes and in a way that does not infringe the rights of others. The following activities are strictly prohibited:",
+      "list": [
+        "Posting content that is illegal, harmful, abusive, harassing, defamatory, or discriminatory",
+        "Impersonating another person or entity, or misrepresenting your affiliation",
+        "Distributing spam, malware, viruses, or any malicious code",
+        "Attempting to gain unauthorized access to any account, system, or network",
+        "Scraping, crawling, or harvesting user data without our express written consent",
+        "Using the platform to engage in any form of commercial advertising without approval",
+        "Interfering with or disrupting the integrity or performance of the platform"
+      ],
+      "outro": "We reserve the right to remove any content that violates these rules and to suspend or terminate the accounts of users who engage in prohibited activities."
+    },
+    "ownership": {
+      "heading": "2. Content Ownership",
+      "yourContent": { "heading": "Your Content", "body": "You retain ownership of all content you create and publish on Codamium, including articles, comments, and profile information. By posting content, you grant Codamium a non-exclusive, worldwide, royalty-free license to display, distribute, and promote your content within the platform." },
+      "responsibility": { "heading": "Content Responsibility", "body": "You are solely responsible for the content you publish. You represent and warrant that you own or have the necessary rights to publish your content, and that it does not violate any applicable laws or third-party rights, including intellectual property rights." },
+      "platformContent": { "heading": "Platform Content", "body": "All platform elements not created by users — including the design, logo, and interface — are owned by Codamium and protected by applicable intellectual property laws. You may not copy, reproduce, or redistribute any platform content without express written permission." }
+    },
+    "moderation": {
+      "heading": "3. Moderation Policy",
+      "review": { "heading": "Content Review", "body": "Codamium moderators may review, edit, or remove any content at their discretion if it violates these Terms. Moderation decisions are final, though users may appeal by contacting our support team." },
+      "reporting": { "heading": "Reporting", "body": "Users may report content or accounts they believe violate these Terms. We investigate all reports and take appropriate action, but we do not guarantee that every report will result in removal or account action." },
+      "suspension": { "heading": "Account Suspension and Termination", "body": "We reserve the right to suspend or permanently terminate any account that repeatedly or severely violates these Terms, without prior notice. Suspended users may not create new accounts to circumvent the suspension." }
+    },
+    "accounts": {
+      "heading": "4. User Accounts",
+      "intro": "You are responsible for maintaining the confidentiality of your account credentials and for all activity that occurs under your account. You agree to:",
+      "list": [
+        "Provide accurate and truthful information when creating your account",
+        "Keep your password secure and not share it with others",
+        "Notify us immediately of any unauthorized use of your account",
+        "Not create multiple accounts to circumvent bans or restrictions"
+      ]
+    },
+    "disclaimers": { "heading": "5. Disclaimers", "body": "Codamium is provided \"as is\" without warranties of any kind. We do not guarantee that the platform will be available at all times, error-free, or free from security vulnerabilities. We are not responsible for any content posted by users, and we do not endorse any opinions expressed on the platform." },
+    "liability": { "heading": "6. Limitation of Liability", "body": "To the maximum extent permitted by law, Codamium shall not be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the platform, including but not limited to loss of data, loss of profits, or reputational damage." },
+    "changes": { "heading": "7. Changes to These Terms", "body": "We may update these Terms from time to time. When we do, we will update the \"Last updated\" date at the top of this page. Material changes will be communicated through the platform. Your continued use of Codamium after any changes constitutes your acceptance of the updated Terms." },
+    "contact": {
+      "heading": "8. Contact Us",
+      "intro": "If you have questions or concerns about these Terms of Service, please contact us at:",
+      "teamName": "Codamium Support Team",
+      "email": "Email: legal@codamium.com",
+      "responseTime": "Response time: We aim to respond within 7 business days"
+    }
+  }
+}

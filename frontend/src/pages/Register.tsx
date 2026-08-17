@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { registerUser } from '@/api/auth'
-
-const PASSWORD_HELP_TEXT = '8-72 chars, use lowercase, uppercase, and digits'
+import { translateApiError } from '@/lib/api-errors'
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -16,6 +16,7 @@ const validateUsername = (username: string) => {
 }
 
 export const Register = () => {
+  const { t } = useTranslation()
   // Move user to login page after success.
   const navigate = useNavigate()
 
@@ -49,34 +50,34 @@ export const Register = () => {
     const trimmedUsername = username.trim()
 
     if (trimmedEmail.length === 0) {
-      setEmailError('Email is required')
+      setEmailError(t('auth.errors.emailRequired'))
       isValid = false
     } else if (!validateEmail(trimmedEmail)) {
-      setEmailError('Please enter a valid email')
+      setEmailError(t('auth.errors.emailInvalid'))
       isValid = false
     }
 
     if (trimmedUsername.length === 0) {
-      setUsernameError('Username is required')
+      setUsernameError(t('register.errors.usernameRequired'))
       isValid = false
     } else if (!validateUsername(trimmedUsername)) {
-      setUsernameError('Username must be 3-20 chars and only letters, numbers, or _')
+      setUsernameError(t('register.errors.usernameInvalid'))
       isValid = false
     }
 
     if (password.length === 0) {
-      setPasswordError('Password is required')
+      setPasswordError(t('auth.errors.passwordRequired'))
       isValid = false
     } else if (password.length < 8 || password.length > 72) {
-      setPasswordError('Password must be between 8 and 72 characters')
+      setPasswordError(t('register.errors.passwordLength'))
       isValid = false
     }
 
     if (confirmPassword.length === 0) {
-      setConfirmPasswordError('Please confirm your password')
+      setConfirmPasswordError(t('register.errors.confirmRequired'))
       isValid = false
     } else if (confirmPassword !== password) {
-      setConfirmPasswordError('Passwords do not match')
+      setConfirmPasswordError(t('register.errors.passwordMismatch'))
       isValid = false
     }
 
@@ -133,11 +134,11 @@ export const Register = () => {
       navigate('/login', { replace: true })
     } catch (error) {
       if (error instanceof Error) {
-        applyApiError(error.message)
+        applyApiError(translateApiError(error, error.message))
         return
       }
 
-      setFormError('Unable to connect to the server')
+      setFormError(t('common.unableToConnect'))
     } finally {
       setIsSubmitting(false)
     }
@@ -147,8 +148,8 @@ export const Register = () => {
     <section className="mx-auto w-full max-w-md space-y-8">
       {/* Register header */}
       <div className="space-y-3 text-center">
-        <h1 className="text-4xl font-bold tracking-tight text-slate-900">Create Account</h1>
-        <p className="text-slate-600">Register to start using the platform</p>
+        <h1 className="text-4xl font-bold tracking-tight text-slate-900">{t('register.title')}</h1>
+        <p className="text-slate-600">{t('register.subtitle')}</p>
       </div>
 
       {/* Register form */}
@@ -159,7 +160,7 @@ export const Register = () => {
       >
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-semibold text-slate-900">
-            Email Address
+            {t('auth.emailLabel')}
           </label>
           <input
             id="email"
@@ -171,15 +172,15 @@ export const Register = () => {
               setEmail(event.target.value)
             }}
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
-            placeholder="you@example.com"
+            placeholder={t('auth.emailPlaceholder')}
           />
-          <p className="text-xs text-slate-500">Valid email format required (e.g., user@example.com)</p>
+          <p className="text-xs text-slate-500">{t('auth.emailHint')}</p>
           {emailError.length > 0 ? <p className="text-xs font-medium text-red-500">{emailError}</p> : null}
         </div>
 
         <div className="space-y-2">
           <label htmlFor="username" className="block text-sm font-semibold text-slate-900">
-            Username
+            {t('register.usernameLabel')}
           </label>
           <input
             id="username"
@@ -192,18 +193,18 @@ export const Register = () => {
             }}
             maxLength={20}
             className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
-            placeholder="your_username"
+            placeholder={t('register.usernamePlaceholder')}
           />
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">3-20 chars, letters, numbers, or underscore</p>
-            <p className="text-xs text-slate-400">{username.length} / 20</p>
+            <p className="text-xs text-slate-500">{t('register.usernameHint')}</p>
+            <p className="text-xs text-slate-400">{t('common.counter', { count: username.length, max: 20 })}</p>
           </div>
           {usernameError.length > 0 ? <p className="text-xs font-medium text-red-500">{usernameError}</p> : null}
         </div>
 
         <div className="space-y-2">
           <label htmlFor="password" className="block text-sm font-semibold text-slate-900">
-            Password
+            {t('auth.passwordLabel')}
           </label>
           <div className="relative">
             <input
@@ -216,7 +217,7 @@ export const Register = () => {
                 setPassword(event.target.value)
               }}
               className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 pr-20 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
-              placeholder="Enter your password"
+              placeholder={t('auth.passwordPlaceholder')}
             />
             <button
               type="button"
@@ -224,7 +225,7 @@ export const Register = () => {
                 setShowPassword(!showPassword)
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-700 hover:text-purple-900"
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
             >
               {showPassword ? (
                 <svg
@@ -256,15 +257,15 @@ export const Register = () => {
             </button>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-xs text-slate-500">{PASSWORD_HELP_TEXT}</p>
-            <p className="text-xs text-slate-400">{password.length} / 72</p>
+            <p className="text-xs text-slate-500">{t('auth.passwordHelp')}</p>
+            <p className="text-xs text-slate-400">{t('common.counter', { count: password.length, max: 72 })}</p>
           </div>
           {passwordError.length > 0 ? <p className="text-xs font-medium text-red-500">{passwordError}</p> : null}
         </div>
 
         <div className="space-y-2">
           <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-900">
-            Confirm Password
+            {t('register.confirmPasswordLabel')}
           </label>
           <div className="relative">
             <input
@@ -277,7 +278,7 @@ export const Register = () => {
                 setConfirmPassword(event.target.value)
               }}
               className="w-full rounded-lg border border-purple-200/50 bg-white/50 px-4 py-3 pr-20 text-sm text-slate-900 placeholder:text-slate-400 focus:border-purple-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-purple-300/50 transition-all"
-              placeholder="Confirm your password"
+              placeholder={t('register.confirmPasswordPlaceholder')}
             />
             <button
               type="button"
@@ -285,7 +286,7 @@ export const Register = () => {
                 setShowConfirmPassword(!showConfirmPassword)
               }}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-purple-700 hover:text-purple-900"
-              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+              aria-label={showConfirmPassword ? t('auth.hidePassword') : t('auth.showPassword')}
             >
               {showConfirmPassword ? (
                 <svg
@@ -316,7 +317,7 @@ export const Register = () => {
               )}
             </button>
           </div>
-          <p className="text-right text-xs text-slate-400">{confirmPassword.length} / 72</p>
+          <p className="text-right text-xs text-slate-400">{t('common.counter', { count: confirmPassword.length, max: 72 })}</p>
           {confirmPasswordError.length > 0 ? (
             <p className="text-xs font-medium text-red-500">{confirmPasswordError}</p>
           ) : null}
@@ -333,13 +334,13 @@ export const Register = () => {
           type="submit"
           disabled={isSubmitting}
         >
-          {isSubmitting ? 'Creating account...' : 'Create Account'}
+          {isSubmitting ? t('register.creatingAccount') : t('register.createAccount')}
         </Button>
 
         <p className="text-center text-sm text-slate-600">
-          Already have an account?{' '}
+          {t('register.haveAccount')}{' '}
           <Link to="/login" className="font-semibold text-purple-700 hover:text-purple-900">
-            Sign in
+            {t('register.signInLink')}
           </Link>
         </p>
       </form>

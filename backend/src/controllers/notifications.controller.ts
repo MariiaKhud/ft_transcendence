@@ -2,11 +2,15 @@ import { Request, Response } from 'express';
 import * as notificationsService from '../services/notifications.service.js';
 import { AppError } from '../middleware/error.middleware.js';
 import { sendSuccess, sendError } from '../utils/api-response.js';
+import { ErrorCode } from '../lib/error-codes.js';
 
 export async function getNotifications(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, new AppError(401, 'Unauthorized'));
+      return sendError(
+        res,
+        new AppError(401, ErrorCode.AUTH_REQUIRED, 'Unauthorized')
+      );
     }
 
     const unreadOnly = req.query.unread === 'true';
@@ -21,7 +25,10 @@ export async function getNotifications(req: Request, res: Response) {
 export async function markOneAsRead(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, new AppError(401, 'Unauthorized'));
+      return sendError(
+        res,
+        new AppError(401, ErrorCode.AUTH_REQUIRED, 'Unauthorized')
+      );
     }
 
     const notification = await notificationsService.markOneAsRead(
@@ -38,7 +45,10 @@ export async function markOneAsRead(req: Request, res: Response) {
 export async function markAllAsRead(req: Request, res: Response) {
   try {
     if (!req.user) {
-      return sendError(res, new AppError(401, 'Unauthorized'));
+      return sendError(
+        res,
+        new AppError(401, ErrorCode.AUTH_REQUIRED, 'Unauthorized')
+      );
     }
 
     const result = await notificationsService.markAllAsRead(req.user.userId);

@@ -5,10 +5,12 @@ import helmet from 'helmet'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { errorHandler } from './middleware/error.middleware.js'
+import { ErrorCode } from './lib/error-codes.js'
 import { prisma } from './lib/prisma.js'
 import { initializeOAuthStrategy, passport } from './auth/oauth.passport.js'
 import authRoutes from './routes/auth.routes.js'
 import userRoutes from './routes/users.routes.js'
+import adminRoutes from './routes/admin.routes.js'
 import articleRoutes from './routes/articles.routes.js'
 import commentRoutes from './routes/comments.routes.js'
 import friendsRoutes from './routes/friends.routes.js';
@@ -33,6 +35,7 @@ const handleHealthCheck = (_req: express.Request, res: express.Response) => {
 const handleNotFound = (_req: express.Request, res: express.Response) => {
   res.status(404).json({
     success: false,
+    code: ErrorCode.ROUTE_NOT_FOUND,
     error: 'Route not found',
   })
 }
@@ -62,22 +65,34 @@ app.use(helmet())
 const allowedOrigins = [
   FRONTEND_URL,
   'http://localhost',
+  'http://127.0.0.1',
   'http://localhost:5173', // Vite dev server
   'http://localhost:5174',
   'http://localhost:8080', // nginx HTTP port
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:5174',
+  'http://127.0.0.1:8080',
   'https://localhost',
+  'https://127.0.0.1',
   'https://localhost:443',
   'https://localhost:3000',
   'https://localhost:8443', // nginx HTTPS port
+  'https://127.0.0.1:443',
+  'https://127.0.0.1:3000',
+  'https://127.0.0.1:8443',
 ]
 
+// ─────────────────────────────────────────────
+// CORS Middleware
+// ─────────────────────────────────────────────
 app.use(
   cors({
     origin: (origin, callback) => {
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true)
       } else {
-        callback(new Error('Not allowed by CORS'))
+        // Return no CORS headers for unknown origins without turning it into a 500.
+        callback(null, false)
       }
     },
     credentials: true,
@@ -118,6 +133,7 @@ app.get('/health', handleHealthCheck)
 
 app.use('/api/auth', authRoutes)                       // Authentication routes (register, login, logout, etc.)
 app.use('/api/users', userRoutes)                      // User routes (profile management, user listing, etc.)
+app.use('/api/admin', adminRoutes)                     // Admin routes (user management, role management, content moderation, and dashboard)
 app.use('/api/articles', articleRoutes)                // Articles routes (global feed, search, filtering)
 app.use('/api/comments', commentRoutes)                // Comments routes (edit comment)
 app.use('/api/friends', friendsRoutes);                // Friend system (send/accept requests, list friends, remove friends)

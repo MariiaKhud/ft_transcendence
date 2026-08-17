@@ -1,13 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { searchUsers, type UserSearchResult } from '@/api/users'
 import { getInitials, toSafeImageUrl } from '@/lib/article-display'
+import { translateApiError } from '@/lib/api-errors'
 import { SearchIcon } from '@/components/ui/icons'
 
 // Username search box for the top nav: type a full or partial username and
 // pick a match to jump straight to their profile.
 export const UserSearchBar = () => {
+  const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [results, setResults] = useState<UserSearchResult[]>([])
@@ -51,7 +54,7 @@ export const UserSearchBar = () => {
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Unable to search users')
+          setError(translateApiError(err, err instanceof Error ? err.message : t('userSearch.unableToSearch')))
         }
       })
       .finally(() => {
@@ -91,8 +94,8 @@ export const UserSearchBar = () => {
               setIsOpen(false)
             }
           }}
-          placeholder="Search users..."
-          aria-label="Search users by username"
+          placeholder={t('userSearch.placeholder')}
+          aria-label={t('userSearch.ariaLabel')}
           className="w-full rounded-full border border-slate-300 bg-white/70 py-2 pl-9 pr-4 text-sm text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
         />
       </div>
@@ -100,11 +103,11 @@ export const UserSearchBar = () => {
       {showDropdown && (
         <div className="absolute left-0 right-0 top-full z-20 mt-2 max-h-80 overflow-y-auto rounded-xl border border-white/30 bg-white/95 shadow-xl backdrop-blur-md">
           {loading ? (
-            <p className="px-4 py-3 text-sm text-slate-600">Searching...</p>
+            <p className="px-4 py-3 text-sm text-slate-600">{t('userSearch.searching')}</p>
           ) : error ? (
             <p className="px-4 py-3 text-sm text-red-600">{error}</p>
           ) : results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-slate-600">No users found.</p>
+            <p className="px-4 py-3 text-sm text-slate-600">{t('userSearch.noResults')}</p>
           ) : (
             <>
               <ul>
@@ -136,7 +139,7 @@ export const UserSearchBar = () => {
               </ul>
               {hasMore && (
                 <p className="border-t border-slate-200 px-4 py-2 text-xs text-slate-500">
-                  Showing top {results.length} results — refine your search to narrow it down.
+                  {t('userSearch.showingTop', { count: results.length })}
                 </p>
               )}
             </>

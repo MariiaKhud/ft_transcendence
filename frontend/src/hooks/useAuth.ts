@@ -1,6 +1,7 @@
 import { useCallback, useEffect } from 'react'
 import { getCurrentUser, loginUser, logoutUser } from '@/api/auth'
 import { useStore } from '@/store/store'
+import { applyPreferredLanguage } from '@/lib/i18n'
 import type { LoginCredentials } from '@/types/auth'
 
 // Hook options.
@@ -44,6 +45,7 @@ export const useAuth = (options: UseAuthOptions = {}) => {
       try {
         const user = await loginUser(credentials)
         setCurrentUser(user)
+        applyPreferredLanguage(user.preferredLanguage)
         return user
       } finally {
         setIsLoading(false)
@@ -73,6 +75,7 @@ export const useAuth = (options: UseAuthOptions = {}) => {
       try {
         const user = await getCurrentUser()
         setCurrentUser(user)
+        applyPreferredLanguage(user.preferredLanguage)
       } catch {
         clearCurrentUser()
       } finally {

@@ -1,0 +1,523 @@
+{
+  "common": {
+    "loading": "Laden...",
+    "retry": "Opnieuw proberen",
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "saving": "Opslaan...",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "deleting": "Verwijderen...",
+    "backToFeed": "Terug naar feed",
+    "checkingSession": "Sessie controleren...",
+    "unableToConnect": "Kan geen verbinding maken met de server",
+    "somethingWrong": "Er is iets misgegaan",
+    "sortBy": "Sorteren op",
+    "sortNewest": "Nieuwste",
+    "sortOldest": "Oudste",
+    "sortMostLiked": "Meest geliket",
+    "category": "Categorie",
+    "previous": "Vorige",
+    "next": "Volgende",
+    "pageOf": "Pagina {{page}} van {{totalPages}}",
+    "counter": "{{count}} / {{max}}",
+    "categories": {
+      "ALL": "Alle categorieën",
+      "PROGRAMMING": "Programmeren",
+      "CAREER": "Carrière",
+      "STUDY_NOTES": "Studienotities",
+      "PROJECTS": "Projecten",
+      "LIFE": "Leven",
+      "OPINION": "Mening"
+    },
+    "errors": {
+      "loadArticlesFailed": "Artikelen laden mislukt",
+      "loadArticlesFailedRetry": "Artikelen laden mislukt. Probeer het opnieuw."
+    }
+  },
+  "footer": {
+    "copyright": "© {{year}} Codamium. Alle rechten voorbehouden.",
+    "navAriaLabel": "Footerlinks",
+    "privacyPolicy": "Privacybeleid",
+    "termsOfService": "Servicevoorwaarden",
+    "githubRepo": "GitHub-repository"
+  },
+  "languageSwitcher": {
+    "label": "Taal"
+  },
+  "api": {
+    "errors": {
+      "internal_server_error": "Er is aan onze kant iets misgegaan. Probeer het opnieuw.",
+      "route_not_found": "Die pagina of bron bestaat niet.",
+      "server_misconfigured": "De server is tijdelijk verkeerd geconfigureerd. Probeer het later opnieuw.",
+      "auth_required": "Log in om door te gaan.",
+      "invalid_token": "Uw sessie is ongeldig of verlopen. Log opnieuw in.",
+      "invalid_session": "Uw sessie is ongeldig of verlopen. Log opnieuw in.",
+      "forbidden_role": "U heeft geen toestemming om dit te doen.",
+      "invalid_credentials": "Ongeldig e-mailadres of wachtwoord.",
+      "email_already_taken": "Dat e-mailadres is al geregistreerd.",
+      "username_already_taken": "Die gebruikersnaam is al in gebruik.",
+      "email_or_username_already_taken": "Dat e-mailadres of die gebruikersnaam is al in gebruik.",
+      "csrf_invalid": "Uw sessie kon niet worden geverifieerd. Vernieuw de pagina en probeer het opnieuw.",
+      "validation_email_required": "E-mailadres is verplicht.",
+      "validation_email_invalid": "Voer een geldig e-mailadres in.",
+      "validation_username_required": "Gebruikersnaam is verplicht.",
+      "validation_username_invalid": "Gebruikersnaam moet 3-20 tekens bevatten en alleen letters, cijfers of onderstrepingstekens.",
+      "validation_password_required": "Wachtwoord is verplicht.",
+      "validation_password_length": "Wachtwoord moet tussen 8 en 72 tekens bevatten.",
+      "validation_register_fields_required": "E-mailadres, gebruikersnaam en wachtwoord zijn verplicht.",
+      "validation_login_fields_required": "E-mailadres en wachtwoord zijn verplicht.",
+      "validation_title_required": "Titel is verplicht.",
+      "validation_title_invalid": "Titel moet een niet-lege tekst zijn.",
+      "validation_title_max_length": "Titel mag maximaal 120 tekens bevatten.",
+      "validation_content_required": "Inhoud is verplicht.",
+      "validation_content_invalid": "Inhoud moet een niet-lege tekst zijn.",
+      "validation_content_min_length": "Inhoud moet minimaal 100 tekens bevatten.",
+      "validation_category_required": "Categorie is verplicht.",
+      "validation_category_invalid": "Kies een geldige categorie.",
+      "validation_article_fields_required": "Titel, inhoud en categorie zijn verplicht.",
+      "validation_article_update_fields_required": "Ten minste één van titel, inhoud of categorie is verplicht.",
+      "validation_sort_invalid": "Ongeldige sorteeroptie.",
+      "validation_date_invalid": "Voer een geldige datum in.",
+      "validation_comment_content_required": "Inhoud van de reactie is verplicht.",
+      "validation_comment_content_max_length": "Reactie mag maximaal 1000 tekens bevatten.",
+      "validation_remove_reason_required": "Een reden is verplicht.",
+      "validation_remove_reason_max_length": "Reden mag maximaal 500 tekens bevatten.",
+      "validation_username_format": "Ongeldig gebruikersnaamformaat.",
+      "validation_search_query_invalid": "Ongeldige zoekopdracht.",
+      "validation_search_query_max_length": "Zoekopdracht mag maximaal 50 tekens bevatten.",
+      "validation_profile_fields_required": "Weergavenaam en/of bio moet worden opgegeven.",
+      "validation_profile_unknown_fields": "Die profielupdate bevat niet-ondersteunde velden.",
+      "validation_display_name_max_length": "Weergavenaam mag maximaal 50 tekens bevatten.",
+      "validation_display_name_invalid": "Weergavenaam moet een tekst of null zijn.",
+      "validation_bio_max_length": "Bio mag maximaal 500 tekens bevatten.",
+      "validation_bio_invalid": "Bio moet een tekst of null zijn.",
+      "validation_avatar_required": "Een avatarbestand is verplicht.",
+      "validation_avatar_format": "Avatar moet een JPEG-, PNG- of WebP-afbeelding zijn.",
+      "validation_preferred_language_invalid": "Die taal wordt niet ondersteund.",
+      "file_too_large": "Dat bestand is te groot.",
+      "validation_message_content_required": "Berichtinhoud is verplicht.",
+      "validation_message_content_empty": "Bericht mag niet leeg zijn.",
+      "validation_message_content_max_length": "Bericht mag niet langer zijn dan 2000 tekens.",
+      "article_not_found": "Artikel niet gevonden.",
+      "comment_not_found": "Reactie niet gevonden.",
+      "user_not_found": "Gebruiker niet gevonden.",
+      "notification_not_found": "Melding niet gevonden.",
+      "friend_request_not_found": "Vriendschapsverzoek niet gevonden.",
+      "friendship_not_found": "Vriendschap niet gevonden.",
+      "article_edit_forbidden": "Alleen de auteur kan dit artikel bewerken.",
+      "article_delete_forbidden": "Alleen de auteur kan dit artikel verwijderen.",
+      "article_like_own_forbidden": "U kunt uw eigen artikel niet leuk vinden.",
+      "comment_edit_forbidden": "Alleen de auteur kan deze reactie bewerken.",
+      "comment_delete_forbidden": "Alleen de auteur of een moderator kan deze reactie verwijderen.",
+      "notification_mark_read_forbidden": "U kunt de melding van een andere gebruiker niet als gelezen markeren.",
+      "friend_self_forbidden": "U kunt uzelf niet als vriend toevoegen.",
+      "friend_already": "U bent al vrienden.",
+      "friend_request_already_pending": "Er is al een vriendschapsverzoek in behandeling.",
+      "friend_request_declined": "Dit vriendschapsverzoek is afgewezen.",
+      "friend_respond_self_forbidden": "U kunt niet reageren op uw eigen vriendschapsverzoek.",
+      "friend_not_addressee": "U bent niet de geadresseerde van dit verzoek.",
+      "friend_remove_self_forbidden": "U kunt uzelf niet verwijderen.",
+      "friend_cancel_self_forbidden": "U kunt geen verzoek aan uzelf annuleren.",
+      "follow_self_forbidden": "U kunt uzelf niet volgen.",
+      "follow_already": "U volgt deze gebruiker al.",
+      "follow_unfollow_self_forbidden": "U kunt uzelf niet ontvolgen.",
+      "follow_not_following": "U volgt deze gebruiker niet.",
+      "message_self_forbidden": "U kunt uzelf geen bericht sturen.",
+      "validation_friend_action_invalid": "Die actie is niet geldig.",
+      "oauth_profile_missing_provider_id": "Het OAuth-profiel mist vereiste informatie.",
+      "oauth_account_already_linked": "Dit OAuth-account is al gekoppeld aan een andere gebruiker.",
+      "oauth_account_link_duplicate": "Dit OAuth-account kon niet worden gekoppeld vanwege een conflict.",
+      "oauth_profile_invalid_payload": "De OAuth-profielgegevens waren ongeldig.",
+      "oauth_not_configured": "OAuth-aanmelding is niet geconfigureerd.",
+      "oauth_provider_not_enabled": "Die aanmeldprovider is niet ingeschakeld."
+    }
+  },
+  "nav": {
+    "write": "Schrijven",
+    "login": "Inloggen",
+    "logout": "Uitloggen",
+    "checkingSession": "Sessie controleren..."
+  },
+  "notFound": {
+    "code": "404",
+    "title": "Pagina niet gevonden",
+    "description": "De pagina die u zoekt bestaat niet of is mogelijk verplaatst."
+  },
+  "serverError": {
+    "code": "500",
+    "title": "Er is iets misgegaan",
+    "description": "Er is een onverwachte fout opgetreden bij het laden van deze pagina. Probeer het opnieuw."
+  },
+  "userSearch": {
+    "placeholder": "Gebruikers zoeken...",
+    "ariaLabel": "Gebruikers zoeken op gebruikersnaam",
+    "searching": "Zoeken...",
+    "noResults": "Geen gebruikers gevonden.",
+    "showingTop_one": "Top {{count}} resultaat weergegeven — verfijn uw zoekopdracht om te versmallen.",
+    "showingTop_other": "Top {{count}} resultaten weergegeven — verfijn uw zoekopdracht om te versmallen.",
+    "unableToSearch": "Kan gebruikers niet doorzoeken"
+  },
+  "articleForm": {
+    "titleLabel": "Titel",
+    "titlePlaceholder": "Geef uw artikel een titel",
+    "categoryLabel": "Categorie",
+    "contentLabel": "Inhoud",
+    "write": "Schrijven",
+    "preview": "Voorbeeld",
+    "nothingToPreview": "Nog niets om te bekijken.",
+    "contentPlaceholder": "Schrijf uw artikel in Markdown...",
+    "contentCounter": "{{count}} / {{min}} minimaal",
+    "saving": "Opslaan...",
+    "cancel": "Annuleren",
+    "errors": {
+      "titleRequired": "Titel is verplicht",
+      "titleMaxLength": "Titel mag maximaal {{max}} tekens bevatten",
+      "contentRequired": "Inhoud is verplicht",
+      "contentMinLength": "Inhoud moet minimaal {{min}} tekens bevatten",
+      "unableToSave": "Kan artikel niet opslaan"
+    }
+  },
+  "followButton": {
+    "follow": "Volgen",
+    "following": "Gevolgd",
+    "unfollow": "Ontvolgen"
+  },
+  "friendButton": {
+    "addFriend": "Vriend toevoegen",
+    "pending": "In behandeling",
+    "accept": "Accepteren",
+    "decline": "Afwijzen",
+    "friends": "Vrienden",
+    "sendAria": "Vriendschapsverzoek versturen",
+    "sendTitle": "Klik om verzoek te versturen",
+    "cancelAria": "Vriendschapsverzoek annuleren",
+    "cancelTitle": "Klik om verzoek te annuleren",
+    "acceptAria": "Vriendschapsverzoek accepteren",
+    "acceptTitle": "Klik om verzoek te accepteren",
+    "declineAria": "Vriendschapsverzoek afwijzen",
+    "declineTitle": "Klik om verzoek af te wijzen",
+    "removeAria": "Vriend verwijderen",
+    "removeTitle": "Klik om vriend te verwijderen"
+  },
+  "createArticle": {
+    "title": "Schrijf een artikel",
+    "subtitle": "Deel iets met de community",
+    "publish": "Publiceren"
+  },
+  "editProfile": {
+    "title": "Profiel bewerken",
+    "subtitle": "Werk uw weergavenaam, bio en avatar bij",
+    "avatarHeading": "Avatar",
+    "noFileChosen": "Geen bestand gekozen",
+    "fileHint": "JPEG, PNG of WebP · max {{maxMb}} MB",
+    "chooseImage": "Afbeelding kiezen",
+    "chooseAvatarAria": "Avatarafbeelding kiezen",
+    "upload": "Uploaden",
+    "uploading": "Uploaden...",
+    "removeAvatar": "Avatar verwijderen",
+    "removing": "Verwijderen...",
+    "detailsHeading": "Profielgegevens",
+    "displayNameLabel": "Weergavenaam",
+    "displayNamePlaceholder": "Uw weergavenaam (optioneel)",
+    "bioLabel": "Bio",
+    "bioPlaceholder": "Vertel mensen iets over uzelf (optioneel)",
+    "saveChanges": "Wijzigingen opslaan",
+    "backToProfile": "← Terug naar uw profiel",
+    "errors": {
+      "invalidImageType": "Kies een JPEG-, PNG- of WebP-afbeelding",
+      "imageTooLarge": "Afbeelding moet {{maxMb}} MB of kleiner zijn",
+      "displayNameMaxLength": "Weergavenaam mag maximaal {{max}} tekens bevatten",
+      "bioMaxLength": "Bio mag maximaal {{max}} tekens bevatten"
+    },
+    "success": {
+      "profileUpdated": "Profiel succesvol bijgewerkt",
+      "avatarUploaded": "Avatar succesvol geüpload",
+      "avatarRemoved": "Avatar succesvol verwijderd"
+    }
+  },
+  "auth": {
+    "emailLabel": "E-mailadres",
+    "emailPlaceholder": "u@voorbeeld.com",
+    "emailHint": "Geldig e-mailformaat vereist (bijv. gebruiker@voorbeeld.com)",
+    "passwordLabel": "Wachtwoord",
+    "passwordPlaceholder": "Voer uw wachtwoord in",
+    "passwordHelp": "8-72 tekens, gebruik kleine letters, hoofdletters en cijfers",
+    "showPassword": "Wachtwoord tonen",
+    "hidePassword": "Wachtwoord verbergen",
+    "errors": {
+      "emailRequired": "E-mailadres is verplicht",
+      "emailInvalid": "Voer een geldig e-mailadres in",
+      "passwordRequired": "Wachtwoord is verplicht"
+    }
+  },
+  "login": {
+    "title": "Welkom terug",
+    "subtitle": "Log in op uw account om verder te gaan",
+    "signIn": "Inloggen",
+    "signingIn": "Inloggen...",
+    "noAccount": "Heeft u nog geen account?",
+    "registerLink": "Registreren",
+    "continueWith": "Doorgaan met {{provider}}",
+    "redirectingTo": "Doorverwijzen naar {{provider}}...",
+    "notConfigured": "{{provider}} is niet geconfigureerd",
+    "errors": {
+      "invalidCredentials": "Ongeldig e-mailadres of wachtwoord"
+    },
+    "oauthErrors": {
+      "oauth_provider_denied": "U heeft de OAuth-aanmelding geannuleerd. Probeer het opnieuw en keur de toegang goed.",
+      "oauth_state_missing": "Uw aanmeldsessie is verlopen. Start de OAuth-aanmelding opnieuw.",
+      "oauth_state_invalid": "OAuth-validatie mislukt. Probeer opnieuw in te loggen vanaf het begin.",
+      "oauth_email_missing": "Deze provider heeft geen e-mailadres teruggegeven. Gebruik een andere provider of e-mail/wachtwoord-aanmelding.",
+      "oauth_profile_invalid": "We konden uw OAuth-profiel niet valideren. Probeer een ander account of een andere provider.",
+      "oauth_account_conflict": "Dit OAuth-account is gekoppeld aan een andere gebruiker. Log in met uw oorspronkelijke methode.",
+      "oauth_callback_invalid": "OAuth-callback mislukt. Probeer het opnieuw.",
+      "oauth_access_token_failed": "OAuth-tokenuitwisseling mislukt. Controleer de instellingen van de providerapp en probeer het opnieuw.",
+      "oauth_redirect_uri_mismatch": "OAuth-omleidings-URI komt niet overeen. Zorg dat de callback-URL van de provider exact overeenkomt met de callback-URL van deze app.",
+      "oauth_user_not_found": "We konden uw OAuth-gebruikersprofiel niet vinden. Probeer het opnieuw.",
+      "oauth_provider_unavailable": "Deze OAuth-provider is momenteel niet beschikbaar. Probeer een andere provider of log in met e-mail/wachtwoord."
+    }
+  },
+  "register": {
+    "title": "Account aanmaken",
+    "subtitle": "Registreer om het platform te gebruiken",
+    "usernameLabel": "Gebruikersnaam",
+    "usernamePlaceholder": "uw_gebruikersnaam",
+    "usernameHint": "3-20 tekens, letters, cijfers of onderstrepingsteken",
+    "confirmPasswordLabel": "Bevestig wachtwoord",
+    "confirmPasswordPlaceholder": "Bevestig uw wachtwoord",
+    "createAccount": "Account aanmaken",
+    "creatingAccount": "Account aanmaken...",
+    "haveAccount": "Heeft u al een account?",
+    "signInLink": "Inloggen",
+    "errors": {
+      "usernameRequired": "Gebruikersnaam is verplicht",
+      "usernameInvalid": "Gebruikersnaam moet 3-20 tekens bevatten en alleen letters, cijfers of _",
+      "passwordLength": "Wachtwoord moet tussen 8 en 72 tekens bevatten",
+      "confirmRequired": "Bevestig uw wachtwoord",
+      "passwordMismatch": "Wachtwoorden komen niet overeen"
+    }
+  },
+  "home": {
+    "eyebrow": "Welkom",
+    "headline": "Verbind. Deel. Groei.",
+    "heroGuest": "Een transcendente ervaring gebouwd met moderne webtechnologieën en ontworpen voor de toekomst.",
+    "heroUser": "Hallo {{name}}, ontdek de laatste activiteit van uw netwerk.",
+    "getStarted": "Aan de slag",
+    "feedEyebrow": "Globale feed",
+    "latestArticles": "Laatste artikelen",
+    "searchPlaceholder": "Artikelen zoeken...",
+    "advancedSearch": "Geavanceerd zoeken",
+    "loadingArticles": "Artikelen laden...",
+    "noArticles": "Geen artikelen gevonden. Probeer een andere categorie."
+  },
+  "search": {
+    "eyebrow": "Geavanceerd zoeken",
+    "title": "Artikelen zoeken op veld",
+    "subtitle": "Beperk resultaten op titel, auteur, inhoud of plaatsingsdatum.",
+    "titleLabel": "Titel",
+    "titlePlaceholder": "bijv. Aan de slag",
+    "authorLabel": "Auteur",
+    "authorPlaceholder": "bijv. alice",
+    "contentLabel": "Inhoud",
+    "contentPlaceholder": "Woorden die voorkomen in de artikeltekst",
+    "postedAfter": "Geplaatst na",
+    "postedBefore": "Geplaatst voor",
+    "clearFilters": "Alle filters wissen",
+    "searching": "Zoeken...",
+    "noResults": "Geen artikelen komen overeen met uw filters. Pas de bovenstaande velden aan."
+  },
+  "profile": {
+    "eyebrow": "Profiel",
+    "loading": "Profiel laden...",
+    "unableToLoad": "Kan profiel niet laden",
+    "unavailable": "Dit profiel bestaat niet of is momenteel niet beschikbaar.",
+    "usernameMissing": "Gebruikersnaam van profiel ontbreekt",
+    "editProfile": "Profiel bewerken",
+    "noBio": "Nog geen bio. Deze gebruiker heeft geen profielbio toegevoegd.",
+    "statArticles": "Artikelen",
+    "statFollowers": "Volgers",
+    "statFollowing": "Volgend",
+    "statLevel": "Niveau",
+    "statExperience": "Ervaring",
+    "badges": "Badges",
+    "badgesCollected": "{{count}} verzameld",
+    "noBadges": "Nog geen badges ontgrendeld.",
+    "articlesHeading": "Artikelen",
+    "articlesShown": "{{count}} weergegeven",
+    "loadingArticles": "Artikelen laden...",
+    "articlesUnableToLoad": "Kan artikelen niet laden",
+    "articlesUnavailable": "Het eindpunt voor artikellijsten is nog niet beschikbaar. Deze sectie is klaar en wordt automatisch weergegeven zodra de API is toegevoegd.",
+    "noArticlesYet": "Nog geen gepubliceerde artikelen.",
+    "likes_one": "{{count}} like",
+    "likes_other": "{{count}} likes",
+    "unknownDate": "Onbekende datum"
+  },
+  "article": {
+    "loading": "Artikel laden...",
+    "notFound": "Artikel niet gevonden",
+    "saveChanges": "Wijzigingen opslaan",
+    "comments": "Reacties ({{count}})",
+    "addCommentPlaceholder": "Voeg een reactie toe...",
+    "postComment": "Reactie plaatsen",
+    "posting": "Plaatsen...",
+    "loginLink": "Inloggen",
+    "loginToCommentSuffix": "om een reactie achter te laten.",
+    "loadingComments": "Reacties laden...",
+    "commentsUnavailable": "Reacties zijn nog niet beschikbaar.",
+    "noComments": "Nog geen reacties. Wees de eerste die reageert!",
+    "likeLabel": "Vind ik leuk",
+    "likedLabel": "Leuk gevonden",
+    "loginToLikeTitle": "Log in om artikelen leuk te vinden",
+    "loginToLikeSentence": "Log in om artikelen leuk te vinden.",
+    "cantLikeOwn": "U kunt uw eigen artikel niet leuk vinden",
+    "backToFeed": "← Terug naar feed",
+    "commentRemove": "Verwijderen",
+    "commentRemoving": "Verwijderen...",
+    "commentDeleting": "Verwijderen...",
+    "removedPlaceholder": "[verwijderd]",
+    "removedLabel": "Verwijderd",
+    "removedWithReason": "Verwijderd: {{reason}}",
+    "deleteCommentConfirm": "Deze reactie verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "removeCommentReasonPrompt": "Reden voor het verwijderen van deze reactie:",
+    "deleteArticleConfirm": "Dit artikel verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "errors": {
+      "loadFailed": "Kan artikel niet laden",
+      "postCommentFailed": "Kan reactie niet plaatsen",
+      "updateCommentFailed": "Kan reactie niet bijwerken",
+      "deleteCommentFailed": "Kan reactie niet verwijderen",
+      "deleteArticleFailed": "Kan artikel niet verwijderen"
+    }
+  },
+  "privacyPolicy": {
+    "title": "Privacybeleid",
+    "lastUpdated": "Laatst bijgewerkt: juli 2026",
+    "intro": {
+      "heading": "Inleiding",
+      "p1": "Codamium (\"wij\", \"ons\" of \"onze\") zet zich in voor de bescherming van uw privacy. Dit privacybeleid legt uit hoe wij uw informatie verzamelen, gebruiken, openbaar maken en beschermen wanneer u ons platform bezoekt.",
+      "p2": "Lees dit privacybeleid zorgvuldig door. Als u niet akkoord gaat met ons beleid en onze praktijken, gebruik ons platform dan niet."
+    },
+    "collect": {
+      "heading": "1. Informatie die wij verzamelen",
+      "account": { "heading": "Accountinformatie", "body": "Wanneer u een account aanmaakt, verzamelen wij informatie zoals uw e-mailadres, gebruikersnaam, weergavenaam, profielfoto en bio. We slaan ook uw wachtwoord op in gehashte vorm voor authenticatiedoeleinden." },
+      "content": { "heading": "Door gebruikers gegenereerde inhoud", "body": "We verzamelen en bewaren de artikelen, reacties en andere inhoud die u op ons platform creëert, inclusief metadata zoals publicatiedatum, categorie en betrokkenheidsstatistieken." },
+      "usage": { "heading": "Gebruiks- en analysegegevens", "body": "We verzamelen automatisch informatie over uw interacties met ons platform, waaronder bezochte pagina's, bekeken inhoud, tijd besteed op pagina's en klikpatronen. Deze informatie wordt gebruikt om onze diensten te verbeteren en gebruikersgedrag te begrijpen." },
+      "device": { "heading": "Apparaatinformatie", "body": "We verzamelen informatie over de apparaten die u gebruikt om toegang te krijgen tot ons platform, waaronder apparaattype, besturingssysteem, browsertype en IP-adres." }
+    },
+    "cookies": {
+      "heading": "2. Cookies en authenticatie",
+      "jwt": { "heading": "JWT-tokens", "body": "We gebruiken JSON Web Tokens (JWT) voor authenticatie en autorisatie. Deze tokens bevatten versleutelde informatie over uw sessie en worden veilig opgeslagen in uw browser. Met JWT's blijft u ingelogd op verschillende pagina's zonder herhaaldelijk uw gegevens in te voeren." },
+      "session": { "heading": "Sessiecookies", "body": "We kunnen sessiecookies gebruiken om uw ingelogde status te behouden en gepersonaliseerde ervaringen te bieden. Deze cookies worden verwijderd wanneer u uw browser sluit of expliciet uitlogt." },
+      "preference": { "heading": "Voorkeurscookies", "body": "We gebruiken voorkeurscookies om uw instellingen en voorkeuren te onthouden, zoals weergavetaal, themakeuze en meldingsvoorkeuren." }
+    },
+    "usage": {
+      "heading": "3. Hoe wij uw informatie gebruiken",
+      "intro": "We gebruiken de verzamelde informatie voor de volgende doeleinden:",
+      "list": [
+        "Om ons platform en onze diensten te leveren, te onderhouden en te verbeteren",
+        "Om uw identiteit te verifiëren en uw account te beheren",
+        "Om uw ervaring te personaliseren en gerichte inhoud te leveren",
+        "Om met u te communiceren over updates, aankondigingen en promotieaanbiedingen",
+        "Om trends en gebruikspatronen te monitoren en analyseren voor platformverbeteringen",
+        "Om onze Servicevoorwaarden en andere overeenkomsten te handhaven",
+        "Om te beschermen tegen frauduleuze, kwaadaardige of illegale activiteiten"
+      ]
+    },
+    "sharing": {
+      "heading": "4. Delen van informatie",
+      "intro": "We verkopen uw persoonlijke informatie niet aan derden. We kunnen uw informatie in de volgende omstandigheden delen:",
+      "list": [
+        { "label": "Dienstverleners:", "text": "Met vertrouwde externe dienstverleners die ons helpen bij het beheren van ons platform, onderworpen aan geheimhoudingsovereenkomsten" },
+        { "label": "Wettelijke naleving:", "text": "Wanneer dit wettelijk verplicht is of bij overheidsverzoeken" },
+        { "label": "Veiligheid en bescherming:", "text": "Om onze rechten, privacy, veiligheid of eigendom te beschermen" },
+        { "label": "Openbare profielen:", "text": "Uw openbare profielinformatie (gebruikersnaam, weergavenaam, bio) is zichtbaar voor alle gebruikers" }
+      ]
+    },
+    "security": {
+      "heading": "5. Gegevensbeveiliging",
+      "intro": "We implementeren passende technische, administratieve en fysieke waarborgen om uw persoonlijke informatie te beschermen tegen ongeautoriseerde toegang, wijziging, openbaarmaking of vernietiging. Onze beveiligingsmaatregelen omvatten:",
+      "list": [
+        "HTTPS-versleuteling voor alle gegevens die tussen uw browser en onze servers worden verzonden",
+        "Wachtwoordhashing met industriestandaardalgoritmen",
+        "Veilige generatie en validatie van JWT-tokens",
+        "Regelmatige beveiligingsaudits en kwetsbaarheidsbeoordelingen"
+      ],
+      "outro": "Geen enkele overdrachtsmethode via internet is echter 100% veilig. Hoewel we ons best doen om uw informatie te beschermen, kunnen we absolute veiligheid niet garanderen."
+    },
+    "rights": {
+      "heading": "6. Uw rechten",
+      "intro": "U heeft de volgende rechten met betrekking tot uw persoonlijke informatie:",
+      "list": [
+        { "label": "Toegang:", "text": "U kunt toegang vragen tot de persoonlijke informatie die wij over u bewaren" },
+        { "label": "Correctie:", "text": "U kunt uw accountinformatie bijwerken of corrigeren via uw profielinstellingen" },
+        { "label": "Verwijdering:", "text": "U kunt verwijdering van uw account en bijbehorende gegevens aanvragen" },
+        { "label": "Afmelden:", "text": "U kunt zich op elk moment afmelden voor promotionele communicatie" }
+      ]
+    },
+    "retention": { "heading": "7. Gegevensbewaring", "body": "We bewaren uw persoonlijke informatie zolang als nodig is om onze diensten te leveren en de doeleinden van dit privacybeleid te vervullen. Wanneer u uw account verwijdert, verwijderen of anonimiseren we uw persoonlijke gegevens binnen 30 dagen, behalve waar wettelijke verplichtingen ons verplichten deze te bewaren." },
+    "children": { "heading": "8. Privacy van kinderen", "body": "Ons platform is niet bedoeld voor kinderen jonger dan 13 jaar. We verzamelen niet bewust persoonlijke informatie van kinderen jonger dan 13 jaar. Als we ons ervan bewust worden dat we persoonlijke informatie van een kind jonger dan 13 jaar hebben verzameld, nemen we stappen om deze informatie onmiddellijk te verwijderen." },
+    "changes": { "heading": "9. Wijzigingen in dit privacybeleid", "body": "We kunnen dit privacybeleid van tijd tot tijd bijwerken om wijzigingen in onze praktijken of om andere operationele, juridische of regelgevende redenen weer te geven. We stellen u op de hoogte van materiële wijzigingen door de datum \"Laatst bijgewerkt\" bovenaan deze pagina bij te werken. Uw voortgezette gebruik van ons platform na dergelijke wijzigingen betekent dat u het bijgewerkte privacybeleid aanvaardt." },
+    "contact": {
+      "heading": "10. Contact met ons opnemen",
+      "intro": "Als u vragen, zorgen of verzoeken heeft over dit privacybeleid of onze privacypraktijken, neem dan contact met ons op via:",
+      "teamName": "Codamium Privacyteam",
+      "email": "E-mail: privacy@codamium.com",
+      "responseTime": "Reactietijd: we streven ernaar binnen 7 werkdagen te reageren"
+    }
+  },
+  "termsOfService": {
+    "title": "Servicevoorwaarden",
+    "lastUpdated": "Laatst bijgewerkt: juli 2026",
+    "intro": {
+      "heading": "Inleiding",
+      "p1": "Welkom bij Codamium. Door toegang te krijgen tot of gebruik te maken van ons platform, gaat u akkoord met deze Servicevoorwaarden (\"Voorwaarden\"). Lees ze zorgvuldig door voordat u het platform gebruikt.",
+      "p2": "Als u niet akkoord gaat met deze Voorwaarden, mag u geen toegang krijgen tot of gebruik maken van Codamium. We behouden ons het recht voor deze Voorwaarden op elk moment bij te werken, en uw voortgezette gebruik van het platform betekent dat u eventuele wijzigingen aanvaardt."
+    },
+    "acceptableUse": {
+      "heading": "1. Aanvaardbaar gebruik",
+      "intro": "U stemt ermee in Codamium alleen te gebruiken voor wettige doeleinden en op een manier die de rechten van anderen niet schendt. De volgende activiteiten zijn ten strengste verboden:",
+      "list": [
+        "Het plaatsen van inhoud die illegaal, schadelijk, beledigend, intimiderend, lasterlijk of discriminerend is",
+        "Zich voordoen als een andere persoon of entiteit, of uw affiliatie verkeerd voorstellen",
+        "Het verspreiden van spam, malware, virussen of andere kwaadaardige code",
+        "Pogingen tot ongeautoriseerde toegang tot een account, systeem of netwerk",
+        "Het scrapen, crawlen of verzamelen van gebruikersgegevens zonder onze uitdrukkelijke schriftelijke toestemming",
+        "Het platform gebruiken voor enige vorm van commerciële reclame zonder goedkeuring",
+        "Het verstoren van de integriteit of prestaties van het platform"
+      ],
+      "outro": "We behouden ons het recht voor om inhoud te verwijderen die deze regels schendt en om accounts van gebruikers die verboden activiteiten uitvoeren op te schorten of te beëindigen."
+    },
+    "ownership": {
+      "heading": "2. Eigendom van inhoud",
+      "yourContent": { "heading": "Uw inhoud", "body": "U behoudt het eigendom van alle inhoud die u op Codamium creëert en publiceert, inclusief artikelen, reacties en profielinformatie. Door inhoud te plaatsen, verleent u Codamium een niet-exclusieve, wereldwijde, royaltyvrije licentie om uw inhoud binnen het platform weer te geven, te verspreiden en te promoten." },
+      "responsibility": { "heading": "Verantwoordelijkheid voor inhoud", "body": "U bent als enige verantwoordelijk voor de inhoud die u publiceert. U verklaart en garandeert dat u eigenaar bent van of over de nodige rechten beschikt om uw inhoud te publiceren, en dat deze geen toepasselijke wetten of rechten van derden schendt, inclusief intellectuele-eigendomsrechten." },
+      "platformContent": { "heading": "Platforminhoud", "body": "Alle platformelementen die niet door gebruikers zijn gemaakt — inclusief het ontwerp, logo en de interface — zijn eigendom van Codamium en beschermd door toepasselijke intellectuele-eigendomswetten. U mag geen platforminhoud kopiëren, reproduceren of herdistribueren zonder uitdrukkelijke schriftelijke toestemming." }
+    },
+    "moderation": {
+      "heading": "3. Moderatiebeleid",
+      "review": { "heading": "Beoordeling van inhoud", "body": "Codamium-moderators kunnen naar eigen goeddunken inhoud beoordelen, bewerken of verwijderen als deze deze Voorwaarden schendt. Moderatiebeslissingen zijn definitief, hoewel gebruikers in beroep kunnen gaan door contact op te nemen met ons supportteam." },
+      "reporting": { "heading": "Melden", "body": "Gebruikers kunnen inhoud of accounts melden waarvan zij denken dat deze deze Voorwaarden schenden. We onderzoeken alle meldingen en ondernemen passende actie, maar we garanderen niet dat elke melding zal resulteren in verwijdering of accountactie." },
+      "suspension": { "heading": "Opschorting en beëindiging van accounts", "body": "We behouden ons het recht voor om elk account dat deze Voorwaarden herhaaldelijk of ernstig schendt, zonder voorafgaande kennisgeving op te schorten of permanent te beëindigen. Opgeschorte gebruikers mogen geen nieuwe accounts aanmaken om de opschorting te omzeilen." }
+    },
+    "accounts": {
+      "heading": "4. Gebruikersaccounts",
+      "intro": "U bent verantwoordelijk voor het vertrouwelijk houden van uw accountgegevens en voor alle activiteiten die onder uw account plaatsvinden. U stemt ermee in om:",
+      "list": [
+        "Nauwkeurige en waarheidsgetrouwe informatie te verstrekken bij het aanmaken van uw account",
+        "Uw wachtwoord veilig te houden en niet met anderen te delen",
+        "Ons onmiddellijk op de hoogte te stellen van ongeautoriseerd gebruik van uw account",
+        "Geen meerdere accounts aan te maken om verbanningen of beperkingen te omzeilen"
+      ]
+    },
+    "disclaimers": { "heading": "5. Disclaimers", "body": "Codamium wordt geleverd \"zoals het is\" zonder garanties van welke aard dan ook. We garanderen niet dat het platform te allen tijde beschikbaar, foutloos of vrij van beveiligingskwetsbaarheden zal zijn. We zijn niet verantwoordelijk voor inhoud die door gebruikers is geplaatst, en we onderschrijven geen meningen die op het platform worden geuit." },
+    "liability": { "heading": "6. Beperking van aansprakelijkheid", "body": "Voor zover maximaal toegestaan door de wet, is Codamium niet aansprakelijk voor enige indirecte, incidentele, speciale, gevolg- of punitieve schade voortvloeiend uit uw gebruik van het platform, inclusief maar niet beperkt tot gegevensverlies, winstderving of reputatieschade." },
+    "changes": { "heading": "7. Wijzigingen in deze voorwaarden", "body": "We kunnen deze Voorwaarden van tijd tot tijd bijwerken. Wanneer we dat doen, werken we de datum \"Laatst bijgewerkt\" bovenaan deze pagina bij. Materiële wijzigingen worden via het platform gecommuniceerd. Uw voortgezette gebruik van Codamium na wijzigingen betekent dat u de bijgewerkte Voorwaarden aanvaardt." },
+    "contact": {
+      "heading": "8. Contact met ons opnemen",
+      "intro": "Als u vragen of zorgen heeft over deze Servicevoorwaarden, neem dan contact met ons op via:",
+      "teamName": "Codamium Supportteam",
+      "email": "E-mail: legal@codamium.com",
+      "responseTime": "Reactietijd: we streven ernaar binnen 7 werkdagen te reageren"
+    }
+  }
+}
