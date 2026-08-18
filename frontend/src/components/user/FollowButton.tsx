@@ -38,7 +38,7 @@ export function FollowButton({
       .finally(() => setLoading(false));
   }, [targetUserId, currentUser, initialIsFollowing]);
 
-      // Hide on own profile and for guests.
+  // Hide for guests and own profile.
   if (!currentUser || currentUser.id === targetUserId) return null;
 
   async function handleClick() {
