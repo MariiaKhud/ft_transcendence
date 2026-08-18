@@ -7,10 +7,6 @@ import { handleAsyncErrors } from '../middleware/error.middleware.js'
 import * as notificationsService from '../services/notifications.service.js'
 import { NotificationType } from '@prisma/client'
 
-import * as notificationsService from '../services/notifications.service.js'
-import { NotificationType } from '@prisma/client'
-
-
 const router = Router()
 
 const VALID_ROLES = ['USER', 'MODERATOR', 'ADMIN'] as const
