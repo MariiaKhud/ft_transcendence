@@ -81,6 +81,7 @@ const searchUsersHandler = async (req: Request, res: Response) => {
 interface LeaderboardRow {
   id: string
   username: string
+  displayName: string | null
   avatarUrl: string | null
   level: number
   articleCount: number
@@ -93,6 +94,7 @@ const getLeaderboardHandler = async (_req: Request, res: Response) => {
       SELECT
         u.id,
         u.username,
+        u.display_name AS "displayName",
         u.avatar_url AS "avatarUrl",
         u.level,
         COUNT(a.id)::int AS "articleCount",
@@ -104,6 +106,7 @@ const getLeaderboardHandler = async (_req: Request, res: Response) => {
       GROUP BY
         u.id,
         u.username,
+        u.display_name,
         u.avatar_url,
         u.level
       ORDER BY
@@ -157,8 +160,11 @@ const getLeaderboardHandler = async (_req: Request, res: Response) => {
     badgesByUser.set(userBadge.userId, badges)
   }
 
-  const leaderboard = users.map((user) => ({
+  const leaderboard = users.map((user, index) => ({
+    id: user.id,
+    rank: index + 1,
     username: user.username,
+    displayName: user.displayName,
     avatarUrl: user.avatarUrl,
     articleCount: user.articleCount,
     totalLikes: user.totalLikes,

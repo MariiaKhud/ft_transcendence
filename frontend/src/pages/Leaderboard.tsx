@@ -1,0 +1,160 @@
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { getLeaderboard } from '@/api/leaderboard'
+import { translateApiError } from '@/lib/api-errors'
+import { useAuth } from '@/hooks/useAuth'
+import type { LeaderboardUser } from '@/types/leaderboard'
+
+const toSafeImageUrl = (avatarUrl: string | null) => {
+  if (!avatarUrl) return null
+  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) return avatarUrl
+  return `${window.location.origin}${avatarUrl}`
+}
+
+const getInitials = (user: LeaderboardUser) => {
+  const source = (user.displayName ?? user.username).trim()
+  const parts = source.split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return 'U'
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
+  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
+}
+
+const rankClass = (rank: number) => {
+  if (rank === 1) return 'text-amber-500'
+  if (rank === 2) return 'text-slate-400'
+  if (rank === 3) return 'text-orange-600'
+  return 'text-slate-600'
+}
+
+export const Leaderboard = () => {
+  const { t } = useTranslation()
+  const { currentUser, hasRestoredSession } = useAuth({ restoreOnMount: true })
+  const [users, setUsers] = useState<LeaderboardUser[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  const loadLeaderboard = async () => {
+    setIsLoading(true)
+    setError('')
+
+    try {
+      setUsers(await getLeaderboard())
+    } catch (loadError) {
+      setError(loadError instanceof Error
+        ? translateApiError(loadError, loadError.message)
+        : t('leaderboard.loadError'))
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    void loadLeaderboard()
+  }, [])
+
+  return (
+    <section className="mx-auto w-full max-w-5xl space-y-8">
+      <header className="text-center">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">
+          {t('leaderboard.eyebrow')}
+        </p>
+        <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
+          {t('leaderboard.title')}
+        </h1>
+        <p className="mx-auto mt-3 max-w-2xl text-slate-600">
+          {t('leaderboard.description')}
+        </p>
+      </header>
+
+      {isLoading ? (
+        <div className="rounded-2xl border border-white/30 bg-white/40 p-8 text-center shadow-xl backdrop-blur-md">
+          <p className="text-slate-700">{t('leaderboard.loading')}</p>
+        </div>
+      ) : error ? (
+        <div className="rounded-2xl border border-red-300/30 bg-red-50/60 p-8 text-center shadow-xl backdrop-blur-md">
+          <p className="text-red-700">{error}</p>
+          <button
+            type="button"
+            onClick={() => void loadLeaderboard()}
+            className="mt-4 rounded-lg bg-red-600 px-4 py-2 font-medium text-white hover:bg-red-700"
+          >
+            {t('common.retry')}
+          </button>
+        </div>
+      ) : users.length === 0 ? (
+        <div className="rounded-2xl border border-white/30 bg-white/40 p-8 text-center shadow-xl backdrop-blur-md">
+          <p className="text-slate-700">{t('leaderboard.empty')}</p>
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-2xl border border-white/30 bg-white/50 shadow-xl backdrop-blur-md">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[680px] text-left">
+              <caption className="sr-only">{t('leaderboard.title')}</caption>
+              <thead className="border-b border-slate-200/80 bg-white/50 text-xs uppercase tracking-wide text-slate-500">
+                <tr>
+                  <th scope="col" className="px-5 py-4">{t('leaderboard.rank')}</th>
+                  <th scope="col" className="px-5 py-4">{t('leaderboard.user')}</th>
+                  <th scope="col" className="px-5 py-4">{t('leaderboard.level')}</th>
+                  <th scope="col" className="px-5 py-4 text-right">{t('leaderboard.likes')}</th>
+                  <th scope="col" className="px-5 py-4 text-right">{t('leaderboard.articles')}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200/70">
+                {users.map((user, index) => {
+                  const rank = user.rank ?? index + 1
+                  const isCurrentUser = hasRestoredSession && currentUser?.id === user.id
+                  const avatarUrl = toSafeImageUrl(user.avatarUrl)
+                  const displayName = user.displayName ?? user.username
+
+                  return (
+                    <tr
+                      key={user.id}
+                      className={isCurrentUser
+                        ? 'bg-purple-100/70 ring-1 ring-inset ring-purple-400'
+                        : 'transition-colors hover:bg-white/60'}
+                    >
+                      <td className={`px-5 py-4 text-lg font-bold ${rankClass(rank)}`}>
+                        <span aria-label={t('leaderboard.rankLabel', { rank })}>{rank}</span>
+                      </td>
+                      <td className="px-5 py-4">
+                        <Link
+                          to={`/profile/${user.username}`}
+                          className="flex min-w-0 items-center gap-3"
+                        >
+                          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-semibold text-white">
+                            {avatarUrl ? (
+                              <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                            ) : (
+                              <span aria-hidden="true">{getInitials(user)}</span>
+                            )}
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block truncate font-semibold text-slate-900">{displayName}</span>
+                            <span className="block truncate text-sm text-slate-500">@{user.username}</span>
+                          </span>
+                          {isCurrentUser ? (
+                            <span className="shrink-0 rounded-full bg-purple-600 px-2 py-1 text-xs font-semibold text-white">
+                              {t('leaderboard.you')}
+                            </span>
+                          ) : null}
+                        </Link>
+                      </td>
+                      <td className="px-5 py-4">
+                        <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-800">
+                          {t('leaderboard.levelBadge', { level: user.level })}
+                        </span>
+                      </td>
+                      <td className="px-5 py-4 text-right font-medium text-slate-700">{user.totalLikes}</td>
+                      <td className="px-5 py-4 text-right font-medium text-slate-700">{user.articleCount}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </section>
+  )
+}

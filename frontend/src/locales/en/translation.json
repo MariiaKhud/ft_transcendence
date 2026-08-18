@@ -519,5 +519,21 @@
       "email": "Email: legal@codamium.com",
       "responseTime": "Response time: We aim to respond within 7 business days"
     }
+  },
+  "leaderboard": {
+    "eyebrow": "Community rankings",
+    "title": "Leaderboard",
+    "description": "Top 50 users ranked by their community impact.",
+    "loading": "Loading leaderboard...",
+    "loadError": "Unable to load leaderboard.",
+    "empty": "There are no leaderboard users yet.",
+    "rank": "Rank",
+    "rankLabel": "Rank {{rank}}",
+    "user": "User",
+    "level": "Level",
+    "levelBadge": "Level {{level}}",
+    "likes": "Total likes",
+    "articles": "Articles",
+    "you": "You"
   }
 }

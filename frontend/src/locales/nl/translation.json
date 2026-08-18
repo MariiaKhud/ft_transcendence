@@ -519,5 +519,21 @@
       "email": "E-mail: legal@codamium.com",
       "responseTime": "Reactietijd: we streven ernaar binnen 7 werkdagen te reageren"
     }
+  },
+  "leaderboard": {
+    "eyebrow": "Communityranglijst",
+    "title": "Ranglijst",
+    "description": "De 50 best gerangschikte gebruikers op basis van hun bijdrage aan de community.",
+    "loading": "Ranglijst laden...",
+    "loadError": "Kan de ranglijst niet laden.",
+    "empty": "Er zijn nog geen gebruikers op de ranglijst.",
+    "rank": "Rang",
+    "rankLabel": "Rang {{rank}}",
+    "user": "Gebruiker",
+    "level": "Niveau",
+    "levelBadge": "Niveau {{level}}",
+    "likes": "Totaal aantal likes",
+    "articles": "Artikelen",
+    "you": "Jij"
   }
 }
