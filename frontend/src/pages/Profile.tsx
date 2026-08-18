@@ -69,11 +69,11 @@ export const Profile = () => {
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [followerCount, setFollowerCount] = useState(0)
   const [isLoadingProfile, setIsLoadingProfile] = useState(true)
-  const [profileError, setProfileError] = useState('')
+  const [profileError, setProfileError] = useState<unknown | null>(null)
 
   const [articles, setArticles] = useState<ProfileArticle[]>([])
   const [isLoadingArticles, setIsLoadingArticles] = useState(true)
-  const [articlesError, setArticlesError] = useState('')
+  const [articlesError, setArticlesError] = useState<unknown | null>(null)
   const [articlesUnavailable, setArticlesUnavailable] = useState(false)
 
   useEffect(() => {
@@ -83,7 +83,7 @@ export const Profile = () => {
       if (!normalizedUsername) {
         setProfile(null)
         setIsLoadingProfile(false)
-        setProfileError(t('profile.usernameMissing'))
+        setProfileError(null)
         return
       }
 
@@ -91,7 +91,7 @@ export const Profile = () => {
 
       const loadProfile = async () => {
         setIsLoadingProfile(true)
-        setProfileError('')
+        setProfileError(null)
 
         try {
           const loadedProfile = await getPublicProfile(normalizedUsername)
@@ -102,11 +102,7 @@ export const Profile = () => {
           }
         } catch (error) {
           if (!ignore) {
-            if (error instanceof Error) {
-              setProfileError(translateApiError(error, error.message))
-            } else {
-              setProfileError(t('profile.unableToLoad'))
-            }
+            setProfileError(error ?? null)
             setProfile(null)
           }
         } finally {
@@ -133,7 +129,7 @@ export const Profile = () => {
       if (!normalizedUsername) {
         setArticles([])
         setIsLoadingArticles(false)
-        setArticlesError('')
+        setArticlesError(null)
         setArticlesUnavailable(false)
         return
       }
@@ -142,7 +138,7 @@ export const Profile = () => {
 
       const loadArticles = async () => {
         setIsLoadingArticles(true)
-        setArticlesError('')
+        setArticlesError(null)
         setArticlesUnavailable(false)
 
         try {
@@ -154,11 +150,7 @@ export const Profile = () => {
           }
         } catch (error) {
           if (!ignore) {
-            if (error instanceof Error) {
-              setArticlesError(translateApiError(error, error.message))
-            } else {
-              setArticlesError(t('profile.articlesUnableToLoad'))
-            }
+            setArticlesError(error ?? null)
             setArticles([])
           }
         } finally {
@@ -206,6 +198,16 @@ export const Profile = () => {
 
   const navigate = useNavigate()
 
+  const resolvedProfileError = profileError
+    ? translateApiError(profileError, t('profile.unableToLoad'))
+    : null
+
+  const resolvedArticlesError = articlesError
+    ? translateApiError(articlesError, t('profile.articlesUnableToLoad'))
+    : null
+
+  const isMissingUsername = !username?.trim()
+
   // Show this while profile data is still loading.
   if (isLoadingProfile) {
     return (
@@ -217,12 +219,22 @@ export const Profile = () => {
   }
 
   // Show this if loading failed or profile was not found.
-  if (profileError.length > 0 || !profile) {
+  if (isMissingUsername) {
     return (
-      <section className="mx-auto w-full max-w-5xl rounded-2xl border border-red-200/50 bg-red-50/80 p-8 shadow-xl backdrop-blur-md">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-600">{t('profile.eyebrow')}</p>
+      <section className="mx-auto w-full max-w-5xl rounded-2xl border border-red-200/50 bg-purple-50 p-8 shadow-xl backdrop-blur-md">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('profile.eyebrow')}</p>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{t('profile.unableToLoad')}</h1>
-        <p className="mt-2 text-slate-700">{profileError || t('profile.unavailable')}</p>
+        <p className="mt-2 text-slate-700">{t('profile.usernameMissing')}</p>
+      </section>
+    )
+  }
+
+  if (resolvedProfileError || !profile) {
+    return (
+      <section className="mx-auto w-full max-w-5xl rounded-2xl border border-red-200/50 bg-purple-50 p-8 shadow-xl backdrop-blur-md">
+        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('profile.eyebrow')}</p>
+        <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{t('profile.unableToLoad')}</h1>
+        <p className="mt-2 text-slate-700">{resolvedProfileError || t('profile.unavailable')}</p>
       </section>
     )
   }
@@ -352,21 +364,21 @@ export const Profile = () => {
         {isLoadingArticles ? <p className="mt-5 text-slate-700">{t('profile.loadingArticles')}</p> : null}
 
         {/* Loading failed. */}
-        {!isLoadingArticles && articlesError.length > 0 ? (
+        {!isLoadingArticles && resolvedArticlesError ? (
           <p className="mt-5 rounded-lg border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600">
-            {articlesError}
+            {resolvedArticlesError}
           </p>
         ) : null}
 
         {/* Backend endpoint not ready yet — show soft message instead of error. */}
-        {!isLoadingArticles && articlesError.length === 0 && articlesUnavailable ? (
+        {!isLoadingArticles && !resolvedArticlesError && articlesUnavailable ? (
           <p className="mt-5 rounded-lg border border-blue-200/50 bg-blue-50/80 px-4 py-3 text-sm font-medium text-blue-700">
             {t('profile.articlesUnavailable')}
           </p>
         ) : null}
 
         {/* No articles written yet. */}
-        {!isLoadingArticles && articlesError.length === 0 && !articlesUnavailable && articles.length === 0 ? (
+        {!isLoadingArticles && !resolvedArticlesError && !articlesUnavailable && articles.length === 0 ? (
           <p className="mt-5 text-slate-600">{t('profile.noArticlesYet')}</p>
         ) : null}
 

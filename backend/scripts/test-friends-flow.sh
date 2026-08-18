@@ -261,7 +261,7 @@ echo
 
 # Empty validation
 color_echo "$CYAN_L" "Check #11"
-check "Incoming list is empty" "$LAST_BODY" '{"data":[],"error":null}'
+check "Incoming list is empty" "$LAST_BODY" '{"success":true,"data":[],"error":null}'
 echo
 
 # No auth
@@ -350,6 +350,21 @@ AND addressee_id='${USER_B_ID}';
 " | tr -d '\n' | xargs)"
 
 check "Friendship status is ACCEPTED" "$STATUS" "ACCEPTED"
+echo
+
+# The original pending notification should be updated to the accepted state so refreshes
+# do not show the stale "sent you a friend request" row with buttons.
+color_echo "$CYAN_L" "Check #18b - resolved notification stored"
+RESOLVED_NOTIFICATION="$(query_db "
+SELECT message
+FROM notifications
+WHERE user_id='${USER_B_ID}'
+AND ref_id='${USER_A_ID}'
+ORDER BY created_at DESC
+LIMIT 1;
+" | tr -d '\n' | xargs)"
+
+check "Resolved notification shows accepted state" "$RESOLVED_NOTIFICATION" "is now your friend"
 echo
 
 ###########################################################
@@ -947,8 +962,7 @@ FROM notifications
 WHERE user_id='${USER_B_ID}';
 " | tr -d '\n' | xargs)"
 
-RESPONSE_COUNT="$(echo "$ALL_NOTIFICATIONS_BODY" | \
-    grep -o '"id"' | wc -l | tr -d ' ')"
+RESPONSE_COUNT="$(echo "$ALL_NOTIFICATIONS_BODY" | jq '.data.notifications | length')"
 
 check "Notification count matches DB" "$RESPONSE_COUNT" "$DB_COUNT"
 echo

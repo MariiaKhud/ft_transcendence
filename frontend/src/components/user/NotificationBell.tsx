@@ -9,6 +9,7 @@ export function NotificationBell() {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+  const [actedOn, setActedOn] = useState<Map<string, 'accepted' | 'declined'>>(new Map());
   const {
     notifications,
     unreadCount,
@@ -39,6 +40,11 @@ export function NotificationBell() {
     return () => document.removeEventListener('keydown', handleEsc);
   }, [open]);
 
+  function goToProfile(username?: string | null) {
+    if (!username) return;
+    navigate(`/profile/${username}`);
+  }
+
   async function handleNotificationClick(notif: Notification) {
     // Mark as read first
     if (!notif.isRead) await markRead(notif.id);
@@ -47,25 +53,32 @@ export function NotificationBell() {
     switch (notif.type) {
       case 'FRIEND_REQUEST':
         navigate('/friends');
+        setOpen(false);
         break;
+
       case 'FRIEND_ACCEPTED':
-        if (notif.refId) navigate(`/profile/${notif.refId}`);
+        goToProfile(notif.actor?.username);
+        setOpen(false);
         break;
+
       case 'FOLLOWED':
-        if (notif.refId) navigate(`/profile/${notif.refId}`);
+        goToProfile(notif.actor?.username);
+        setOpen(false);
         break;
+
       case 'COMMENT':
       case 'LIKE':
         if (notif.refId) navigate(`/articles/${notif.refId}`);
+        setOpen(false);
         break;
+
       case 'CONTENT_REMOVED':
         navigate('/profile');
+        setOpen(false);
         break;
       default:
         break;
     }
-
-    setOpen(false);
   }
 
   // ── Race condition fix ────────────────────────────────────
@@ -77,8 +90,8 @@ export function NotificationBell() {
     if (!notif.refId) return;
     try {
       await respondToFriendRequest(notif.refId, 'ACCEPTED');
-      removeNotification(notif.id);
-      navigate('/friends');
+      if (!notif.isRead) await markRead(notif.id);
+      setActedOn((prev) => new Map(prev).set(notif.id, 'accepted'));
     } catch (err: any) {
       if (err?.error?.includes('not found') || err?.statusCode === 404) {
         // Request was cancelled — remove stale notification
@@ -92,7 +105,8 @@ export function NotificationBell() {
     if (!notif.refId) return;
     try {
       await respondToFriendRequest(notif.refId, 'DECLINED');
-      removeNotification(notif.id);
+      if (!notif.isRead) await markRead(notif.id);
+      setActedOn((prev) => new Map(prev).set(notif.id, 'declined'));
     } catch {
       removeNotification(notif.id);
       refetch();
@@ -126,7 +140,7 @@ export function NotificationBell() {
           <span
             className="absolute
                        -top-0.5
-                       -right-0.5\
+                       -right-0.5
                        min-w-[18px]
                        h-[18px]
                        px-1
@@ -211,14 +225,15 @@ export function NotificationBell() {
                   <NotificationItem
                     key={notif.id}
                     notif={notif}
+                    actionResult={actedOn.get(notif.id)}
                     onClick={() => handleNotificationClick(notif)}
                     onAccept={
-                      notif.type === 'FRIEND_REQUEST'
+                      notif.type === 'FRIEND_REQUEST' && !actedOn.has(notif.id)
                         ? () => handleAcceptFromBell(notif)
                         : undefined
                     }
                     onDecline={
-                      notif.type === 'FRIEND_REQUEST'
+                      notif.type === 'FRIEND_REQUEST' && !actedOn.has(notif.id)
                         ? () => handleDeclineFromBell(notif)
                         : undefined
                     }
@@ -253,12 +268,19 @@ export function NotificationBell() {
 
 interface NotificationItemProps {
   notif: Notification;
+  actionResult?: 'accepted' | 'declined';
   onClick: () => void;
   onAccept?: () => Promise<void>;
   onDecline?: () => Promise<void>;
 }
 
-function NotificationItem({ notif, onClick, onAccept, onDecline }: NotificationItemProps) {
+function NotificationItem({
+    notif,
+    actionResult,
+    onClick,
+    onAccept,
+    onDecline
+  }: NotificationItemProps) {
   const [actionError, setActionError] = useState<string | null>(null);
   const [actioning, setActioning] = useState(false);
 
@@ -273,6 +295,14 @@ function NotificationItem({ notif, onClick, onAccept, onDecline }: NotificationI
       setActioning(false);
     }
   }
+
+  const resolvedState =
+    actionResult ??
+    (notif.type === 'FRIEND_ACCEPTED' && notif.message === 'is now your friend'
+      ? 'accepted'
+      : notif.message === 'friend request declined'
+        ? 'declined'
+        : undefined);
 
   return (
     <li
@@ -290,12 +320,17 @@ function NotificationItem({ notif, onClick, onAccept, onDecline }: NotificationI
         className="w-full
                    text-left
                    hover:opacity-80
-                   transition-opacity"
+                   transition-opacity
+                   cursor-pointer"
       >
         <div className="flex items-start gap-3">
           {/* Icon for notification type */}
           <span className="text-xl flex-shrink-0 mt-0.5" aria-hidden="true">
-            {notificationIcon(notif.type)}
+            {resolvedState === 'accepted'
+            ? '🤝'
+            : resolvedState === 'declined'
+              ? '🚫'
+              : notificationIcon(notif.type)}
           </span>
 
           <div className="flex-1 min-w-0">
@@ -303,15 +338,30 @@ function NotificationItem({ notif, onClick, onAccept, onDecline }: NotificationI
               <span className="font-medium">
                 {notif.actor?.displayName || notif.actor?.username || 'Someone'}
               </span>{' '}
-              {notif.message}
+              {resolvedState === 'accepted'
+              ? 'is now your friend'
+              : resolvedState === 'declined'
+                ? 'friend request declined'
+                : notif.message}
             </p>
-            <p className="text-xs text-gray-400 mt-0.5">
-              {formatTime(notif.createdAt)}
+
+            <p className={`text-xs mt-0.5 ${
+              resolvedState === 'accepted'
+                ? 'text-teal-500'
+                : resolvedState === 'declined'
+                  ? 'text-gray-400'
+                  : 'text-gray-400'
+            }`}>
+              {resolvedState === 'accepted'
+                ? 'You can now chat and see each other\'s activity'
+                : resolvedState === 'declined'
+                  ? formatTime(notif.createdAt)
+                  : formatTime(notif.createdAt)}
             </p>
           </div>
 
           {/* Unread dot */}
-          {!notif.isRead && (
+          {!notif.isRead && !resolvedState && (
             <span className="w-2
                              h-2
                              rounded-full
@@ -322,33 +372,41 @@ function NotificationItem({ notif, onClick, onAccept, onDecline }: NotificationI
       </button>
 
       {/* Inline Accept/Decline for FRIEND_REQUEST */}
-      {notif.type === 'FRIEND_REQUEST' && onAccept && onDecline && (
+      {notif.type === 'FRIEND_REQUEST' && !resolvedState && onAccept && onDecline && (
         <div className="mt-2
                         ml-9
-                        flex items-center
+                        flex
+                        items-center
                         gap-2">
+
           {actionError ? (
-            <p className="text-xs text-pink-600">{actionError}</p>
-          ) : (
-            <>
-              <Button
-                variant="profileSuccess"
-                size="notification"
-                disabled={actioning}
-                onClick={() => handleAction(onAccept)}
-              >
-                {actioning ? '...' : 'Accept'}
-              </Button>
-              <Button
-                variant="profileSecondary"
-                size="notification"
-                disabled={actioning}
-                onClick={() => handleAction(onDecline)}
-              >
-                Decline
-              </Button>
-            </>
-          )}
+              <p className="text-xs text-pink-600">{actionError}</p>
+            ) : (
+              <>
+                <Button
+                  variant="profileSuccess"
+                  size="notification"
+                  disabled={actioning}
+                  onClick={(e) => {
+                    e.stopPropagation();  // ← prevent row click navigating to /friends
+                    void handleAction(onAccept);
+                  }}
+                >
+                  {actioning ? '...' : 'Accept'}
+                </Button>
+                <Button
+                  variant="profileSecondary"
+                  size="notification"
+                  disabled={actioning}
+                  onClick={(e) => {
+                    e.stopPropagation();  // ← same
+                    void handleAction(onDecline);
+                  }}
+                >
+                  Decline
+                </Button>
+              </>
+            )}
         </div>
       )}
     </li>

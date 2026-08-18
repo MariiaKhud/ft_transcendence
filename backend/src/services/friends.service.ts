@@ -70,9 +70,6 @@ export async function respondToFriendRequest(
       throw new AppError(404, ErrorCode.FRIEND_REQUEST_NOT_FOUND, 'Friend request not found');
     }
 
-    // Row exists but not PENDING — so it's already been responded to
-    // Also covers the case where User A tries to accept User B's request
-    // using User A's own cookie (wrong role — addressee mismatch)
     throw new AppError(403, ErrorCode.FRIEND_NOT_ADDRESSEE, 'You are not the addressee of this request');
   }
 
@@ -81,13 +78,24 @@ export async function respondToFriendRequest(
     data: { status: action },
   });
 
-  // Only notify on accept — no notification for decline (don't tell someone they were rejected)
+  await prisma.notification.updateMany({
+    where: {
+      userId: addresseeId,
+      type: 'FRIEND_REQUEST',
+      refId: requesterId,
+    },
+    data: {
+      type: action === 'ACCEPTED' ? 'FRIEND_ACCEPTED' : 'FRIEND_REQUEST',
+      message: action === 'ACCEPTED' ? 'is now your friend' : 'friend request declined',
+    },
+  });
+
   if (action === 'ACCEPTED') {
     await createNotification(
-      requesterId,                          // notify the person who sent the request
+      requesterId,
       'FRIEND_ACCEPTED',
       'accepted your friend request',
-      addresseeId                           // refId = who accepted, for building a profile link
+      addresseeId
     );
   }
 
