@@ -134,6 +134,7 @@
     }
   },
   "nav": {
+    "leaderboard": "Таблиця лідерів",
     "write": "Написати",
     "login": "Увійти",
     "logout": "Вийти",
@@ -340,8 +341,10 @@
     "statArticles": "Статті",
     "statFollowers": "Підписники",
     "statFollowing": "Підписки",
+    "statProgress": "Прогрес",
     "statLevel": "Рівень",
-    "statExperience": "Досвід",
+    "xpTotal": "{{xp}} XP загалом",
+    "toNextLevel": "{{current}} / {{needed}} до наступного рівня",
     "badges": "Значки",
     "badgesCollected": "{{count}} зібрано",
     "noBadges": "Поки що немає розблокованих значків.",
