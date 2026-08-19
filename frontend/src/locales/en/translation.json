@@ -224,6 +224,11 @@
     "bioPlaceholder": "Tell people a little about yourself (optional)",
     "saveChanges": "Save Changes",
     "backToProfile": "← Back to your profile",
+    "dangerZoneHeading": "Danger Zone",
+    "deleteAccountDescription": "Permanently delete your account and all of its content. This action cannot be undone.",
+    "deleteAccount": "Delete Account",
+    "deletingAccount": "Deleting account...",
+    "deleteAccountConfirm": "Are you sure you want to permanently delete your account? This cannot be undone.",
     "errors": {
       "invalidImageType": "Please choose a JPEG, PNG, or WebP image",
       "imageTooLarge": "Image must be {{maxMb}} MB or smaller",
@@ -254,6 +259,7 @@
   "login": {
     "title": "Welcome Back",
     "subtitle": "Sign in to your account to continue",
+    "accountDeleted": "Your account was deleted successfully.",
     "signIn": "Sign In",
     "signingIn": "Signing in...",
     "noAccount": "Don't have an account?",

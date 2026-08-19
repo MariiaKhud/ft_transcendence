@@ -21,6 +21,7 @@ npm i @prisma/client@latest
 - **Public profile read** (`GET /api/users/:username`) — displayName, bio, stats
 - **Public profile article list** (`GET /api/users/:username/articles`)
 - **User profile updates** (`PATCH /api/users/me`) — displayName, bio with validation
+- **Self-account deletion** (`DELETE /api/users/me`) — permanently deletes the authenticated user's account and cascaded data
 - **Avatar management** (`POST /api/users/me/avatar`) — upload PNG/JPG, max 2MB
 - **Avatar delete** (`DELETE /api/users/me/avatar`) — remove user avatar
 - **Global articles feed** (`GET /api/articles`) — paginated, searchable, filterable, sortable
@@ -328,6 +329,12 @@ Validation errors:
 Deletes authenticated user's avatar.
 
 Success: `200` with updated editable profile payload (`avatarUrl: null`).
+
+### DELETE /api/users/me
+
+Permanently deletes the authenticated user's account. The request must include the `x-csrf-token` header matching the `csrf_token` cookie.
+
+Account deletion cascades through the user's articles, comments, likes, follows, friendships, messages, notifications, badges, and OAuth accounts. The user's local avatar file is also removed when present. Auth cookies are cleared after successful deletion.
 
 ### GET /api/users/:username
 

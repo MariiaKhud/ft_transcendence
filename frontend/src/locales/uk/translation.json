@@ -226,6 +226,11 @@
     "bioPlaceholder": "Розкажіть трохи про себе (необов'язково)",
     "saveChanges": "Зберегти зміни",
     "backToProfile": "← Назад до вашого профілю",
+    "dangerZoneHeading": "Небезпечна зона",
+    "deleteAccountDescription": "Назавжди видалити обліковий запис і весь його вміст. Цю дію неможливо скасувати.",
+    "deleteAccount": "Видалити обліковий запис",
+    "deletingAccount": "Видалення облікового запису...",
+    "deleteAccountConfirm": "Ви впевнені, що хочете назавжди видалити обліковий запис? Цю дію неможливо скасувати.",
     "errors": {
       "invalidImageType": "Оберіть зображення у форматі JPEG, PNG або WebP",
       "imageTooLarge": "Зображення має бути {{maxMb}} МБ або менше",
@@ -241,10 +246,10 @@
   "auth": {
     "emailLabel": "Електронна пошта",
     "emailPlaceholder": "you@example.com",
-    "emailHint": "Потрібен дійсний формат електронної пошти (напр., user@example.com)",
+    "emailHint": "Потрібен дійсний формат пошти (user@example.com)",
     "passwordLabel": "Пароль",
     "passwordPlaceholder": "Введіть ваш пароль",
-    "passwordHelp": "8-72 символи, використовуйте малі, великі літери та цифри",
+    "passwordHelp": "8-72 символів, тільки малі, великі літери та цифри",
     "showPassword": "Показати пароль",
     "hidePassword": "Приховати пароль",
     "errors": {
@@ -256,6 +261,7 @@
   "login": {
     "title": "З поверненням",
     "subtitle": "Увійдіть у свій акаунт, щоб продовжити",
+    "accountDeleted": "Ваш обліковий запис успішно видалено.",
     "signIn": "Увійти",
     "signingIn": "Вхід...",
     "noAccount": "Немає акаунта?",

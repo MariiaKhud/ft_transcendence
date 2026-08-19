@@ -224,6 +224,11 @@
     "bioPlaceholder": "Vertel mensen iets over uzelf (optioneel)",
     "saveChanges": "Wijzigingen opslaan",
     "backToProfile": "← Terug naar uw profiel",
+    "dangerZoneHeading": "Gevarenzone",
+    "deleteAccountDescription": "Verwijder uw account en alle inhoud permanent. Deze actie kan niet ongedaan worden gemaakt.",
+    "deleteAccount": "Account verwijderen",
+    "deletingAccount": "Account verwijderen...",
+    "deleteAccountConfirm": "Weet u zeker dat u uw account permanent wilt verwijderen? Dit kan niet ongedaan worden gemaakt.",
     "errors": {
       "invalidImageType": "Kies een JPEG-, PNG- of WebP-afbeelding",
       "imageTooLarge": "Afbeelding moet {{maxMb}} MB of kleiner zijn",
@@ -254,6 +259,7 @@
   "login": {
     "title": "Welkom terug",
     "subtitle": "Log in op uw account om verder te gaan",
+    "accountDeleted": "Uw account is succesvol verwijderd.",
     "signIn": "Inloggen",
     "signingIn": "Inloggen...",
     "noAccount": "Heeft u nog geen account?",

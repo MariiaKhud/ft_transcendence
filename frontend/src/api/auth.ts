@@ -50,6 +50,17 @@ export const logoutUser = async () => {
   })
 }
 
+// Permanently delete the current account after CSRF validation on the server.
+export const deleteMyAccount = async () => {
+  const csrfToken = getCookie('csrf_token')
+
+  await apiRequest('/users/me', {
+    method: 'DELETE',
+    headers: csrfToken ? { 'x-csrf-token': csrfToken } : undefined,
+    fallbackMessage: 'Unable to delete account',
+  })
+}
+
 // Get currently logged-in user from session cookie.
 export const getCurrentUser = async () => {
   return apiRequestData<AuthUser>('/auth/me', {

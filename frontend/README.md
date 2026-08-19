@@ -139,12 +139,14 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 - Upload avatar (PNG/JPG, max 2MB)
 - Preview avatar before upload
 - Delete existing avatar
+- Permanently delete own account from the Danger Zone after confirmation
 - Field validation and error handling
 
 **API Integration:**
 - `PATCH /api/users/me` — update displayName and bio
 - `POST /api/users/me/avatar` — upload new avatar
 - `DELETE /api/users/me/avatar` — remove avatar
+- `DELETE /api/users/me` — permanently delete account and clear session
 
 **Implementation files:**
 - `src/pages/EditProfile.tsx` — main edit profile page component
