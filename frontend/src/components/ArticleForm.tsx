@@ -119,7 +119,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
         <p className="text-right text-xs text-slate-400">
           {t('common.counter', { count: title.length, max: TITLE_MAX_LENGTH })}
         </p>
-        {titleError.length > 0 && <p className="text-xs font-medium text-red-500">{titleError}</p>}
+        {titleError.length > 0 && <p className="text-xs font-medium text-pink-600">{titleError}</p>}
       </div>
 
       <div className="space-y-2">
@@ -191,7 +191,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
         <p className="text-right text-xs text-slate-400">
           {t('articleForm.contentCounter', { count: content.trim().length, min: CONTENT_MIN_LENGTH })}
         </p>
-        {contentError.length > 0 && <p className="text-xs font-medium text-red-500">{contentError}</p>}
+        {contentError.length > 0 && <p className="text-xs font-medium text-pink-600">{contentError}</p>}
       </div>
 
       {formError.length > 0 && (

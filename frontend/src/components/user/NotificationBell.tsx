@@ -52,7 +52,8 @@ export function NotificationBell() {
     // Navigate to the relevant page based on type
     switch (notif.type) {
       case 'FRIEND_REQUEST':
-        navigate('/friends');
+        // navigate('/friends');
+        goToProfile(notif.actor?.username);
         setOpen(false);
         break;
 

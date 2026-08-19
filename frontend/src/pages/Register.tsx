@@ -175,7 +175,7 @@ export const Register = () => {
             placeholder={t('auth.emailPlaceholder')}
           />
           <p className="text-xs text-slate-500">{t('auth.emailHint')}</p>
-          {emailError.length > 0 ? <p className="text-xs font-medium text-red-500">{emailError}</p> : null}
+          {emailError.length > 0 ? <p className="text-xs font-medium text-pink-600">{emailError}</p> : null}
         </div>
 
         <div className="space-y-2">
@@ -199,7 +199,7 @@ export const Register = () => {
             <p className="text-xs text-slate-500">{t('register.usernameHint')}</p>
             <p className="text-xs text-slate-400">{t('common.counter', { count: username.length, max: 20 })}</p>
           </div>
-          {usernameError.length > 0 ? <p className="text-xs font-medium text-red-500">{usernameError}</p> : null}
+          {usernameError.length > 0 ? <p className="text-xs font-medium text-pink-600">{usernameError}</p> : null}
         </div>
 
         <div className="space-y-2">
@@ -260,7 +260,7 @@ export const Register = () => {
             <p className="text-xs text-slate-500">{t('auth.passwordHelp')}</p>
             <p className="text-xs text-slate-400">{t('common.counter', { count: password.length, max: 72 })}</p>
           </div>
-          {passwordError.length > 0 ? <p className="text-xs font-medium text-red-500">{passwordError}</p> : null}
+          {passwordError.length > 0 ? <p className="text-xs font-medium text-pink-600">{passwordError}</p> : null}
         </div>
 
         <div className="space-y-2">
@@ -319,7 +319,7 @@ export const Register = () => {
           </div>
           <p className="text-right text-xs text-slate-400">{t('common.counter', { count: confirmPassword.length, max: 72 })}</p>
           {confirmPasswordError.length > 0 ? (
-            <p className="text-xs font-medium text-red-500">{confirmPasswordError}</p>
+            <p className="text-xs font-medium text-pink-600">{confirmPasswordError}</p>
           ) : null}
         </div>
 

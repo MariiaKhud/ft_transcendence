@@ -552,7 +552,7 @@ export const Article = () => {
                             {comment.content}
                           </p>
                           {comment.isRemoved && isStaff && (
-                            <p className="mt-1 text-xs italic text-red-500">
+                            <p className="mt-1 text-xs italic text-pink-600">
                               {comment.removedReason
                                 ? t('article.removedWithReason', { reason: comment.removedReason })
                                 : t('article.removedLabel')}
