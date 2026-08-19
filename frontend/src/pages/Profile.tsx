@@ -10,6 +10,7 @@ import { FollowButton } from '@/components/user/FollowButton'
 import type { FriendshipState } from '@shared/types/friendship'
 import { getFriendshipStatus } from '../api/friends';
 import { Button } from '@/components/ui/button'
+import { XPBar } from '@/components/gamification/XPBar'
 
 // Convert relative avatar path to full URL for browser image tag.
 const toSafeImageUrl = (avatarUrl: string | null) => {
@@ -290,8 +291,8 @@ export const Profile = () => {
           {profile.bio ?? t('profile.noBio')}
         </p>
 
-        {/* Stats row: articles, followers, following, level, experience. */}
-        <div className="relative mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+        {/* Stats row: articles, followers, following. */}
+        <div className="relative mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statArticles')}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{profile.articleCount}</p>
@@ -304,15 +305,14 @@ export const Profile = () => {
             <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statFollowing')}</p>
             <p className="mt-1 text-2xl font-bold text-slate-900">{profile.followingCount}</p>
           </div>
-          <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statLevel')}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{profile.level}</p>
-          </div>
-          <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statExperience')}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{profile.experiencePoints}</p>
-          </div>
         </div>
+
+        {/* XP Bar */}
+        <XPBar 
+          level={profile.level} 
+          experiencePoints={profile.experiencePoints}
+          className="mt-6"
+        />
       </div>
 
       {/* Badges section. */}

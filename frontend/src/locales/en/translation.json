@@ -134,6 +134,7 @@
     }
   },
   "nav": {
+    "leaderboard": "Leaderboard",
     "write": "Write",
     "login": "Login",
     "logout": "Logout",
@@ -338,8 +339,10 @@
     "statArticles": "Articles",
     "statFollowers": "Followers",
     "statFollowing": "Following",
+    "statProgress": "Progress",
     "statLevel": "Level",
-    "statExperience": "Experience",
+    "xpTotal": "{{xp}} XP total",
+    "toNextLevel": "{{current}} / {{needed}} to next level",
     "badges": "Badges",
     "badgesCollected": "{{count}} collected",
     "noBadges": "No badges unlocked yet.",

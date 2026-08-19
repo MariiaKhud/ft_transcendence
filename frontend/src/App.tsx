@@ -62,6 +62,13 @@ const App = () => {
 
             {currentUser ? (
               <>
+                {/* Leaderboard */}
+                <Link
+                  to="/leaderboard"
+                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+                >
+                  {t('nav.leaderboard')}
+                </Link>
                 {/* Write a new article. */}
                 <Link
                   to="/articles/new"
@@ -94,13 +101,22 @@ const App = () => {
                 </button>
               </>
             ) : hasRestoredSession ? (
-              // If not logged in, show login button.
+              <>
+              {/* If not logged in, show login button. */}
+              <Link
+                  to="/leaderboard"
+                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+                >
+                  {t('nav.leaderboard')}
+              </Link>
+
               <Link
                 to="/login"
                 className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
               >
                 {t('nav.login')}
               </Link>
+              </>
             ) : null}
           </div>
         </div>

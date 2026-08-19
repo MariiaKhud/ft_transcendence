@@ -110,7 +110,8 @@ const getLeaderboardHandler = async (_req: Request, res: Response) => {
         u.avatar_url,
         u.level
       ORDER BY
-        "totalLikes" DESC,
+        COALESCE(SUM(a.like_count), 0)::int DESC,
+        LOWER(u.username) ASC,
         u.username ASC
       LIMIT 50
     `,

@@ -134,6 +134,7 @@
     }
   },
   "nav": {
+    "leaderboard": "Ranglijst",
     "write": "Schrijven",
     "login": "Inloggen",
     "logout": "Uitloggen",
@@ -338,8 +339,10 @@
     "statArticles": "Artikelen",
     "statFollowers": "Volgers",
     "statFollowing": "Volgend",
+    "statProgress": "Voortgang",
     "statLevel": "Niveau",
-    "statExperience": "Ervaring",
+    "xpTotal": "{{xp}} XP totaal",
+    "toNextLevel": "{{current}} / {{needed}} tot volgend niveau",
     "badges": "Badges",
     "badgesCollected": "{{count}} verzameld",
     "noBadges": "Nog geen badges ontgrendeld.",
