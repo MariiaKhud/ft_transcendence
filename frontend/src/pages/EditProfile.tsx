@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { deleteMyAccount } from '@/api/auth'
 import { deleteMyAvatar, updateMyProfile, uploadMyAvatar } from '@/api/users'
 import { useAuth } from '@/hooks/useAuth'
 import { useStore } from '@/store/store'
@@ -45,6 +46,7 @@ const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
 export const EditProfile = () => {
   const { t } = useTranslation()
   const { hasRestoredSession, isLoading } = useAuth({ restoreOnMount: true })
+  const navigate = useNavigate()
 
   const currentUser = useStore((state) => {
     return state.auth.currentUser
@@ -52,6 +54,10 @@ export const EditProfile = () => {
 
   const setCurrentUser = useStore((state) => {
     return state.authActions.setCurrentUser
+  })
+
+  const clearCurrentUser = useStore((state) => {
+    return state.authActions.clearCurrentUser
   })
 
   // Profile fields.
@@ -72,6 +78,8 @@ export const EditProfile = () => {
   const [avatarSuccess, setAvatarSuccess] = useState('')
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isDeletingAvatar, setIsDeletingAvatar] = useState(false)
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false)
+  const [accountDeleteError, setAccountDeleteError] = useState('')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -264,6 +272,26 @@ export const EditProfile = () => {
       setAvatarError(t('common.unableToConnect'))
     } finally {
       setIsDeletingAvatar(false)
+    }
+  }
+
+  // Require explicit confirmation before permanently deleting the account.
+  const handleDeleteAccount = async () => {
+    if (!window.confirm(t('editProfile.deleteAccountConfirm'))) {
+      return
+    }
+
+    setAccountDeleteError('')
+    setIsDeletingAccount(true)
+
+    try {
+      await deleteMyAccount()
+      clearCurrentUser()
+      sessionStorage.setItem('accountDeleted', '1')
+      navigate('/login', { replace: true })
+    } catch (error) {
+      setAccountDeleteError(error instanceof Error ? translateApiError(error, error.message) : t('common.unableToConnect'))
+      setIsDeletingAccount(false)
     }
   }
 
@@ -470,6 +498,30 @@ export const EditProfile = () => {
           </Link>
         </p>
       </form>
+
+      <section className="space-y-4 rounded-2xl border border-red-200/70 bg-red-50/60 p-8 shadow-xl">
+        <div>
+          <h2 className="text-xl font-bold text-red-800">{t('editProfile.dangerZoneHeading')}</h2>
+          <p className="mt-2 text-sm text-red-700">{t('editProfile.deleteAccountDescription')}</p>
+        </div>
+
+        {accountDeleteError.length > 0 ? (
+          <p className="rounded-lg border border-red-300 bg-red-100 px-4 py-3 text-sm font-medium text-red-700">
+            {accountDeleteError}
+          </p>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={() => {
+            void handleDeleteAccount()
+          }}
+          disabled={isDeletingAccount}
+          className="rounded-lg border border-red-300 bg-red-100 px-4 py-2 text-sm font-semibold text-red-700 transition-colors hover:bg-red-200 disabled:opacity-50"
+        >
+          {isDeletingAccount ? t('editProfile.deletingAccount') : t('editProfile.deleteAccount')}
+        </button>
+      </section>
     </section>
   )
 }

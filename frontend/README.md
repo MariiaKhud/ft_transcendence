@@ -134,22 +134,28 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 **Description:** Form for authenticated users to edit their profile information and avatar.
 
 **Features:**
-- Update `displayName` (optional, max 50 chars)
+- Update `displayName` (optional, max 20 chars)
 - Update `bio` (optional, max 500 chars)
+- Save preferred language for the account
 - Upload avatar (PNG/JPG, max 2MB)
 - Preview avatar before upload
 - Delete existing avatar
+- Permanently delete own account from the Danger Zone after confirmation
 - Field validation and error handling
 
 **API Integration:**
 - `PATCH /api/users/me` — update displayName and bio
 - `POST /api/users/me/avatar` — upload new avatar
 - `DELETE /api/users/me/avatar` — remove avatar
+- `DELETE /api/users/me` — permanently delete account and clear session
 
 **Implementation files:**
 - `src/pages/EditProfile.tsx` — main edit profile page component
 - `src/api/users.ts` — API wrapper functions
+- `src/api/auth.ts` — account deletion and authentication API functions
 - `src/components/` — reusable form components
+
+After successful account deletion, the user is redirected to Login and sees a localized one-time confirmation message.
 
 ## Global Articles Feed 🔄
 
@@ -177,6 +183,15 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 
 **Implementation files:**
 - `src/pages/Home.tsx` — feed page component with filtering UI
+
+## Backend-supported Features Pending Frontend UI
+
+The backend currently exposes these APIs, but dedicated frontend pages/components are still pending:
+
+- `GET/POST /api/messages/:userId` — private conversations
+- `GET/PATCH /api/notifications` — notification listing and read state
+- `GET /api/users/leaderboard` — leaderboard data
+- `/api/admin/*` — admin user and moderation tools
 
 ## Article Detail and Publishing ✓
 
@@ -268,6 +283,7 @@ Auth API calls live in:
 - `src/api/users.ts` (profile and profile-articles API wrappers)
 - `src/api/articles.ts` (feed/detail/publish/comment/like wrappers)
 - `src/api/follows.ts` and `src/api/friends.ts` (social actions on profile)
+- `src/api/client.ts` (shared authenticated fetch wrapper)
 
 Current auth actions via `useAuth` hook (`src/hooks/useAuth.ts`):
 
@@ -281,6 +297,7 @@ Current auth UX behavior:
 - Logout redirects users to `/login` from profile/edit flows.
 - `EditProfile` redirects unauthenticated access to `/login`.
 - Login/Register forms show a short password hint: `8-72 chars, use lowercase, uppercase, and digits.`
+- Account deletion uses a confirmation dialog and a one-time localized success notice on Login.
 
 ## OAuth Login UX
 

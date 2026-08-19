@@ -20,7 +20,8 @@ npm i @prisma/client@latest
 - **User authentication** (`register`, `login`, `logout`, `me`)
 - **Public profile read** (`GET /api/users/:username`) — displayName, bio, stats
 - **Public profile article list** (`GET /api/users/:username/articles`)
-- **User profile updates** (`PATCH /api/users/me`) — displayName, bio with validation
+- **User profile updates** (`PATCH /api/users/me`) — displayName, bio, preferred language with validation
+- **Self-account deletion** (`DELETE /api/users/me`) — permanently deletes the authenticated user's account and cascaded data
 - **Avatar management** (`POST /api/users/me/avatar`) — upload PNG/JPG, max 2MB
 - **Avatar delete** (`DELETE /api/users/me/avatar`) — remove user avatar
 - **Global articles feed** (`GET /api/articles`) — paginated, searchable, filterable, sortable
@@ -31,6 +32,8 @@ npm i @prisma/client@latest
 - **Follows API** (`/api/follows/*` follow, unfollow, status)
 - **Messages API** (`GET/POST /api/messages/:userId`)
 - **Notifications API** (`GET /api/notifications`, mark one/all read)
+- **Leaderboard API** (`GET /api/users/leaderboard`)
+- **Admin API** (`/api/admin/*`) for user roles and content moderation
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses
@@ -293,13 +296,17 @@ npm run test:backend
 
 Base path: `/api/users`
 
+### GET /api/users/leaderboard
+
+Returns up to 50 users ranked by total likes on non-removed articles. Each row includes username, avatar, article count, total likes, level, and earned badges.
+
 ### PATCH /api/users/me
 
 Edits authenticated user profile.
 
 Request body fields:
 
-- `displayName` (optional): string or `null`, max 50 chars
+- `displayName` (optional): string or `null`, max 20 chars
 - `bio` (optional): string or `null`, max 500 chars
 
 Success: `200` with updated editable profile payload.
@@ -328,6 +335,12 @@ Validation errors:
 Deletes authenticated user's avatar.
 
 Success: `200` with updated editable profile payload (`avatarUrl: null`).
+
+### DELETE /api/users/me
+
+Permanently deletes the authenticated user's account. The request must include the `x-csrf-token` header matching the `csrf_token` cookie.
+
+Account deletion cascades through the user's articles, comments, likes, follows, friendships, messages, notifications, badges, and OAuth accounts. The user's local avatar file is also removed when present. Auth cookies are cleared after successful deletion.
 
 ### GET /api/users/:username
 
@@ -492,6 +505,18 @@ Author hard-deletes their own comment; moderator/admin can soft-remove with reas
 - `PATCH /read-all`
 - `PATCH /:id/read`
 
+## Admin API
+
+Base path: `/api/admin`
+
+All admin routes require authentication and the appropriate `ADMIN` or `MODERATOR` role.
+
+- `GET /users` — list users; admin only
+- `PATCH /users/:id/role` — change a user's role; admin only
+- `GET /articles` — list articles for moderation; moderator/admin
+- `PATCH /articles/:id/remove` — soft-remove an article; moderator/admin
+- `PATCH /comments/:id/remove` — soft-remove a comment; moderator/admin
+
 ## Test Flow Script
 
 The backend integration flow script lives in:
@@ -500,6 +525,7 @@ The backend integration flow script lives in:
 - `scripts/test-follows-flow.sh`
 - `scripts/test-friends-flow.sh`
 - `scripts/test-messages.sh`
+- `scripts/test-gamification-flow.sh`
 
 Run it with:
 
