@@ -111,8 +111,8 @@ export const Leaderboard = () => {
                     <tr
                       key={user.id}
                       className={isCurrentUser
-                        ? 'bg-purple-100/70 ring-1 ring-inset ring-purple-400'
-                        : 'transition-colors hover:bg-white/60'}
+                        ? 'bg-purple-200/100'
+                        : 'transition-colors hover:bg-purple-100/70'}
                     >
                       <td className={`px-5 py-4 text-lg font-bold ${rankClass(rank)}`}>
                         <span aria-label={t('leaderboard.rankLabel', { rank })}>{rank}</span>
