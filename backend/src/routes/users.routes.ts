@@ -24,6 +24,7 @@ import {
 } from './users.route-helpers.js'
 import type { EditableProfile } from './users.route-helpers.js'
 import { updateOnlineStatus } from '../controllers/users.controller.js';
+import { clearAuthCookies, validateCsrfToken } from './auth.routes-helpers.js'
 
 // Type for request with file from multer
 interface FileRequest extends Request {
@@ -321,8 +322,33 @@ const deleteMyAvatarHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: updatedUser })
 }
 
+// Permanently delete the authenticated user's account and all cascaded data.
+const deleteMyAccountHandler = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
+  }
+
+  validateCsrfToken(req, req.user.csrfToken)
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: req.user.userId },
+    select: { avatarUrl: true },
+  })
+
+  if (!currentUser) {
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found')
+  }
+
+  await prisma.user.delete({ where: { id: req.user.userId } })
+  await deleteOldAvatar(currentUser.avatarUrl)
+  clearAuthCookies(res)
+
+  res.status(200).json({ success: true })
+}
+
 router.post('/me/avatar', authMiddleware, upload.single('avatar'), handleMulterError, handleAsyncErrors(uploadAvatarHandler))
 router.delete('/me/avatar', authMiddleware, handleAsyncErrors(deleteMyAvatarHandler))
+router.delete('/me', authMiddleware, handleAsyncErrors(deleteMyAccountHandler))
 router.patch('/me', authMiddleware, handleAsyncErrors(editMyProfileHandler))
 // Must be registered before '/:username' so a search request isn't swallowed by the username route.
 router.get('/search', handleAsyncErrors(searchUsersHandler))

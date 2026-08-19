@@ -106,6 +106,17 @@ export const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const [oauthLoadingProvider, setOAuthLoadingProvider] = useState<string | null>(null)
   const [enabledOAuthProviders, setEnabledOAuthProviders] = useState<string[]>([])
+  const [accountDeletedNotice] = useState(() => {
+    return sessionStorage.getItem('accountDeleted') === '1'
+  })
+
+  useEffect(() => {
+    if (!accountDeletedNotice) {
+      return
+    }
+
+    sessionStorage.removeItem('accountDeleted')
+  }, [accountDeletedNotice])
 
   const oauthErrorMessage = useMemo(() => {
     const params = new URLSearchParams(location.search)
@@ -295,6 +306,12 @@ export const Login = () => {
 
       {/* Login form */}
       <form className="space-y-6 rounded-2xl border border-white/30 bg-white/40 p-8 backdrop-blur-md shadow-xl" onSubmit={handleSubmit} noValidate>
+        {accountDeletedNotice ? (
+          <p className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm font-medium text-green-700" role="status">
+            {t('login.accountDeleted')}
+          </p>
+        ) : null}
+
         <div className="space-y-2">
           <label htmlFor="email" className="block text-sm font-semibold text-slate-900">
             {t('auth.emailLabel')}

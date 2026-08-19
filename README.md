@@ -32,6 +32,7 @@
 	- comments create/edit/delete
 	- article likes
 	- follow and friend actions on profile pages
+- Self-service account deletion is available from profile settings with confirmation, cascade cleanup, avatar-file cleanup, cleared auth cookies, and a localized post-deletion confirmation on Login.
 - Backend Prisma packages updated to:
 	- `prisma@7.9.1`
 	- `@prisma/client@7.9.1`
@@ -394,22 +395,25 @@ ft_transcendence/
 - **Profile management** (displayName, bio, avatar upload/delete/preview)
 - **Public profiles** (read-only user profiles with stats)
 - **Edit profile form** (displayName, bio, avatar upload/delete, field validation)
+- **Self-service account deletion** (confirmation, cascade cleanup, session clearing)
 - **Logout redirect UX** (logout from profile/edit pages redirects to login)
 - **Password requirement hints** (short helper text in login/register forms)
 - **Global articles feed** (paginated, searchable, filterable by category, sortable)
 - **Article publishing and detail pages** (create, view, edit, delete)
 - **Comments and likes** (create/edit/delete comments, toggle likes)
 - **Follow and friend actions** (profile follow/unfollow, friend request flows)
+- **Leaderboard API** (top users by likes, article counts, levels, and badges)
+- **Admin API** (user role management and article/comment moderation)
 - **Privacy Policy page** (static content, linked from footer, guest accessible)
 - **Terms of Service page** (acceptable use, content ownership, moderation policy, guest accessible)
 - **Minimal footer links** (Privacy Policy, Terms of Service, GitHub repo)
 - **Internationalization** (English, Dutch, Ukrainian — full UI coverage, footer language switcher, account-level persistence, translated API error codes)
 
 ### In Progress
-- Direct messaging
-- Notifications
-- Gamification (badges, XP, leaderboard)
-- Moderation dashboard
+- Direct messaging frontend UI (backend conversation API is available)
+- Notifications frontend UI (backend list/read API is available)
+- Gamification frontend UI (badge awarding and leaderboard backend support are available)
+- Admin dashboard frontend UI (backend moderation/user-management endpoints are available)
 
 ## Modules Checklist (Evaluation)
 
