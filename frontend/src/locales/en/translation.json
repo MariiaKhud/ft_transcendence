@@ -398,6 +398,19 @@
       "deleteArticleFailed": "Unable to delete article"
     }
   },
+  "friends": {
+    "title": "Friends",
+    "requestsTitle": "Friend Requests",
+    "noFriends": "No friends yet",
+    "noFriendsHint": "Visit someone's profile and send them a friend request.",
+    "online": "Online",
+    "lastSeen": "Last seen {{time}}",
+    "message": "Send message",
+    "since": "Friends since {{date}}",
+    "loadError": "Failed to load friends",
+    "acceptError": "Failed to accept request",
+    "declineError": "Failed to decline request"
+  },
   "privacyPolicy": {
     "title": "Privacy Policy",
     "lastUpdated": "Last updated: July 2026",

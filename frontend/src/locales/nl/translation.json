@@ -398,6 +398,19 @@
       "deleteArticleFailed": "Kan artikel niet verwijderen"
     }
   },
+  "friends": {
+    "title": "Vrienden",
+    "requestsTitle": "Vriendschapsverzoeken",
+    "noFriends": "Nog geen vrienden",
+    "noFriendsHint": "Ga naar iemands profiel en stuur een vriendschapsverzoek.",
+    "online": "Online",
+    "lastSeen": "Laatst gezien {{time}}",
+    "message": "Bericht sturen",
+    "since": "Vrienden sinds {{date}}",
+    "loadError": "Vrienden konden niet worden geladen",
+    "acceptError": "Vriendschapsverzoek kon niet worden geaccepteerd",
+    "declineError": "Vriendschapsverzoek kon niet worden geweigerd"
+  },
   "privacyPolicy": {
     "title": "Privacybeleid",
     "lastUpdated": "Laatst bijgewerkt: juli 2026",

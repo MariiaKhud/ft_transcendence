@@ -1,5 +1,6 @@
 import type { FriendshipState } from '@shared/types/friendship';
 import { apiRequest, apiRequestData } from '@/api/client'
+import type { Friend, IncomingRequest } from '@/types/friends'
 
 // Shared path prefix for friend-related routes.
 const BASE = '/friends'
@@ -39,14 +40,14 @@ export async function removeFriend(userId: string) {
 
 // List incoming friend requests for current user.
 export async function getIncomingRequests() {
-  return apiRequest(`${BASE}/requests`, {
+  return apiRequest<IncomingRequest[]>(`${BASE}/requests`, {
     fallbackMessage: 'Unable to load incoming requests',
   })
 }
 
 // List current friends.
 export async function getFriends() {
-  return apiRequest(`${BASE}`, {
+  return apiRequest<Friend[]>(`${BASE}`, {
     fallbackMessage: 'Unable to load friends',
   })
 }

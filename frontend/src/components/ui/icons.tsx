@@ -144,8 +144,18 @@ export function NotificationsSkeleton() {
   return (
     <ul>
       {[1, 2, 3].map((i) => (
-        <li key={i} className="px-4 py-3 border-b border-gray-50 flex gap-3">
-          <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+        <li key={i} className="px-4
+                               py-3
+                               border-b
+                               border-gray-50
+                               flex
+                               gap-3">
+          <div className="w-8
+                          h-8
+                          rounded-full
+                          bg-gray-200
+                          animate-pulse
+                          flex-shrink-0" />
           <div className="flex-1 space-y-2 py-1">
             <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4" />
             <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
@@ -154,4 +164,37 @@ export function NotificationsSkeleton() {
       ))}
     </ul>
   );
+}
+
+export function MessageIcon() {
+  return (
+    <svg className="h-4 w-4"
+         fill="none"
+         stroke="currentColor"
+         viewBox="0 0 24 24">
+      <path strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+    </svg>
+  )
+}
+
+export function UserPlusIcon({ className = 'h-12 w-12' }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      aria-hidden="true"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.75}
+        d="M15 20a6 6 0 00-12 0m6-8a4 4 0 100-8 4 4 0 000 8zm8-3v6m-3-3h6"
+      />
+    </svg>
+  )
 }
