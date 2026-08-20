@@ -271,15 +271,27 @@ export const Profile = () => {
 
           {/* Only show Edit button on your own profile. */}
           {isOwnProfile ? (
-            <Button
-              variant="profile"
-              type="button"
-              onClick={() => {
-                navigate('/settings/profile')
-              }}
-            >
-              {t('profile.editProfile')}
-            </Button>
+            <div className="flex flex-col items-end gap-2">
+              <Button
+                variant="profile"
+                type="button"
+                onClick={() => {
+                  navigate('/settings/profile')
+                }}
+              >
+                {t('profile.editProfile')}
+              </Button>
+
+              <Button
+                variant="profile"
+                type="button"
+                onClick={() => {
+                  navigate('/friends')
+                }}
+              >
+                {t('profile.friends')}
+              </Button>
+            </div>
           ) : (
             <div className="flex flex-col items-end gap-2">
               <FollowButton
