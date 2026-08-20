@@ -3,6 +3,7 @@ import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { Footer } from '@/components/Footer'
+import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
 import { NotificationBell } from '@/components/user/NotificationBell'
 
@@ -58,6 +59,8 @@ const App = () => {
           </div>
 
           <div className="flex shrink-0 items-center gap-3">
+            <LanguageSwitcher />
+
             {/* Show text while checking login. */}
             {isLoading ? <span className="text-sm font-medium text-slate-700">{t('nav.checkingSession')}</span> : null}
 

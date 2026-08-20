@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getNotifications, markOneAsRead, markAllAsRead } from '../api/notifications';
 
 export interface Notification {
@@ -19,6 +20,7 @@ export interface Notification {
 const POLL_INTERVAL = 30_000; // 30 seconds
 
 export function useNotifications() {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -32,11 +34,11 @@ export function useNotifications() {
       setUnreadCount(res.data.unreadCount);
       setError(null);
     } catch {
-      setError('Failed to load notifications');
+      setError(t('notification.loadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   // Initial fetch + polling
   useEffect(() => {

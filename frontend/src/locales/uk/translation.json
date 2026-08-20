@@ -205,6 +205,39 @@
     "removeAria": "Видалити з друзів",
     "removeTitle": "Натисніть, щоб видалити з друзів"
   },
+  "notification": {
+    "title": "Сповіщення",
+    "bellAriaLabelUnread": "Сповіщення, {{count}} непрочитаних",
+    "markAllRead": "Позначити всі як прочитані",
+    "seeAll": "Переглянути всі",
+    "empty": "Ви переглянули все",
+    "viewAll": "Переглянути всі сповіщення ({{count}})",
+    "accept": "Прийняти",
+    "decline": "Відхилити",
+    "processing": "...",
+    "actionUnavailable": "Цей запит більше недоступний",
+    "someone": "Хтось",
+    "chatHint": "Тепер ви можете спілкуватися та бачити активність одне одного",
+    "loadError": "Не вдалося завантажити сповіщення",
+    "comingSoon": "Сторінка сповіщень — скоро",
+    "time": {
+      "justNow": "щойно",
+      "minutesAgo": "{{count}} хв тому",
+      "hoursAgo": "{{count}} год тому",
+      "daysAgo": "{{count}} дн тому"
+    },
+    "types": {
+      "followed": "почав(-ла) стежити за вами",
+      "friendRequest": "надіслав(-ла) вам запит у друзі",
+      "friendRequestDeclined": "запит у друзі відхилено",
+      "friendAccepted": "прийняв(-ла) ваш запит у друзі",
+      "nowFriends": "тепер ваш друг",
+      "comment": "прокоментував(-ла) вашу статтю «{{title}}»",
+      "like": "вподобав(-ла) вашу статтю «{{title}}»",
+      "contentRemovedArticle": "Вашу статтю «{{title}}» видалено модератором.",
+      "contentRemovedComment": "Ваш коментар видалено модератором."
+    }
+  },
   "createArticle": {
     "title": "Написати статтю",
     "subtitle": "Поділіться чимось зі спільнотою",

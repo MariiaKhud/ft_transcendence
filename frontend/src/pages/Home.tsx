@@ -9,6 +9,14 @@ import { getArticles, type Article, type ArticlesResponse } from '@/api/articles
 
 type SortOption = 'newest' | 'oldest' | 'most_liked'
 
+const SORT_OPTIONS: SortOption[] = ['newest', 'oldest', 'most_liked']
+
+const SORT_LABEL_KEYS: Record<SortOption, string> = {
+  newest: 'sortNewest',
+  oldest: 'sortOldest',
+  most_liked: 'sortMostLiked',
+}
+
 const CATEGORY_VALUES = ['', 'PROGRAMMING', 'CAREER', 'STUDY_NOTES', 'PROJECTS', 'LIFE', 'OPINION']
 
 export const Home = () => {
@@ -120,19 +128,23 @@ export const Home = () => {
 
           {/* Sort */}
           <div>
-            <label htmlFor="sort-select" className="block text-sm font-medium text-slate-700 mb-2">
-              {t('common.sortBy')}
-            </label>
-            <select
-              id="sort-select"
-              value={sort}
-              onChange={(e) => setSort(e.target.value as SortOption)}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:border-purple-500 focus:outline-none sm:w-auto"
-            >
-              <option value="newest">{t('common.sortNewest')}</option>
-              <option value="oldest">{t('common.sortOldest')}</option>
-              <option value="most_liked">{t('common.sortMostLiked')}</option>
-            </select>
+            <span className="mb-2 block text-sm font-medium text-slate-700">{t('common.sortBy')}</span>
+            <div className="flex flex-wrap gap-2">
+              {SORT_OPTIONS.map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setSort(value)}
+                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
+                    sort === value
+                      ? 'border-purple-600 bg-purple-600 text-white'
+                      : 'border-slate-300 bg-white text-slate-700 hover:border-purple-300 hover:bg-purple-50'
+                  }`}
+                >
+                  {t(`common.${SORT_LABEL_KEYS[value]}`)}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Category pills */}

@@ -203,6 +203,39 @@
     "removeAria": "Vriend verwijderen",
     "removeTitle": "Klik om vriend te verwijderen"
   },
+  "notification": {
+    "title": "Meldingen",
+    "bellAriaLabelUnread": "Meldingen, {{count}} ongelezen",
+    "markAllRead": "Alles als gelezen markeren",
+    "seeAll": "Alles bekijken",
+    "empty": "Je bent helemaal bij",
+    "viewAll": "Bekijk alle {{count}} meldingen",
+    "accept": "Accepteren",
+    "decline": "Afwijzen",
+    "processing": "...",
+    "actionUnavailable": "Dit verzoek is niet meer beschikbaar",
+    "someone": "Iemand",
+    "chatHint": "Je kunt nu chatten en elkaars activiteit zien",
+    "loadError": "Meldingen laden mislukt",
+    "comingSoon": "Meldingenpagina — binnenkort beschikbaar",
+    "time": {
+      "justNow": "zojuist",
+      "minutesAgo": "{{count}}m geleden",
+      "hoursAgo": "{{count}}u geleden",
+      "daysAgo": "{{count}}d geleden"
+    },
+    "types": {
+      "followed": "is je nu aan het volgen",
+      "friendRequest": "heeft je een vriendschapsverzoek gestuurd",
+      "friendRequestDeclined": "vriendschapsverzoek afgewezen",
+      "friendAccepted": "heeft je vriendschapsverzoek geaccepteerd",
+      "nowFriends": "is nu je vriend(in)",
+      "comment": "heeft gereageerd op je artikel \"{{title}}\"",
+      "like": "vindt je artikel \"{{title}}\" leuk",
+      "contentRemovedArticle": "Je artikel \"{{title}}\" is verwijderd door een moderator.",
+      "contentRemovedComment": "Je reactie is verwijderd door een moderator."
+    }
+  },
   "createArticle": {
     "title": "Schrijf een artikel",
     "subtitle": "Deel iets met de community",

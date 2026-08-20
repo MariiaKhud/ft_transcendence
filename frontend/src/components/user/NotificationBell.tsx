@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import type { TFunction } from 'i18next';
 import { useNotifications, Notification } from '../../hooks/useNotifications';
 import { respondToFriendRequest } from '../../api/friends';
 import { BellIcon, NotificationsSkeleton} from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 
 export function NotificationBell() {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -132,7 +135,7 @@ export function NotificationBell() {
                    focus:outline-none
                    focus:ring-2
                    focus:ring-blue-500"
-        aria-label={`Notifications${unreadCount > 0 ? `, ${unreadCount} unread` : ''}`}
+        aria-label={unreadCount > 0 ? t('notification.bellAriaLabelUnread', { count: unreadCount }) : t('notification.title')}
         aria-expanded={open}
         aria-haspopup="true"
       >
@@ -164,7 +167,7 @@ export function NotificationBell() {
       {open && (
         <div
           role="dialog"
-          aria-label="Notifications"
+          aria-label={t('notification.title')}
           className="absolute
                      right-0
                      mt-2
@@ -185,7 +188,7 @@ export function NotificationBell() {
                           py-3
                           border-b
                           border-gray-100">
-            <h3 className="font-semibold text-gray-900">Notifications</h3>
+            <h3 className="font-semibold text-gray-900">{t('notification.title')}</h3>
             <div className="flex items-center gap-2">
               {unreadCount > 0 && (
                 <button
@@ -195,7 +198,7 @@ export function NotificationBell() {
                              hover:text-fuchsia-600
                              font-medium"
                 >
-                  Mark all as read
+                  {t('notification.markAllRead')}
                 </button>
               )}
               <button
@@ -204,7 +207,7 @@ export function NotificationBell() {
                            text-gray-500
                            hover:text-gray-700"
               >
-                See all
+                {t('notification.seeAll')}
               </button>
             </div>
           </div>
@@ -218,7 +221,7 @@ export function NotificationBell() {
                               text-center
                               text-gray-500">
                 <div className="text-3xl mb-2">🔔</div>
-                <p className="text-sm">You're all caught up</p>
+                <p className="text-sm">{t('notification.empty')}</p>
               </div>
             ) : (
               <ul>
@@ -255,7 +258,7 @@ export function NotificationBell() {
                 size="notification"
                 onClick={() => { navigate('/notifications'); setOpen(false); }}
               >
-                View all {notifications.length} notifications
+                {t('notification.viewAll', { count: notifications.length })}
               </Button>
             </div>
           )}
@@ -282,6 +285,7 @@ function NotificationItem({
     onAccept,
     onDecline
   }: NotificationItemProps) {
+  const { t } = useTranslation();
   const [actionError, setActionError] = useState<string | null>(null);
   const [actioning, setActioning] = useState(false);
 
@@ -291,7 +295,7 @@ function NotificationItem({
     try {
       await fn();
     } catch {
-      setActionError('This request is no longer available');
+      setActionError(t('notification.actionUnavailable'));
     } finally {
       setActioning(false);
     }
@@ -337,13 +341,13 @@ function NotificationItem({
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-800">
               <span className="font-medium">
-                {notif.actor?.displayName || notif.actor?.username || 'Someone'}
+                {notif.actor?.displayName || notif.actor?.username || t('notification.someone')}
               </span>{' '}
               {resolvedState === 'accepted'
-              ? 'is now your friend'
+              ? t('notification.types.nowFriends')
               : resolvedState === 'declined'
-                ? 'friend request declined'
-                : notif.message}
+                ? t('notification.types.friendRequestDeclined')
+                : getNotificationText(t, notif)}
             </p>
 
             <p className={`text-xs mt-0.5 ${
@@ -354,10 +358,8 @@ function NotificationItem({
                   : 'text-gray-400'
             }`}>
               {resolvedState === 'accepted'
-                ? 'You can now chat and see each other\'s activity'
-                : resolvedState === 'declined'
-                  ? formatTime(notif.createdAt)
-                  : formatTime(notif.createdAt)}
+                ? t('notification.chatHint')
+                : formatTime(notif.createdAt, t)}
             </p>
           </div>
 
@@ -393,7 +395,7 @@ function NotificationItem({
                     void handleAction(onAccept);
                   }}
                 >
-                  {actioning ? '...' : 'Accept'}
+                  {actioning ? t('notification.processing') : t('notification.accept')}
                 </Button>
                 <Button
                   variant="profileSecondary"
@@ -404,7 +406,7 @@ function NotificationItem({
                     void handleAction(onDecline);
                   }}
                 >
-                  Decline
+                  {t('notification.decline')}
                 </Button>
               </>
             )}
@@ -428,7 +430,43 @@ function notificationIcon(type: string): string {
   return icons[type] ?? '🔔';
 }
 
-function formatTime(dateStr: string): string {
+// The backend only sends a pre-composed English `message`. Derive the
+// display text from the notification's type instead, so it can be
+// translated — pulling any embedded article title out of the message.
+function getNotificationText(t: TFunction, notif: Notification): string {
+  switch (notif.type) {
+    case 'FOLLOWED':
+      return t('notification.types.followed');
+
+    case 'FRIEND_REQUEST':
+      return notif.message === 'friend request declined'
+        ? t('notification.types.friendRequestDeclined')
+        : t('notification.types.friendRequest');
+
+    case 'FRIEND_ACCEPTED':
+      return notif.message === 'is now your friend'
+        ? t('notification.types.nowFriends')
+        : t('notification.types.friendAccepted');
+
+    case 'COMMENT':
+    case 'LIKE': {
+      const title = notif.message.match(/"([^"]*)"/)?.[1] ?? '';
+      return t(`notification.types.${notif.type === 'COMMENT' ? 'comment' : 'like'}`, { title });
+    }
+
+    case 'CONTENT_REMOVED': {
+      const titleMatch = notif.message.match(/"([^"]*)"/);
+      return titleMatch
+        ? t('notification.types.contentRemovedArticle', { title: titleMatch[1] })
+        : t('notification.types.contentRemovedComment');
+    }
+
+    default:
+      return notif.message;
+  }
+}
+
+function formatTime(dateStr: string, t: TFunction): string {
   const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -436,9 +474,9 @@ function formatTime(dateStr: string): string {
   const diffHours = Math.floor(diffMins / 60);
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffMins < 1) return 'just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return t('notification.time.justNow');
+  if (diffMins < 60) return t('notification.time.minutesAgo', { count: diffMins });
+  if (diffHours < 24) return t('notification.time.hoursAgo', { count: diffHours });
+  if (diffDays < 7) return t('notification.time.daysAgo', { count: diffDays });
   return date.toLocaleDateString();
 }

@@ -203,6 +203,39 @@
     "removeAria": "Remove friend",
     "removeTitle": "Click to remove friend"
   },
+  "notification": {
+    "title": "Notifications",
+    "bellAriaLabelUnread": "Notifications, {{count}} unread",
+    "markAllRead": "Mark all as read",
+    "seeAll": "See all",
+    "empty": "You're all caught up",
+    "viewAll": "View all {{count}} notifications",
+    "accept": "Accept",
+    "decline": "Decline",
+    "processing": "...",
+    "actionUnavailable": "This request is no longer available",
+    "someone": "Someone",
+    "chatHint": "You can now chat and see each other's activity",
+    "loadError": "Failed to load notifications",
+    "comingSoon": "Notifications page — coming soon",
+    "time": {
+      "justNow": "just now",
+      "minutesAgo": "{{count}}m ago",
+      "hoursAgo": "{{count}}h ago",
+      "daysAgo": "{{count}}d ago"
+    },
+    "types": {
+      "followed": "started following you",
+      "friendRequest": "sent you a friend request",
+      "friendRequestDeclined": "friend request declined",
+      "friendAccepted": "accepted your friend request",
+      "nowFriends": "is now your friend",
+      "comment": "commented on your article \"{{title}}\"",
+      "like": "liked your article \"{{title}}\"",
+      "contentRemovedArticle": "Your article \"{{title}}\" was removed by a moderator.",
+      "contentRemovedComment": "Your comment was removed by a moderator."
+    }
+  },
   "createArticle": {
     "title": "Write an Article",
     "subtitle": "Share something with the community",
