@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 
 export const Footer = () => {
   const { t } = useTranslation()
@@ -27,7 +26,6 @@ export const Footer = () => {
           >
             {t('footer.githubRepo')}
           </a>
-          <LanguageSwitcher />
         </nav>
       </div>
     </footer>
