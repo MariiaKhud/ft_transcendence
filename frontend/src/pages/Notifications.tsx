@@ -1,3 +1,6 @@
+import { useTranslation } from 'react-i18next'
+
 export function Notifications() {
-  return <div className="p-8 text-slate-900">Notifications page — coming soon</div>
+  const { t } = useTranslation()
+  return <div className="p-8 text-slate-900">{t('notification.comingSoon')}</div>
 }
