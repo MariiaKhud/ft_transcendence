@@ -21,9 +21,10 @@ import { useAuth } from '@/hooks/useAuth'
 interface FriendButtonProps {
   targetUserId: string;
   initialState: FriendshipState;
+  onStateChange?: (newState: FriendshipState) => void
 }
 
-export function FriendButton({ targetUserId, initialState }: FriendButtonProps) {
+export function FriendButton({ targetUserId, initialState, onStateChange }: FriendButtonProps) {
   const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [state, setState] = useState<FriendshipState>(initialState);
@@ -46,6 +47,7 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
     try {
       await action();
       setState(nextState);
+      onStateChange?.(nextState);
     } catch (error) {
       setError(translateApiError(
         error,
@@ -148,16 +150,8 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
         disabled={loading}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        aria-label={
-          isHovered
-            ? t('friendButton.remove')
-            : t('friendButton.friends')
-        }
-        title={
-          isHovered
-            ? t('friendButton.removeTitle')
-            : t('friendButton.friends')
-        }
+        aria-label={t('friendButton.remove')}
+        title={t('friendButton.removeTitle')}
       >
         {loading ? (
           <Spinner />
