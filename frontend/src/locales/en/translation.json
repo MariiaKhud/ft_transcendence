@@ -352,6 +352,14 @@
     "badges": "Badges",
     "badgesCollected": "{{count}} collected",
     "noBadges": "No badges unlocked yet.",
+    "badgeNames": {
+      "First Post": "First Post",
+      "Consistent Writer": "Consistent Writer",
+      "Prolific Author": "Prolific Author",
+      "First Like": "First Like",
+      "Rising Voice": "Rising Voice",
+      "Popular Writer": "Popular Writer"
+    },
     "articlesHeading": "Articles",
     "articlesShown": "{{count}} shown",
     "loadingArticles": "Loading articles...",

@@ -94,49 +94,51 @@ const main = async () => {
 
   console.log('✅ Users created')
 
-    // Create badges
-    await prisma.badge.createMany({
-      data: [
-        {
-          name: 'First Post',
-          description: 'Write 1 article',
-          icon: 'sparkles',
-          xpReward: 10,
-        },
-        {
-          name: 'Consistent Writer',
-          description: 'Write 5 articles',
-          icon: 'pen',
-          xpReward: 20,
-        },
-        {
-          name: 'Prolific Author',
-          description: 'Write 20 articles',
-          icon: 'book-open',
-          xpReward: 50,
-        },
-        {
-          name: 'First Like',
-          description: 'Receive 1 like',
-          icon: 'heart',
-          xpReward: 10,
-        },
-        {
-          name: 'Rising Voice',
-          description: 'Receive 10 likes',
-          icon: 'trending-up',
-          xpReward: 20,
-        },
-        {
-          name: 'Popular Writer',
-          description: 'Receive 50 likes',
-          icon: 'trophy',
-          xpReward: 50,
-        },
-      ],
-    })
+  // Create badges
+  const badgeDefinitions = [
+    {
+      name: 'First Post',
+      description: 'Write 1 article',
+      icon: 'sparkles',
+      xpReward: 10,
+    },
+    {
+      name: 'Consistent Writer',
+      description: 'Write 5 articles',
+      icon: 'pen',
+      xpReward: 20,
+    },
+    {
+      name: 'Prolific Author',
+      description: 'Write 20 articles',
+      icon: 'book-open',
+      xpReward: 50,
+    },
+    {
+      name: 'First Like',
+      description: 'Receive 1 like',
+      icon: 'heart',
+      xpReward: 10,
+    },
+    {
+      name: 'Rising Voice',
+      description: 'Receive 10 likes',
+      icon: 'trending-up',
+      xpReward: 20,
+    },
+    {
+      name: 'Popular Writer',
+      description: 'Receive 50 likes',
+      icon: 'trophy',
+      xpReward: 50,
+    },
+  ]
+
+  await prisma.badge.createMany({
+    data: badgeDefinitions,
+  })
   
-    console.log('✅ Badges created')
+  console.log('✅ Badges created')
 
   // Create articles
   const article1 = await prisma.article.create({
@@ -304,6 +306,86 @@ const main = async () => {
 
   console.log('✅ Likes created')
 
+  // Award badges according to actual user achievements.
+  const users = await prisma.user.findMany({
+    select: {
+      id: true,
+      username: true,
+    },
+  })
+
+  const seededBadges = await prisma.badge.findMany({
+    select: {
+      id: true,
+      name: true,
+    },
+  })
+
+  const badgesByName = new Map(
+    seededBadges.map((badge) => [badge.name, badge]),
+  )
+
+  for (const user of users) {
+    const articleCount = await prisma.article.count({
+      where: {
+        authorId: user.id,
+      },
+    })
+
+    const receivedLikes = await prisma.articleLike.count({
+      where: {
+        article: {
+          authorId: user.id,
+        },
+      },
+    })
+
+    const earnedBadgeNames: string[] = []
+
+    if (articleCount >= 1) {
+      earnedBadgeNames.push('First Post')
+    }
+
+    if (articleCount >= 5) {
+      earnedBadgeNames.push('Consistent Writer')
+    }
+
+    if (articleCount >= 20) {
+      earnedBadgeNames.push('Prolific Author')
+    }
+
+    if (receivedLikes >= 1) {
+      earnedBadgeNames.push('First Like')
+    }
+
+    if (receivedLikes >= 10) {
+      earnedBadgeNames.push('Rising Voice')
+    }
+
+    if (receivedLikes >= 50) {
+      earnedBadgeNames.push('Popular Writer')
+    }
+
+    const userBadges = earnedBadgeNames
+      .map((name) => badgesByName.get(name))
+      .filter((badge): badge is { id: string; name: string } => Boolean(badge))
+      .map((badge) => ({
+        userId: user.id,
+        badgeId: badge.id,
+      }))
+
+    if (userBadges.length > 0) {
+      await prisma.userBadge.createMany({
+        data: userBadges,
+        skipDuplicates: true,
+      })
+    }
+
+    console.log(
+      `🏅 ${user.username}: ${articleCount} articles, ${receivedLikes} received likes, ${userBadges.length} badges`,
+    )
+  }
+  
   console.log('🎉 Seeding complete!')
 }
 

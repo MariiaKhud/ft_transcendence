@@ -354,6 +354,14 @@
     "badges": "Значки",
     "badgesCollected": "{{count}} зібрано",
     "noBadges": "Поки що немає розблокованих значків.",
+    "badgeNames": {
+      "First Post": "Перша публікація",
+      "Consistent Writer": "Стабільний автор",
+      "Prolific Author": "Плідний автор",
+      "First Like": "Перший лайк",
+      "Rising Voice": "Голос, що зростає",
+      "Popular Writer": "Популярний автор"
+    },
     "articlesHeading": "Статті",
     "articlesShown": "{{count}} показано",
     "loadingArticles": "Завантаження статей...",
