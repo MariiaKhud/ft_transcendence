@@ -8,7 +8,13 @@ import {
   removeFriend,
 } from '../../api/friends';
 import { Button } from '@/components/ui/button';
-import { PlusIcon, ClockIcon, CheckIcon, Spinner } from '@/components/ui/icons'
+import {
+  PlusIcon,
+  ClockIcon,
+  CheckIcon,
+  Spinner,
+  XIcon,
+} from '@/components/ui/icons'
 import { translateApiError } from '@/lib/api-errors'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -23,6 +29,7 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
   const [state, setState] = useState<FriendshipState>(initialState);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isHovered, setIsHovered] = useState(false);
 
   // Keep local button state in sync when parent-provided state changes.
   useEffect(() => {
@@ -40,7 +47,12 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
       await action();
       setState(nextState);
     } catch (error) {
-      setError(translateApiError(error, error instanceof Error ? error.message : t('common.somethingWrong')))
+      setError(translateApiError(
+        error,
+        error instanceof Error
+        ? error.message
+        : t('common.somethingWrong')
+      ))
     } finally {
       setLoading(false);
     }
@@ -60,7 +72,7 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
           {t('friendButton.addFriend')}
         </Button>
 
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-pink-600">{error}</p>}
       </div>
     );
   }
@@ -72,14 +84,24 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
           variant="profileSecondary"
           onClick={() => handle(() => cancelFriendRequest(targetUserId), 'none')}
           disabled={loading}
-          aria-label={t('friendButton.cancelAria')}
-          title={t('friendButton.cancelTitle')}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          aria-label={isHovered ? t('friendButton.cancelRequest') : t('friendButton.pending')}
         >
-          {loading ? <Spinner /> : <ClockIcon />}
-          {t('friendButton.pending')}
+          {loading ? (
+            <Spinner />
+          ) : isHovered ? (
+            <XIcon />
+          ) : (
+            <ClockIcon />
+          )}
+
+          {isHovered
+            ? t('friendButton.cancelRequest')
+            : t('friendButton.pending')}
         </Button>
 
-        {error && <p className="text-xs text-red-500">{error}</p>}
+        {error && <p className="text-xs text-pink-600">{error}</p>}
       </div>
     );
   }
@@ -111,7 +133,7 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
         </div>
 
         {error && (
-          <p className="text-xs text-red-500">{error}</p>
+          <p className="text-xs text-pink-600">{error}</p>
         )}
       </div>
     );
@@ -124,15 +146,34 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
         variant="profileSecondary"
         onClick={() => handle(() => removeFriend(targetUserId), 'none')}
         disabled={loading}
-        aria-label={t('friendButton.removeAria')}
-        title={t('friendButton.removeTitle')}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        aria-label={
+          isHovered
+            ? t('friendButton.remove')
+            : t('friendButton.friends')
+        }
+        title={
+          isHovered
+            ? t('friendButton.removeTitle')
+            : t('friendButton.friends')
+        }
       >
-        {loading ? <Spinner /> : <CheckIcon />}
-        {t('friendButton.friends')}
+        {loading ? (
+          <Spinner />
+        ) : isHovered ? (
+          <XIcon />
+        ) : (
+          <CheckIcon />
+        )}
+
+        {isHovered
+          ? t('friendButton.remove')
+          : t('friendButton.friends')}
       </Button>
 
       {error && (
-        <p className="text-xs text-red-500">{error}</p>
+        <p className="text-xs text-pink-600">{error}</p>
       )}
     </div>
   );

@@ -40,7 +40,7 @@ export async function getConversation(req: Request, res: Response) {
     if (currentUserId === otherUserId) {
       return sendError(
         res,
-        new AppError(403,
+        new AppError(400,
         ErrorCode.MESSAGE_SELF_FORBIDDEN,
         "You can't open a conversation with yourself"),
       );

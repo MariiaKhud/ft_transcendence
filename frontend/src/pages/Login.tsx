@@ -329,7 +329,7 @@ export const Login = () => {
             placeholder={t('auth.emailPlaceholder')}
           />
           <p className="text-xs text-slate-500">{t('auth.emailHint')}</p>
-          {emailError.length > 0 ? <p className="text-xs font-medium text-red-500">{emailError}</p> : null}
+          {emailError.length > 0 ? <p className="text-xs font-medium text-pink-600">{emailError}</p> : null}
         </div>
 
         <div className="space-y-2">
@@ -390,7 +390,7 @@ export const Login = () => {
             <p className="text-xs text-slate-500">{t('auth.passwordHelp')}</p>
             <p className="text-xs text-slate-400">{t('common.counter', { count: password.length, max: 72 })}</p>
           </div>
-          {passwordError.length > 0 ? <p className="text-xs font-medium text-red-500">{passwordError}</p> : null}
+          {passwordError.length > 0 ? <p className="text-xs font-medium text-pink-600">{passwordError}</p> : null}
         </div>
 
         {oauthErrorMessage.length > 0 ? (

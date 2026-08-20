@@ -87,7 +87,7 @@ export function FollowButton({
         {isFollowing ? (isHovered ? t('followButton.unfollow') : t('followButton.following')) : t('followButton.follow')}
       </Button>
 
-      {error && <p className="text-xs text-red-500" role="alert">{error}</p>}
+      {error && <p className="text-xs text-pink-600" role="alert">{error}</p>}
     </div>
   );
 }

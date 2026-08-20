@@ -443,7 +443,7 @@ export const EditProfile = () => {
             {t('common.counter', { count: displayName.length, max: MAX_DISPLAY_NAME_LENGTH })}
           </p>
           {displayNameError.length > 0 ? (
-            <p className="text-xs font-medium text-red-500">{displayNameError}</p>
+            <p className="text-xs font-medium text-pink-600">{displayNameError}</p>
           ) : null}
         </div>
 
@@ -466,7 +466,7 @@ export const EditProfile = () => {
           <p className="text-right text-xs text-slate-400">
             {t('common.counter', { count: bio.length, max: MAX_BIO_LENGTH })}
           </p>
-          {bioError.length > 0 ? <p className="text-xs font-medium text-red-500">{bioError}</p> : null}
+          {bioError.length > 0 ? <p className="text-xs font-medium text-pink-600">{bioError}</p> : null}
         </div>
 
         {profileFormError.length > 0 ? (

@@ -16,6 +16,11 @@ const Leaderboard = lazy(() => import('@/pages/Leaderboard').then((m) => ({ defa
 const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy })))
 const TermsOfService = lazy(() => import('@/pages/TermsOfService').then((m) => ({ default: m.TermsOfService })))
 const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
+const Friends = lazy(() => import('@/pages/Friends').then((m) => ({ default: m.Friends })))
+const Notifications = lazy(() => import('@/pages/Notifications').then((m) => ({ default: m.Notifications })))
+const Chat = lazy(() => import('@/pages/Chat').then((m) => ({ default: m.Chat })))
+// const Leaderboard = lazy(() => import('@/pages/Leaderboard').then((m) => ({ default: m.Leaderboard })))
+// const AdminDashboard = lazy(() => import('@/pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard })))
 
 // App routes.
 export const router = createBrowserRouter([
@@ -78,6 +83,30 @@ export const router = createBrowserRouter([
             path: 'terms-of-service',
             element: <TermsOfService />,
           },
+          {
+            path: 'friends',
+            element: <Friends />
+          },
+          {
+            path: 'notifications',
+            element: <Notifications />
+          },
+          {
+            path: 'chat',
+            element: <Chat />
+          },  // conversations list
+          {
+            path: 'chat/:userId',
+            element: <Chat />
+          },  // open specific conversation
+          // {
+          //   path: 'leaderboard',
+          //   element: <Leaderboard />
+          // },
+          // {
+          //   path: 'admin',
+          //   element: <AdminDashboard />
+          // },
           {
             path: '*',
             element: <NotFound />,

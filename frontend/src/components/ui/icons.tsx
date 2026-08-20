@@ -94,3 +94,64 @@ export function XIcon() {
     </svg>
   )
 }
+
+export function PencilIcon() {
+  return (
+    <svg className="w-4 h-4"
+         fill="none"
+         stroke="currentColor"
+         viewBox="0 0 24 24">
+
+      <path strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+    </svg>
+  )
+}
+
+export function TrashIcon() {
+  return (
+    <svg className="w-4 h-4"
+         fill="none"
+         stroke="currentColor"
+         viewBox="0 0 24 24">
+
+      <path strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9.5 7V4.5A1.5 1.5 0 0111 3h2a1.5 1.5 0 011.5 1.5V7M4 7h16" />
+    </svg>
+  )
+}
+
+export function BellIcon() {
+  return (
+    <svg className="w-6 h-6"
+         fill="none"
+         stroke="currentColor"
+         viewBox="0 0 24 24">
+
+      <path strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    </svg>
+  );
+}
+
+export function NotificationsSkeleton() {
+  return (
+    <ul>
+      {[1, 2, 3].map((i) => (
+        <li key={i} className="px-4 py-3 border-b border-gray-50 flex gap-3">
+          <div className="w-8 h-8 rounded-full bg-gray-200 animate-pulse flex-shrink-0" />
+          <div className="flex-1 space-y-2 py-1">
+            <div className="h-3 bg-gray-200 rounded animate-pulse w-3/4" />
+            <div className="h-3 bg-gray-200 rounded animate-pulse w-1/2" />
+          </div>
+        </li>
+      ))}
+    </ul>
+  );
+}

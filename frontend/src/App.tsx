@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { Footer } from '@/components/Footer'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
+import { NotificationBell } from '@/components/user/NotificationBell'
 
 const App = () => {
   const { t } = useTranslation()
@@ -62,6 +63,7 @@ const App = () => {
 
             {currentUser ? (
               <>
+                <NotificationBell />
                 {/* Leaderboard */}
                 <Link
                   to="/leaderboard"
