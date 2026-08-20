@@ -130,6 +130,14 @@ export async function respondToFriendRequest(
       );
     }
 
+    if (exists.status === 'DECLINED') {
+      throw new AppError(
+        409,
+        ErrorCode.FRIEND_ALREADY,
+        'Already declined'
+      );
+    }
+
     throw new AppError(
       403,
       ErrorCode.FRIEND_NOT_ADDRESSEE,

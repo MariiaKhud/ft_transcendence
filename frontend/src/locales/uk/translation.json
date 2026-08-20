@@ -187,7 +187,8 @@
   },
   "friendButton": {
     "addFriend": "Додати в друзі",
-    "pending": "Очікує",
+    "pending": "Очікується",
+    "cancelRequest": "Скасувати запит",
     "accept": "Прийняти",
     "decline": "Відхилити",
     "friends": "Друзі",

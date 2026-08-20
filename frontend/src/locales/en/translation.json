@@ -186,6 +186,7 @@
   "friendButton": {
     "addFriend": "Add Friend",
     "pending": "Pending",
+    "cancelRequest": "Cancel request",
     "accept": "Accept",
     "decline": "Decline",
     "friends": "Friends",

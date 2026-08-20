@@ -186,6 +186,7 @@
   "friendButton": {
     "addFriend": "Vriend toevoegen",
     "pending": "In behandeling",
+    "cancelRequest": "Verzoek annuleren",
     "accept": "Accepteren",
     "decline": "Afwijzen",
     "friends": "Vrienden",

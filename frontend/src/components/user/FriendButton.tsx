@@ -84,11 +84,21 @@ export function FriendButton({ targetUserId, initialState }: FriendButtonProps) 
           variant="profileSecondary"
           onClick={() => handle(() => cancelFriendRequest(targetUserId), 'none')}
           disabled={loading}
-          aria-label={t('friendButton.cancelAria')}
-          title={t('friendButton.cancelTitle')}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          aria-label={isHovered ? t('friendButton.cancelRequest') : t('friendButton.pending')}
         >
-          {loading ? <Spinner /> : <ClockIcon />}
-          {t('friendButton.pending')}
+          {loading ? (
+            <Spinner />
+          ) : isHovered ? (
+            <XIcon />
+          ) : (
+            <ClockIcon />
+          )}
+
+          {isHovered
+            ? t('friendButton.cancelRequest')
+            : t('friendButton.pending')}
         </Button>
 
         {error && <p className="text-xs text-pink-600">{error}</p>}
