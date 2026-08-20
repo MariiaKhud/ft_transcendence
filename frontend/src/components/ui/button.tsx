@@ -80,6 +80,22 @@ const buttonVariants = cva(
                   hover:text-emerald-800 \
                   sm:px-5 \
                   sm:text-sm',
+
+        destructive:
+                  'rounded-lg \
+                  border \
+                  border-red-200 \
+                  bg-red-50/70 \
+                  px-4 \
+                  py-2 \
+                  text-xs \
+                  font-semibold \
+                  text-red-600 \
+                  transition-all \
+                  hover:border-red-300 \
+                  hover:bg-red-100 \
+                  sm:px-5 \
+                  sm:text-sm',
       },
 
       size: {

@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { PencilIcon, Spinner, TrashIcon } from '@/components/ui/icons'
 import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
 import { useStore } from '@/store/store'
 import { formatCategoryLabel, getInitials, toSafeImageUrl } from '@/lib/article-display'
@@ -305,21 +306,14 @@ export const Article = () => {
 
             {isOwnArticle && (
               <div className="flex shrink-0 gap-2">
-                <button
-                  type="button"
-                  onClick={handleStartEdit}
-                  className="rounded-lg border border-slate-300 bg-white/70 px-3 py-1 text-sm font-semibold text-slate-700 hover:bg-white"
-                >
+                <Button type="button" variant="profile" onClick={handleStartEdit}>
+                  <PencilIcon />
                   {t('common.edit')}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleDelete}
-                  disabled={isDeleting}
-                  className="rounded-lg border border-red-200 bg-red-50/70 px-3 py-1 text-sm font-semibold text-red-600 hover:bg-red-100 disabled:opacity-50"
-                >
+                </Button>
+                <Button type="button" variant="destructive" onClick={handleDelete} disabled={isDeleting}>
+                  {isDeleting ? <Spinner /> : <TrashIcon />}
                   {isDeleting ? t('common.deleting') : t('common.delete')}
-                </button>
+                </Button>
               </div>
             )}
           </div>
@@ -486,33 +480,40 @@ export const Article = () => {
                         </span>
 
                         {!showRemovedPlaceholder && !isOwnComment && isStaff && (
-                          <button
+                          <Button
                             type="button"
+                            variant="destructive"
+                            size="notification"
+                            className="ml-auto"
                             onClick={() => handleDeleteComment(comment)}
                             disabled={deletingCommentId === comment.id}
-                            className="ml-auto text-xs font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
                           >
+                            {deletingCommentId === comment.id ? <Spinner /> : <TrashIcon />}
                             {deletingCommentId === comment.id ? t('article.commentRemoving') : t('article.commentRemove')}
-                          </button>
+                          </Button>
                         )}
 
                         {!showRemovedPlaceholder && isOwnComment && editingCommentId !== comment.id && (
-                          <div className="ml-auto flex gap-3">
-                            <button
+                          <div className="ml-auto flex gap-2">
+                            <Button
                               type="button"
+                              variant="profile"
+                              size="notification"
                               onClick={() => handleStartEditComment(comment)}
-                              className="text-xs font-semibold text-slate-600 hover:text-purple-700"
                             >
+                              <PencilIcon />
                               {t('common.edit')}
-                            </button>
-                            <button
+                            </Button>
+                            <Button
                               type="button"
+                              variant="destructive"
+                              size="notification"
                               onClick={() => handleDeleteComment(comment)}
                               disabled={deletingCommentId === comment.id}
-                              className="text-xs font-semibold text-red-600 hover:text-red-800 disabled:opacity-50"
                             >
+                              {deletingCommentId === comment.id ? <Spinner /> : <TrashIcon />}
                               {deletingCommentId === comment.id ? t('article.commentDeleting') : t('common.delete')}
-                            </button>
+                            </Button>
                           </div>
                         )}
                       </div>
