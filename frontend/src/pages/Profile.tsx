@@ -11,6 +11,7 @@ import type { FriendshipState } from '@shared/types/friendship'
 import { getFriendshipStatus } from '../api/friends';
 import { Button } from '@/components/ui/button'
 import { XPBar } from '@/components/gamification/XPBar'
+import { BadgeList } from '@/components/gamification/BadgeList'
 
 // Convert relative avatar path to full URL for browser image tag.
 const toSafeImageUrl = (avatarUrl: string | null) => {
@@ -315,53 +316,65 @@ export const Profile = () => {
           {profile.bio ?? t('profile.noBio')}
         </p>
 
-        {/* Stats row: articles, followers, following. */}
+        {/* Stats row: articles, followers, following */}
         <div className="relative mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statArticles')}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{profile.articleCount}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {t('profile.statArticles')}
+            </p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">
+              {profile.articleCount}
+            </p>
           </div>
+
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statFollowers')}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{followerCount}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {t('profile.statFollowers')}
+            </p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">
+              {followerCount}
+            </p>
           </div>
+
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">
-            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{t('profile.statFollowing')}</p>
-            <p className="mt-1 text-2xl font-bold text-slate-900">{profile.followingCount}</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+              {t('profile.statFollowing')}
+            </p>
+            <p className="mt-1 text-2xl font-bold text-slate-900">
+              {profile.followingCount}
+            </p>
           </div>
         </div>
 
-        {/* XP Bar */}
-        <XPBar 
-          level={profile.level} 
-          experiencePoints={profile.experiencePoints}
-          className="mt-6"
-        />
-      </div>
+        {/* Progress and badges */}
+        <div className="relative mt-6 grid items-stretch gap-3 sm:grid-cols-2">
+          {/* XP Bar */}
+          <div className="h-full">
+            <XPBar
+              level={profile.level}
+              experiencePoints={profile.experiencePoints}
+              className="h-full"
+            />
+          </div>
 
-      {/* Badges section. */}
-      <div className="rounded-3xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-2xl font-bold text-slate-900">{t('profile.badges')}</h2>
-          <span className="text-sm font-semibold text-slate-500">{t('profile.badgesCollected', { count: profile.badges.length })}</span>
-        </div>
+          {/* Badges section */}
+          <div className="flex h-full flex-col rounded-2xl border border-white/50 bg-white/60 p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                {t('profile.badges')}
+              </p>
 
-        <div className="mt-5 flex flex-wrap gap-3">
-          {profile.badges.length > 0 ? (
-            profile.badges.map((badge) => {
-              return (
-                <span
-                  key={badge.id}
-                  className="inline-flex items-center gap-2 rounded-full border border-fuchsia-200 bg-gradient-to-r from-fuchsia-50 to-purple-50 px-4 py-2 text-sm font-semibold text-fuchsia-800"
-                >
-                  <span>{badge.icon}</span>
-                  <span>{badge.name}</span>
-                </span>
-              )
-            })
-          ) : (
-            <p className="text-slate-600">{t('profile.noBadges')}</p>
-          )}
+              <span className="text-xs font-semibold uppercase text-purple-600">
+                {t('profile.badgesCollected', {
+                  count: profile.badges.length,
+                })}
+              </span>
+            </div>
+
+            <div className="mt-3 flex-1">
+              <BadgeList badges={profile.badges} />
+            </div>
+          </div>
         </div>
       </div>
 

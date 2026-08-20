@@ -386,6 +386,14 @@
     "xpTotal": "{{xp}} XP totaal",
     "toNextLevel": "{{current}} / {{needed}} tot volgend niveau",
     "badges": "Badges",
+    "badgeNames": {
+      "First Post": "Eerste bericht",
+      "Consistent Writer": "Vaste schrijver",
+      "Prolific Author": "Productieve auteur",
+      "First Like": "Eerste like",
+      "Rising Voice": "Opkomende stem",
+      "Popular Writer": "Populaire schrijver"
+    },
     "badgesCollected": "{{count}} verzameld",
     "noBadges": "Nog geen badges ontgrendeld.",
     "articlesHeading": "Artikelen",
