@@ -425,7 +425,7 @@ perform_request \
         "action":"ACCEPTED"
     }'
 
-check "Second accept returns 403 (not authorized)" "$LAST_STATUS" "403"
+check "Second accept returns 409 (already friends)" "$LAST_STATUS" "409"
 echo
 
 # Invalid action
@@ -466,7 +466,7 @@ color_echo "$CYAN_L" "Check #27"
 perform_request \
     "Requester tries to accept own request" \
     -X PATCH \
-    "$BASE_URL/api/friends/request/$USER_B_ID" \
+    "$BASE_URL/api/friends/request/$USER_A_ID" \
     -b "$COOKIE_A" \
     -H "Content-Type: application/json" \
     -d '{"action":"ACCEPTED"}'

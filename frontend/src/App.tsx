@@ -70,6 +70,12 @@ const App = () => {
             {currentUser ? (
               <>
                 <NotificationBell />
+                <Link
+                  to="/notifications"
+                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+                >
+                  {t('notification.title')}
+                </Link>
                 {/* Leaderboard */}
                 <Link
                   to="/leaderboard"

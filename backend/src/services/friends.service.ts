@@ -150,17 +150,25 @@ export async function respondToFriendRequest(
     data: { status: action },
   });
 
-  await prisma.notification.updateMany({
+  const requestNotification = await prisma.notification.findFirst({
     where: {
       userId: addresseeId,
       type: 'FRIEND_REQUEST',
       refId: requesterId,
     },
-    data: {
-      type: action === 'ACCEPTED' ? 'FRIEND_ACCEPTED' : 'FRIEND_REQUEST',
-      message: action === 'ACCEPTED' ? 'is now your friend' : 'friend request declined',
-    },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true },
   });
+
+  if (requestNotification) {
+    await prisma.notification.update({
+      where: { id: requestNotification.id },
+      data: {
+        type: action === 'ACCEPTED' ? 'FRIEND_ACCEPTED' : 'FRIEND_REQUEST',
+        message: action === 'ACCEPTED' ? 'is now your friend' : 'friend request declined',
+      },
+    });
+  }
 
   if (action === 'ACCEPTED') {
     await createNotification(
@@ -309,13 +317,21 @@ export async function cancelFriendRequest(requesterId: string, addresseeId: stri
   });
 
   // Remove the notification so addressee doesn't see a dangling request
-  await prisma.notification.deleteMany({
+  const requestNotification = await prisma.notification.findFirst({
     where: {
       userId: addresseeId,
       type: 'FRIEND_REQUEST',
       refId: requesterId,
     },
+    orderBy: { createdAt: 'desc' },
+    select: { id: true },
   });
+
+  if (requestNotification) {
+    await prisma.notification.delete({
+      where: { id: requestNotification.id },
+    });
+  }
 }
 
 export async function getFriendshipStatus(

@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import type { TFunction } from 'i18next';
 import { useNotifications, Notification } from '../../hooks/useNotifications';
 import { respondToFriendRequest } from '../../api/friends';
+import {
+  formatNotificationTime,
+  getNotificationActionState,
+  getNotificationText,
+  notificationIcon,
+} from '@/lib/notification-display'
+import { goToProfile } from '@/lib/profile-navigation'
 import { BellIcon, NotificationsSkeleton} from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 
@@ -43,11 +49,6 @@ export function NotificationBell() {
     return () => document.removeEventListener('keydown', handleEsc);
   }, [open]);
 
-  function goToProfile(username?: string | null) {
-    if (!username) return;
-    navigate(`/profile/${username}`);
-  }
-
   async function handleNotificationClick(notif: Notification) {
     // Mark as read first
     if (!notif.isRead) await markRead(notif.id);
@@ -56,17 +57,17 @@ export function NotificationBell() {
     switch (notif.type) {
       case 'FRIEND_REQUEST':
         // navigate('/friends');
-        goToProfile(notif.actor?.username);
+        goToProfile(navigate, notif.actor?.username);
         setOpen(false);
         break;
 
       case 'FRIEND_ACCEPTED':
-        goToProfile(notif.actor?.username);
+        goToProfile(navigate, notif.actor?.username);
         setOpen(false);
         break;
 
       case 'FOLLOWED':
-        goToProfile(notif.actor?.username);
+        goToProfile(navigate, notif.actor?.username);
         setOpen(false);
         break;
 
@@ -80,6 +81,7 @@ export function NotificationBell() {
         navigate('/profile');
         setOpen(false);
         break;
+
       default:
         break;
     }
@@ -97,11 +99,14 @@ export function NotificationBell() {
       if (!notif.isRead) await markRead(notif.id);
       setActedOn((prev) => new Map(prev).set(notif.id, 'accepted'));
     } catch (err: any) {
-      if (err?.error?.includes('not found') || err?.statusCode === 404) {
+      if (err?.status === 404 || err?.statusCode === 404 || err?.error?.includes('not found')) {
         // Request was cancelled — remove stale notification
         removeNotification(notif.id);
         refetch(); // re-sync everything
+        return;
       }
+
+      throw err;
     }
   }
 
@@ -111,9 +116,14 @@ export function NotificationBell() {
       await respondToFriendRequest(notif.refId, 'DECLINED');
       if (!notif.isRead) await markRead(notif.id);
       setActedOn((prev) => new Map(prev).set(notif.id, 'declined'));
-    } catch {
-      removeNotification(notif.id);
-      refetch();
+    } catch (err: any) {
+      if (err?.status === 404 || err?.statusCode === 404) {
+        removeNotification(notif.id);
+        refetch();
+        return;
+      }
+
+      throw err;
     }
   }
 
@@ -232,12 +242,14 @@ export function NotificationBell() {
                     actionResult={actedOn.get(notif.id)}
                     onClick={() => handleNotificationClick(notif)}
                     onAccept={
-                      notif.type === 'FRIEND_REQUEST' && !actedOn.has(notif.id)
+                      notif.type === 'FRIEND_REQUEST' &&
+                      !getNotificationActionState(notif, actedOn.get(notif.id))
                         ? () => handleAcceptFromBell(notif)
                         : undefined
                     }
                     onDecline={
-                      notif.type === 'FRIEND_REQUEST' && !actedOn.has(notif.id)
+                      notif.type === 'FRIEND_REQUEST' &&
+                      !getNotificationActionState(notif, actedOn.get(notif.id))
                         ? () => handleDeclineFromBell(notif)
                         : undefined
                     }
@@ -258,7 +270,7 @@ export function NotificationBell() {
                 size="notification"
                 onClick={() => { navigate('/notifications'); setOpen(false); }}
               >
-                {t('notification.viewAll', { count: notifications.length })}
+                {t('notification.viewAll')}
               </Button>
             </div>
           )}
@@ -294,20 +306,22 @@ function NotificationItem({
     setActionError(null);
     try {
       await fn();
-    } catch {
-      setActionError(t('notification.actionUnavailable'));
+    } catch (err: any) {
+      const errorMessage = typeof err?.message === 'string' ? err.message.toLowerCase() : '';
+
+      if (err?.status === 409 && errorMessage.includes('declined')) {
+        setActionError(t('notification.alreadyDeclined'));
+      } else if (err?.status === 409 && errorMessage.includes('already friends')) {
+        setActionError(t('notification.alreadyAccepted'));
+      } else {
+        setActionError(t('notification.actionUnavailable'));
+      }
     } finally {
       setActioning(false);
     }
   }
 
-  const resolvedState =
-    actionResult ??
-    (notif.type === 'FRIEND_ACCEPTED' && notif.message === 'is now your friend'
-      ? 'accepted'
-      : notif.message === 'friend request declined'
-        ? 'declined'
-        : undefined);
+  const resolvedState = getNotificationActionState(notif, actionResult);
 
   return (
     <li
@@ -359,7 +373,7 @@ function NotificationItem({
             }`}>
               {resolvedState === 'accepted'
                 ? t('notification.chatHint')
-                : formatTime(notif.createdAt, t)}
+                : formatNotificationTime(notif.createdAt, t)}
             </p>
           </div>
 
@@ -414,69 +428,4 @@ function NotificationItem({
       )}
     </li>
   );
-}
-
-// ─── Helpers ──────────────────────────────────────────────────
-
-function notificationIcon(type: string): string {
-  const icons: Record<string, string> = {
-    FRIEND_REQUEST:  '👋',
-    FRIEND_ACCEPTED: '🤝',
-    FOLLOWED:        '➕',
-    COMMENT:         '💬',
-    LIKE:            '❤️',
-    CONTENT_REMOVED: '🚫',
-  };
-  return icons[type] ?? '🔔';
-}
-
-// The backend only sends a pre-composed English `message`. Derive the
-// display text from the notification's type instead, so it can be
-// translated — pulling any embedded article title out of the message.
-function getNotificationText(t: TFunction, notif: Notification): string {
-  switch (notif.type) {
-    case 'FOLLOWED':
-      return t('notification.types.followed');
-
-    case 'FRIEND_REQUEST':
-      return notif.message === 'friend request declined'
-        ? t('notification.types.friendRequestDeclined')
-        : t('notification.types.friendRequest');
-
-    case 'FRIEND_ACCEPTED':
-      return notif.message === 'is now your friend'
-        ? t('notification.types.nowFriends')
-        : t('notification.types.friendAccepted');
-
-    case 'COMMENT':
-    case 'LIKE': {
-      const title = notif.message.match(/"([^"]*)"/)?.[1] ?? '';
-      return t(`notification.types.${notif.type === 'COMMENT' ? 'comment' : 'like'}`, { title });
-    }
-
-    case 'CONTENT_REMOVED': {
-      const titleMatch = notif.message.match(/"([^"]*)"/);
-      return titleMatch
-        ? t('notification.types.contentRemovedArticle', { title: titleMatch[1] })
-        : t('notification.types.contentRemovedComment');
-    }
-
-    default:
-      return notif.message;
-  }
-}
-
-function formatTime(dateStr: string, t: TFunction): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60_000);
-  const diffHours = Math.floor(diffMins / 60);
-  const diffDays = Math.floor(diffHours / 24);
-
-  if (diffMins < 1) return t('notification.time.justNow');
-  if (diffMins < 60) return t('notification.time.minutesAgo', { count: diffMins });
-  if (diffHours < 24) return t('notification.time.hoursAgo', { count: diffHours });
-  if (diffDays < 7) return t('notification.time.daysAgo', { count: diffDays });
-  return date.toLocaleDateString();
 }
