@@ -22,6 +22,7 @@ export function notificationIcon(type: string): string {
     FRIEND_ACCEPTED: '🤝',
     FOLLOWED: '➕',
     COMMENT: '💬',
+    MESSAGE: '💬',
     LIKE: '❤️',
     CONTENT_REMOVED: '🚫',
   }
@@ -40,6 +41,8 @@ export function getNotificationText(t: TFunction, notif: Notification): string {
       return notif.message === 'is now your friend'
         ? t('notification.types.nowFriends')
         : t('notification.types.friendAccepted')
+    case 'MESSAGE':
+      return t('notification.types.message')
     case 'COMMENT':
     case 'LIKE': {
       const title = notif.message.match(/"([^"]*)"/)?.[1] ?? ''

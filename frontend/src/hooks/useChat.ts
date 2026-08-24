@@ -57,6 +57,7 @@ export function useChat(otherUserId: string) {
     // Confirmation that our sent message was saved
     function onSent(message: ChatMessage) {
       setSending(false)
+      setError(null)
       setMessages((prev) => [...prev, message])
     }
 

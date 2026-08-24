@@ -52,6 +52,12 @@ export function Notifications() {
         goToProfile(navigate, notif.actor?.username)
         break
 
+      case 'MESSAGE':
+        if (notif.actor?.username) {
+          navigate(`/chat/${encodeURIComponent(notif.actor.username)}`)
+        }
+        break
+
       case 'COMMENT':
       case 'LIKE':
         if (notif.refId) navigate(`/articles/${notif.refId}`)

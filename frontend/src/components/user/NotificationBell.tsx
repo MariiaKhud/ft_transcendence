@@ -71,6 +71,13 @@ export function NotificationBell() {
         setOpen(false);
         break;
 
+      case 'MESSAGE':
+        if (notif.actor?.username) {
+          navigate(`/chat/${encodeURIComponent(notif.actor.username)}`)
+        }
+        setOpen(false);
+        break;
+
       case 'COMMENT':
       case 'LIKE':
         if (notif.refId) navigate(`/articles/${notif.refId}`);

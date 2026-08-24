@@ -238,6 +238,7 @@
       "friendCancelled": "Dit verzoek is niet meer beschikbaar",
       "newFriendHint": "Jullie kunnen nu met elkaar chatten en elkaars activiteit bekijken",
       "nowFriends": "is nu je vriend(in)",
+      "message": "heeft je een bericht gestuurd",
       "comment": "heeft gereageerd op je artikel \"{{title}}\"",
       "like": "vindt je artikel \"{{title}}\" leuk",
       "contentRemovedArticle": "Je artikel \"{{title}}\" is verwijderd door een moderator.",

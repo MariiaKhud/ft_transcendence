@@ -238,6 +238,7 @@
       "friendCancelled": "This request is no longer available",
       "newFriendHint": "You can now chat and see each other's activity",
       "nowFriends": "is now your friend",
+      "message": "sent you a message",
       "comment": "commented on your article \"{{title}}\"",
       "like": "liked your article \"{{title}}\"",
       "contentRemovedArticle": "Your article \"{{title}}\" was removed by a moderator.",

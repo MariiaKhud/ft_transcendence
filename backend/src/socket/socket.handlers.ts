@@ -16,9 +16,10 @@ export function registerChatHandlers(io: Server, socket: Socket) {
     if (trimmed.length === 0 || trimmed.length > 2000) return
     if (senderId === receiverId) return
 
+    let message
     try {
       // Save to DB
-      const message = await prisma.message.create({
+      message = await prisma.message.create({
         data: { senderId, receiverId, content: trimmed },
         include: {
           sender: {
@@ -32,29 +33,33 @@ export function registerChatHandlers(io: Server, socket: Socket) {
         },
       })
 
-      // Send to receiver's room (instant delivery)
-      io.to(receiverId).emit('chat:message', message)
+    } catch (err) {
+      console.error('Chat message save failed:', err)
+      socket.emit('chat:error', { message: 'Failed to send message' })
+      return
+    }
 
-      // Confirm back to sender
-      socket.emit('chat:sent', message)
+    // Send the saved message to the receiver and confirm it to the sender.
+    io.to(receiverId).emit('chat:message', message)
+    socket.emit('chat:sent', message)
 
+    try {
       // Notify receiver if they're not in the chat already
-      // (frontend suppresses this if the conversation is open)
       await createNotification(
         receiverId,
-        'COMMENT',
+        'MESSAGE',
         'sent you a message',
         senderId
       )
 
-      // Push notification in real-time too
+      // Push notification in real-time too.
       io.to(receiverId).emit('notification:new', {
         type: 'MESSAGE',
         message: 'sent you a message',
         refId: senderId,
       })
     } catch (err) {
-      socket.emit('chat:error', { message: 'Failed to send message' })
+      console.error('Chat notification creation failed:', err)
     }
   })
 
