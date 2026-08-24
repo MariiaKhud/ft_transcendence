@@ -450,6 +450,15 @@
       "deleteArticleFailed": "Kan artikel niet verwijderen"
     }
   },
+  "chat": {
+    "placeholder": "Typ een bericht... (Enter om te verzenden, Shift+Enter voor een nieuwe regel)",
+    "send": "Verzenden",
+    "noMessages": "Nog geen berichten. Zeg hallo!",
+    "offline": "Offline",
+    "userNotFound": "Gebruiker niet gevonden",
+    "backToFriends": "Terug naar Mijn vrienden",
+    "loadError": "Berichten konden niet worden geladen"
+  },
   "friends": {
     "title": "Vrienden",
     "requestsTitle": "Vriendschapsverzoeken",

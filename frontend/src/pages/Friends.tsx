@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getFriends, getIncomingRequests, respondToFriendRequest } from '@/api/friends'
 import { FriendButton } from '@/components/user/FriendButton'
+import { UserAvatar } from '@/components/user/UserAvatar'
 import { Button } from '@/components/ui/button'
 import { CheckIcon, XIcon, Spinner, MessageIcon, UserPlusIcon } from '@/components/ui/icons'
 import { formatLastSeen } from '@/lib/utils'
@@ -342,7 +343,7 @@ function FriendCard({
                         gap-2">
           {/* Message button */}
           <Link
-            to={`/chat/${friend.id}`}
+            to={`/chat/${encodeURIComponent(friend.username)}`}
             aria-label={t('friends.message')}
             title={t('friends.message')}
           >
@@ -363,56 +364,6 @@ function FriendCard({
         </div>
       </div>
     </li>
-  )
-}
-
-// ─── Avatar ───────────────────────────────────────────────────
-
-function UserAvatar({
-  avatarUrl,
-  username,
-}: {
-  avatarUrl: string | null
-  username: string
-}) {
-  const colors = [
-    'from-purple-400  to-pink-400',
-    'from-blue-400    to-cyan-400',
-    'from-emerald-400 to-teal-400',
-    'from-orange-400  to-red-400',
-    'from-fuchsia-400 to-purple-400',
-  ]
-  const gradient = colors[username.charCodeAt(0) % colors.length]
-
-  if (avatarUrl) {
-    return (
-      <img
-        src={avatarUrl}
-        alt={username}
-        className="h-10
-                   w-10
-                   rounded-full
-                   object-cover"
-      />
-    )
-  }
-
-  return (
-    <div
-      className={`h-10
-                  w-10
-                  rounded-full
-                  bg-gradient-to-br
-                  ${gradient}
-                  flex
-                  items-center
-                  justify-center
-                  text-sm
-                  font-bold
-                  text-white`}
-    >
-      {username[0].toUpperCase()}
-    </div>
   )
 }
 

@@ -91,11 +91,7 @@ export const router = createBrowserRouter([
             element: <Notifications />
           },
           {
-            path: 'chat',
-            element: <Chat />
-          },  // conversations list
-          {
-            path: 'chat/:userId',
+            path: 'chat/:username',
             element: <Chat />
           },  // open specific conversation
           // {

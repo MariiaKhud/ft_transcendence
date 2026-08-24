@@ -9,3 +9,20 @@ export async function setUserOnline(userId: string) {
     },
   });
 }
+
+export async function getPublicProfileById(userId: string) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      username: true,
+      displayName: true,
+      avatarUrl: true,
+      bio: true,
+      isOnline: true,
+      lastSeenAt: true,
+      level: true,
+      xp: true,
+    },
+  })
+}

@@ -20,3 +20,8 @@ export function formatLastSeen(dateStr: string): string {
   if (diffDays < 7) return `${diffDays}d ago`
   return date.toLocaleDateString()
 }
+
+export function formatMessageTime(dateStr: string): string {
+  const date = new Date(dateStr)
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+}

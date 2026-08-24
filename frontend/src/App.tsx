@@ -7,6 +7,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
 import { NotificationBell } from '@/components/user/NotificationBell'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { useSocket } from '@/hooks/useSocket'
 
 const App = () => {
   const { t } = useTranslation()
@@ -15,7 +16,8 @@ const App = () => {
   // Get user info and logout function.
   const { currentUser, hasRestoredSession, isLoading, logout } = useAuth({ restoreOnMount: true })
 
-  useOnlineStatus()
+  useOnlineStatus() // can remove ping logic later, socket handles it
+  useSocket()
 
   return (
     <div className="relative flex flex-col min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">

@@ -23,7 +23,7 @@ import {
   USER_SEARCH_RESULTS_LIMIT,
 } from './users.route-helpers.js'
 import type { EditableProfile } from './users.route-helpers.js'
-import { updateOnlineStatus } from '../controllers/users.controller.js';
+import { updateOnlineStatus, getUserById } from '../controllers/users.controller.js';
 import { clearAuthCookies, validateCsrfToken } from './auth.routes-helpers.js'
 
 // Type for request with file from multer
@@ -362,6 +362,7 @@ router.get('/search', handleAsyncErrors(searchUsersHandler))
 router.get('/leaderboard', handleAsyncErrors(getLeaderboardHandler))
 router.get('/:username', handleAsyncErrors(getPublicProfileHandler))
 router.get('/:username/articles', handleAsyncErrors(getProfileArticlesHandler))
-router.patch('/me/online', authMiddleware, updateOnlineStatus);
+router.patch('/me/online', authMiddleware, updateOnlineStatus)
+router.get('/id/:userId', handleAsyncErrors(getUserById))
 
 export default router

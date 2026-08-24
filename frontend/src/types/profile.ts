@@ -11,6 +11,7 @@ export interface PublicProfile {
   username: string
   avatarUrl: string | null
   bio: string | null
+  isOnline?: boolean
   followerCount: number
   followingCount: number
   articleCount: number

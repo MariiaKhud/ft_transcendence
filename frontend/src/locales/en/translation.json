@@ -450,6 +450,15 @@
       "deleteArticleFailed": "Unable to delete article"
     }
   },
+  "chat": {
+    "placeholder": "Type a message... (Enter to send, Shift+Enter for new line)",
+    "send": "Send",
+    "noMessages": "No messages yet. Say hi!",
+    "offline": "Offline",
+    "userNotFound": "User not found",
+    "backToFriends": "Back to My Friends",
+    "loadError": "Failed to load messages"
+  },
   "friends": {
     "title": "Friends",
     "requestsTitle": "Friend Requests",

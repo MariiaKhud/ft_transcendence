@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getNotifications, markOneAsRead, markAllAsRead } from '../api/notifications';
+import { getSocket } from '@/lib/socket'
 
 export interface Notification {
   id: string;
@@ -42,10 +43,20 @@ export function useNotifications() {
 
   // Initial fetch + polling
   useEffect(() => {
-    fetch();
+    void fetch();
     intervalRef.current = setInterval(fetch, POLL_INTERVAL);
+    const socket = getSocket();
+
+    function onNewNotification() {
+      // Re-fetch when server pushes a new notification
+      void fetch()
+    }
+
+    socket.on('notification:new', onNewNotification)
+
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      socket.off('notification:new', onNewNotification)
     };
   }, [fetch]);
 

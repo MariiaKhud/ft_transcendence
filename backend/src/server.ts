@@ -18,6 +18,8 @@ import followsRoutes from './routes/follows.routes.js';
 import { startOnlineStatusJob } from './jobs/onlineStatus.job.js';
 import notificationsRoutes from './routes/notifications.routes.js';
 import messagesRoutes from './routes/messages.routes.js';
+import { createServer } from 'http';
+import { initSocketServer } from './socket/socket.server.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -47,7 +49,7 @@ const handleServerStart = () => {
 
 const handleGracefulShutdown = () => {
   console.log('\n🛑 Shutting down gracefully...')
-  server.close(async () => {
+  httpServer.close(async () => {
     await prisma.$disconnect()
     console.log('✅ Server closed')
     process.exit(0)
@@ -160,8 +162,16 @@ app.use(errorHandler)
 // Start Server
 // ─────────────────────────────────────────────
 
-const server = app.listen(PORT, handleServerStart)
-startOnlineStatusJob();
+// const server = app.listen(PORT, handleServerStart) <= Before WebSockets
+// startOnlineStatusJob();                            <= Before WebSockets
+
+const httpServer = createServer(app)          // ← wrap app in http server
+initSocketServer(httpServer)                  // ← attach socket.io
+
+httpServer.listen(PORT, () => {               // ← listen on httpServer, not app
+  handleServerStart()
+  startOnlineStatusJob()                      // keep as fallback for missed disconnects
+})
 
 // Graceful shutdown
 process.on('SIGINT', handleGracefulShutdown)
