@@ -92,6 +92,25 @@ const main = async () => {
     },
   })
 
+  const mainuser = await prisma.user.create({
+    data: {
+      email: 'mainuser@example.com',
+      username: 'mainuser_writer_extraordinaire',  // long username
+      passwordHash,
+      displayName: 'Maximilian Konstantinopolsky-Verbosenstein III',  // long display name
+      bio: `I am a passionate full-stack developer with over a decade of experience building web applications, distributed systems, and everything in between. My journey started with PHP and jQuery (yes, really), evolved through Angular and Ruby on Rails, and eventually landed me here in the beautiful world of TypeScript, React, and PostgreSQL.
+
+  When I am not writing code, you will find me reading about software architecture, arguing about tabs vs spaces (spaces, obviously), mentoring junior developers, contributing to open source projects, and occasionally touching grass.
+
+  I believe in clean code, thorough documentation, ruthless refactoring, and the Oxford comma. I also believe that every bug is just an undiscovered feature waiting for a creative product manager to explain it away.
+
+  Currently obsessed with: WebSockets, distributed caching, and finding the perfect mechanical keyboard.`,
+      role: Role.USER,
+      xp: 950,
+      level: 8,
+    },
+  })
+
   console.log('✅ Users created')
 
   // Create badges
@@ -249,7 +268,7 @@ const main = async () => {
       category: Category.LIFE,
       likeCount: 4,
     },
-  })      
+  })
 
   const article12 = await prisma.article.create({
     data: {
@@ -258,6 +277,239 @@ const main = async () => {
       content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
       category: Category.LIFE,
       likeCount: 4,
+    },
+  })
+
+  const articleLong = await prisma.article.create({
+    data: {
+      authorId: mainuser.id,
+      title: 'A Comprehensive Deep Dive into Modern Full-Stack Development: Architecture, Patterns, and Everything In Between',
+      content: `# A Comprehensive Deep Dive into Modern Full-Stack Development
+
+  ## Introduction
+
+  Full-stack development has evolved dramatically over the past decade. What once required separate specialists for frontend, backend, and database work can now be handled by a single developer armed with TypeScript, React, Node.js, and PostgreSQL. But with great power comes great responsibility — and a lot of architectural decisions.
+
+  In this article, I want to walk you through everything I have learned building production applications: from project structure to deployment, from authentication patterns to real-time features.
+
+  ---
+
+  ## Part 1: Project Structure
+
+  The way you organize your code matters more than most developers realize. A flat structure works fine for a weekend project. It becomes a maintenance nightmare at scale.
+
+  ### The Monorepo Approach
+
+  We use a monorepo with three main directories:
+
+  \`\`\`
+  project/
+  ├── frontend/     # React + TypeScript + Vite
+  ├── backend/      # Node.js + Express + TypeScript
+  ├── shared/       # Types used by both sides
+  └── docker-compose.yml
+  \`\`\`
+
+  The \`shared/\` directory is the secret weapon. When you define your API response types once and import them on both sides, TypeScript catches mismatches at compile time rather than at 2am in production.
+
+  ### Backend Structure
+
+  \`\`\`
+  backend/src/
+  ├── routes/       # URL definitions only
+  ├── controllers/  # Request/response handling
+  ├── services/     # Business logic + Prisma calls
+  ├── middleware/   # Auth, error handling
+  └── lib/          # Utilities, Prisma client
+  \`\`\`
+
+  This three-layer pattern (controller → service → database) keeps concerns separated. Controllers never call Prisma directly. Services never know about \`req\` or \`res\`. This sounds like over-engineering until you try to write tests or swap out your ORM.
+
+  ---
+
+  ## Part 2: Authentication
+
+  Authentication is where most tutorials lead you astray. Let me be specific about what actually works in production.
+
+  ### JWT in HttpOnly Cookies
+
+  Do not store JWTs in localStorage. I am not going to be subtle about this. LocalStorage is accessible to any JavaScript on your page, including injected scripts from XSS attacks.
+
+  Instead:
+
+  1. On login, sign a JWT and set it as an **HttpOnly cookie**
+  2. The browser sends it automatically on every request
+  3. JavaScript cannot read it — not your code, not an attacker's code
+
+  \`\`\`typescript
+  res.cookie('token', jwt, {
+    httpOnly: true,
+    secure: true,        // HTTPS only
+    sameSite: 'strict',  // CSRF protection
+    maxAge: 7 * 24 * 60 * 60 * 1000,  // 7 days
+  })
+  \`\`\`
+
+  ### Role-Based Access Control
+
+  Roles should live in the JWT payload, not require a database lookup on every request:
+
+  \`\`\`typescript
+  const payload = {
+    userId: user.id,
+    role: user.role,   // 'USER' | 'MODERATOR' | 'ADMIN'
+  }
+  \`\`\`
+
+  Your middleware checks the role from the token. A separate \`requireRole('ADMIN')\` middleware guards sensitive routes.
+
+  ---
+
+  ## Part 3: Database Design
+
+  PostgreSQL with Prisma is one of the most productive combinations I have used. A few lessons learned:
+
+  ### Use UUIDs, Not Auto-Increment IDs
+
+  \`\`\`prisma
+  model User {
+    id String @id @default(uuid())
+  }
+  \`\`\`
+
+  Auto-increment IDs expose your data volume (users can see that they are user #47 and guess you have 46 other users). They also cause merge conflicts in distributed systems. UUIDs are opaque and safe to expose.
+
+  ### Soft Deletes for Moderated Content
+
+  When a moderator removes an article, do not delete the row. Mark it:
+
+  \`\`\`prisma
+  model Article {
+    isRemoved     Boolean   @default(false)
+    removedReason String?
+    removedAt     DateTime?
+  }
+  \`\`\`
+
+  This gives you an audit trail, lets you restore content, and means the foreign key constraints stay intact.
+
+  ### Cached Counters
+
+  Counting likes by joining \`article_likes\` on every feed request is slow at scale. Instead, maintain a \`likeCount\` column and update it in a transaction when likes are added or removed:
+
+  \`\`\`typescript
+  await prisma.$transaction([
+    prisma.articleLike.create({ data: { userId, articleId } }),
+    prisma.article.update({
+      where: { id: articleId },
+      data: { likeCount: { increment: 1 } },
+    }),
+  ])
+  \`\`\`
+
+  ---
+
+  ## Part 4: Real-Time Features with WebSockets
+
+  REST is great for CRUD. It is terrible for "tell me when something happens." This is where WebSockets come in.
+
+  We use **Socket.io** because it handles reconnection, fallback transports, and room-based broadcasting out of the box.
+
+  ### Authentication on WebSockets
+
+  The trick is reusing your existing HTTP cookie. When the browser opens a WebSocket connection, it sends cookies automatically:
+
+  \`\`\`typescript
+  io.use((socket, next) => {
+    const cookies = parseCookie(socket.handshake.headers.cookie ?? '')
+    const token = cookies['token']
+    
+    if (!token) return next(new Error('Unauthorized'))
+    
+    try {
+      const decoded = verifyAuthToken(token)
+      socket.data.userId = decoded.userId
+      next()
+    } catch {
+      next(new Error('Invalid token'))
+    }
+  })
+  \`\`\`
+
+  ### Room-Based Broadcasting
+
+  Do not broadcast to all connected clients. Use rooms:
+
+  \`\`\`typescript
+  // Each user joins a room named after their userId
+  await socket.join(userId)
+
+  // Send a message to one specific user
+  io.to(receiverId).emit('chat:message', message)
+  \`\`\`
+
+  This is efficient — the message only travels to the target user's connection, not everyone on the server.
+
+  ### Online Status
+
+  The elegant solution: mark online on \`connect\`, mark offline on \`disconnect\`. No polling needed:
+
+  \`\`\`typescript
+  io.on('connection', async (socket) => {
+    await prisma.user.update({
+      where: { id: socket.data.userId },
+      data: { isOnline: true },
+    })
+
+    socket.on('disconnect', async () => {
+      await prisma.user.update({
+        where: { id: socket.data.userId },
+        data: { isOnline: false },
+      })
+    })
+  })
+  \`\`\`
+
+  ---
+
+  ## Part 5: Deployment
+
+  Docker Compose is the right choice for a project like this. One command, reproducible environment, same setup locally and on the server.
+
+  ### The Four Services
+
+  \`\`\`yaml
+  services:
+    postgres:   # database
+    backend:    # Node.js API
+    frontend:   # Vite dev server or static build
+    nginx:      # reverse proxy + HTTPS termination
+  \`\`\`
+
+  Nginx handles HTTPS so your application code never needs to deal with certificates. It also proxies \`/api\` to the backend and everything else to the frontend.
+
+  ### Environment Variables
+
+  Never commit secrets. Use \`.env.example\` with placeholder values:
+
+  \`\`\`bash
+  DATABASE_URL=postgresql://user:password@postgres:5432/dbname
+  JWT_SECRET=change-me
+  \`\`\`
+
+  Developers copy this to \`.env\` and fill in real values. The \`.env\` file is in \`.gitignore\`.
+
+  ---
+
+  ## Conclusion
+
+  Modern full-stack development is genuinely good now. The tools fit together well, TypeScript catches entire categories of bugs before they reach production, and the developer experience has never been better.
+
+  The patterns in this article — monorepo structure, HttpOnly JWTs, Prisma with PostgreSQL, WebSocket rooms, Docker Compose — are not theoretical. They are what we use in this very application.
+
+  If you made it to the end of this very long article, thank you for your patience. Go drink some water. You deserve it.`,
+      category: Category.PROGRAMMING,
+      likeCount: 0,
     },
   })
 
