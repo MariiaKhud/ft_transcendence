@@ -6,6 +6,7 @@ import { Footer } from '@/components/Footer'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
 import { NotificationBell } from '@/components/user/NotificationBell'
+import { LeaderboardButton } from '@/components/user/LeaderboardButton'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useSocket } from '@/hooks/useSocket'
 
@@ -72,19 +73,7 @@ const App = () => {
             {currentUser ? (
               <>
                 <NotificationBell />
-                <Link
-                  to="/notifications"
-                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
-                >
-                  {t('notification.title')}
-                </Link>
-                {/* Leaderboard */}
-                <Link
-                  to="/leaderboard"
-                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
-                >
-                  {t('nav.leaderboard')}
-                </Link>
+                <LeaderboardButton />
                 {/* Write a new article. */}
                 <Link
                   to="/articles/new"
