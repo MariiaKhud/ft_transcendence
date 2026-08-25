@@ -415,6 +415,18 @@
     "likes_other": "{{count}} likes",
     "unknownDate": "Unknown date"
   },
+  "admin": {
+    "title": "Admin Dashboard",
+    "removedContent": "Removed Content",
+    "users": "Users",
+    "forbidden": "You do not have permission to view this page.",
+    "removedArticles": "Removed Articles",
+    "removedComments": "Removed Comments",
+    "restoreArticle": "Restore Article",
+    "restoreComment": "Restore Comment",
+    "noRemovedArticles": "No removed articles.",
+    "noRemovedComments": "No removed comments."
+  },
   "article": {
     "loading": "Loading article...",
     "notFound": "Article not found",

@@ -19,7 +19,7 @@ const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m
 const Friends = lazy(() => import('@/pages/Friends').then((m) => ({ default: m.Friends })))
 const Notifications = lazy(() => import('@/pages/Notifications').then((m) => ({ default: m.Notifications })))
 const Chat = lazy(() => import('@/pages/Chat').then((m) => ({ default: m.Chat })))
-// const AdminDashboard = lazy(() => import('@/pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard })))
+const AdminDashboard = lazy(() => import('@/pages/AdminDashboard').then((m) => ({ default: m.AdminDashboard })))
 
 // App routes.
 export const router = createBrowserRouter([
@@ -94,10 +94,10 @@ export const router = createBrowserRouter([
             path: 'chat/:username',
             element: <Chat />
           },  // open specific conversation
-          // {
-          //   path: 'admin',
-          //   element: <AdminDashboard />
-          // },
+          {
+            path: 'admin',
+            element: <AdminDashboard />
+          },
           {
             path: '*',
             element: <NotFound />,
