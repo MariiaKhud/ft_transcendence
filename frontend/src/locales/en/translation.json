@@ -134,6 +134,7 @@
     }
   },
   "nav": {
+    "leaderboard": "Leaderboard",
     "write": "Write",
     "login": "Login",
     "logout": "Logout",
