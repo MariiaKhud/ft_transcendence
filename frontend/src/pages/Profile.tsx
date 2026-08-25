@@ -7,6 +7,7 @@ import { useStore } from '@/store/store'
 import type { ProfileArticle, PublicProfile } from '@/types/profile'
 import { FriendButton } from '@/components/user/FriendButton'
 import { FollowButton } from '@/components/user/FollowButton'
+import { MessageButtonLink } from '../components/user/MessageButtonLink'
 import type { FriendshipState } from '@shared/types/friendship'
 import { getFriendshipStatus } from '../api/friends';
 import { Button } from '@/components/ui/button'
@@ -306,7 +307,12 @@ export const Profile = () => {
               <FriendButton
                 targetUserId={profile.id}
                 initialState={friendshipState}
+                onStateChange={setFriendshipState}
               />
+
+              {friendshipState === 'friends' ? (
+                <MessageButtonLink username={profile.username} />
+              ) : null}
             </div>
           )}
         </div>

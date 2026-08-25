@@ -3,9 +3,10 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getFriends, getIncomingRequests, respondToFriendRequest } from '@/api/friends'
 import { FriendButton } from '@/components/user/FriendButton'
+import { MessageButtonLink } from '../components/user/MessageButtonLink'
 import { UserAvatar } from '@/components/user/UserAvatar'
 import { Button } from '@/components/ui/button'
-import { CheckIcon, XIcon, Spinner, MessageIcon, UserPlusIcon } from '@/components/ui/icons'
+import { CheckIcon, XIcon, Spinner, UserPlusIcon } from '@/components/ui/icons'
 import { formatLastSeen } from '@/lib/utils'
 import type { Friend, IncomingRequest } from '@/types/friends'
 
@@ -341,17 +342,7 @@ function FriendCard({
                         shrink-0
                         items-center
                         gap-2">
-          {/* Message button */}
-          <Link
-            to={`/chat/${encodeURIComponent(friend.username)}`}
-            aria-label={t('friends.message')}
-            title={t('friends.message')}
-          >
-            <Button variant="profile">
-              <MessageIcon />
-              <span className="hidden sm:inline">{t('friends.message')}</span>
-            </Button>
-          </Link>
+          <MessageButtonLink username={friend.username} />
 
           {/* FriendButton handles remove with hover → "Remove" pattern */}
           <FriendButton
