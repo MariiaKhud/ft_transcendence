@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import type { Article } from '@/api/articles'
-import { formatCategoryLabel, getInitials, toSafeImageUrl } from '@/lib/article-display'
+import { formatCategoryLabel, getInitials, stripMarkdown, toSafeImageUrl } from '@/lib/article-display'
 
 interface ArticleCardProps {
   article: Article
@@ -28,7 +28,7 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
           </span>
         </div>
 
-        <p className="mb-4 line-clamp-2 break-words text-slate-600">{article.content}</p>
+        <p className="mb-4 line-clamp-2 break-words text-slate-600">{stripMarkdown(article.content)}</p>
 
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">

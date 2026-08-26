@@ -424,11 +424,11 @@ export const Profile = () => {
                 >
                   <Link to={`/articles/${article.id}`} className="absolute inset-0" aria-label={article.title} />
                   <div className="pointer-events-none flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                      <h3 className="text-lg font-semibold text-slate-900">{article.title}</h3>
+                    <div className="min-w-0">
+                      <h3 className="break-words text-lg font-semibold text-slate-900">{article.title}</h3>
                       <p className="mt-1 text-sm text-slate-600">{article.category}</p>
                     </div>
-                    <div className="text-sm text-slate-500">
+                    <div className="shrink-0 text-sm text-slate-500">
                       <p>{formatDate(article.createdAt, t('profile.unknownDate'))}</p>
                       <p>{t('profile.likes', { count: article.likeCount })}</p>
                     </div>
