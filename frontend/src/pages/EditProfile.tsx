@@ -314,7 +314,7 @@ export const EditProfile = () => {
   const hasCurrentAvatar = Boolean(currentUser.avatarUrl)
 
   return (
-    <section className="mx-auto w-full max-w-md space-y-8">
+    <section className="mx-auto w-full max-w-4xl space-y-8">
       {/* Page header */}
       <div className="space-y-3 text-center">
         <h1 className="text-4xl font-bold tracking-tight text-slate-900">{t('editProfile.title')}</h1>

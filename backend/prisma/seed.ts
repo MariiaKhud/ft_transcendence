@@ -95,16 +95,12 @@ const main = async () => {
   const mainuser = await prisma.user.create({
     data: {
       email: 'mainuser@example.com',
-      username: 'mainuser_writer_extraordinaire',  // long username
+      username: 'mainuser_writer_long',  // long username
       passwordHash,
-      displayName: 'Maximilian Konstantinopolsky-Verbosenstein III',  // long display name
+      displayName: 'Maximiliaaaaaaan III',  // long display name
       bio: `I am a passionate full-stack developer with over a decade of experience building web applications, distributed systems, and everything in between. My journey started with PHP and jQuery (yes, really), evolved through Angular and Ruby on Rails, and eventually landed me here in the beautiful world of TypeScript, React, and PostgreSQL.
 
-  When I am not writing code, you will find me reading about software architecture, arguing about tabs vs spaces (spaces, obviously), mentoring junior developers, contributing to open source projects, and occasionally touching grass.
-
-  I believe in clean code, thorough documentation, ruthless refactoring, and the Oxford comma. I also believe that every bug is just an undiscovered feature waiting for a creative product manager to explain it away.
-
-  Currently obsessed with: WebSockets, distributed caching, and finding the perfect mechanical keyboard.`,
+When I am not writing code, you will find me reading about software architecture, arguing about tabs vs spaces (spaces, obviously), mentoring junior developers.`,
       role: Role.USER,
       xp: 950,
       level: 8,
@@ -155,6 +151,20 @@ const main = async () => {
 
   await prisma.badge.createMany({
     data: badgeDefinitions,
+  })
+
+  const mainuserBadges = await prisma.badge.findMany({
+    select: {
+      id: true,
+    },
+  })
+
+  await prisma.userBadge.createMany({
+    data: mainuserBadges.map((badge) => ({
+      userId: mainuser.id,
+      badgeId: badge.id,
+    })),
+    skipDuplicates: true,
   })
   
   console.log('✅ Badges created')
@@ -538,6 +548,11 @@ const main = async () => {
         authorId: admin.id,
         content: 'Nice summary of container basics.',
       },
+      {
+        articleId: article12.id,
+        authorId: mainuser.id,
+        content: 'Nice summary of container basics.',
+      },
     ],
   })
 
@@ -553,6 +568,11 @@ const main = async () => {
       { userId: bob.id, articleId: article3.id },
       { userId: alice.id, articleId: article4.id },
       { userId: admin.id, articleId: article5.id },
+      { userId: mainuser.id, articleId: article1.id },
+      { userId: mainuser.id, articleId: article2.id },
+      { userId: mainuser.id, articleId: article3.id },
+      { userId: mainuser.id, articleId: article4.id },
+      { userId: mainuser.id, articleId: article5.id },
     ],
   })
 
