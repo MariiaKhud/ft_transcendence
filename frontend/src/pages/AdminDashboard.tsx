@@ -11,6 +11,7 @@ import {
   restoreAdminArticle,
   restoreAdminComment,
   updateAdminUserRole,
+  removeAdminArticle,
 } from '@/api/admin'
 
 import type {
@@ -21,15 +22,19 @@ import type {
 
 import { UsersTab } from '@/components/admin/UsersTab'
 import { RemovedContentTab } from '@/components/admin/RemovedContentTab'
+import { ContentTab } from '@/components/admin/ContentTab'
 
-type Tab = 'content' | 'users'
+type Tab = 'content' | 'removed' | 'users'
 
 export function AdminDashboard() {
   const { t } = useTranslation()
   const currentUser = useStore((state) => state.auth.currentUser)
 
   const [activeTab, setActiveTab] = useState<Tab>('content')
-  const [articles, setArticles] = useState<AdminArticle[]>([])
+  // NEW: all articles (removed + non-removed)
+  const [allArticles, setAllArticles] = useState<AdminArticle[]>([])
+  // DERIVED: only removed articles for the "Removed content" tab
+  const [removedArticles, setRemovedArticles] = useState<AdminArticle[]>([])
   const [comments, setComments] = useState<AdminComment[]>([])
   const [users, setUsers] = useState<AdminUser[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -37,63 +42,109 @@ export function AdminDashboard() {
 
   const isAdmin = currentUser?.role === 'ADMIN'
 
-useEffect(() => {
-  if (!isAdmin) {
-    setIsLoading(false)
-    return
-  }
-
-  const loadDashboard = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
-
-      const [articleData, commentData, userData] = await Promise.all([
-        getAdminArticles(),
-        getAdminComments(),
-        getAdminUsers(),
-      ])
-
-      setArticles(articleData)
-      setComments(commentData)
-      setUsers(userData)
-    } catch (err) {
-      setError(
-        translateApiError(err, 'Failed to load admin dashboard'),
-      )
-    } finally {
+  useEffect(() => {
+    if (!isAdmin) {
       setIsLoading(false)
+      return
     }
+  
+    const loadDashboard = async () => {
+      try {
+        setIsLoading(true)
+        setError(null)
+  
+        const [articleData, commentData, userData] = await Promise.all([
+          getAdminArticles(),   // must now return ALL articles
+          getAdminComments(),
+          getAdminUsers(),
+        ])
+  
+        // All articles
+        setAllArticles(articleData)
+  
+        // Only removed ones
+        setRemovedArticles(
+          articleData.filter((a) => a.isRemoved),
+        )
+  
+        setComments(commentData)
+        setUsers(userData)
+      } catch (err) {
+        setError(
+          translateApiError(err, 'Failed to load admin dashboard'),
+        )
+      } finally {
+        setIsLoading(false)
+      }
+    }
+  
+    void loadDashboard()
+  }, [isAdmin])
+
+  if (!currentUser) {
+    return (
+      <main className="mx-auto max-w-4xl px-4 py-10">
+        <p className="rounded-2xl bg-slate-100 p-6 text-slate-700">
+          {t('common.loading')}
+        </p>
+      </main>
+    )
   }
 
-  void loadDashboard()
-}, [isAdmin])
-
-if (!currentUser) {
-  return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <p className="rounded-2xl bg-slate-100 p-6 text-slate-700">
-        {t('common.loading')}
-      </p>
-    </main>
-  )
-}
-
-if (!isAdmin) {
-  return (
-    <main className="mx-auto max-w-4xl px-4 py-10">
-      <p className="rounded-2xl bg-red-50 p-6 text-red-700">
-        {t('admin.forbidden')}
-      </p>
-    </main>
-  )
-}
+  if (!isAdmin) {
+    return (
+      <main className="mx-auto max-w-4xl px-4 py-10">
+        <p className="rounded-2xl bg-red-50 p-6 text-red-700">
+          {t('admin.forbidden')}
+        </p>
+      </main>
+    )
+  }
 
   const handleRestoreArticle = async (articleId: string) => {
+    const article = removedArticles.find((a) => a.id === articleId)
+    if (!article) return
+  
     await restoreAdminArticle(articleId)
-    setArticles((current) =>
-      current.filter((article) => article.id !== articleId),
+  
+    // Remove from removedArticles
+    setRemovedArticles((current) =>
+      current.filter((a) => a.id !== articleId),
     )
+  
+    // Update in allArticles to mark as not removed
+    setAllArticles((current) =>
+      current.map((a) =>
+        a.id === articleId
+          ? { ...a, isRemoved: false, removedReason: null, removedAt: null }
+          : a,
+      ),
+    )
+  }
+
+
+  const handleRemoveArticle = async (
+    articleId: string,
+    reason: string,
+  ) => {
+    const removedArticle = await removeAdminArticle(articleId, reason)
+  
+    // Update allArticles
+    setAllArticles((current) =>
+      current.map((a) =>
+        a.id === articleId
+          ? {
+              ...a,
+              isRemoved: true,
+              removedReason: removedArticle.removedReason,
+              removedAt: removedArticle.removedAt,
+            }
+          : a,
+      ),
+    )
+  
+    // Add to removedArticles using the real server object
+    setRemovedArticles((current) => [removedArticle, ...current])
   }
 
   const handleRestoreComment = async (commentId: string) => {
@@ -129,6 +180,18 @@ if (!isAdmin) {
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
+          {t('admin.content')}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('removed')}
+          className={`rounded-t-xl px-4 py-3 text-sm font-semibold ${
+            activeTab === 'removed'
+              ? 'bg-purple-600 text-white'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
           {t('admin.removedContent')}
         </button>
 
@@ -158,8 +221,15 @@ if (!isAdmin) {
       )}
 
       {!isLoading && !error && activeTab === 'content' && (
+        <ContentTab
+          articles={allArticles}
+          onRemoveArticle={handleRemoveArticle}
+        />
+      )}
+
+      {!isLoading && !error && activeTab === 'removed' && (
         <RemovedContentTab
-          articles={articles}
+          articles={removedArticles}
           comments={comments}
           onRestoreArticle={handleRestoreArticle}
           onRestoreComment={handleRestoreComment}

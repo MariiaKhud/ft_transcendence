@@ -12,6 +12,17 @@ export function getAdminArticles() {
   })
 }
 
+export function removeAdminArticle( id: string, removedReason: string,
+) {
+  return apiRequestData<AdminArticle>(`/admin/articles/${id}/remove`,
+    {
+      method: 'PATCH',
+      body: { removedReason },
+      fallbackMessage: 'Failed to remove article',
+    },
+  )
+}
+
 export function getAdminComments() {
   return apiRequestData<AdminComment[]>('/admin/comments', {
     fallbackMessage: 'Failed to load admin comments',

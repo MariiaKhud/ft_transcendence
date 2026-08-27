@@ -416,16 +416,19 @@
     "unknownDate": "Unknown date"
   },
   "admin": {
-    "title": "Admin Dashboard",
-    "removedContent": "Removed Content",
-    "users": "Users",
-    "forbidden": "You do not have permission to view this page.",
-    "removedArticles": "Removed Articles",
-    "removedComments": "Removed Comments",
-    "restoreArticle": "Restore Article",
-    "restoreComment": "Restore Comment",
-    "noRemovedArticles": "No removed articles.",
-    "noRemovedComments": "No removed comments."
+      "title": "Admin dashboard",
+      "forbidden": "You don’t have permission to view this page.",
+      "content": "Content",
+      "removedContent": "Removed content",
+      "users": "Users",
+      "allContent": "All content",
+      "removed": "Removed",
+      "remove": "Remove",
+      "removeArticle": "Remove article",
+      "removeArticleReasonHelp": "Provide a reason for removal. The author will be notified.",
+      "removeArticleReasonPlaceholder": "e.g. Violates community guidelines: ...",
+      "restoreArticle": "Restore article",
+      "restoreComment": "Restore comment"
   },
   "article": {
     "loading": "Loading article...",

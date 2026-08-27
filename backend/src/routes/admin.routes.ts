@@ -124,9 +124,6 @@ const changeUserRoleHandler = async (req: Request, res: Response) => {
 
 const getAdminArticlesHandler = async (req: Request, res: Response) => {
   const articles = await prisma.article.findMany({
-    where: { // shows only deleted (might be changed in next tickets for soft delete)
-      isRemoved: true,
-    },
     select: {
       id: true,
       title: true,
@@ -236,10 +233,7 @@ const removeArticleHandler = async (req: Request, res: Response) => {
   })
 }
 
-const restoreArticleHandler = async (
-  req: Request,
-  res: Response,
-) => {
+const restoreArticleHandler = async ( req: Request, res: Response, ) => {
   const { id } = req.params
 
   const article = await prisma.article.findUnique({
@@ -281,10 +275,7 @@ const restoreArticleHandler = async (
   })
 }
 
-const getAdminCommentsHandler = async (
-  req: Request,
-  res: Response,
-) => {
+const getAdminCommentsHandler = async ( req: Request, res: Response,) => {
   const comments = await prisma.comment.findMany({
     where: {
       isRemoved: true,
