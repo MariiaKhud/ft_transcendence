@@ -64,7 +64,6 @@ export function Notifications() {
         break
 
       case 'CONTENT_REMOVED':
-        navigate('/profile')
         break
 
       default:
@@ -294,10 +293,16 @@ function NotificationRow({
           {/* Content */}
           <div className="min-w-0 flex-1">
             <p className="text-sm text-slate-800">
-              <span className="font-semibold">
-                {notif.actor?.displayName ?? notif.actor?.username ?? t('notification.someone')}
-              </span>{' '}
-              {message}
+              {notif.type === 'CONTENT_REMOVED' ? (
+                message
+              ) : (
+                <>
+                  <span className="font-semibold">
+                    {notif.actor?.displayName ?? notif.actor?.username ?? t('notification.someone')}
+                  </span>{' '}
+                  {message}
+                </>
+              )}
             </p>
 
             {/* Sub-line — hint after accept, or timestamp */}

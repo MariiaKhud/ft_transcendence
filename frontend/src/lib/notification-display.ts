@@ -33,16 +33,20 @@ export function getNotificationText(t: TFunction, notif: Notification): string {
   switch (notif.type) {
     case 'FOLLOWED':
       return t('notification.types.followed')
+
     case 'FRIEND_REQUEST':
       return notif.message === 'friend request declined'
         ? t('notification.types.friendRequestDeclined')
         : t('notification.types.friendRequest')
+
     case 'FRIEND_ACCEPTED':
       return notif.message === 'is now your friend'
         ? t('notification.types.nowFriends')
         : t('notification.types.friendAccepted')
+
     case 'MESSAGE':
       return t('notification.types.message')
+
     case 'COMMENT':
     case 'LIKE': {
       const title = notif.message.match(/"([^"]*)"/)?.[1] ?? ''
@@ -51,12 +55,14 @@ export function getNotificationText(t: TFunction, notif: Notification): string {
         { title },
       )
     }
+
     case 'CONTENT_REMOVED': {
       const titleMatch = notif.message.match(/"([^"]*)"/)
       return titleMatch
         ? t('notification.types.contentRemovedArticle', { title: titleMatch[1] })
         : t('notification.types.contentRemovedComment')
     }
+
     default:
       return notif.message
   }

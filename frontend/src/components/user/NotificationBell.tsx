@@ -87,7 +87,6 @@ export function NotificationBell() {
         break;
 
       case 'CONTENT_REMOVED':
-        navigate('/profile');
         setOpen(false);
         break;
 
@@ -367,14 +366,20 @@ function NotificationItem({
 
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-800">
-              <span className="font-medium">
-                {notif.actor?.displayName || notif.actor?.username || t('notification.someone')}
-              </span>{' '}
-              {resolvedState === 'accepted'
-              ? t('notification.types.nowFriends')
-              : resolvedState === 'declined'
-                ? t('notification.types.friendRequestDeclined')
-                : getNotificationText(t, notif)}
+              {notif.type === 'CONTENT_REMOVED' ? (
+                getNotificationText(t, notif)
+              ) : (
+                <>
+                  <span className="font-medium">
+                    {notif.actor?.displayName || notif.actor?.username || t('notification.someone')}
+                  </span>{' '}
+                  {resolvedState === 'accepted'
+                  ? t('notification.types.nowFriends')
+                  : resolvedState === 'declined'
+                    ? t('notification.types.friendRequestDeclined')
+                    : getNotificationText(t, notif)}
+                </>
+              )}
             </p>
 
             <p className={`text-xs mt-0.5 ${
