@@ -8,10 +8,10 @@ import { CheckIcon, Spinner } from '@/components/ui/icons'
 import {
   formatNotificationTime,
   getNotificationActionState,
-  getNotificationText,
   notificationIcon,
 } from '@/lib/notification-display'
-import { goToProfile } from '@/lib/profile-navigation'
+import { navigateToNotification } from '@/lib/profile-navigation'
+import { NotificationMessage } from '@/components/user/NotificationMessage'
 
 export function Notifications() {
   const NOTIFICATIONS_PER_PAGE = 15
@@ -39,36 +39,7 @@ export function Notifications() {
   async function handleClick(notif: Notification) {
     if (!notif.isRead) await markRead(notif.id)
 
-    switch (notif.type) {
-      case 'FRIEND_REQUEST':
-        goToProfile(navigate, notif.actor?.username)
-        break
-
-      case 'FRIEND_ACCEPTED':
-        goToProfile(navigate, notif.actor?.username)
-        break
-
-      case 'FOLLOWED':
-        goToProfile(navigate, notif.actor?.username)
-        break
-
-      case 'MESSAGE':
-        if (notif.actor?.username) {
-          navigate(`/chat/${encodeURIComponent(notif.actor.username)}`)
-        }
-        break
-
-      case 'COMMENT':
-      case 'LIKE':
-        if (notif.refId) navigate(`/articles/${notif.refId}`)
-        break
-
-      case 'CONTENT_REMOVED':
-        break
-
-      default:
-        break
-    }
+    navigateToNotification(navigate, notif)
   }
 
   async function handleAccept(notif: Notification) {
@@ -226,12 +197,12 @@ interface NotificationRowProps {
 }
 
 function NotificationRow({
-  notif,
-  actionResult,
-  onClick,
-  onAccept,
-  onDecline,
-}: NotificationRowProps) {
+    notif,
+    actionResult,
+    onClick,
+    onAccept,
+    onDecline,
+  }: NotificationRowProps) {
   const { t } = useTranslation()
   const [actioning, setActioning] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
@@ -250,12 +221,6 @@ function NotificationRow({
 
   // Message shown in the row — changes after action
   const resolvedState = getNotificationActionState(notif, actionResult)
-
-  const message = resolvedState === 'accepted'
-    ? t('notification.types.nowFriends')
-    : resolvedState === 'declined'
-      ? t('notification.types.friendRequestDeclined')
-      : getNotificationText(t, notif)
 
   const icon = resolvedState === 'accepted'
     ? '🤝'
@@ -293,16 +258,11 @@ function NotificationRow({
           {/* Content */}
           <div className="min-w-0 flex-1">
             <p className="text-sm text-slate-800">
-              {notif.type === 'CONTENT_REMOVED' ? (
-                message
-              ) : (
-                <>
-                  <span className="font-semibold">
-                    {notif.actor?.displayName ?? notif.actor?.username ?? t('notification.someone')}
-                  </span>{' '}
-                  {message}
-                </>
-              )}
+              <NotificationMessage
+                notif={notif}
+                actionResult={actionResult}
+                actorClassName="font-semibold"
+              />
             </p>
 
             {/* Sub-line — hint after accept, or timestamp */}
