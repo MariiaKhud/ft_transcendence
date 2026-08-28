@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/icons'
 import { translateApiError } from '@/lib/api-errors'
 import { useAuth } from '@/hooks/useAuth'
+import { getFriendshipStatus } from '../../api/friends'
 
 interface FriendButtonProps {
   targetUserId: string;
@@ -31,19 +32,22 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [hasActed, setHasActed] = useState(false);
 
-  // Keep local button state in sync when parent-provided state changes.
   useEffect(() => {
-    setState(initialState);
-  }, [initialState]);
+    if (!hasActed) {
+      setState(initialState);
+    }
+  }, [initialState, hasActed]);
 
-  // Hide for guests and own profile.
+  // Hide for guests and own profile
   if (!currentUser || currentUser.id === targetUserId) return null;
 
-  // Run action, then transition to the expected next UI state.
+  // Run action, then transition to the expected next UI state
   async function handle(action: () => Promise<void>, nextState: FriendshipState) {
     setLoading(true);
     setError(null);
+    setHasActed(true);
     try {
       await action();
       setState(nextState);
@@ -51,9 +55,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
     } catch (error) {
       setError(translateApiError(
         error,
-        error instanceof Error
-        ? error.message
-        : t('common.somethingWrong')
+        error instanceof Error ? error.message : t('common.somethingWrong')
       ))
     } finally {
       setLoading(false);
@@ -62,7 +64,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   if (state === 'none') {
     return (
-      <div className="flex flex-col items-start gap-1">
+      <div className="relative flex flex-col items-start gap-1">
         <Button
           variant="profile"
           onClick={() => handle(() => sendFriendRequest(targetUserId), 'pending_sent')}
@@ -74,43 +76,72 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
           {t('friendButton.addFriend')}
         </Button>
 
-        {error && <p className="text-xs text-pink-600">{error}</p>}
+        {error && (
+          <p className="absolute top-full left-0 mt-1 text-xs text-pink-600 whitespace-nowrap">
+            {error}
+          </p>
+        )}
       </div>
     );
   }
 
   if (state === 'pending_sent') {
     return (
-      <div className="flex flex-col items-start gap-1">
+      <div className="relative flex flex-col items-start gap-1">
         <Button
           variant="profileSecondary"
-          onClick={() => handle(() => cancelFriendRequest(targetUserId), 'none')}
+          onClick={async () => {
+            setLoading(true)
+            setError(null)
+            setHasActed(true)
+            try {
+              await cancelFriendRequest(targetUserId)
+              setState('none')
+              onStateChange?.('none')
+            } catch (err: any) {
+              if (err?.status === 404 || err?.statusCode === 404) {
+                // 404 means request is no longer PENDING — but we don't know why
+                // Ask the backend what the actual state is instead of guessing
+                try {
+                  const { state: realState } = await getFriendshipStatus(targetUserId)
+                  setState(realState)
+                  onStateChange?.(realState)
+                } catch {
+                  // If status check also fails, default to none — safest fallback
+                  setState('none')
+                  onStateChange?.('none')
+                }
+              } else {
+                setError(translateApiError(
+                  err,
+                  err instanceof Error ? err.message : t('common.somethingWrong')
+                ))
+              }
+            } finally {
+              setLoading(false)
+            }
+          }}
           disabled={loading}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           aria-label={isHovered ? t('friendButton.cancelRequest') : t('friendButton.pending')}
         >
-          {loading ? (
-            <Spinner />
-          ) : isHovered ? (
-            <XIcon />
-          ) : (
-            <ClockIcon />
-          )}
-
-          {isHovered
-            ? t('friendButton.cancelRequest')
-            : t('friendButton.pending')}
+          {loading ? <Spinner /> : isHovered ? <XIcon /> : <ClockIcon />}
+          {isHovered ? t('friendButton.cancelRequest') : t('friendButton.pending')}
         </Button>
 
-        {error && <p className="text-xs text-pink-600">{error}</p>}
+        {error && (
+          <p className="absolute top-full left-0 mt-1 text-xs text-pink-600 whitespace-nowrap">
+            {error}
+          </p>
+        )}
       </div>
-    );
+    )
   }
 
   if (state === 'pending_received') {
     return (
-      <div className="flex flex-col items-start gap-1">
+      <div className="relative flex flex-col items-start gap-1">
         <div className="flex gap-2">
           <Button
             variant="profileSuccess"
@@ -135,7 +166,9 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
         </div>
 
         {error && (
-          <p className="text-xs text-pink-600">{error}</p>
+          <p className="absolute top-full left-0 mt-1 text-xs text-pink-600 whitespace-nowrap">
+            {error}
+          </p>
         )}
       </div>
     );
@@ -143,7 +176,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   // state === 'friends'
   return (
-    <div className="flex flex-col items-start gap-1">
+    <div className="relative flex flex-col items-start gap-1">
       <Button
         variant="profileSecondary"
         onClick={() => handle(() => removeFriend(targetUserId), 'none')}
@@ -153,13 +186,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
         aria-label={t('friendButton.remove')}
         title={t('friendButton.removeTitle')}
       >
-        {loading ? (
-          <Spinner />
-        ) : isHovered ? (
-          <XIcon />
-        ) : (
-          <CheckIcon />
-        )}
+        {loading ? <Spinner /> : isHovered ? <XIcon /> : <CheckIcon />}
 
         {isHovered
           ? t('friendButton.remove')
@@ -167,7 +194,9 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
       </Button>
 
       {error && (
-        <p className="text-xs text-pink-600">{error}</p>
+        <p className="absolute top-full left-0 mt-1 text-xs text-pink-600 whitespace-nowrap">
+          {error}
+        </p>
       )}
     </div>
   );
