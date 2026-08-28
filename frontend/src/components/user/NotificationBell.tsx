@@ -6,10 +6,10 @@ import { respondToFriendRequest } from '../../api/friends';
 import {
   formatNotificationTime,
   getNotificationActionState,
-  getNotificationText,
   notificationIcon,
 } from '@/lib/notification-display'
-import { goToProfile } from '@/lib/profile-navigation'
+import { navigateToNotification } from '@/lib/profile-navigation'
+import { NotificationMessage } from '@/components/user/NotificationMessage'
 import { BellIcon, NotificationsSkeleton} from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 import { useLocation } from 'react-router-dom'
@@ -53,47 +53,10 @@ export function NotificationBell() {
   }, [open]);
 
   async function handleNotificationClick(notif: Notification) {
-    // Mark as read first
     if (!notif.isRead) await markRead(notif.id);
 
-    // Navigate to the relevant page based on type
-    switch (notif.type) {
-      case 'FRIEND_REQUEST':
-        goToProfile(navigate, notif.actor?.username);
-        setOpen(false);
-        break;
-
-      case 'FRIEND_ACCEPTED':
-        goToProfile(navigate, notif.actor?.username);
-        setOpen(false);
-        break;
-
-      case 'FOLLOWED':
-        goToProfile(navigate, notif.actor?.username);
-        setOpen(false);
-        break;
-
-      case 'MESSAGE':
-        if (notif.actor?.username) {
-          navigate(`/chat/${encodeURIComponent(notif.actor.username)}`)
-        }
-        setOpen(false);
-        break;
-
-      case 'COMMENT':
-      case 'LIKE':
-        if (notif.refId) navigate(`/articles/${notif.refId}`);
-        setOpen(false);
-        break;
-
-      case 'CONTENT_REMOVED':
-        navigate('/profile');
-        setOpen(false);
-        break;
-
-      default:
-        break;
-    }
+    navigateToNotification(navigate, notif)
+    setOpen(false)
   }
 
   // ── Race condition fix ────────────────────────────────────
@@ -367,14 +330,10 @@ function NotificationItem({
 
           <div className="flex-1 min-w-0">
             <p className="text-sm text-gray-800">
-              <span className="font-medium">
-                {notif.actor?.displayName || notif.actor?.username || t('notification.someone')}
-              </span>{' '}
-              {resolvedState === 'accepted'
-              ? t('notification.types.nowFriends')
-              : resolvedState === 'declined'
-                ? t('notification.types.friendRequestDeclined')
-                : getNotificationText(t, notif)}
+              <NotificationMessage
+                notif={notif}
+                actionResult={actionResult}
+              />
             </p>
 
             <p className={`text-xs mt-0.5 ${
