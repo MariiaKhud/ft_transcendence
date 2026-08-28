@@ -25,6 +25,22 @@ interface FriendButtonProps {
   onStateChange?: (newState: FriendshipState) => void
 }
 
+function FriendButtonError({ error }: { error: string | null }) {
+  if (!error) return null
+
+  return (
+    <p className="absolute
+                  top-full
+                  left-0
+                  mt-1
+                  text-xs
+                  text-pink-600
+                  whitespace-nowrap">
+      {error}
+    </p>
+  )
+}
+
 export function FriendButton({ targetUserId, initialState, onStateChange }: FriendButtonProps) {
   const { t } = useTranslation();
   const { currentUser } = useAuth();
@@ -76,11 +92,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
           {t('friendButton.addFriend')}
         </Button>
 
-        {error && (
-          <p className="absolute top-full left-0 mt-1 text-xs text-pink-600 whitespace-nowrap">
-            {error}
-          </p>
-        )}
+        <FriendButtonError error={error} />
       </div>
     );
   }
@@ -101,7 +113,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
             } catch (err: any) {
               if (err?.status === 404 || err?.statusCode === 404) {
                 // 404 means request is no longer PENDING — but we don't know why
-                // Ask the backend what the actual state is instead of guessing
+                // Ask the backend what the actual state is
                 try {
                   const { state: realState } = await getFriendshipStatus(targetUserId)
                   setState(realState)
@@ -130,11 +142,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
           {isHovered ? t('friendButton.cancelRequest') : t('friendButton.pending')}
         </Button>
 
-        {error && (
-          <p className="absolute top-full left-0 mt-1 text-xs text-pink-600 whitespace-nowrap">
-            {error}
-          </p>
-        )}
+        <FriendButtonError error={error} />
       </div>
     )
   }
@@ -165,11 +173,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
           </Button>
         </div>
 
-        {error && (
-          <p className="absolute top-full left-0 mt-1 text-xs text-pink-600 whitespace-nowrap">
-            {error}
-          </p>
-        )}
+        <FriendButtonError error={error} />
       </div>
     );
   }
@@ -193,11 +197,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
           : t('friendButton.friends')}
       </Button>
 
-      {error && (
-        <p className="absolute top-full left-0 mt-1 text-xs text-pink-600 whitespace-nowrap">
-          {error}
-        </p>
-      )}
+      <FriendButtonError error={error} />
     </div>
   );
 }

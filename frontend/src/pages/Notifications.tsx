@@ -143,6 +143,7 @@ export function Notifications() {
             ))}
           </ul>
 
+          {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-8
                             flex
