@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom' // or your router's link component
 import type { AdminArticle } from '@/types/admin'
 
 type ContentTabProps = {
@@ -34,17 +35,24 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
         {articles.map((article) => (
           <li
             key={article.id}
-            className="flex items-center justify-between rounded-xl border border-slate-200 p-4"
+            className="group flex items-center justify-between rounded-xl border border-slate-200 p-4 hover:border-purple-300 hover:bg-purple-50/40"
           >
-            <div>
-              <p className="font-medium text-slate-900">
-                {article.title}
-              </p>
-              <p className="text-sm text-slate-600">
-                by {article.author?.username} • {article.category}
-              </p>
-            </div>
+            {/* Clickable area */}
+            <Link
+              to={`/articles/${article.id}`}
+              className="flex flex-1 items-center gap-4"
+            >
+              <div className="flex-1">
+                <p className="font-medium text-slate-900 group-hover:text-purple-700">
+                  {article.title}
+                </p>
+                <p className="text-sm text-slate-600">
+                  by {article.author?.username} • {article.category}
+                </p>
+              </div>
+            </Link>
 
+            {/* Remove button (still separate) */}
             {article.isRemoved ? (
               <span className="text-sm text-red-600">
                 {t('admin.removed')}
@@ -52,7 +60,11 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
             ) : (
               <button
                 type="button"
-                onClick={() => startRemove(article)}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  startRemove(article)
+                }}
                 className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
               >
                 {t('admin.remove')}

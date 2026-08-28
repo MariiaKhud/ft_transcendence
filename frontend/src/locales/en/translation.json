@@ -416,7 +416,7 @@
     "unknownDate": "Unknown date"
   },
   "admin": {
-      "title": "Admin dashboard",
+      "title": "Dashboard",
       "forbidden": "You don’t have permission to view this page.",
       "content": "Content",
       "removedContent": "Removed content",
@@ -428,7 +428,14 @@
       "removeArticleReasonHelp": "Provide a reason for removal. The author will be notified.",
       "removeArticleReasonPlaceholder": "e.g. Violates community guidelines: ...",
       "restoreArticle": "Restore article",
-      "restoreComment": "Restore comment"
+      "restoreComment": "Restore comment",
+      "activeArticles": "Active articles",
+      "removedArticles": "Removed articles",
+      "totalComments": "Total comments",
+      "totalUsers": "Total users",
+      "moderators": "Moderators",
+      "admins": "Admins",
+      "refresh": "Refresh"
   },
   "article": {
     "loading": "Loading article...",
