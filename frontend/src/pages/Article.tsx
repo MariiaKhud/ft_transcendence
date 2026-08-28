@@ -271,7 +271,7 @@ export const Article = () => {
 
   if (loading) {
     return (
-      <div className="mx-auto w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-4xl">
         <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md text-center">
           <p className="text-slate-700">{t('article.loading')}</p>
         </div>
@@ -281,7 +281,7 @@ export const Article = () => {
 
   if (error || !article) {
     return (
-      <div className="mx-auto w-full max-w-3xl">
+      <div className="mx-auto w-full max-w-4xl">
         <div className="rounded-2xl border border-red-300/30 bg-red-50/40 p-8 shadow-xl backdrop-blur-md">
           <p className="text-red-700">{error ?? t('article.notFound')}</p>
           <Link to="/" className="mt-4 inline-block text-purple-700 hover:text-purple-900 font-semibold">
@@ -296,7 +296,7 @@ export const Article = () => {
   const avatarUrl = toSafeImageUrl(article.author.avatarUrl)
 
   return (
-    <article className="mx-auto w-full max-w-3xl space-y-6">
+    <article className="mx-auto w-full max-w-4xl space-y-6">
       <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
         {!isEditing && (
           <div className="flex items-start justify-between gap-4">

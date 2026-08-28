@@ -112,7 +112,7 @@ export function Notifications() {
 
   return (
     <div className="mx-auto
-                    max-w-3xl
+                    max-w-4xl
                     space-y-6">
 
       {/* ── Header ──────────────────────────────────────── */}

@@ -9,6 +9,57 @@ import { NotificationBell } from '@/components/user/NotificationBell'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useSocket } from '@/hooks/useSocket'
 
+const headerButtonClassName = `
+  rounded-full
+  border
+  border-purple-200
+  bg-white/70
+  px-4
+  py-2
+  text-sm
+  font-medium
+  text-purple-700
+  transition-all
+  hover:border-purple-300
+  hover:bg-white
+`
+
+const profileButtonClassName = `
+  inline-flex
+  items-center
+  justify-center
+  rounded-full
+  border
+  border-fuchsia-300/60
+  bg-gradient-to-r
+  from-fuchsia-100
+  to-purple-100
+  px-4
+  py-2
+  text-sm
+  font-semibold
+  text-fuchsia-800
+  shadow-sm
+  transition-all
+  hover:scale-105
+`
+
+const loginButtonClassName = `
+  rounded-full
+  bg-gradient-to-r
+  from-purple-600
+  to-pink-600
+  px-6
+  py-2
+  text-sm
+  font-medium
+  text-white
+  shadow-lg
+  transition-all
+  hover:scale-105
+  hover:shadow-xl
+`
+
 const App = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -50,7 +101,13 @@ const App = () => {
       <header className="relative z-20 border-b border-white/20 bg-white/10 backdrop-blur-md">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-6 py-4">
           {/* App name link. */}
-          <Link to="/" className="shrink-0 text-xl font-semibold tracking-tight text-slate-900">
+          <Link to="/" className="flex
+                                  shrink-0
+                                  items-center
+                                  gap-2
+                                  text-xl
+                                  font-semibold">
+            <img src="/icons/logo.svg" alt="Codamium" className="h-8 w-8" />
             Codamium
           </Link>
 
@@ -72,33 +129,31 @@ const App = () => {
             {currentUser ? (
               <>
                 <NotificationBell />
-                <Link
-                  to="/notifications"
-                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
-                >
-                  {t('notification.title')}
-                </Link>
+
                 {/* Leaderboard */}
                 <Link
                   to="/leaderboard"
-                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+                  className={headerButtonClassName}
                 >
                   {t('nav.leaderboard')}
                 </Link>
+
                 {/* Write a new article. */}
                 <Link
                   to="/articles/new"
-                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+                  className={headerButtonClassName}
                 >
                   {t('nav.write')}
                 </Link>
+
                 {/* Open your profile. */}
                 <Link
                   to={`/profile/${currentUser.username}`}
-                  className="inline-flex items-center justify-center rounded-full border border-fuchsia-300/60 bg-gradient-to-r from-fuchsia-100 to-purple-100 px-4 py-2 text-sm font-semibold text-fuchsia-800 shadow-sm transition-all hover:scale-105"
+                  className={profileButtonClassName}
                 >
                   {(currentUser.displayName ?? currentUser.username).slice(0, 6)}
                 </Link>
+
                 {/* Log out. */}
                 <button
                   type="button"
@@ -111,7 +166,7 @@ const App = () => {
                       }
                     })()
                   }}
-                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+                  className={headerButtonClassName}
                 >
                   {t('nav.logout')}
                 </button>
@@ -121,14 +176,14 @@ const App = () => {
               {/* If not logged in, show login button. */}
               <Link
                   to="/leaderboard"
-                  className="rounded-full border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+                  className={headerButtonClassName}
                 >
                   {t('nav.leaderboard')}
               </Link>
 
               <Link
                 to="/login"
-                className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-2 text-sm font-medium text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl"
+                className={loginButtonClassName}
               >
                 {t('nav.login')}
               </Link>

@@ -12,6 +12,7 @@ import {
 import { goToProfile } from '@/lib/profile-navigation'
 import { BellIcon, NotificationsSkeleton} from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
+import { useLocation } from 'react-router-dom'
 
 export function NotificationBell() {
   const { t } = useTranslation();
@@ -28,6 +29,8 @@ export function NotificationBell() {
     removeNotification,
     refetch,
   } = useNotifications();
+  const location = useLocation();
+  const isOnNotificationsPage = location.pathname === '/notifications';
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -140,7 +143,10 @@ export function NotificationBell() {
 
       {/* ── Bell button ─────────────────────────────────── */}
       <button
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          if (isOnNotificationsPage) return
+          setOpen((prev) => !prev)
+        }}
         className="relative
                    p-2
                    text-gray-500
@@ -180,7 +186,7 @@ export function NotificationBell() {
       </button>
 
       {/* ── Dropdown ────────────────────────────────────── */}
-      {open && (
+      {open && !isOnNotificationsPage && (
         <div
           role="dialog"
           aria-label={t('notification.title')}
