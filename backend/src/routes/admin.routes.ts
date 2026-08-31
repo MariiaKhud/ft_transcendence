@@ -233,6 +233,79 @@ const removeArticleHandler = async (req: Request, res: Response) => {
   })
 }
 
+const restoreArticleHandler = async ( req: Request, res: Response, ) => {
+  const { id } = req.params
+
+  const article = await prisma.article.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      isRemoved: true,
+    },
+  })
+
+  if (!article) {
+    res.status(404).json({
+      success: false,
+      error: 'Article not found',
+    })
+    return
+  }
+
+  const restoredArticle = await prisma.article.update({
+    where: { id },
+    data: {
+      isRemoved: false,
+      removedReason: null,
+      removedAt: null,
+    },
+    select: {
+      id: true,
+      title: true,
+      isRemoved: true,
+      removedReason: true,
+      removedAt: true,
+    },
+  })
+
+  res.status(200).json({
+    success: true,
+    data: restoredArticle,
+  })
+}
+
+const getAdminCommentsHandler = async ( req: Request, res: Response,) => {
+  const comments = await prisma.comment.findMany({
+    where: {
+      isRemoved: true,
+    },
+    select: {
+      id: true,
+      content: true,
+      isRemoved: true,
+      removedReason: true,
+      removedAt: true,
+      createdAt: true,
+      author: {
+        select: {
+          id: true,
+          username: true,
+          displayName: true,
+          avatarUrl: true,
+        },
+      },
+    },
+    orderBy: {
+      removedAt: 'desc',
+    },
+  })
+
+  res.status(200).json({
+    success: true,
+    data: comments,
+  })
+}
 
 const removeCommentHandler = async (req: Request, res: Response) => {
   const { id } = req.params
@@ -310,6 +383,8 @@ router.get('/users', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(get
 router.patch('/users/:id/role', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(changeUserRoleHandler),)
 router.get('/articles', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(getAdminArticlesHandler),)
 router.patch('/articles/:id/remove', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(removeArticleHandler),)
+router.patch('/articles/:id/restore', authMiddleware,requireRole('MODERATOR'),handleAsyncErrors(restoreArticleHandler),)
+router.get('/comments', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(getAdminCommentsHandler),)
 router.patch('/comments/:id/remove', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(removeCommentHandler),)
 
 export default router

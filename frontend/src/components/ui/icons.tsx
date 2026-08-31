@@ -213,3 +213,69 @@ export function BackIcon() {
     </svg>
   )
 }
+
+export function LeaderboardIcon() {
+  return (
+    <svg
+      className="w-6 h-6"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      {/* Cup bowl – narrower, same proportions */}
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 3h12v7c0 3.05-2.46 5.5-5.5 5.5h-1C8.46 15.5 6 13.05 6 10V3z"
+      />
+      {/* Left handle – scaled with cup */}
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M6 6H4a3 3 0 0 0 0 6h2"
+      />
+      {/* Right handle – scaled with cup */}
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M18 6h2a3 3 0 0 1 0 6h-2"
+      />
+      {/* Stem */}
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M12 15.5v5.5"
+      />
+      {/* Base – slightly inset from edges */}
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9.5 21h5"
+      />
+    </svg>
+  )
+}
+
+export function RefreshIcon() {
+  return (
+    <svg
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+      />
+    </svg>
+  )
+}

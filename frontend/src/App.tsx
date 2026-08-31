@@ -6,6 +6,7 @@ import { Footer } from '@/components/Footer'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
 import { NotificationBell } from '@/components/user/NotificationBell'
+import { LeaderboardButton } from '@/components/user/LeaderboardButton'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useSocket } from '@/hooks/useSocket'
 
@@ -129,15 +130,7 @@ const App = () => {
             {currentUser ? (
               <>
                 <NotificationBell />
-
-                {/* Leaderboard */}
-                <Link
-                  to="/leaderboard"
-                  className={headerButtonClassName}
-                >
-                  {t('nav.leaderboard')}
-                </Link>
-
+                <LeaderboardButton />
                 {/* Write a new article. */}
                 <Link
                   to="/articles/new"
