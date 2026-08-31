@@ -415,6 +415,28 @@
     "likes_other": "{{count}} likes",
     "unknownDate": "Unknown date"
   },
+  "admin": {
+      "title": "Dashboard",
+      "forbidden": "You don’t have permission to view this page.",
+      "content": "Content",
+      "removedContent": "Removed content",
+      "users": "Users",
+      "allContent": "All content",
+      "removed": "Removed",
+      "remove": "Remove",
+      "removeArticle": "Remove article",
+      "removeArticleReasonHelp": "Provide a reason for removal. The author will be notified.",
+      "removeArticleReasonPlaceholder": "e.g. Violates community guidelines: ...",
+      "restoreArticle": "Restore article",
+      "restoreComment": "Restore comment",
+      "activeArticles": "Active articles",
+      "removedArticles": "Removed articles",
+      "totalComments": "Total comments",
+      "totalUsers": "Total users",
+      "moderators": "Moderators",
+      "admins": "Admins",
+      "refresh": "Refresh"
+  },
   "article": {
     "loading": "Loading article...",
     "notFound": "Article not found",
