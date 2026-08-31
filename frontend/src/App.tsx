@@ -131,6 +131,7 @@ const App = () => {
               <>
                 <NotificationBell />
                 <LeaderboardButton />
+
                 {/* Write a new article. */}
                 <Link
                   to="/articles/new"
@@ -166,14 +167,9 @@ const App = () => {
               </>
             ) : hasRestoredSession ? (
               <>
-              {/* If not logged in, show login button. */}
-              <Link
-                  to="/leaderboard"
-                  className={headerButtonClassName}
-                >
-                  {t('nav.leaderboard')}
-              </Link>
+              <LeaderboardButton />
 
+              {/* If not logged in, show login button. */}
               <Link
                 to="/login"
                 className={loginButtonClassName}

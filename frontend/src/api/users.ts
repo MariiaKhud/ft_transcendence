@@ -36,6 +36,8 @@ export const getPublicProfile = async (username: string) => {
     username: data.username,
     avatarUrl: data.avatarUrl,
     bio: data.bio,
+    isOnline: data.isOnline,
+    lastSeenAt: data.lastSeenAt,
     followerCount: data.followerCount,
     followingCount: data.followingCount,
     articleCount: data.articleCount,
