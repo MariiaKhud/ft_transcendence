@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import { AppError } from '../middleware/error.middleware.js'
 import { ErrorCode } from './error-codes.js'
@@ -28,9 +29,27 @@ const getJwtSecret = () => {
   return jwtSecret
 }
 
-// Create token with user id, role, and CSRF token.
+const revokedJtis = new Set<string>()
+
+export const revokeAuthTokenJti = (jti: string) => {
+  revokedJtis.add(jti)
+}
+
+export const revokeAuthToken = (token: string) => {
+  try {
+    const decoded = jwt.decode(token)
+    if (isRecord(decoded) && typeof decoded.jti === 'string') {
+      revokeAuthTokenJti(decoded.jti)
+    }
+  } catch {
+    // Ignore malformed tokens during logout cleanup.
+  }
+}
+
+// Create token with user id, role, CSRF token, and unique revocation id.
 export const signAuthToken = (userId: string, role: AuthRole, csrfToken: string) => {
-  return jwt.sign({ userId, role, csrfToken }, getJwtSecret(), { expiresIn: '7d' })
+  const jti = randomUUID()
+  return jwt.sign({ userId, role, csrfToken, jti }, getJwtSecret(), { expiresIn: '7d' })
 }
 
 // Verify token and return safe payload.
@@ -42,8 +61,8 @@ export const verifyAuthToken = (token: string) => {
       throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
     }
 
-    const { userId, role, csrfToken } = decoded
-    if (typeof userId !== 'string' || typeof csrfToken !== 'string') {
+    const { userId, role, csrfToken, jti } = decoded
+    if (typeof userId !== 'string' || typeof csrfToken !== 'string' || typeof jti !== 'string') {
       throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
     }
 
@@ -51,10 +70,15 @@ export const verifyAuthToken = (token: string) => {
       throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
     }
 
+    if (revokedJtis.has(jti)) {
+      throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
+    }
+
     return {
       userId,
       role,
       csrfToken,
+      jti,
     }
   } catch (error) {
     if (error instanceof AppError) {

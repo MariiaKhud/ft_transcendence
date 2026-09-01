@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 import { ErrorCode } from '../lib/error-codes.js'
-import { signAuthToken, verifyAuthToken } from '../lib/auth.utils.js'
+import { revokeAuthTokenJti, signAuthToken, verifyAuthToken } from '../lib/auth.utils.js'
 import type { NormalizedOAuthUser } from '../auth/oauth.passport.js'
 import { initializeOAuthStrategy } from '../auth/oauth.passport.js'
 import { getOAuthConfig, type OAuthProvider, type OAuthProviderConfig } from '../auth/oauth.config.js'
@@ -329,8 +329,9 @@ const loginHandler = async (req: Request, res: Response) => {
 const logoutHandler = async (req: Request, res: Response) => {
   try {
     const token = readAuthTokenFromCookie(req)
-    const { csrfToken } = verifyAuthToken(token)
+    const { csrfToken, jti } = verifyAuthToken(token)
     validateCsrfToken(req, csrfToken)
+    revokeAuthTokenJti(jti)
   } catch (error) {
     if (!(error instanceof AppError)) {
       throw error
