@@ -42,7 +42,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
 }
 
-const getOAuthCallbackErrorCode = (error: unknown) => {
+export const getOAuthCallbackErrorCode = (error: unknown) => {
   if (!isRecord(error)) {
     return OAUTH_CALLBACK_INVALID_CODE
   }
@@ -56,34 +56,54 @@ const getOAuthCallbackErrorCode = (error: unknown) => {
   const errorCode = typeof oauthDataRecord?.error === 'string' ? oauthDataRecord.error.toLowerCase() : ''
   const errorName = typeof error.name === 'string' ? error.name : ''
   const errorMessage = typeof error.message === 'string' ? error.message.toLowerCase() : ''
-  const combined = `${errorDescription} ${errorCode} ${errorMessage} ${oauthDataText}`
+  const combined = `${errorDescription} ${errorCode} ${errorMessage} ${oauthDataText}`.toLowerCase()
+
+  if (
+    combined.includes('redirect_uri') ||
+    combined.includes('redirect uri') ||
+    combined.includes('redirection uri') ||
+    combined.includes('uri mismatch') ||
+    combined.includes('callback url mismatch') ||
+    combined.includes('redirect url mismatch') ||
+    combined.includes('does not match the redirection uri')
+  ) {
+    return OAUTH_REDIRECT_URI_MISMATCH_CODE
+  }
 
   if (errorName === 'TokenError') {
     if (
-      combined.includes('redirect_uri') ||
-      combined.includes('redirect uri') ||
-      combined.includes('redirection uri')
+      combined.includes('invalid_client') ||
+      combined.includes('invalid client') ||
+      combined.includes('client_id') ||
+      combined.includes('client id') ||
+      combined.includes('unauthorized client') ||
+      combined.includes('authorization code was used') ||
+      combined.includes('code has already been used') ||
+      combined.includes('failed to obtain access token') ||
+      combined.includes('access token') ||
+      combined.includes('invalid_grant') ||
+      combined.includes('invalid grant') ||
+      combined.includes('token exchange failed')
     ) {
-      return OAUTH_REDIRECT_URI_MISMATCH_CODE
+      return OAUTH_ACCESS_TOKEN_FAILED_CODE
     }
 
     return OAUTH_ACCESS_TOKEN_FAILED_CODE
   }
 
   if (
-    combined.includes('redirect_uri') ||
-    combined.includes('redirect uri') ||
-    combined.includes('redirection uri') ||
-    combined.includes('does not match the redirection uri')
-  ) {
-    return OAUTH_REDIRECT_URI_MISMATCH_CODE
-  }
-
-  if (
+    combined.includes('invalid_client') ||
+    combined.includes('invalid client') ||
+    combined.includes('client_id') ||
+    combined.includes('client id') ||
+    combined.includes('unauthorized client') ||
+    combined.includes('authorization code was used') ||
+    combined.includes('code has already been used') ||
     combined.includes('failed to obtain access token') ||
     combined.includes('access token') ||
     combined.includes('invalid_grant') ||
-    combined.includes('invalid grant')
+    combined.includes('invalid grant') ||
+    combined.includes('token exchange failed')
   ) {
     return OAUTH_ACCESS_TOKEN_FAILED_CODE
   }
