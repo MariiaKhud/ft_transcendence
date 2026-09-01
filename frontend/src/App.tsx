@@ -7,7 +7,6 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
 import { NotificationBell } from '@/components/user/NotificationBell'
 import { LeaderboardButton } from '@/components/user/LeaderboardButton'
-import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useSocket } from '@/hooks/useSocket'
 
 const headerButtonClassName = `
@@ -68,7 +67,6 @@ const App = () => {
   // Get user info and logout function.
   const { currentUser, hasRestoredSession, isLoading, logout } = useAuth({ restoreOnMount: true })
 
-  useOnlineStatus() // can remove ping logic later, socket handles it
   useSocket()
 
   return (
@@ -131,6 +129,7 @@ const App = () => {
               <>
                 <NotificationBell />
                 <LeaderboardButton />
+
                 {/* Write a new article. */}
                 <Link
                   to="/articles/new"
@@ -166,14 +165,9 @@ const App = () => {
               </>
             ) : hasRestoredSession ? (
               <>
-              {/* If not logged in, show login button. */}
-              <Link
-                  to="/leaderboard"
-                  className={headerButtonClassName}
-                >
-                  {t('nav.leaderboard')}
-              </Link>
+              <LeaderboardButton />
 
+              {/* If not logged in, show login button. */}
               <Link
                 to="/login"
                 className={loginButtonClassName}

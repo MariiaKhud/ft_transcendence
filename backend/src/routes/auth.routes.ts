@@ -23,6 +23,7 @@ import {
   validateLoginInput,
   validateRegisterInput,
 } from './auth.routes-helpers.js'
+import { forceOffline } from '../socket/socket.server.js'
 
 // Router for all auth endpoints.
 const router = Router()
@@ -327,11 +328,13 @@ const loginHandler = async (req: Request, res: Response) => {
 
 // Log out by clearing cookies after CSRF check.
 const logoutHandler = async (req: Request, res: Response) => {
+  let userId: string | null = null
   try {
     const token = readAuthTokenFromCookie(req)
-    const { csrfToken, jti } = verifyAuthToken(token)
-    validateCsrfToken(req, csrfToken)
-    revokeAuthTokenJti(jti)
+    const decoded = verifyAuthToken(token)
+    validateCsrfToken(req, decoded.csrfToken)
+    userId = decoded.userId
+    revokeAuthTokenJti(decoded.jti)
   } catch (error) {
     if (!(error instanceof AppError)) {
       throw error
@@ -339,6 +342,11 @@ const logoutHandler = async (req: Request, res: Response) => {
   }
 
   clearAuthCookies(res)
+
+  // Mark offline immediately — don't wait for the 30s grace period
+  if (userId) {
+    await forceOffline(userId)
+  }
 
   res.status(200).json({ success: true, message: 'Logged out successfully' })
 }
