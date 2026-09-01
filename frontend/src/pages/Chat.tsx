@@ -31,7 +31,6 @@ export function Chat() {
       fallbackMessage: 'Failed to load user',
     })
       .then((res) => {
-        console.log('[chat] profile fetch result:', res.data)
         setOtherUser(res.data ?? null)
         setOtherUserOnline(res.data?.isOnline ?? false)
       })
@@ -46,26 +45,10 @@ export function Chat() {
     const socket = getSocket()
 
     function onOnline(data: { userId: string }) {
-      console.log(
-        '[chat] USER ONLINE EVENT',
-        {
-          eventUserId: data.userId,
-          expectedUserId: otherUserId,
-          time: new Date().toISOString(),
-        }
-      )
       if (data.userId === otherUserId) setOtherUserOnline(true)
     }
 
     function onOffline(data: { userId: string }) {
-      console.log(
-        '[chat] USER OFFLINE EVENT',
-        {
-          eventUserId: data.userId,
-          expectedUserId: otherUserId,
-          time: new Date().toISOString(),
-        }
-      )
       if (data.userId === otherUserId) setOtherUserOnline(false)
     }
 

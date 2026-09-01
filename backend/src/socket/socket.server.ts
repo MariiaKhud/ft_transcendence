@@ -52,13 +52,6 @@ export function initSocketServer(httpServer: HttpServer) {
   io.on('connection', async (socket) => {
     const userId = socket.data.userId as string
 
-    console.log(
-      `[socket] CONNECTED`,
-      'userId:', userId,
-      'socketId:', socket.id,
-      'time:', new Date().toISOString()
-    )
-
     // Cancel grace period if user reconnects within 30s
     const existingTimer = offlineTimers.get(userId)
     if (existingTimer) {
@@ -68,7 +61,6 @@ export function initSocketServer(httpServer: HttpServer) {
 
     // Each user joins their personal room (their userId)
     await socket.join(userId)
-    console.log(`[socket] ${userId} joined room ${userId}`)
 
     // Mark online in DB
     await prisma.user.update({
@@ -98,57 +90,20 @@ export function initSocketServer(httpServer: HttpServer) {
     registerChatHandlers(io, socket)
 
     // ── Disconnect with grace period ───────────────────────────
-    // socket.on('disconnect', () => {
-    socket.on('disconnect', (reason) => {
-      console.log(
-        `[socket] DISCONNECTED`,
-        'userId:', userId,
-        'socketId:', socket.id,
-        'reason:', reason,
-        'time:', new Date().toISOString()
-      )
-      console.log(
-        `[socket] STARTING GRACE PERIOD`,
-        'userId:', userId,
-        'duration:', GRACE_MS
-      )
+    socket.on('disconnect', () => {
 
       const timer = setTimeout(async () => {
-        console.log(
-          `[socket] GRACE PERIOD EXPIRED`,
-          'userId:', userId,
-          'time:', new Date().toISOString()
-        )
-
         offlineTimers.delete(userId)
 
         // Only mark offline if no other tabs are open
         const activeSockets = await io.in(userId).fetchSockets()
 
-        console.log(
-          `[socket] ACTIVE SOCKETS AFTER GRACE`,
-          'userId:', userId,
-          'count:', activeSockets.length
-        )
-
-        // if (activeSockets.length > 0) return
-        if (activeSockets.length > 0) {
-          console.log(
-            `[socket] STILL CONNECTED - keeping user online`,
-            'userId:', userId
-          )
-          return
-        }
+        if (activeSockets.length > 0) return
 
         await prisma.user.update({
           where: { id: userId },
           data: { isOnline: false, lastSeenAt: new Date() },
         })
-
-        console.log(
-          `[socket] USER MARKED OFFLINE`,
-          'userId:', userId
-        )
 
         friendIds.forEach((friendId) => {
           io.to(friendId).emit('user:offline', { userId })

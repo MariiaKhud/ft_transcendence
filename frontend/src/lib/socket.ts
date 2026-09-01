@@ -17,24 +17,10 @@ export function getSocket(): Socket {
 
 export function connectSocket() {
   const socket = getSocket()
-
-  console.log(
-    '[socket client] connectSocket()',
-    'connected:', socket.connected,
-    'id:', socket.id
-  )
-
   socket.connect()
 }
 
 export function disconnectSocket() {
   const socket = getSocket()
-
-  console.log(
-    '[socket client] disconnectSocket()',
-    'connected:', socket.connected,
-    'id:', socket.id
-  )
-
   socket.disconnect()
 }

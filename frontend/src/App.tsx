@@ -7,7 +7,6 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
 import { NotificationBell } from '@/components/user/NotificationBell'
 import { LeaderboardButton } from '@/components/user/LeaderboardButton'
-import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useSocket } from '@/hooks/useSocket'
 
 const headerButtonClassName = `
@@ -68,7 +67,6 @@ const App = () => {
   // Get user info and logout function.
   const { currentUser, hasRestoredSession, isLoading, logout } = useAuth({ restoreOnMount: true })
 
-  useOnlineStatus() // can remove ping logic later, socket handles it
   useSocket()
 
   return (
