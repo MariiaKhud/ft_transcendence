@@ -2,6 +2,10 @@ import { lazy } from 'react'
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import App from '@/App'
 import { RouteErrorBoundary } from '@/components/RouteErrorBoundary'
+// Imported statically (not lazy) because RouteErrorBoundary also imports it
+// statically so the 404 page still renders if lazy-loading itself fails;
+// Vite can't split it into its own chunk either way, so lazy() here bought nothing.
+import { NotFound } from '@/pages/NotFound'
 
 // Lazily load each page so its code ships in its own chunk instead of the main bundle.
 const Home = lazy(() => import('@/pages/Home').then((m) => ({ default: m.Home })))
@@ -15,7 +19,6 @@ const CreateArticle = lazy(() => import('@/pages/CreateArticle').then((m) => ({ 
 const Leaderboard = lazy(() => import('@/pages/Leaderboard').then((m) => ({ default: m.Leaderboard })))
 const PrivacyPolicy = lazy(() => import('@/pages/PrivacyPolicy').then((m) => ({ default: m.PrivacyPolicy })))
 const TermsOfService = lazy(() => import('@/pages/TermsOfService').then((m) => ({ default: m.TermsOfService })))
-const NotFound = lazy(() => import('@/pages/NotFound').then((m) => ({ default: m.NotFound })))
 const Friends = lazy(() => import('@/pages/Friends').then((m) => ({ default: m.Friends })))
 const Notifications = lazy(() => import('@/pages/Notifications').then((m) => ({ default: m.Notifications })))
 const Chat = lazy(() => import('@/pages/Chat').then((m) => ({ default: m.Chat })))

@@ -29,4 +29,20 @@ export default defineConfig({
       '@shared': path.resolve(__dirname, '../shared'),
     },
   },
+  build: {
+    // The vendor chunk (React, react-router-dom, socket.io-client, etc.) sits
+    // just over the default 500kB warning threshold; splitting it out was the
+    // point (better caching), so raise the limit instead of chasing the warning.
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        // Keep third-party deps (node_modules) in their own chunk, separate
+        // from app code, so a code change doesn't bust the cache for
+        // libraries that didn't actually change.
+        manualChunks(id) {
+          if (id.includes('node_modules')) return 'vendor'
+        },
+      },
+    },
+  },
 })
