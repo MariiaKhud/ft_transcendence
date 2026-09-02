@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { translateApiError } from '@/lib/api-errors'
 import { useStore } from '@/store/store'
 import { StatCard } from '@/components/admin/StatCard'
-import { DashboardRefreshButton } from '@/components/user/DashboardRefreshButton'
+import { DashboardRefreshButton } from '@/components/admin/DashboardRefreshButton'
 import type { UserRole } from '@shared/types/user'
 
 import {
@@ -23,10 +23,11 @@ import type {
 } from '@/types/admin'
 
 import { UsersTab } from '@/components/admin/UsersTab'
-import { RemovedContentTab } from '@/components/admin/RemovedContentTab'
+import { RemovedArticlesTab } from '@/components/admin/RemovedArticlesTab'
+import { RemovedCommentsTab } from '@/components/admin/RemovedCommentsTab'
 import { ContentTab } from '@/components/admin/ContentTab'
 
-type Tab = 'content' | 'removed' | 'users'
+type Tab = 'content' | 'removed_articles' | 'removed_comments' | 'users'
 
 export function AdminDashboard() {
   const { t } = useTranslation()
@@ -198,9 +199,9 @@ export function AdminDashboard() {
               value={removedArticles.length}
             />
 
-            {/* Comments */}
+            {/* Removed comments */}
             <StatCard
-              label={t('admin.totalComments')}
+              label={t('admin.removedComments')}
               value={comments.length}
             />
 
@@ -245,14 +246,28 @@ export function AdminDashboard() {
 
         <button
           type="button"
-          onClick={() => setActiveTab('removed')}
+          onClick={() => setActiveTab('removed_articles')}
           className={`rounded-t-xl px-4 py-3 text-sm font-semibold ${
-            activeTab === 'removed'
+            activeTab === 'removed_articles'
               ? 'bg-purple-600 text-white'
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          {t('admin.removedContent')}
+          {/* TO DO updated */}
+          {t('admin.removedArticles')} 
+        </button>
+
+        <button
+        type="button"
+          onClick={() => setActiveTab('removed_comments')}
+          className={`rounded-t-xl px-4 py-3 text-sm font-semibold ${
+            activeTab === 'removed_comments'
+              ? 'bg-purple-600 text-white'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          {/* TO DO updated */}
+          {t('admin.removedComments')} 
         </button>
 
         {isAdmin && (
@@ -289,11 +304,16 @@ export function AdminDashboard() {
         />
       )}
 
-      {!isLoading && !error && activeTab === 'removed' && (
-        <RemovedContentTab
+      {!isLoading && !error && activeTab === 'removed_articles' && (
+        <RemovedArticlesTab
           articles={removedArticles}
-          comments={comments}
           onRestoreArticle={handleRestoreArticle}
+        />
+      )}
+
+      {!isLoading && !error && activeTab === 'removed_comments' && (
+        <RemovedCommentsTab
+          comments={comments}
           onRestoreComment={handleRestoreComment}
         />
       )}

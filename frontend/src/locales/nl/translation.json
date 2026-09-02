@@ -415,6 +415,27 @@
     "likes_other": "{{count}} likes",
     "unknownDate": "Onbekende datum"
   },
+  "admin": {
+    "title": "Dashboard",
+    "forbidden": "Je hebt geen toestemming om deze pagina te bekijken.",
+    "content": "Inhoud",
+    "users": "Gebruikers",
+    "allContent": "Alle inhoud",
+    "removed": "Verwijderd",
+    "remove": "Verwijderen",
+    "removeArticle": "Artikel verwijderen",
+    "removeArticleReasonHelp": "Geef een reden voor verwijdering op. De auteur wordt op de hoogte gesteld.",
+    "removeArticleReasonPlaceholder": "bijv. Schendt communityrichtlijnen: ...",
+    "restoreArticle": "Artikel herstellen",
+    "restoreComment": "Reactie herstellen",
+    "activeArticles": "Actieve artikelen",
+    "removedArticles": "Verwijderde artikelen",
+    "removedComments": "Verwijderde reacties",
+    "totalUsers": "Totaal aantal gebruikers",
+    "moderators": "Moderatoren",
+    "admins": "Beheerders",
+    "refresh": "Vernieuwen"
+  },
   "article": {
     "loading": "Artikel laden...",
     "notFound": "Artikel niet gevonden",

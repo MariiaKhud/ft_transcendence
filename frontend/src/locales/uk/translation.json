@@ -419,6 +419,27 @@
     "likes_other": "{{count}} вподобання",
     "unknownDate": "Невідома дата"
   },
+  "admin": {
+    "title": "Панель керування",
+    "forbidden": "У вас немає дозволу переглядати цю сторінку.",
+    "content": "Контент",
+    "users": "Користувачі",
+    "allContent": "Весь контент",
+    "removed": "Видалені",
+    "remove": "Видалити",
+    "removeArticle": "Видалити статтю",
+    "removeArticleReasonHelp": "Вкажіть причину видалення. Автора буде повідомлено.",
+    "removeArticleReasonPlaceholder": "напр. Порушує правила спільноти: ...",
+    "restoreArticle": "Відновити статтю",
+    "restoreComment": "Відновити коментар",
+    "activeArticles": "Активні статті",
+    "removedArticles": "Видалені статті",
+    "removedComments": "Видалені коментарі",
+    "totalUsers": "Всього користувачів",
+    "moderators": "Модератори",
+    "admins": "Адміністратори",
+    "refresh": "Оновити"
+  },
   "article": {
     "loading": "Завантаження статті...",
     "notFound": "Статтю не знайдено",

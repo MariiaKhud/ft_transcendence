@@ -35,7 +35,7 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
         {articles.map((article) => (
           <li
             key={article.id}
-            className="group flex items-center justify-between rounded-xl border border-slate-200 p-4 hover:border-purple-300 hover:bg-purple-50/40"
+            className="group flex items-center justify-between rounded-xl border border-slate-200 p-4 bg-white/60 hover:border-purple-300 hover:bg-purple-50/40"
           >
             {/* Clickable area */}
             <Link
