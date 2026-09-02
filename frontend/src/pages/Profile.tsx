@@ -279,16 +279,6 @@ export const Profile = () => {
                 variant="profile"
                 type="button"
                 onClick={() => {
-                  navigate('/settings/profile')
-                }}
-              >
-                {t('profile.editProfile')}
-              </Button>
-
-              <Button
-                variant="profile"
-                type="button"
-                onClick={() => {
                   navigate('/friends')
                 }}
               >

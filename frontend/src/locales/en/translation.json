@@ -137,6 +137,8 @@
     "leaderboard": "Leaderboard",
     "write": "Write",
     "login": "Login",
+    "profile": "Profile",
+    "settings": "Edit profile",
     "logout": "Logout",
     "checkingSession": "Checking session..."
   },
@@ -384,7 +386,6 @@
     "unableToLoad": "Unable to load profile",
     "unavailable": "This profile does not exist or is currently unavailable.",
     "usernameMissing": "Profile username is missing",
-    "editProfile": "Edit Profile",
     "friends": "My Friends",
     "noBio": "No bio yet. This user has not added a profile bio.",
     "statArticles": "Articles",

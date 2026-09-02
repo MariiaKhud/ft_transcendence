@@ -1,5 +1,5 @@
 import { Suspense } from 'react'
-import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { Link, Outlet } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { Footer } from '@/components/Footer'
@@ -7,6 +7,7 @@ import { LanguageSwitcher } from '@/components/LanguageSwitcher'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
 import { NotificationBell } from '@/components/user/NotificationBell'
 import { LeaderboardButton } from '@/components/user/LeaderboardButton'
+import { UserMenu } from '@/components/user/UserMenu'
 import { useSocket } from '@/hooks/useSocket'
 
 const headerButtonClassName = `
@@ -22,26 +23,6 @@ const headerButtonClassName = `
   transition-all
   hover:border-purple-300
   hover:bg-white
-`
-
-const profileButtonClassName = `
-  inline-flex
-  items-center
-  justify-center
-  rounded-full
-  border
-  border-fuchsia-300/60
-  bg-gradient-to-r
-  from-fuchsia-100
-  to-purple-100
-  px-4
-  py-2
-  text-sm
-  font-semibold
-  text-fuchsia-800
-  shadow-sm
-  transition-all
-  hover:scale-105
 `
 
 const loginButtonClassName = `
@@ -62,9 +43,7 @@ const loginButtonClassName = `
 
 const App = () => {
   const { t } = useTranslation()
-  const navigate = useNavigate()
 
-  // Get user info and logout function.
   const { currentUser, hasRestoredSession, isLoading, logout } = useAuth({ restoreOnMount: true })
 
   useSocket()
@@ -138,30 +117,7 @@ const App = () => {
                   {t('nav.write')}
                 </Link>
 
-                {/* Open your profile. */}
-                <Link
-                  to={`/profile/${currentUser.username}`}
-                  className={profileButtonClassName}
-                >
-                  {(currentUser.displayName ?? currentUser.username).slice(0, 6)}
-                </Link>
-
-                {/* Log out. */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    void (async () => {
-                      try {
-                        await logout()
-                      } finally {
-                        navigate('/login', { replace: true })
-                      }
-                    })()
-                  }}
-                  className={headerButtonClassName}
-                >
-                  {t('nav.logout')}
-                </button>
+                <UserMenu currentUser={currentUser} logout={logout} />
               </>
             ) : hasRestoredSession ? (
               <>

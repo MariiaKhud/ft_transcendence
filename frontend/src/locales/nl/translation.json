@@ -137,6 +137,8 @@
     "leaderboard": "Ranglijst",
     "write": "Schrijven",
     "login": "Inloggen",
+    "profile": "Profiel",
+    "settings": "Profiel bewerken",
     "logout": "Uitloggen",
     "checkingSession": "Sessie controleren..."
   },
@@ -384,7 +386,6 @@
     "unableToLoad": "Kan profiel niet laden",
     "unavailable": "Dit profiel bestaat niet of is momenteel niet beschikbaar.",
     "usernameMissing": "Gebruikersnaam van profiel ontbreekt",
-    "editProfile": "Profiel bewerken",
     "friends": "Mijn vrienden",
     "noBio": "Nog geen bio. Deze gebruiker heeft geen profielbio toegevoegd.",
     "statArticles": "Artikelen",
