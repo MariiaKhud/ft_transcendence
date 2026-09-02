@@ -31,6 +31,8 @@ export interface PublicProfile {
   username: string
   avatarUrl: string | null
   bio: string | null
+  isOnline: boolean
+  lastSeenAt: Date | null
   followerCount: number
   followingCount: number
   articleCount: number
@@ -77,6 +79,8 @@ interface PublicProfileUserRecord {
   displayName: string | null
   avatarUrl: string | null
   bio: string | null
+  isOnline: boolean
+  lastSeenAt: Date | null
   level: number
   xp: number
   userBadges: Array<{ badge: PublicBadge }>
@@ -99,6 +103,8 @@ export const publicProfileSelect = {
   displayName: true,
   avatarUrl: true,
   bio: true,
+  isOnline: true,
+  lastSeenAt: true,
   level: true,
   xp: true,
   userBadges: {
@@ -277,6 +283,8 @@ export const mapUserToPublicProfile = (user: PublicProfileUserRecord): PublicPro
     username: user.username,
     avatarUrl: user.avatarUrl,
     bio: user.bio,
+    isOnline: user.isOnline,
+    lastSeenAt: user.lastSeenAt,
     followerCount: user._count.followers,
     followingCount: user._count.following,
     articleCount: user._count.articles,

@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 import { ErrorCode } from '../lib/error-codes.js'
-import { signAuthToken, verifyAuthToken } from '../lib/auth.utils.js'
+import { revokeAuthTokenJti, signAuthToken, verifyAuthToken } from '../lib/auth.utils.js'
 import type { NormalizedOAuthUser } from '../auth/oauth.passport.js'
 import { initializeOAuthStrategy } from '../auth/oauth.passport.js'
 import { getOAuthConfig, type OAuthProvider, type OAuthProviderConfig } from '../auth/oauth.config.js'
@@ -23,6 +23,7 @@ import {
   validateLoginInput,
   validateRegisterInput,
 } from './auth.routes-helpers.js'
+import { forceOffline } from '../socket/socket.server.js'
 
 // Router for all auth endpoints.
 const router = Router()
@@ -327,10 +328,13 @@ const loginHandler = async (req: Request, res: Response) => {
 
 // Log out by clearing cookies after CSRF check.
 const logoutHandler = async (req: Request, res: Response) => {
+  let userId: string | null = null
   try {
     const token = readAuthTokenFromCookie(req)
-    const { csrfToken } = verifyAuthToken(token)
-    validateCsrfToken(req, csrfToken)
+    const decoded = verifyAuthToken(token)
+    validateCsrfToken(req, decoded.csrfToken)
+    userId = decoded.userId
+    revokeAuthTokenJti(decoded.jti)
   } catch (error) {
     if (!(error instanceof AppError)) {
       throw error
@@ -338,6 +342,11 @@ const logoutHandler = async (req: Request, res: Response) => {
   }
 
   clearAuthCookies(res)
+
+  // Mark offline immediately — don't wait for the 30s grace period
+  if (userId) {
+    await forceOffline(userId)
+  }
 
   res.status(200).json({ success: true, message: 'Logged out successfully' })
 }

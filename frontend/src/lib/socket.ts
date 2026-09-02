@@ -16,9 +16,11 @@ export function getSocket(): Socket {
 }
 
 export function connectSocket() {
-  getSocket().connect()
+  const socket = getSocket()
+  socket.connect()
 }
 
 export function disconnectSocket() {
-  getSocket().disconnect()
+  const socket = getSocket()
+  socket.disconnect()
 }
