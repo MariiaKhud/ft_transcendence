@@ -1,6 +1,7 @@
 .PHONY: help up down clean logs migrate seed setup-local-cert \
 		test-backend test-frontend test-browser-compat test-i18n \
 		test-friends test-follows test-messages test-gamification \
+		test-articles test-articles-backend test-articles-frontend \
 
 CYAN := \033[0;34m
 GREEN := \033[0;32m
@@ -25,6 +26,9 @@ help:
 	@printf "  $(GREEN)make test-follows$(RESET)        - Run follows flow integration test\n"
 	@printf "  $(GREEN)make test-messages$(RESET)       - Run messages integration test\n"
 	@printf "  $(GREEN)make test-gamification$(RESET)   - Run gamification integration test\n"
+	@printf "  $(GREEN)make test-articles$(RESET)       - Run articles/comments/likes/search tests (backend + frontend)\n"
+	@printf "  $(GREEN)make test-articles-backend$(RESET)  - Run articles/comments/likes/search backend tests only\n"
+	@printf "  $(GREEN)make test-articles-frontend$(RESET) - Run articles/comments/likes/search frontend proxy tests only\n"
 
 up:
 	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"
@@ -72,5 +76,13 @@ test-messages:
 
 test-gamification:
 	cd backend && ./scripts/test-gamification-flow.sh
+
+test-articles-backend:
+	cd backend && ./scripts/test-articles-flow.sh
+
+test-articles-frontend:
+	cd frontend && ./scripts/test-articles-flow.sh
+
+test-articles: test-articles-backend test-articles-frontend
 
 .DEFAULT_GOAL := help
