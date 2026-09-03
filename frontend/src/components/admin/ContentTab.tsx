@@ -41,6 +41,8 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
             <Link
               to={`/articles/${article.id}`}
               className="flex flex-1 items-center gap-4"
+              target="_blank"
+              rel="noopener noreferrer"
             >
               <div className="flex-1">
                 <p className="font-medium text-slate-900 group-hover:text-purple-700">
@@ -54,7 +56,7 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
 
             {/* Remove button (still separate) */}
             {article.isRemoved ? (
-              <span className="text-sm text-red-600">
+              <span className="rounded-lg px-3 py-2 text-sm font-semibold text-red-600">
                 {t('admin.removed')}
               </span>
             ) : (
