@@ -37,6 +37,7 @@ export const ErrorCode = {
   VALIDATION_CONTENT_REQUIRED: 'validation_content_required',
   VALIDATION_CONTENT_INVALID: 'validation_content_invalid',
   VALIDATION_CONTENT_MIN_LENGTH: 'validation_content_min_length',
+  VALIDATION_CONTENT_MAX_LENGTH: 'validation_content_max_length',
   VALIDATION_CATEGORY_REQUIRED: 'validation_category_required',
   VALIDATION_CATEGORY_INVALID: 'validation_category_invalid',
   VALIDATION_ARTICLE_FIELDS_REQUIRED: 'validation_article_fields_required',

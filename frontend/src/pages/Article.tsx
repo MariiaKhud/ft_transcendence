@@ -21,6 +21,8 @@ import {
   type Comment,
 } from '@/api/articles'
 
+const COMMENT_MAX_LENGTH = 1000
+
 export const Article = () => {
   const { t } = useTranslation()
   const { id } = useParams<{ id: string }>()
@@ -416,9 +418,13 @@ export const Article = () => {
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               rows={3}
+              maxLength={COMMENT_MAX_LENGTH}
               placeholder={t('article.addCommentPlaceholder')}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-900 focus:border-purple-500 focus:outline-none"
             />
+            <p className={`text-right text-xs ${newComment.length > COMMENT_MAX_LENGTH * 0.9 ? 'text-pink-500' : 'text-slate-400'}`}>
+              {t('common.counter', { count: newComment.length, max: COMMENT_MAX_LENGTH })}
+            </p>
             {commentError.length > 0 && <p className="text-sm font-medium text-red-600">{commentError}</p>}
             <Button
               type="submit"
@@ -526,8 +532,12 @@ export const Article = () => {
                             value={editingCommentContent}
                             onChange={(e) => setEditingCommentContent(e.target.value)}
                             rows={3}
+                            maxLength={COMMENT_MAX_LENGTH}
                             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-purple-500 focus:outline-none"
                           />
+                          <p className={`text-right text-xs ${editingCommentContent.length > COMMENT_MAX_LENGTH * 0.9 ? 'text-pink-500' : 'text-slate-400'}`}>
+                            {t('common.counter', { count: editingCommentContent.length, max: COMMENT_MAX_LENGTH })}
+                          </p>
                           <div className="flex gap-2">
                             <Button
                               type="button"
