@@ -399,7 +399,16 @@
     "toNextLevel": "{{current}} / {{needed}} to next level",
     "badges": "Badges",
     "badgesCollected": "{{count}} collected",
-    "noBadges": "No badges unlocked yet.",
+    "badgeLocked": "Locked",
+    "badgeLockedLabel": "Not yet unlocked",
+    "badgeDescriptions": {
+      "First Post": "Published your first article.",
+      "Consistent Writer": "Published 10 articles.",
+      "Prolific Author": "Published 50 articles.",
+      "First Like": "Received your first like.",
+      "Rising Voice": "Received 100 likes.",
+      "Popular Writer": "Received 1,000 likes."
+    },
     "badgeNames": {
       "First Post": "First Post",
       "Consistent Writer": "Consistent Writer",
@@ -407,6 +416,14 @@
       "First Like": "First Like",
       "Rising Voice": "Rising Voice",
       "Popular Writer": "Popular Writer"
+    },
+    "badgeRequirements": {
+      "sparkles": "Publish your first article to unlock this badge.",
+      "pen": "Write 10 articles to unlock this badge.",
+      "book-open": "Write 50 articles to unlock this badge.",
+      "heart": "Get 1 like to unlock this badge.",
+      "trending-up": "Get 100 likes to unlock this badge.",
+      "trophy": "Get 1,000 likes to unlock this badge."
     },
     "articlesHeading": "Articles",
     "articlesShown": "{{count}} shown",

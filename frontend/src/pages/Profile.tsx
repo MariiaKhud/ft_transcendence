@@ -272,7 +272,7 @@ export const Profile = () => {
             </div>
           </div>
 
-          {/* Only show Edit button on your own profile. */}
+          {/* Only show friends button on your own profile. */}
           {isOwnProfile ? (
             <div className="flex flex-col items-end gap-2">
               <Button

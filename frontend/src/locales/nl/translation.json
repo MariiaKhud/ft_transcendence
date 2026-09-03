@@ -398,16 +398,33 @@
     "xpTotal": "{{xp}} XP totaal",
     "toNextLevel": "{{current}} / {{needed}} tot volgend niveau",
     "badges": "Badges",
-    "badgeNames": {
-      "First Post": "Eerste bericht",
-      "Consistent Writer": "Vaste schrijver",
-      "Prolific Author": "Productieve auteur",
-      "First Like": "Eerste like",
-      "Rising Voice": "Opkomende stem",
-      "Popular Writer": "Populaire schrijver"
-    },
     "badgesCollected": "{{count}} verzameld",
-    "noBadges": "Nog geen badges ontgrendeld.",
+    "badgeLocked": "Vergrendeld",
+    "badgeLockedLabel": "Nog niet ontgrendeld",
+    "badgeDescriptions": {
+      "First Post": "Je eerste artikel gepubliceerd.",
+      "Consistent Writer": "10 artikelen gepubliceerd.",
+      "Prolific Author": "50 artikelen gepubliceerd.",
+      "First Like": "Je eerste like ontvangen.",
+      "Rising Voice": "100 likes ontvangen.",
+      "Popular Writer": "1.000 likes ontvangen."
+    },
+    "badgeNames": {
+      "First Post": "Eerste Post",
+      "Consistent Writer": "Consistente Schrijver",
+      "Prolific Author": "Productieve Auteur",
+      "First Like": "Eerste Like",
+      "Rising Voice": "Opkomende Stem",
+      "Popular Writer": "Populaire Schrijver"
+    },
+    "badgeRequirements": {
+      "sparkles": "Publiceer je eerste artikel om deze badge te ontgrendelen.",
+      "pen": "Schrijf 10 artikelen om deze badge te ontgrendelen.",
+      "book-open": "Schrijf 50 artikelen om deze badge te ontgrendelen.",
+      "heart": "Ontvang 1 like om deze badge te ontgrendelen.",
+      "trending-up": "Ontvang 100 likes om deze badge te ontgrendelen.",
+      "trophy": "Ontvang 1.000 likes om deze badge te ontgrendelen."
+    },
     "articlesHeading": "Artikelen",
     "articlesShown": "{{count}} weergegeven",
     "loadingArticles": "Artikelen laden...",
