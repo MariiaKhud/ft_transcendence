@@ -5,6 +5,7 @@ import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 import { ErrorCode } from '../lib/error-codes.js'
 import { authMiddleware, optionalAuthMiddleware } from '../middleware/auth.middleware.js'
 import { createNotification } from '../services/notifications.service.js'
+import { io } from '../socket/socket.server.js'
 import {
   articleDetailSelect,
   articleSummarySelect,
@@ -225,6 +226,9 @@ const createCommentHandler = async (req: Request, res: Response) => {
     select: commentWithAuthorSelect,
   })
 
+  // Push the new comment live to anyone currently viewing the article.
+  io.to(`article:${article.id}`).emit('comment:new', comment)
+
   // Don't notify authors about their own comments.
   if (article.authorId !== authorId) {
     await createNotification(
@@ -233,6 +237,13 @@ const createCommentHandler = async (req: Request, res: Response) => {
       `commented on your article "${article.title}"`,
       article.id
     )
+
+    // Push the notification in real-time too, instead of waiting for the next poll.
+    io.to(article.authorId).emit('notification:new', {
+      type: 'COMMENT',
+      message: `commented on your article "${article.title}"`,
+      refId: article.id,
+    })
   }
 
   res.status(201).json({ success: true, data: comment })
