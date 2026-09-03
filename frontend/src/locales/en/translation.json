@@ -482,7 +482,8 @@
     "offline": "Offline",
     "userNotFound": "User not found",
     "backToFriends": "Back to My Friends",
-    "loadError": "Failed to load messages"
+    "loadError": "Failed to load messages",
+    "notFriends": "You can no longer send messages because you are not friends."
   },
   "friends": {
     "title": "Friends",

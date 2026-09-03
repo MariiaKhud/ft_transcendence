@@ -61,9 +61,13 @@ export function useChat(otherUserId: string) {
       setMessages((prev) => [...prev, message])
     }
 
-    function onError(payload: { message: string }) {
+    function onError(payload: { code?: string; message: string }) {
       setSending(false)
-      setError(payload.message)
+      setError(
+        payload.code === 'friendship_not_found'
+          ? t('chat.notFriends')
+          : payload.message,
+      )
     }
 
     socket.on('chat:message', onMessage)
@@ -74,11 +78,12 @@ export function useChat(otherUserId: string) {
     socket.emit('chat:read', { senderId: otherUserId })
 
     return () => {
+      socket.emit('chat:close')
       socket.off('chat:message', onMessage)
       socket.off('chat:sent', onSent)
       socket.off('chat:error', onError)
     }
-  }, [otherUserId])
+  }, [otherUserId, t])
 
   // Send a message
   const sendMessage = useCallback((content: string) => {

@@ -1,9 +1,21 @@
 import type { Server, Socket } from 'socket.io'
 import { prisma } from '../lib/prisma.js'
 import { createNotification } from '../services/notifications.service.js'
+import { ErrorCode } from '../lib/error-codes.js'
 
 export function registerChatHandlers(io: Server, socket: Socket) {
   const senderId = socket.data.userId as string
+
+  socket.on('presence:heartbeat', async () => {
+    try {
+      await prisma.user.updateMany({
+        where: { id: senderId, isOnline: true },
+        data: { lastSeenAt: new Date() },
+      })
+    } catch (err) {
+      console.error('Presence heartbeat failed:', err)
+    }
+  })
 
   // ── chat:send ────────────────────────────────────────────────
   // Client emits this when user sends a message
@@ -15,6 +27,25 @@ export function registerChatHandlers(io: Server, socket: Socket) {
     const trimmed = content.trim()
     if (trimmed.length === 0 || trimmed.length > 2000) return
     if (senderId === receiverId) return
+
+    const friendship = await prisma.friendship.findFirst({
+      where: {
+        status: 'ACCEPTED',
+        OR: [
+          { requesterId: senderId, addresseeId: receiverId },
+          { requesterId: receiverId, addresseeId: senderId },
+        ],
+      },
+      select: { id: true },
+    })
+
+    if (!friendship) {
+      socket.emit('chat:error', {
+        code: ErrorCode.FRIENDSHIP_NOT_FOUND,
+        message: 'You can only message your friends',
+      })
+      return
+    }
 
     let message
     try {
@@ -39,25 +70,30 @@ export function registerChatHandlers(io: Server, socket: Socket) {
       return
     }
 
+    const receiverSockets = await io.in(receiverId).fetchSockets()
+    const isConversationOpen = receiverSockets.some(
+      (receiverSocket) => receiverSocket.data.activeChatUserId === senderId,
+    )
+
     // Send the saved message to the receiver and confirm it to the sender.
     io.to(receiverId).emit('chat:message', message)
     socket.emit('chat:sent', message)
 
     try {
-      // Notify receiver if they're not in the chat already
-      await createNotification(
-        receiverId,
-        'MESSAGE',
-        'sent you a message',
-        senderId
-      )
+      if (!isConversationOpen) {
+        await createNotification(
+          receiverId,
+          'MESSAGE',
+          'sent you a message',
+          senderId,
+        )
 
-      // Push notification in real-time too.
-      io.to(receiverId).emit('notification:new', {
-        type: 'MESSAGE',
-        message: 'sent you a message',
-        refId: senderId,
-      })
+        io.to(receiverId).emit('notification:new', {
+          type: 'MESSAGE',
+          message: 'sent you a message',
+          refId: senderId,
+        })
+      }
     } catch (err) {
       console.error('Chat notification creation failed:', err)
     }
@@ -68,6 +104,8 @@ export function registerChatHandlers(io: Server, socket: Socket) {
   socket.on('chat:read', async (payload: { senderId: string }) => {
     if (!payload || typeof payload.senderId !== 'string' || !payload.senderId) return
 
+    socket.data.activeChatUserId = payload.senderId
+
     await prisma.message.updateMany({
       where: {
         senderId: payload.senderId,
@@ -77,7 +115,23 @@ export function registerChatHandlers(io: Server, socket: Socket) {
       data: { isRead: true },
     })
 
+    await prisma.notification.updateMany({
+      where: {
+        userId: senderId,
+        type: 'MESSAGE',
+        refId: payload.senderId,
+        isRead: false,
+      },
+      data: { isRead: true },
+    })
+
+    socket.emit('notifications:messages-read', { senderId: payload.senderId })
+
     // Tell the sender their messages were read
     io.to(payload.senderId).emit('chat:read', { by: senderId })
+  })
+
+  socket.on('chat:close', () => {
+    delete socket.data.activeChatUserId
   })
 }

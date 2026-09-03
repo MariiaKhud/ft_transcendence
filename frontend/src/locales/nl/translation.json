@@ -482,7 +482,8 @@
     "offline": "Offline",
     "userNotFound": "Gebruiker niet gevonden",
     "backToFriends": "Terug naar Mijn vrienden",
-    "loadError": "Berichten konden niet worden geladen"
+    "loadError": "Berichten konden niet worden geladen",
+    "notFriends": "Je kunt geen berichten meer sturen omdat jullie geen vrienden meer zijn."
   },
   "friends": {
     "title": "Vrienden",

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getProfileArticles, getPublicProfile } from '@/api/users'
 import { translateApiError } from '@/lib/api-errors'
@@ -10,7 +10,6 @@ import { FollowButton } from '@/components/user/FollowButton'
 import { MessageButtonLink } from '../components/user/MessageButtonLink'
 import type { FriendshipState } from '@shared/types/friendship'
 import { getFriendshipStatus } from '../api/friends';
-import { Button } from '@/components/ui/button'
 import { XPBar } from '@/components/gamification/XPBar'
 import { BadgeList } from '@/components/gamification/BadgeList'
 
@@ -199,8 +198,6 @@ export const Profile = () => {
       .catch(() => setFriendshipState('none'))
   }, [profile, currentUser])
 
-  const navigate = useNavigate()
-
   const resolvedProfileError = profileError
     ? translateApiError(profileError, t('profile.unableToLoad'))
     : null
@@ -272,20 +269,7 @@ export const Profile = () => {
             </div>
           </div>
 
-          {/* Only show Edit button on your own profile. */}
-          {isOwnProfile ? (
-            <div className="flex flex-col items-end gap-2">
-              <Button
-                variant="profile"
-                type="button"
-                onClick={() => {
-                  navigate('/friends')
-                }}
-              >
-                {t('profile.friends')}
-              </Button>
-            </div>
-          ) : (
+          {!isOwnProfile ? (
             <div className="flex flex-col items-end gap-2">
               <FollowButton
                 targetUserId={profile.id}
@@ -304,7 +288,7 @@ export const Profile = () => {
                 <MessageButtonLink username={profile.username} />
               ) : null}
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* Bio text or a default message if empty. */}

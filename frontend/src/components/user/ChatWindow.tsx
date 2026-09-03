@@ -11,6 +11,7 @@ interface ChatWindowProps {
   currentUserId: string
   sending: boolean
   error: string | null
+  canSend: boolean
   onSend: (content: string) => void
 }
 
@@ -19,6 +20,7 @@ export function ChatWindow({
   currentUserId,
   sending,
   error,
+  canSend,
   onSend,
 }: ChatWindowProps) {
   const { t } = useTranslation()
@@ -32,7 +34,7 @@ export function ChatWindow({
   }, [messages])
 
   function handleSend() {
-    if (!draft.trim() || sending) return
+    if (!draft.trim() || sending || !canSend) return
     onSend(draft)
     setDraft('')
     textareaRef.current?.focus()
@@ -146,10 +148,10 @@ export function ChatWindow({
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={t('chat.placeholder')}
+            placeholder={canSend ? t('chat.placeholder') : t('chat.notFriends')}
             rows={1}
             maxLength={2000}
-            disabled={sending}
+            disabled={sending || !canSend}
             className="flex-1
                        resize-none
                        rounded-2xl
@@ -180,7 +182,7 @@ export function ChatWindow({
           <Button
             variant="default"
             onClick={handleSend}
-            disabled={!draft.trim() || sending}
+            disabled={!draft.trim() || sending || !canSend}
             aria-label={t('chat.send')}
             className="shrink-0
                        rounded-2xl
