@@ -65,6 +65,7 @@
       "validation_username_invalid": "Gebruikersnaam moet 3-20 tekens bevatten en alleen letters, cijfers of onderstrepingstekens.",
       "validation_password_required": "Wachtwoord is verplicht.",
       "validation_password_length": "Wachtwoord moet tussen 8 en 72 tekens bevatten.",
+      "validation_password_whitespace": "Wachtwoord mag geen spaties bevatten.",
       "validation_register_fields_required": "E-mailadres, gebruikersnaam en wachtwoord zijn verplicht.",
       "validation_login_fields_required": "E-mailadres en wachtwoord zijn verplicht.",
       "validation_title_required": "Titel is verplicht.",
@@ -345,6 +346,7 @@
       "usernameRequired": "Gebruikersnaam is verplicht",
       "usernameInvalid": "Gebruikersnaam moet 3-20 tekens bevatten en alleen letters, cijfers of _",
       "passwordLength": "Wachtwoord moet tussen 8 en 72 tekens bevatten",
+      "passwordWhitespace": "Wachtwoord mag geen spaties bevatten",
       "confirmRequired": "Bevestig uw wachtwoord",
       "passwordMismatch": "Wachtwoorden komen niet overeen"
     }

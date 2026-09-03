@@ -65,6 +65,7 @@
       "validation_username_invalid": "Ім'я користувача має містити 3-20 символів: лише літери, цифри або підкреслення.",
       "validation_password_required": "Пароль обов'язковий.",
       "validation_password_length": "Пароль має містити від 8 до 72 символів.",
+      "validation_password_whitespace": "Пароль не може містити пробілів.",
       "validation_register_fields_required": "Електронна пошта, ім'я користувача та пароль обов'язкові.",
       "validation_login_fields_required": "Електронна пошта та пароль обов'язкові.",
       "validation_title_required": "Заголовок обов'язковий.",
@@ -347,6 +348,7 @@
       "usernameRequired": "Ім'я користувача обов'язкове",
       "usernameInvalid": "Ім'я користувача має містити 3-20 символів: лише літери, цифри або _",
       "passwordLength": "Пароль має містити від 8 до 72 символів",
+      "passwordWhitespace": "Пароль не може містити пробілів",
       "confirmRequired": "Будь ласка, підтвердіть ваш пароль",
       "passwordMismatch": "Паролі не збігаються"
     }

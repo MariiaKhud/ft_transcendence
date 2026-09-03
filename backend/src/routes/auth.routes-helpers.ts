@@ -35,6 +35,11 @@ const validatePasswordLength = (password: string) => {
   if (password.length < 8 || password.length > 72) {
     throw new AppError(400, ErrorCode.VALIDATION_PASSWORD_LENGTH, 'Validation failed: password must be between 8 and 72 characters')
   }
+
+  // Spaces/tabs/etc. anywhere let padding fake the length requirement, so ban them outright.
+  if (/\s/.test(password)) {
+    throw new AppError(400, ErrorCode.VALIDATION_PASSWORD_WHITESPACE, 'Validation failed: password cannot contain spaces')
+  }
 }
 
 // Read auth token from cookie or fail.

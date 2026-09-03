@@ -143,9 +143,6 @@ app.use('/api/follows', followsRoutes);                // Follow system (follow/
 app.use('/api/notifications', notificationsRoutes);    // Notification system (list user notifications)
 app.use('/api/messages', messagesRoutes);              // Private messaging (send messages, retrieve conversations)
 
-// TODO: Wire up route modules here
-// app.use('/api/gamification', gamificationRoutes)
-
 // ─────────────────────────────────────────────
 // 404 Handler
 // ─────────────────────────────────────────────
@@ -161,9 +158,6 @@ app.use(errorHandler)
 // ─────────────────────────────────────────────
 // Start Server
 // ─────────────────────────────────────────────
-
-// const server = app.listen(PORT, handleServerStart) <= Before WebSockets
-// startOnlineStatusJob();                            <= Before WebSockets
 
 const httpServer = createServer(app)          // ← wrap app in http server
 initSocketServer(httpServer)                  // ← attach socket.io

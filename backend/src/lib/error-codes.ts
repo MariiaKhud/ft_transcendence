@@ -26,6 +26,7 @@ export const ErrorCode = {
   VALIDATION_USERNAME_INVALID: 'validation_username_invalid',
   VALIDATION_PASSWORD_REQUIRED: 'validation_password_required',
   VALIDATION_PASSWORD_LENGTH: 'validation_password_length',
+  VALIDATION_PASSWORD_WHITESPACE: 'validation_password_whitespace',
   VALIDATION_REGISTER_FIELDS_REQUIRED: 'validation_register_fields_required',
   VALIDATION_LOGIN_FIELDS_REQUIRED: 'validation_login_fields_required',
 

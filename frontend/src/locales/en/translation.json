@@ -65,6 +65,7 @@
       "validation_username_invalid": "Username must be 3-20 characters and contain only letters, numbers, or underscores.",
       "validation_password_required": "Password is required.",
       "validation_password_length": "Password must be between 8 and 72 characters.",
+      "validation_password_whitespace": "Password cannot contain spaces.",
       "validation_register_fields_required": "Email, username, and password are required.",
       "validation_login_fields_required": "Email and password are required.",
       "validation_title_required": "Title is required.",
@@ -345,6 +346,7 @@
       "usernameRequired": "Username is required",
       "usernameInvalid": "Username must be 3-20 chars and only letters, numbers, or _",
       "passwordLength": "Password must be between 8 and 72 characters",
+      "passwordWhitespace": "Password cannot contain spaces",
       "confirmRequired": "Please confirm your password",
       "passwordMismatch": "Passwords do not match"
     }

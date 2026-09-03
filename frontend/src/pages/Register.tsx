@@ -71,6 +71,9 @@ export const Register = () => {
     } else if (password.length < 8 || password.length > 72) {
       setPasswordError(t('register.errors.passwordLength'))
       isValid = false
+    } else if (/\s/.test(password)) {
+      setPasswordError(t('register.errors.passwordWhitespace'))
+      isValid = false
     }
 
     if (confirmPassword.length === 0) {
