@@ -4,6 +4,7 @@ import type { Category, Prisma } from '@prisma/client'
 
 const TITLE_MAX_LENGTH = 120
 const CONTENT_MIN_LENGTH = 100
+const CONTENT_MAX_LENGTH = 10000
 const VALID_CATEGORIES = new Set<string>([
   'PROGRAMMING',
   'CAREER',
@@ -49,6 +50,10 @@ export const validateCreateArticleInput = (body: unknown): CreateArticleInput =>
   const trimmedContent = content.trim()
   if (trimmedContent.length < CONTENT_MIN_LENGTH) {
     throw new AppError(400, ErrorCode.VALIDATION_CONTENT_MIN_LENGTH, `Validation failed: content must be at least ${CONTENT_MIN_LENGTH} characters`)
+  }
+
+  if (trimmedContent.length > CONTENT_MAX_LENGTH) {
+    throw new AppError(400, ErrorCode.VALIDATION_CONTENT_MAX_LENGTH, `Validation failed: content must be at most ${CONTENT_MAX_LENGTH} characters`)
   }
 
   if (typeof category !== 'string' || !VALID_CATEGORIES.has(category)) {
@@ -98,6 +103,10 @@ export const validateUpdateArticleInput = (body: unknown): UpdateArticleInput =>
     const trimmedContent = content.trim()
     if (trimmedContent.length < CONTENT_MIN_LENGTH) {
       throw new AppError(400, ErrorCode.VALIDATION_CONTENT_MIN_LENGTH, `Validation failed: content must be at least ${CONTENT_MIN_LENGTH} characters`)
+    }
+
+    if (trimmedContent.length > CONTENT_MAX_LENGTH) {
+      throw new AppError(400, ErrorCode.VALIDATION_CONTENT_MAX_LENGTH, `Validation failed: content must be at most ${CONTENT_MAX_LENGTH} characters`)
     }
 
     result.content = trimmedContent

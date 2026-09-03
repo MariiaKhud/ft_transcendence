@@ -74,6 +74,7 @@
       "validation_content_required": "Зміст обов'язковий.",
       "validation_content_invalid": "Зміст має бути непорожнім текстом.",
       "validation_content_min_length": "Зміст має містити щонайменше 100 символів.",
+      "validation_content_max_length": "Зміст має містити не більше 10000 символів.",
       "validation_category_required": "Категорія обов'язкова.",
       "validation_category_invalid": "Оберіть дійсну категорію.",
       "validation_article_fields_required": "Заголовок, зміст і категорія обов'язкові.",
@@ -173,7 +174,7 @@
     "preview": "Перегляд",
     "nothingToPreview": "Поки що нічого переглядати.",
     "contentPlaceholder": "Напишіть статтю в форматі Markdown...",
-    "contentCounter": "{{count}} / {{min}} мінімум",
+    "validCharactersHint": "{{count}} дійсних символів (мінімум {{min}})",
     "saving": "Збереження...",
     "cancel": "Скасувати",
     "errors": {
@@ -181,6 +182,7 @@
       "titleMaxLength": "Заголовок має містити не більше {{max}} символів",
       "contentRequired": "Зміст обов'язковий",
       "contentMinLength": "Зміст має містити щонайменше {{min}} символів",
+      "contentMaxLength": "Зміст має містити не більше {{max}} символів",
       "unableToSave": "Не вдалося зберегти статтю"
     }
   },
