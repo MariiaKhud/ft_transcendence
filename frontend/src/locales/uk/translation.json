@@ -403,14 +403,31 @@
     "toNextLevel": "{{current}} / {{needed}} до наступного рівня",
     "badges": "Значки",
     "badgesCollected": "{{count}} зібрано",
-    "noBadges": "Поки що немає розблокованих значків.",
+    "badgeLocked": "Заблоковано",
+    "badgeLockedLabel": "Ще не розблоковано",
+    "badgeDescriptions": {
+      "First Post": "Опубліковано першу статтю.",
+      "Consistent Writer": "Опубліковано 10 статей.",
+      "Prolific Author": "Опубліковано 50 статей.",
+      "First Like": "Отримано перший лайк.",
+      "Rising Voice": "Отримано 100 лайків.",
+      "Popular Writer": "Отримано 1000 лайків."
+    },
     "badgeNames": {
-      "First Post": "Перша публікація",
-      "Consistent Writer": "Стабільний автор",
+      "First Post": "Перший пост",
+      "Consistent Writer": "Послідовний автор",
       "Prolific Author": "Плідний автор",
       "First Like": "Перший лайк",
       "Rising Voice": "Голос, що зростає",
       "Popular Writer": "Популярний автор"
+    },
+    "badgeRequirements": {
+      "sparkles": "Опублікуйте першу статтю, щоб розблокувати цей бейдж.",
+      "pen": "Напишіть 10 статей, щоб розблокувати цей бейдж.",
+      "book-open": "Напишіть 50 статей, щоб розблокувати цей бейдж.",
+      "heart": "Отримайте 1 лайк, щоб розблокувати цей бейдж.",
+      "trending-up": "Отримайте 100 лайків, щоб розблокувати цей бейдж.",
+      "trophy": "Отримайте 1000 лайків, щоб розблокувати цей бейдж."
     },
     "articlesHeading": "Статті",
     "articlesShown": "{{count}} показано",
