@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { PencilIcon, Spinner, TrashIcon } from '@/components/ui/icons'
 import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
 import { useStore } from '@/store/store'
+import { getSocket } from '@/lib/socket'
 import { formatCategoryLabel, getInitials, toSafeImageUrl } from '@/lib/article-display'
 import { translateApiError } from '@/lib/api-errors'
 import {
@@ -40,6 +41,10 @@ export const Article = () => {
 
   // Comments state.
   const [comments, setComments] = useState<Comment[]>([])
+  // Mirrors which comment ids are currently in state, kept in sync at every mutation
+  // site so live socket events can tell a genuinely new change from an echo of the
+  // current user's own action (e.g. their own comment/delete coming back over the socket).
+  const commentIdsRef = useRef<Set<string>>(new Set())
   const [commentsUnavailable, setCommentsUnavailable] = useState(false)
   const [commentsLoading, setCommentsLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
@@ -94,6 +99,7 @@ export const Article = () => {
 
     getComments(id)
       .then((result) => {
+        commentIdsRef.current = new Set(result.items.map((comment) => comment.id))
         setComments(result.items)
         setCommentsUnavailable(result.isUnavailable)
       })
@@ -103,6 +109,50 @@ export const Article = () => {
       .finally(() => {
         setCommentsLoading(false)
       })
+  }, [id])
+
+  // Join the article's room so comments posted, edited, or removed by other users
+  // while this page is open appear live, without needing a manual refresh.
+  useEffect(() => {
+    if (!id) {
+      return
+    }
+
+    const socket = getSocket()
+    socket.emit('article:join', id)
+
+    const onNewComment = (comment: Comment) => {
+      if (commentIdsRef.current.has(comment.id)) {
+        return
+      }
+      commentIdsRef.current.add(comment.id)
+      setComments((prev) => [...prev, comment])
+      setArticle((prev) => (prev ? { ...prev, commentsCount: prev.commentsCount + 1 } : prev))
+    }
+
+    const onCommentUpdated = (comment: Comment) => {
+      setComments((prev) => prev.map((item) => (item.id === comment.id ? comment : item)))
+    }
+
+    const onCommentDeleted = ({ id: commentId }: { id: string }) => {
+      if (!commentIdsRef.current.has(commentId)) {
+        return
+      }
+      commentIdsRef.current.delete(commentId)
+      setComments((prev) => prev.filter((item) => item.id !== commentId))
+      setArticle((prev) => (prev ? { ...prev, commentsCount: Math.max(0, prev.commentsCount - 1) } : prev))
+    }
+
+    socket.on('comment:new', onNewComment)
+    socket.on('comment:updated', onCommentUpdated)
+    socket.on('comment:deleted', onCommentDeleted)
+
+    return () => {
+      socket.emit('article:leave', id)
+      socket.off('comment:new', onNewComment)
+      socket.off('comment:updated', onCommentUpdated)
+      socket.off('comment:deleted', onCommentDeleted)
+    }
   }, [id])
 
   const isOwnArticle = Boolean(currentUser && article && currentUser.id === article.authorId)
@@ -143,8 +193,14 @@ export const Article = () => {
 
     try {
       const comment = await createComment(id, newComment.trim())
-      setComments((prev) => [...prev, comment])
-      setArticle((prev) => (prev ? { ...prev, commentsCount: prev.commentsCount + 1 } : prev))
+      // The server pushes this comment over the socket before the HTTP response
+      // arrives, so it may already be in state (added by the socket listener) by
+      // the time we get here — guard against adding it twice.
+      if (!commentIdsRef.current.has(comment.id)) {
+        commentIdsRef.current.add(comment.id)
+        setComments((prev) => [...prev, comment])
+        setArticle((prev) => (prev ? { ...prev, commentsCount: prev.commentsCount + 1 } : prev))
+      }
       setNewComment('')
     } catch (err) {
       setCommentError(translateApiError(err, err instanceof Error ? err.message : t('article.errors.postCommentFailed')))
@@ -209,8 +265,12 @@ export const Article = () => {
     try {
       const result = await deleteComment(comment.id, reason)
       if (isOwnComment) {
-        setComments((prev) => prev.filter((item) => item.id !== comment.id))
-        setArticle((prev) => (prev ? { ...prev, commentsCount: Math.max(0, prev.commentsCount - 1) } : prev))
+        // Symmetric with the add guard above — the socket event may have already removed it.
+        if (commentIdsRef.current.has(comment.id)) {
+          commentIdsRef.current.delete(comment.id)
+          setComments((prev) => prev.filter((item) => item.id !== comment.id))
+          setArticle((prev) => (prev ? { ...prev, commentsCount: Math.max(0, prev.commentsCount - 1) } : prev))
+        }
       } else {
         const updated = result as Comment
         setComments((prev) => prev.map((item) => (item.id === comment.id ? updated : item)))
