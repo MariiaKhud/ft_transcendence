@@ -112,11 +112,6 @@ export function ChatWindow({
                   isMine ? 'text-white/60 text-right' : 'text-slate-400'
                 }`}>
                   {formatMessageTime(msg.createdAt)}
-                  {isMine && (
-                    <span className="ml-1">
-                      {msg.isRead ? '✓✓' : '✓'}
-                    </span>
-                  )}
                 </p>
               </div>
             </div>
