@@ -253,7 +253,6 @@ export function AdminDashboard() {
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          {/* TO DO updated */}
           {t('admin.removedArticles')} 
         </button>
 
@@ -266,7 +265,6 @@ export function AdminDashboard() {
               : 'text-slate-600 hover:bg-slate-100'
           }`}
         >
-          {/* TO DO updated */}
           {t('admin.removedComments')} 
         </button>
 

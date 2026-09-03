@@ -47,7 +47,7 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
                   {article.title}
                 </p>
                 <p className="text-sm text-slate-600">
-                  by {article.author?.username} • {article.category}
+                  {t('admin.contentBy', {username: article.author?.username,})} • {t(`admin.categories.${article.category}`)}
                 </p>
               </div>
             </Link>
