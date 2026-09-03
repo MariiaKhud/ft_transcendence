@@ -471,7 +471,19 @@
       "totalUsers": "Total users",
       "moderators": "Moderators",
       "admins": "Admins",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "usersTab": {
+        "user": "User",
+        "role": "Role",
+        "articles": "Articles",
+        "created": "Created",
+        "action": "Action",
+        "roles": {
+          "USER": "User",
+          "MODERATOR": "Moderator",
+          "ADMIN": "Admin"
+        }
+      }
   },
   "article": {
     "loading": "Loading article...",

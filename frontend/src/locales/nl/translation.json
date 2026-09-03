@@ -471,7 +471,19 @@
     "totalUsers": "Totaal aantal gebruikers",
     "moderators": "Moderatoren",
     "admins": "Beheerders",
-    "refresh": "Vernieuwen"
+    "refresh": "Vernieuwen",
+    "usersTab": {
+      "user": "Gebruiker",
+      "role": "Rol",
+      "articles": "Artikelen",
+      "created": "Aangemaakt",
+      "action": "Actie",
+      "roles": {
+        "USER": "Gebruiker",
+        "MODERATOR": "Moderator",
+        "ADMIN": "Beheerder"
+      }
+    }
   },
   "article": {
     "loading": "Artikel laden...",
