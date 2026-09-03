@@ -27,6 +27,11 @@ const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
 }
 
+// The minimum-length check counts only non-whitespace characters so it can't be
+// satisfied by padding — leading, trailing, or between real characters — with
+// whitespace; the maximum stays based on raw length, which is a payload-size cap.
+const countNonWhitespaceChars = (value: string): number => value.replace(/\s+/g, '').length
+
 export const validateCreateArticleInput = (body: unknown): CreateArticleInput => {
   if (!isRecord(body)) {
     throw new AppError(400, ErrorCode.VALIDATION_ARTICLE_FIELDS_REQUIRED, 'Validation failed: title, content, and category are required')
@@ -48,7 +53,7 @@ export const validateCreateArticleInput = (body: unknown): CreateArticleInput =>
   }
 
   const trimmedContent = content.trim()
-  if (trimmedContent.length < CONTENT_MIN_LENGTH) {
+  if (countNonWhitespaceChars(trimmedContent) < CONTENT_MIN_LENGTH) {
     throw new AppError(400, ErrorCode.VALIDATION_CONTENT_MIN_LENGTH, `Validation failed: content must be at least ${CONTENT_MIN_LENGTH} characters`)
   }
 
@@ -101,7 +106,7 @@ export const validateUpdateArticleInput = (body: unknown): UpdateArticleInput =>
     }
 
     const trimmedContent = content.trim()
-    if (trimmedContent.length < CONTENT_MIN_LENGTH) {
+    if (countNonWhitespaceChars(trimmedContent) < CONTENT_MIN_LENGTH) {
       throw new AppError(400, ErrorCode.VALIDATION_CONTENT_MIN_LENGTH, `Validation failed: content must be at least ${CONTENT_MIN_LENGTH} characters`)
     }
 
