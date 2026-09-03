@@ -1,3 +1,5 @@
+// oauth.config.ts → prepares the settings (keys, secrets, URLs)
+
 import { AppError } from '../middleware/error.middleware.js'
 import { ErrorCode } from '../lib/error-codes.js'
 
@@ -16,16 +18,17 @@ export interface OAuthConfig {
   errorRedirect: string
 }
 
-// Accept empty OAuth env in development so the backend can still start
-// until the provider task is fully configured.
+// Helper to treat empty strings as missing values.
 const asNonEmpty = (value: string | undefined) => {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : ''
 }
 
+// Check that value is a valid OAuth provider.
 const isOAuthProvider = (value: string): value is OAuthProvider => {
   return value === 'github' || value === 'google' || value === '42'
 }
 
+// Check that value is a valid absolute URL.
 const assertUrl = (value: string, fieldName: string) => {
   try {
     // Throws when value is not a valid absolute URL.
@@ -35,6 +38,7 @@ const assertUrl = (value: string, fieldName: string) => {
   }
 }
 
+// Get the env variable prefix for a given provider, e.g. "OAUTH_GITHUB" or "OAUTH_42".
 const providerEnvPrefix = (provider: OAuthProvider) => {
   if (provider === '42') {
     return 'OAUTH_42'
@@ -43,6 +47,7 @@ const providerEnvPrefix = (provider: OAuthProvider) => {
   return `OAUTH_${provider.toUpperCase()}`
 }
 
+// Read provider config from env variables, returning null if none are set.
 const readProviderConfig = (provider: OAuthProvider): OAuthProviderConfig | null => {
   const prefix = providerEnvPrefix(provider)
   const clientId = asNonEmpty(process.env[`${prefix}_CLIENT_ID`])
@@ -67,6 +72,7 @@ const readProviderConfig = (provider: OAuthProvider): OAuthProviderConfig | null
   }
 }
 
+// Cache the config so we don't read env variables on every request.
 let cachedConfig: OAuthConfig | null = null
 
 export const getOAuthConfig = (): OAuthConfig | null => {
@@ -114,7 +120,7 @@ export const getOAuthConfig = (): OAuthConfig | null => {
     return null
   }
 
-  // Backward compatibility: support the original single-provider env format.
+  // If any of the OAuth variables are present, validate them and enable the feature.
   if (providerRaw || clientId || clientSecret || callbackUrl) {
     if (!isOAuthProvider(providerRaw)) {
       throw new AppError(500, ErrorCode.SERVER_MISCONFIGURED, 'Server misconfiguration: OAUTH_PROVIDER must be one of github, google, 42')
@@ -140,7 +146,7 @@ export const getOAuthConfig = (): OAuthConfig | null => {
     throw new AppError(500, ErrorCode.SERVER_MISCONFIGURED, 'Server misconfiguration: No OAuth providers are configured')
   }
 
-  // Validate redirect targets early so startup fails before any login attempt.
+  // Validate that the redirect URLs are valid absolute URLs.
   assertUrl(successRedirect, 'OAUTH_SUCCESS_REDIRECT')
   assertUrl(errorRedirect, 'OAUTH_ERROR_REDIRECT')
 

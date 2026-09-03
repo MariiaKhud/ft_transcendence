@@ -1,3 +1,7 @@
+// 1. All the user profile routes: search users, leaderboard, view a public profile, edit your own profile, upload/delete avatar, and delete your account
+// 2. Most routes are public reads (search, leaderboard, view profile), while editing, avatar, and delete actions require authMiddleware
+//    and check the logged-in user's own ID/CSRF token
+
 import { Router } from 'express'
 import { Prisma } from '@prisma/client'
 import type { Request, Response } from 'express'

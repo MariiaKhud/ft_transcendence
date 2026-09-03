@@ -1,3 +1,6 @@
+// 1. Makes and checks login tokens (JWT) — creates one when a user logs in, and checks it's still good on every request
+// 2. Remembers which tokens were logged out (revokedJtis), so that exact token stops working right away — even before it would normally expire
+
 import { randomUUID } from 'node:crypto'
 import jwt from 'jsonwebtoken'
 import { AppError } from '../middleware/error.middleware.js'
@@ -29,14 +32,17 @@ const getJwtSecret = () => {
   return jwtSecret
 }
 
+// In-memory set of revoked JWT IDs (jti) for logged-out tokens. This is a simple way to invalidate tokens without a database, but it won't persist across server restarts.
 const revokedJtis = new Set<string>()
 
+// Revoke a JWT ID (jti) so that the token is no longer valid.
 export const revokeAuthTokenJti = (jti: string) => {
   revokedJtis.add(jti)
 }
 
 export const revokeAuthToken = (token: string) => {
   try {
+	// Decode the token without verifying it, to get the jti for revocation.
     const decoded = jwt.decode(token)
     if (isRecord(decoded) && typeof decoded.jti === 'string') {
       revokeAuthTokenJti(decoded.jti)

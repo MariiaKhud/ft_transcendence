@@ -1,3 +1,6 @@
+// 1. Validates and shapes user profile data: usernames, search queries, edit-profile input, and avatar uploads (file type, size, filename)
+// 2. Defines the exact fields (select) sent back for profiles, search results, and edited profiles, so users.routes.ts doesn't leak extra database fields
+
 import { promises as fs } from 'fs'
 import { randomUUID } from 'crypto'
 import { AppError } from '../middleware/error.middleware.js'

@@ -1,5 +1,6 @@
 import { prisma } from '../lib/prisma.js'
 
+// Sets the user as online and updates their last seen timestamp.
 export async function setUserOnline(userId: string) {
   await prisma.user.update({
     where: { id: userId },
@@ -10,6 +11,7 @@ export async function setUserOnline(userId: string) {
   });
 }
 
+// Sets the user as offline and updates their last seen timestamp.
 export async function getPublicProfileById(userId: string) {
   return prisma.user.findUnique({
     where: { id: userId },

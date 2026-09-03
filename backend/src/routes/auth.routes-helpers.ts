@@ -1,3 +1,6 @@
+// 1. Input validation and cookie management shared by the auth routes (email/username/password checks, reading/setting/clearing the JWT and CSRF cookies)
+// 2. Small utility helpers used by both classic login and OAuth login, such as CSRF token verification and the safe user fields returned to the client
+
 import { randomBytes } from 'crypto'
 import type { Request, Response } from 'express'
 import { AppError } from '../middleware/error.middleware.js'

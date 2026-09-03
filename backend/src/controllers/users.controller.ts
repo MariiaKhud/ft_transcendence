@@ -1,9 +1,13 @@
-import { Request, Response } from 'express';
+// Marks a user online, and gets a user's public profile by ID
+// Calls usersService for the real work, just wraps it in a success/error response
+
+import { Request, response, Response } from 'express';
 import * as usersService from '../services/users.service.js';
 import { AppError } from '../middleware/error.middleware.js';
 import { sendSuccess, sendError } from '../utils/api-response.js';
 import { ErrorCode } from '../lib/error-codes.js';
 
+// Updates the user's online status to true and returns a success response.
 export async function updateOnlineStatus(req: Request, res: Response) {
   try {
     if (!req.user) {
@@ -22,6 +26,7 @@ export async function updateOnlineStatus(req: Request, res: Response) {
 }
 
 
+// Retrieves a user's public profile by their ID and returns it in the response.
 export async function getUserById(req: Request, res: Response) {
   try {
     const user = await usersService.getPublicProfileById(req.params.userId)

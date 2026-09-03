@@ -1,3 +1,6 @@
+// oauth.passport.ts → takes those settings and connects them to passport, which is then used in auth.routes.ts to handle /api/auth/oauth/:provider
+// and /api/auth/oauth/:provider/callback
+
 import passport from 'passport'
 import { Strategy as GitHubStrategy } from 'passport-github2'
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20'
@@ -17,8 +20,10 @@ export interface NormalizedOAuthUser {
   emailVerified: boolean
 }
 
+// Flag to ensure we only initialize Passport strategies once.
 let strategyInitialized = false
 
+/// Extracts the primary email from a Passport profile object, returning null if none is found.
 const extractPrimaryEmail = (profile: Profile): { email: string | null; verified: boolean } => {
   // GitHub profiles can expose multiple emails; we only need one stable login address.
   const emailEntry = profile.emails?.[0] as { value?: string; verified?: boolean } | undefined
@@ -30,6 +35,7 @@ const extractPrimaryEmail = (profile: Profile): { email: string | null; verified
   }
 }
 
+// Extracts a field from a JSON-like object, returning null if the field is missing or not a string.
 const extractJsonField = (value: unknown, fieldName: string): string | null => {
   // The 42 profile payload is JSON-like, so we read fields defensively.
   if (value && typeof value === 'object' && fieldName in value) {
@@ -42,6 +48,7 @@ const extractJsonField = (value: unknown, fieldName: string): string | null => {
   return null
 }
 
+// Converts a GitHub profile into a normalized user object for our app.
 const toNormalizedGithubUser = (profile: Profile): NormalizedOAuthUser => {
   const { email, verified } = extractPrimaryEmail(profile)
 
@@ -56,6 +63,7 @@ const toNormalizedGithubUser = (profile: Profile): NormalizedOAuthUser => {
   }
 }
 
+// Converts a Google profile into a normalized user object for our app.
 const toNormalizedGoogleUser = (profile: Profile): NormalizedOAuthUser => {
   const { email, verified } = extractPrimaryEmail(profile)
 
@@ -70,6 +78,7 @@ const toNormalizedGoogleUser = (profile: Profile): NormalizedOAuthUser => {
   }
 }
 
+// Converts a 42 profile into a normalized user object for our app.
 const toNormalizedFortyTwoUser = (rawProfile: unknown): NormalizedOAuthUser => {
   const profile = rawProfile as Record<string, unknown>
   const userIdValue = profile.id
@@ -102,6 +111,7 @@ const toNormalizedFortyTwoUser = (rawProfile: unknown): NormalizedOAuthUser => {
   }
 }
 
+// Creates a Passport strategy for 42 using the generic OAuth2 adapter.
 const createFortyTwoStrategy = (clientId: string, clientSecret: string, callbackURL: string) => {
   // 42 uses standard OAuth2 endpoints, so we can reuse Passport's generic OAuth2 strategy.
   const strategy = new OAuth2Strategy(
@@ -169,6 +179,7 @@ const createFortyTwoStrategy = (clientId: string, clientSecret: string, callback
   return strategy
 }
 
+// Initializes Passport strategies for all configured OAuth providers.
 export const initializeOAuthStrategy = () => {
   const oauthConfig = getOAuthConfig()
 

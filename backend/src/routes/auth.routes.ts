@@ -1,3 +1,6 @@
+// 1. Classic authentication (email/password, JWT, CSRF, logout with token revocation)
+// 2. OAuth login via external providers, using the settings from oauth.config.ts and the strategies from oauth.passport.ts
+
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { randomBytes } from 'crypto'
@@ -28,20 +31,23 @@ import { forceOffline } from '../socket/socket.server.js'
 // Router for all auth endpoints.
 const router = Router()
 
+// Constants for OAuth flow and error handling.
 const OAUTH_ERROR_CODE_PARAM = 'code'
 const OAUTH_STATE_COOKIE_NAME = 'oauth_state'
 const OAUTH_STATE_MAX_AGE_MS = 10 * 60 * 1000
-// Fallback codes used when callback payload is malformed or passport fails unexpectedly.
+// OAuth error codes for frontend redirection.
 const OAUTH_CALLBACK_INVALID_CODE = 'oauth_callback_invalid'
 const OAUTH_PROFILE_INVALID_CODE = 'oauth_profile_invalid'
 const OAUTH_PROVIDER_UNAVAILABLE_CODE = 'oauth_provider_unavailable'
 const OAUTH_REDIRECT_URI_MISMATCH_CODE = 'oauth_redirect_uri_mismatch'
 const OAUTH_ACCESS_TOKEN_FAILED_CODE = 'oauth_access_token_failed'
 
+// Helper to check if a value is a non-null object (Record).
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
 }
 
+// Classifies an OAuth callback error into a compact code for frontend redirection.
 export const getOAuthCallbackErrorCode = (error: unknown) => {
   if (!isRecord(error)) {
     return OAUTH_CALLBACK_INVALID_CODE
@@ -111,6 +117,7 @@ export const getOAuthCallbackErrorCode = (error: unknown) => {
   return OAUTH_CALLBACK_INVALID_CODE
 }
 
+// Returns the OAuth scopes required for a given provider.
 const getOAuthScopes = (provider: OAuthProvider) => {
   if (provider === 'github') {
     return ['user:email']

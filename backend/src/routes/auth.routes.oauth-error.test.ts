@@ -1,3 +1,7 @@
+// 1. This test checks that OAuth login errors get the right error code — like when the redirect URL doesn't match, or the login code is invalid or expired
+// 2. It runs sample error cases through getOAuthCallbackErrorCode (from auth.routes.ts) and checks the output is correct, so the error messages shown to users
+//    stay correct if that logic changes later
+
 import assert from 'node:assert/strict'
 import { getOAuthCallbackErrorCode } from './auth.routes'
 

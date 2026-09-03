@@ -1,3 +1,6 @@
+// 1. Checks the login cookie on every request and blocks the request if it's missing or invalid (authMiddleware) — used on routes that require login
+// 2. Also has a softer version (optionalAuthMiddleware) that reads the user if logged in, but still lets guests through if there's no valid cookie
+
 import { Request, Response, NextFunction } from 'express'
 import { AppError } from './error.middleware.js'
 import { ErrorCode } from '../lib/error-codes.js'
