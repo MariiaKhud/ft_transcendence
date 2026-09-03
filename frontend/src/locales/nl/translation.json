@@ -74,6 +74,7 @@
       "validation_content_required": "Inhoud is verplicht.",
       "validation_content_invalid": "Inhoud moet een niet-lege tekst zijn.",
       "validation_content_min_length": "Inhoud moet minimaal 100 tekens bevatten.",
+      "validation_content_max_length": "Inhoud mag maximaal 10000 tekens bevatten.",
       "validation_category_required": "Categorie is verplicht.",
       "validation_category_invalid": "Kies een geldige categorie.",
       "validation_article_fields_required": "Titel, inhoud en categorie zijn verplicht.",
@@ -171,7 +172,7 @@
     "preview": "Voorbeeld",
     "nothingToPreview": "Nog niets om te bekijken.",
     "contentPlaceholder": "Schrijf uw artikel in Markdown...",
-    "contentCounter": "{{count}} / {{min}} minimaal",
+    "validCharactersHint": "{{count}} geldige tekens (minimaal {{min}})",
     "saving": "Opslaan...",
     "cancel": "Annuleren",
     "errors": {
@@ -179,6 +180,7 @@
       "titleMaxLength": "Titel mag maximaal {{max}} tekens bevatten",
       "contentRequired": "Inhoud is verplicht",
       "contentMinLength": "Inhoud moet minimaal {{min}} tekens bevatten",
+      "contentMaxLength": "Inhoud mag maximaal {{max}} tekens bevatten",
       "unableToSave": "Kan artikel niet opslaan"
     }
   },
@@ -497,7 +499,8 @@
     "offline": "Offline",
     "userNotFound": "Gebruiker niet gevonden",
     "backToFriends": "Terug naar Mijn vrienden",
-    "loadError": "Berichten konden niet worden geladen"
+    "loadError": "Berichten konden niet worden geladen",
+    "notFriends": "Je kunt geen berichten meer sturen omdat jullie geen vrienden meer zijn."
   },
   "friends": {
     "title": "Vrienden",

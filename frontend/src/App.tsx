@@ -106,8 +106,8 @@ const App = () => {
 
             {currentUser ? (
               <>
-                <NotificationBell />
                 <LeaderboardButton />
+                <NotificationBell />
 
                 {/* Write a new article. */}
                 <Link

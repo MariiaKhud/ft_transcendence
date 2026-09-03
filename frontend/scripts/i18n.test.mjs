@@ -374,7 +374,6 @@ test('frontend catch sites route API errors through translateApiError instead of
     'src/pages/EditProfile.tsx',
     'src/pages/Profile.tsx',
     'src/pages/Article.tsx',
-    'src/components/ArticleForm.tsx',
     'src/components/user/FollowButton.tsx',
     'src/components/user/FriendButton.tsx',
     'src/components/user/UserSearchBar.tsx',
@@ -389,6 +388,23 @@ test('frontend catch sites route API errors through translateApiError instead of
     );
     assert.match(source, /translateApiError\(/, `${relativePath} imports but never calls translateApiError`);
   }
+});
+
+test('ArticleForm routes API errors by their backend code (getApiErrorCode + i18n) instead of raw err.message', () => {
+  // ArticleForm needs the bare error code — not just translateApiError's resolved
+  // string — to route a validation error to the right field (title vs. content vs.
+  // the generic form banner), so it calls i18n directly rather than going through
+  // translateApiError. This checks it still only ever displays translated text.
+  const source = readFileSync(path.join(frontendRoot, 'src/components/ArticleForm.tsx'), 'utf8');
+  assert.match(
+    source,
+    /import \{ getApiErrorCode \} from '@\/lib\/api-errors'/,
+    'ArticleForm.tsx does not import getApiErrorCode',
+  );
+  assert.match(source, /getApiErrorCode\(/, 'ArticleForm.tsx imports but never calls getApiErrorCode');
+  assert.match(source, /i18n\.exists\(`api\.errors\.\$\{code\}`\)/, 'ArticleForm.tsx does not guard on i18n.exists before treating a code as translated');
+  assert.match(source, /key:\s*`api\.errors\.\$\{code\}`/, 'ArticleForm.tsx does not store the matched code as an api.errors.<code> translation key');
+  assert.match(source, /t\(error\.key,\s*error\.params\)/, 'ArticleForm.tsx does not resolve the stored error key via t() at render time');
 });
 
 test('LanguageSwitcher syncs the choice to the account when authenticated', () => {

@@ -89,6 +89,19 @@ export function initSocketServer(httpServer: HttpServer) {
     // Register all chat event handlers
     registerChatHandlers(io, socket)
 
+    // Article viewers join a per-article room so they can receive live comment updates
+    socket.on('article:join', (articleId: string) => {
+      if (typeof articleId === 'string' && articleId) {
+        socket.join(`article:${articleId}`)
+      }
+    })
+
+    socket.on('article:leave', (articleId: string) => {
+      if (typeof articleId === 'string' && articleId) {
+        socket.leave(`article:${articleId}`)
+      }
+    })
+
     // ── Disconnect with grace period ───────────────────────────
     socket.on('disconnect', () => {
 

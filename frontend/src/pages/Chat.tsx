@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useChat } from '@/hooks/useChat'
 import { getSocket } from '@/lib/socket'
 import { apiRequest } from '@/api/client'
+import { getFriendshipStatus } from '@/api/friends'
 import { ChatWindow } from '@/components/user/ChatWindow'
 import { UserAvatar } from '@/components/user/UserAvatar'
 import type { PublicProfile } from '@/types/profile'
@@ -17,6 +18,7 @@ export function Chat() {
 
   const [otherUser, setOtherUser] = useState<PublicProfile | null>(null)
   const [otherUserOnline, setOtherUserOnline] = useState(false)
+  const [canSend, setCanSend] = useState(false)
   const [loadingUser, setLoadingUser] = useState(true)
 
   const { messages, loading, error, sending, sendMessage } = useChat(
@@ -33,6 +35,10 @@ export function Chat() {
       .then((res) => {
         setOtherUser(res.data ?? null)
         setOtherUserOnline(res.data?.isOnline ?? false)
+        return res.data?.id ? getFriendshipStatus(res.data.id) : null
+      })
+      .then((res) => {
+        if (res) setCanSend(res.state === 'friends')
       })
       .catch(() => {})
       .finally(() => setLoadingUser(false))
@@ -163,6 +169,7 @@ export function Chat() {
             currentUserId={currentUser.id}
             sending={sending}
             error={error}
+            canSend={canSend}
             onSend={sendMessage}
           />
         )}

@@ -74,6 +74,7 @@
       "validation_content_required": "Content is required.",
       "validation_content_invalid": "Content must be a non-empty string.",
       "validation_content_min_length": "Content must be at least 100 characters.",
+      "validation_content_max_length": "Content must be at most 10000 characters.",
       "validation_category_required": "Category is required.",
       "validation_category_invalid": "Please choose a valid category.",
       "validation_article_fields_required": "Title, content, and category are required.",
@@ -171,7 +172,7 @@
     "preview": "Preview",
     "nothingToPreview": "Nothing to preview yet.",
     "contentPlaceholder": "Write your article in Markdown...",
-    "contentCounter": "{{count}} / {{min}} minimum",
+    "validCharactersHint": "{{count}} valid characters (minimum {{min}})",
     "saving": "Saving...",
     "cancel": "Cancel",
     "errors": {
@@ -179,6 +180,7 @@
       "titleMaxLength": "Title must be at most {{max}} characters",
       "contentRequired": "Content is required",
       "contentMinLength": "Content must be at least {{min}} characters",
+      "contentMaxLength": "Content must be at most {{max}} characters",
       "unableToSave": "Unable to save article"
     }
   },
@@ -497,7 +499,8 @@
     "offline": "Offline",
     "userNotFound": "User not found",
     "backToFriends": "Back to My Friends",
-    "loadError": "Failed to load messages"
+    "loadError": "Failed to load messages",
+    "notFriends": "You can no longer send messages because you are not friends."
   },
   "friends": {
     "title": "Friends",
