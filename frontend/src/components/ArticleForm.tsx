@@ -11,6 +11,12 @@ const TITLE_MAX_LENGTH = 120
 const CONTENT_MIN_LENGTH = 100
 const CONTENT_MAX_LENGTH = 10000
 
+// Mirrors the backend's minimum-length check: count only non-whitespace characters
+// so the requirement can't be satisfied by padding with whitespace — leading,
+// trailing, or between real characters. The maximum still uses raw length, which
+// is a payload-size cap rather than an effort signal.
+const countNonWhitespaceChars = (value: string): number => value.replace(/\s+/g, '').length
+
 export interface ArticleFormValues {
   title: string
   content: string
@@ -106,7 +112,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
     if (trimmedContent.length === 0) {
       setContentError({ key: 'articleForm.errors.contentRequired' })
       isValid = false
-    } else if (trimmedContent.length < CONTENT_MIN_LENGTH) {
+    } else if (countNonWhitespaceChars(trimmedContent) < CONTENT_MIN_LENGTH) {
       setContentError({ key: 'articleForm.errors.contentMinLength', params: { min: CONTENT_MIN_LENGTH } })
       isValid = false
     } else if (trimmedContent.length > CONTENT_MAX_LENGTH) {
@@ -135,11 +141,12 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
     }
   }
 
-  // Leading/trailing whitespace counts toward the raw counter but not toward the
-  // minimum-length check, which can make the counter look satisfied when it isn't.
-  // Only surface this when it's actually misleading (still under the minimum).
-  const trimmedContentLength = content.trim().length
-  const showValidCharsHint = trimmedContentLength !== content.length && trimmedContentLength < CONTENT_MIN_LENGTH
+  // Whitespace (anywhere — leading, trailing, or padding between real characters)
+  // counts toward the raw counter but not toward the minimum-length check, which
+  // can make the counter look satisfied when it isn't. Surface the real count
+  // whenever that's the case, not just when the padding happens to be at the edges.
+  const nonWhitespaceContentLength = countNonWhitespaceChars(content)
+  const showValidCharsHint = nonWhitespaceContentLength !== content.length && nonWhitespaceContentLength < CONTENT_MIN_LENGTH
 
   return (
     <form className="space-y-4" onSubmit={handleSubmit} noValidate>
@@ -237,7 +244,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
         </p>
         {showValidCharsHint && (
           <p className="text-right text-xs text-amber-600">
-            {t('articleForm.validCharactersHint', { count: trimmedContentLength, min: CONTENT_MIN_LENGTH })}
+            {t('articleForm.validCharactersHint', { count: nonWhitespaceContentLength, min: CONTENT_MIN_LENGTH })}
           </p>
         )}
         {contentError && <p className="text-xs font-medium text-pink-600">{resolveFieldError(contentError)}</p>}
