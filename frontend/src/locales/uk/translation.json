@@ -135,9 +135,11 @@
     }
   },
   "nav": {
-    "leaderboard": "Таблиця лідерів",
+    "leaderboard": "Рейтинг",
     "write": "Написати",
     "login": "Увійти",
+    "profile": "Профіль",
+    "settings": "Редагувати профіль",
     "logout": "Вийти",
     "checkingSession": "Перевірка сесії..."
   },
@@ -388,7 +390,6 @@
     "unableToLoad": "Не вдалося завантажити профіль",
     "unavailable": "Цей профіль не існує або наразі недоступний.",
     "usernameMissing": "Відсутнє ім'я користувача профілю",
-    "editProfile": "Редагувати профіль",
     "friends": "Мої друзі",
     "noBio": "Поки що немає біографії. Цей користувач не додав біографію профілю.",
     "statArticles": "Статті",
@@ -420,6 +421,27 @@
     "likes_many": "{{count}} вподобань",
     "likes_other": "{{count}} вподобання",
     "unknownDate": "Невідома дата"
+  },
+  "admin": {
+    "title": "Панель керування",
+    "forbidden": "У вас немає дозволу переглядати цю сторінку.",
+    "content": "Контент",
+    "users": "Користувачі",
+    "allContent": "Весь контент",
+    "removed": "Видалені",
+    "remove": "Видалити",
+    "removeArticle": "Видалити статтю",
+    "removeArticleReasonHelp": "Вкажіть причину видалення. Автора буде повідомлено.",
+    "removeArticleReasonPlaceholder": "напр. Порушує правила спільноти: ...",
+    "restoreArticle": "Відновити статтю",
+    "restoreComment": "Відновити коментар",
+    "activeArticles": "Активні статті",
+    "removedArticles": "Видалені статті",
+    "removedComments": "Видалені коментарі",
+    "totalUsers": "Всього користувачів",
+    "moderators": "Модератори",
+    "admins": "Адміністратори",
+    "refresh": "Оновити"
   },
   "article": {
     "loading": "Завантаження статті...",

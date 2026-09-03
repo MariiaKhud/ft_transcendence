@@ -479,7 +479,7 @@ export const Article = () => {
                           {new Date(comment.createdAt).toLocaleDateString()}
                         </span>
 
-                        {!showRemovedPlaceholder && !isOwnComment && isStaff && (
+                        {!comment.isRemoved && !isOwnComment && isStaff && (
                           <Button
                             type="button"
                             variant="destructive"

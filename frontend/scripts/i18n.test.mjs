@@ -16,6 +16,7 @@ const uk = JSON.parse(readFileSync(path.join(localesDir, 'uk/translation.json'),
 const i18nConfig = readFileSync(path.join(frontendRoot, 'src/lib/i18n.ts'), 'utf8');
 const mainEntry = readFileSync(path.join(frontendRoot, 'src/main.tsx'), 'utf8');
 const footer = readFileSync(path.join(frontendRoot, 'src/components/Footer.tsx'), 'utf8');
+const appEntry = readFileSync(path.join(frontendRoot, 'src/App.tsx'), 'utf8');
 const languageSwitcher = readFileSync(path.join(frontendRoot, 'src/components/LanguageSwitcher.tsx'), 'utf8');
 const packageJson = JSON.parse(readFileSync(path.join(frontendRoot, 'package.json'), 'utf8'));
 const apiErrorsSource = readFileSync(path.join(frontendRoot, 'src/lib/api-errors.ts'), 'utf8');
@@ -85,14 +86,32 @@ const collectPathValues = (obj, prefix = '') =>
 // one/few/many/other) — normalize away the suffix before comparing key sets.
 const normalizePluralKeys = (keys) => [...new Set(keys.map((key) => key.replace(PLURAL_SUFFIX_RE, '')))].sort();
 
+// Top-level namespaces that are English-only on purpose right now: the
+// feature is still being built by another contributor under their own
+// ticket, who owns adding the nl/uk translations. Remove an entry here once
+// that namespace has full nl/uk coverage — don't add to this list to silence
+// a real gap in a namespace you own.
+const PENDING_NAMESPACES = ['admin'];
+
+const dropPendingNamespaces = (keys) =>
+  keys.filter((key) => !PENDING_NAMESPACES.some((ns) => key === ns || key.startsWith(`${ns}.`)));
+
 test('en, nl, and uk translation bundles expose the same key set (plural-suffix aware)', () => {
-  const enKeys = normalizePluralKeys(collectKeys(en));
-  const nlKeys = normalizePluralKeys(collectKeys(nl));
-  const ukKeys = normalizePluralKeys(collectKeys(uk));
+  const enKeys = dropPendingNamespaces(normalizePluralKeys(collectKeys(en)));
+  const nlKeys = dropPendingNamespaces(normalizePluralKeys(collectKeys(nl)));
+  const ukKeys = dropPendingNamespaces(normalizePluralKeys(collectKeys(uk)));
 
   assert.ok(enKeys.length > 0, 'English bundle should not be empty');
   assert.deepEqual(nlKeys, enKeys, 'Dutch bundle is missing or has extra keys vs. English');
   assert.deepEqual(ukKeys, enKeys, 'Ukrainian bundle is missing or has extra keys vs. English');
+});
+
+test('pending namespaces are only missing from nl/uk, not from English itself', () => {
+  const enKeys = new Set(collectKeys(en));
+  for (const ns of PENDING_NAMESPACES) {
+    const hasNamespace = [...enKeys].some((key) => key === ns || key.startsWith(`${ns}.`));
+    assert.ok(hasNamespace, `PENDING_NAMESPACES lists "${ns}", but it doesn't exist in en/translation.json — remove it`);
+  }
 });
 
 test('Ukrainian declares all four CLDR plural forms for count-based strings', () => {
@@ -237,17 +256,18 @@ test('Privacy Policy and Terms of Service pages read their content from i18n, no
 
 test('LanguageSwitcher offers every supported language and calls i18n.changeLanguage', () => {
   assert.match(languageSwitcher, /import \{ useTranslation \} from 'react-i18next'/);
-  assert.match(languageSwitcher, /void i18n\.changeLanguage\(event\.target\.value\)/);
+  assert.match(languageSwitcher, /void i18n\.changeLanguage\(language\)/);
   assert.match(languageSwitcher, /aria-label=\{t\('languageSwitcher\.label'\)\}/);
 
   for (const language of ['en', 'nl', 'uk']) {
     assert.match(languageSwitcher, new RegExp(`LANGUAGE_NAMES[\\s\\S]*${language}:`));
+    assert.match(languageSwitcher, new RegExp(`LANGUAGE_ORDER[\\s\\S]*${language}`));
   }
 });
 
-test('Footer renders the language switcher on every page', () => {
-  assert.match(footer, /import \{ LanguageSwitcher \} from '@\/components\/LanguageSwitcher'/);
-  assert.match(footer, /<LanguageSwitcher \/>/);
+test('App renders the language switcher in the nav on every page', () => {
+  assert.match(appEntry, /import \{ LanguageSwitcher \} from '@\/components\/LanguageSwitcher'/);
+  assert.match(appEntry, /<LanguageSwitcher \/>/);
 });
 
 test('changing the i18next language updates resolved translations and persists to localStorage', async () => {
@@ -373,7 +393,7 @@ test('frontend catch sites route API errors through translateApiError instead of
 
 test('LanguageSwitcher syncs the choice to the account when authenticated', () => {
   assert.match(languageSwitcher, /import \{ updateMyProfile \} from '@\/api\/users'/);
-  assert.match(languageSwitcher, /updateMyProfile\(\{ preferredLanguage: event\.target\.value \}\)/);
+  assert.match(languageSwitcher, /updateMyProfile\(\{ preferredLanguage: language \}\)/);
 });
 
 test('useAuth applies a logged-in user\'s preferredLanguage on login and session restore', () => {

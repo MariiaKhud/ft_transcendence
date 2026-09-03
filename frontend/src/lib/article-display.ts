@@ -34,6 +34,26 @@ export const getInitials = (author: AuthorLike) => {
     .join('')
 }
 
+// Strip common markdown syntax down to plain text, for previews (e.g. article
+// cards) that can't render real markdown without breaking a line-clamp.
+export const stripMarkdown = (markdown: string) => {
+  return markdown
+    .replace(/```[\s\S]*?```/g, ' ') // fenced code blocks
+    .replace(/^#{1,6}\s+/gm, '') // headings
+    .replace(/^>\s+/gm, '') // blockquotes
+    .replace(/^\s*[-*+]\s+/gm, '') // unordered list markers
+    .replace(/^\s*\d+\.\s+/gm, '') // ordered list markers
+    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1') // images -> alt text
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1') // links -> link text
+    .replace(/(\*\*|__)(.*?)\1/g, '$2') // bold
+    .replace(/(\*|_)(.*?)\1/g, '$2') // italic
+    .replace(/~~(.*?)~~/g, '$1') // strikethrough
+    .replace(/`([^`]*)`/g, '$1') // inline code
+    .replace(/\n{2,}/g, ' ') // collapse blank lines
+    .replace(/\n/g, ' ')
+    .trim()
+}
+
 // Translated category label, e.g. "STUDY_NOTES" -> "Study Notes". Falls back
 // to a naive title-case of the raw category key if no translation exists.
 export const formatCategoryLabel = (category: string) => {
