@@ -89,17 +89,41 @@ export function initSocketServer(httpServer: HttpServer) {
     // Register all chat event handlers
     registerChatHandlers(io, socket)
 
-    // Article viewers join a per-article room so they can receive live comment updates
-    socket.on('article:join', (articleId: string) => {
-      if (typeof articleId === 'string' && articleId) {
-        socket.join(`article:${articleId}`)
-      }
+    // Article viewers join a per-article room so they can receive live comment/like updates.
+    // Also marks the socket as "viewing" this article, so a new comment or like doesn't
+    // generate a notification while the author is already looking at it — mirrors
+    // how chat:read suppresses MESSAGE notifications for an open conversation.
+    socket.on('article:join', async (articleId: string) => {
+      if (typeof articleId !== 'string' || !articleId) return
+
+      socket.data.activeArticleId = articleId
+      await socket.join(`article:${articleId}`)
+
+      await prisma.notification.updateMany({
+        where: { userId, type: { in: ['COMMENT', 'LIKE'] }, refId: articleId, isRead: false },
+        data: { isRead: true },
+      })
+      socket.emit('notifications:comments-read', { articleId })
     })
 
     socket.on('article:leave', (articleId: string) => {
-      if (typeof articleId === 'string' && articleId) {
-        socket.leave(`article:${articleId}`)
+      if (typeof articleId !== 'string' || !articleId) return
+
+      if (socket.data.activeArticleId === articleId) {
+        delete socket.data.activeArticleId
       }
+      socket.leave(`article:${articleId}`)
+    })
+
+    // Clients viewing the article feed join this room so like/comment count
+    // changes can be pushed to visible cards without refetching the whole page.
+    // Scoped to feed viewers only, not broadcast to every connected socket.
+    socket.on('feed:join', () => {
+      socket.join('feed')
+    })
+
+    socket.on('feed:leave', () => {
+      socket.leave('feed')
     })
 
     // ── Disconnect with grace period ───────────────────────────
@@ -113,10 +137,15 @@ export function initSocketServer(httpServer: HttpServer) {
 
         if (activeSockets.length > 0) return
 
-        await prisma.user.update({
+        // updateMany (not update): the user may have been deleted since this socket
+        // connected — that must not throw and crash the whole process off an
+        // unhandled rejection in this timer.
+        const updated = await prisma.user.updateMany({
           where: { id: userId },
           data: { isOnline: false, lastSeenAt: new Date() },
         })
+
+        if (updated.count === 0) return
 
         friendIds.forEach((friendId) => {
           io.to(friendId).emit('user:offline', { userId })

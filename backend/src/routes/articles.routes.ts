@@ -229,21 +229,32 @@ const createCommentHandler = async (req: Request, res: Response) => {
   // Push the new comment live to anyone currently viewing the article.
   io.to(`article:${article.id}`).emit('comment:new', comment)
 
-  // Don't notify authors about their own comments.
-  if (article.authorId !== authorId) {
-    await createNotification(
-      article.authorId,
-      'COMMENT',
-      `commented on your article "${article.title}"`,
-      article.id
-    )
+  // Push the updated comment count to anyone browsing the feed.
+  const commentsCount = await prisma.comment.count({
+    where: { articleId: article.id, isRemoved: false },
+  })
+  io.to('feed').emit('article:stats-updated', { articleId: article.id, commentsCount })
 
-    // Push the notification in real-time too, instead of waiting for the next poll.
-    io.to(article.authorId).emit('notification:new', {
-      type: 'COMMENT',
-      message: `commented on your article "${article.title}"`,
-      refId: article.id,
-    })
+  // Don't notify authors about their own comments, or if they're already viewing this article.
+  if (article.authorId !== authorId) {
+    const authorSockets = await io.in(article.authorId).fetchSockets()
+    const authorIsViewing = authorSockets.some((s) => s.data.activeArticleId === article.id)
+
+    if (!authorIsViewing) {
+      await createNotification(
+        article.authorId,
+        'COMMENT',
+        `commented on your article "${article.title}"`,
+        article.id
+      )
+
+      // Push the notification in real-time too, instead of waiting for the next poll.
+      io.to(article.authorId).emit('notification:new', {
+        type: 'COMMENT',
+        message: `commented on your article "${article.title}"`,
+        refId: article.id,
+      })
+    }
   }
 
   res.status(201).json({ success: true, data: comment })
@@ -295,10 +306,26 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
     return { liked: true, likeCount: updated.likeCount }
   })
 
-  // Only notify on the like transition, not the unlike.
+  // Push the updated like count live to anyone currently viewing the article, and to the feed.
+  io.to(`article:${article.id}`).emit('article:like-updated', { likeCount })
+  io.to('feed').emit('article:stats-updated', { articleId: article.id, likeCount })
+
+  // Only notify on the like transition, not the unlike, and not if the author is already viewing.
   if (liked) {
     await checkAndAwardBadges(article.authorId)
-    await createNotification(article.authorId, 'LIKE', `liked your article "${article.title}"`, article.id)
+
+    const authorSockets = await io.in(article.authorId).fetchSockets()
+    const authorIsViewing = authorSockets.some((s) => s.data.activeArticleId === article.id)
+
+    if (!authorIsViewing) {
+      await createNotification(article.authorId, 'LIKE', `liked your article "${article.title}"`, article.id)
+
+      io.to(article.authorId).emit('notification:new', {
+        type: 'LIKE',
+        message: `liked your article "${article.title}"`,
+        refId: article.id,
+      })
+    }
   }
 
   res.status(200).json({ success: true, data: { liked, likeCount } })

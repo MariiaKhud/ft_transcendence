@@ -2,7 +2,8 @@
 		test-backend test-frontend test-browser-compat test-i18n \
 		test-friends test-follows test-messages test-gamification \
 		test-articles test-articles-backend test-articles-frontend \
-		test-all
+		test-all \
+		test-realtime \
 
 CYAN := \033[0;34m
 GREEN := \033[0;32m
@@ -31,6 +32,7 @@ help:
 	@printf "  $(GREEN)make test-articles-backend$(RESET)  - Run articles/comments/likes/search backend tests only\n"
 	@printf "  $(GREEN)make test-articles-frontend$(RESET) - Run articles/comments/likes/search frontend proxy tests only\n"
 	@printf "  $(GREEN)make test-all$(RESET)            - Run every test suite in sequence\n"
+	@printf "  $(GREEN)make test-realtime$(RESET)       - Run Socket.IO live-update + notification-suppression tests\n"
 
 up:
 	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"
@@ -87,8 +89,12 @@ test-articles-frontend:
 
 test-articles: test-articles-backend test-articles-frontend
 
+test-realtime:
+	cd backend && ./scripts/test-realtime-flow.sh
+
 # Runs every test suite back to back; stops at the first failure.
 test-all: test-backend test-frontend test-browser-compat test-i18n \
-	test-friends test-follows test-messages test-gamification test-articles
+	test-friends test-follows test-messages test-gamification test-articles test-realtime
+
 
 .DEFAULT_GOAL := help
