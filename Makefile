@@ -31,8 +31,8 @@ help:
 	@printf "  $(GREEN)make test-articles$(RESET)       - Run articles/comments/likes/search tests (backend + frontend)\n"
 	@printf "  $(GREEN)make test-articles-backend$(RESET)  - Run articles/comments/likes/search backend tests only\n"
 	@printf "  $(GREEN)make test-articles-frontend$(RESET) - Run articles/comments/likes/search frontend proxy tests only\n"
-	@printf "  $(GREEN)make test-all$(RESET)            - Run every test suite in sequence\n"
 	@printf "  $(GREEN)make test-realtime$(RESET)       - Run Socket.IO live-update + notification-suppression tests\n"
+	@printf "  $(GREEN)make test-all$(RESET)            - Run every test suite in sequence\n"
 
 up:
 	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"
