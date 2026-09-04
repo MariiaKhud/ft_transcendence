@@ -68,6 +68,12 @@ const deleteCommentHandler = async (req: Request, res: Response) => {
     // Push the removal live to anyone currently viewing the article.
     io.to(`article:${existing.articleId}`).emit('comment:deleted', { id: existing.id })
 
+    // Push the updated comment count to anyone browsing the feed.
+    const commentsCount = await prisma.comment.count({
+      where: { articleId: existing.articleId, isRemoved: false },
+    })
+    io.to('feed').emit('article:stats-updated', { articleId: existing.articleId, commentsCount })
+
     res.status(200).json({ success: true, data: { id: existing.id } })
     return
   }
@@ -86,6 +92,12 @@ const deleteCommentHandler = async (req: Request, res: Response) => {
 
   // Push the removal live to anyone currently viewing the article.
   io.to(`article:${comment.articleId}`).emit('comment:updated', comment)
+
+  // Push the updated comment count to anyone browsing the feed.
+  const commentsCount = await prisma.comment.count({
+    where: { articleId: comment.articleId, isRemoved: false },
+  })
+  io.to('feed').emit('article:stats-updated', { articleId: comment.articleId, commentsCount })
 
   res.status(200).json({ success: true, data: comment })
 }

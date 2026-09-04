@@ -56,13 +56,19 @@ export function useNotifications() {
       void fetch()
     }
 
+    function onCommentsRead() {
+      void fetch()
+    }
+
     socket.on('notification:new', onNewNotification)
     socket.on('notifications:messages-read', onMessagesRead)
+    socket.on('notifications:comments-read', onCommentsRead)
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       socket.off('notification:new', onNewNotification)
       socket.off('notifications:messages-read', onMessagesRead)
+      socket.off('notifications:comments-read', onCommentsRead)
     };
   }, [fetch]);
 

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { ArticleCard } from '@/components/ArticleCard'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { useStore } from '@/store/store'
+import { getSocket } from '@/lib/socket'
 import { getArticles, type Article, type ArticlesResponse } from '@/api/articles'
 
 type SortOption = 'newest' | 'oldest' | 'most_liked'
@@ -74,6 +75,37 @@ export const Home = () => {
   useEffect(() => {
     fetchArticles()
   }, [page])
+
+  // Join the feed room so like/comment counts on visible cards update live,
+  // without refetching the whole page.
+  useEffect(() => {
+    const socket = getSocket()
+    socket.emit('feed:join')
+
+    const onStatsUpdated = (payload: { articleId: string; likeCount?: number; commentsCount?: number }) => {
+      setArticles((prev) =>
+        prev.map((article) => {
+          if (article.id !== payload.articleId) {
+            return article
+          }
+          return {
+            ...article,
+            ...(payload.likeCount !== undefined ? { likeCount: payload.likeCount } : {}),
+            ...(payload.commentsCount !== undefined
+              ? { _count: { ...article._count, comments: payload.commentsCount } }
+              : {}),
+          }
+        }),
+      )
+    }
+
+    socket.on('article:stats-updated', onStatsUpdated)
+
+    return () => {
+      socket.emit('feed:leave')
+      socket.off('article:stats-updated', onStatsUpdated)
+    }
+  }, [])
 
   return (
     <div className="space-y-10">

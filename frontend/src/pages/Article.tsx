@@ -143,15 +143,21 @@ export const Article = () => {
       setArticle((prev) => (prev ? { ...prev, commentsCount: Math.max(0, prev.commentsCount - 1) } : prev))
     }
 
+    const onLikeUpdated = ({ likeCount: count }: { likeCount: number }) => {
+      setLikeCount(count)
+    }
+
     socket.on('comment:new', onNewComment)
     socket.on('comment:updated', onCommentUpdated)
     socket.on('comment:deleted', onCommentDeleted)
+    socket.on('article:like-updated', onLikeUpdated)
 
     return () => {
       socket.emit('article:leave', id)
       socket.off('comment:new', onNewComment)
       socket.off('comment:updated', onCommentUpdated)
       socket.off('comment:deleted', onCommentDeleted)
+      socket.off('article:like-updated', onLikeUpdated)
     }
   }, [id])
 
