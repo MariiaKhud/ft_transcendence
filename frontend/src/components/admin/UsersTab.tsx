@@ -1,5 +1,6 @@
 import type { UserRole } from '@shared/types/user'
 import type { AdminUser } from '@/types/admin'
+import { useTranslation } from 'react-i18next'
 
 type UsersTabProps = {
   users: AdminUser[]
@@ -15,16 +16,18 @@ export function UsersTab({
   currentUserId,
   onRoleChange,
 }: UsersTabProps) {
+  const { t } = useTranslation()
+
   return (
     <section className="mt-6 overflow-x-auto rounded-2xl border border-white/50 bg-white/60">
       <table className="w-full min-w-[600px] text-left">
         <thead className="bg-white/60 text-xs uppercase tracking-wide text-slate-500">
           <tr>
-            <th className="px-4 py-3">User</th>
-            <th className="px-4 py-3">Role</th>
-            <th className="px-4 py-3">Articles</th>
-            <th className="px-4 py-3">Created</th>
-            <th className="px-4 py-3">Action</th>
+            <th className="px-4 py-3">{t('admin.usersTab.user')}</th>
+            <th className="px-4 py-3">{t('admin.usersTab.role')}</th>
+            <th className="px-4 py-3">{t('admin.usersTab.articles')}</th>
+            <th className="px-4 py-3">{t('admin.usersTab.created')}</th>
+            <th className="px-4 py-3">{t('admin.usersTab.action')}</th>
           </tr>
         </thead>
 
@@ -41,7 +44,7 @@ export function UsersTab({
               </td>
 
               <td className="px-4 py-4 text-sm text-slate-700">
-                {user.role}
+                {t(`admin.usersTab.roles.${user.role}`)}
               </td>
 
               <td className="px-4 py-4 text-sm text-slate-700">
@@ -64,9 +67,9 @@ export function UsersTab({
                   }
                   className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <option value="USER">User</option>
-                  <option value="MODERATOR">Moderator</option>
-                  <option value="ADMIN">Admin</option>
+                  <option value="USER">{t('admin.usersTab.roles.USER')}</option>
+                  <option value="MODERATOR">{t('admin.usersTab.roles.MODERATOR')}</option>
+                  <option value="ADMIN">{t('admin.usersTab.roles.ADMIN')}</option>
                 </select>
               </td>
             </tr>

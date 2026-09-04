@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 import { ErrorCode } from '../lib/error-codes.js'
 import { authMiddleware } from '../middleware/auth.middleware.js'
+import { io } from '../socket/socket.server.js'
 import {
   commentWithAuthorSelect,
   validateCreateCommentInput,
@@ -39,6 +40,9 @@ const updateCommentHandler = async (req: Request, res: Response) => {
     select: commentWithAuthorSelect,
   })
 
+  // Push the edit live to anyone currently viewing the article.
+  io.to(`article:${comment.articleId}`).emit('comment:updated', comment)
+
   res.status(200).json({ success: true, data: comment })
 }
 
@@ -51,7 +55,7 @@ const deleteCommentHandler = async (req: Request, res: Response) => {
 
   const existing = await prisma.comment.findUnique({
     where: { id: req.params.id },
-    select: { id: true, authorId: true, isRemoved: true },
+    select: { id: true, articleId: true, authorId: true, isRemoved: true },
   })
 
   if (!existing || existing.isRemoved) {
@@ -60,6 +64,10 @@ const deleteCommentHandler = async (req: Request, res: Response) => {
 
   if (existing.authorId === req.user.userId) {
     await prisma.comment.delete({ where: { id: existing.id } })
+
+    // Push the removal live to anyone currently viewing the article.
+    io.to(`article:${existing.articleId}`).emit('comment:deleted', { id: existing.id })
+
     res.status(200).json({ success: true, data: { id: existing.id } })
     return
   }
@@ -75,6 +83,9 @@ const deleteCommentHandler = async (req: Request, res: Response) => {
     data: { isRemoved: true, removedReason: reason, removedAt: new Date() },
     select: commentWithAuthorSelect,
   })
+
+  // Push the removal live to anyone currently viewing the article.
+  io.to(`article:${comment.articleId}`).emit('comment:updated', comment)
 
   res.status(200).json({ success: true, data: comment })
 }

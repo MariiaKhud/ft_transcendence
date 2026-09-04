@@ -378,6 +378,47 @@ const removeCommentHandler = async (req: Request, res: Response) => {
   })
 }
 
+const restoreCommentHandler = async (req: Request, res: Response) => {
+  const { id } = req.params
+
+  const comment = await prisma.comment.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      isRemoved: true,
+    },
+  })
+
+  if (!comment) {
+    res.status(404).json({
+      success: false,
+      error: 'Comment not found',
+    })
+    return
+  }
+
+  const restoredComment = await prisma.comment.update({
+    where: { id },
+    data: {
+      isRemoved: false,
+      removedReason: null,
+      removedAt: null,
+    },
+    select: {
+      id: true,
+      content: true,
+      isRemoved: true,
+      removedReason: true,
+      removedAt: true,
+    },
+  })
+
+  res.status(200).json({
+    success: true,
+    data: restoredComment,
+  })
+}
+
 // Admin routes: user management, role management, and content moderation.
 router.get('/users', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(getAdminUsersHandler),)
 router.patch('/users/:id/role', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(changeUserRoleHandler),)
@@ -386,5 +427,6 @@ router.patch('/articles/:id/remove', authMiddleware, requireRole('MODERATOR'), h
 router.patch('/articles/:id/restore', authMiddleware,requireRole('MODERATOR'),handleAsyncErrors(restoreArticleHandler),)
 router.get('/comments', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(getAdminCommentsHandler),)
 router.patch('/comments/:id/remove', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(removeCommentHandler),)
+router.patch('/comments/:id/restore', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(restoreCommentHandler),)
 
 export default router

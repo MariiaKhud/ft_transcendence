@@ -74,6 +74,7 @@
       "validation_content_required": "Inhoud is verplicht.",
       "validation_content_invalid": "Inhoud moet een niet-lege tekst zijn.",
       "validation_content_min_length": "Inhoud moet minimaal 100 tekens bevatten.",
+      "validation_content_max_length": "Inhoud mag maximaal 10000 tekens bevatten.",
       "validation_category_required": "Categorie is verplicht.",
       "validation_category_invalid": "Kies een geldige categorie.",
       "validation_article_fields_required": "Titel, inhoud en categorie zijn verplicht.",
@@ -171,7 +172,7 @@
     "preview": "Voorbeeld",
     "nothingToPreview": "Nog niets om te bekijken.",
     "contentPlaceholder": "Schrijf uw artikel in Markdown...",
-    "contentCounter": "{{count}} / {{min}} minimaal",
+    "validCharactersHint": "{{count}} geldige tekens (minimaal {{min}})",
     "saving": "Opslaan...",
     "cancel": "Annuleren",
     "errors": {
@@ -179,6 +180,7 @@
       "titleMaxLength": "Titel mag maximaal {{max}} tekens bevatten",
       "contentRequired": "Inhoud is verplicht",
       "contentMinLength": "Inhoud moet minimaal {{min}} tekens bevatten",
+      "contentMaxLength": "Inhoud mag maximaal {{max}} tekens bevatten",
       "unableToSave": "Kan artikel niet opslaan"
     }
   },
@@ -398,16 +400,33 @@
     "xpTotal": "{{xp}} XP totaal",
     "toNextLevel": "{{current}} / {{needed}} tot volgend niveau",
     "badges": "Badges",
-    "badgeNames": {
-      "First Post": "Eerste bericht",
-      "Consistent Writer": "Vaste schrijver",
-      "Prolific Author": "Productieve auteur",
-      "First Like": "Eerste like",
-      "Rising Voice": "Opkomende stem",
-      "Popular Writer": "Populaire schrijver"
-    },
     "badgesCollected": "{{count}} verzameld",
-    "noBadges": "Nog geen badges ontgrendeld.",
+    "badgeLocked": "Vergrendeld",
+    "badgeLockedLabel": "Nog niet ontgrendeld",
+    "badgeDescriptions": {
+      "First Post": "Je eerste artikel gepubliceerd.",
+      "Consistent Writer": "10 artikelen gepubliceerd.",
+      "Prolific Author": "50 artikelen gepubliceerd.",
+      "First Like": "Je eerste like ontvangen.",
+      "Rising Voice": "100 likes ontvangen.",
+      "Popular Writer": "1.000 likes ontvangen."
+    },
+    "badgeNames": {
+      "First Post": "Eerste Post",
+      "Consistent Writer": "Consistente Schrijver",
+      "Prolific Author": "Productieve Auteur",
+      "First Like": "Eerste Like",
+      "Rising Voice": "Opkomende Stem",
+      "Popular Writer": "Populaire Schrijver"
+    },
+    "badgeRequirements": {
+      "sparkles": "Publiceer je eerste artikel om deze badge te ontgrendelen.",
+      "pen": "Schrijf 10 artikelen om deze badge te ontgrendelen.",
+      "book-open": "Schrijf 50 artikelen om deze badge te ontgrendelen.",
+      "heart": "Ontvang 1 like om deze badge te ontgrendelen.",
+      "trending-up": "Ontvang 100 likes om deze badge te ontgrendelen.",
+      "trophy": "Ontvang 1.000 likes om deze badge te ontgrendelen."
+    },
     "articlesHeading": "Artikelen",
     "articlesShown": "{{count}} weergegeven",
     "loadingArticles": "Artikelen laden...",
@@ -434,10 +453,37 @@
     "activeArticles": "Actieve artikelen",
     "removedArticles": "Verwijderde artikelen",
     "removedComments": "Verwijderde reacties",
+    "noRemovedComments": "Geen verwijderde reacties.",
+    "noRemovedArticles": "Geen verwijderde artikelen.",
+    "contentBy": "Door {{username}}",
+    "categories": {
+      "ALL": "Alle categorieën",
+      "PROGRAMMING": "Programmeren",
+      "CAREER": "Carrière",
+      "STUDY_NOTES": "Studienotities",
+      "PROJECTS": "Projecten",
+      "LIFE": "Leven",
+      "OPINION": "Mening"
+    },
+    "removedReason": "Reden: {{reason}}",
+    "removedAt": "Verwijderd op: {{date}}",
+    "unknownDate": "Onbekend",
     "totalUsers": "Totaal aantal gebruikers",
     "moderators": "Moderatoren",
     "admins": "Beheerders",
-    "refresh": "Vernieuwen"
+    "refresh": "Vernieuwen",
+    "usersTab": {
+      "user": "Gebruiker",
+      "role": "Rol",
+      "articles": "Artikelen",
+      "created": "Aangemaakt",
+      "action": "Actie",
+      "roles": {
+        "USER": "Gebruiker",
+        "MODERATOR": "Moderator",
+        "ADMIN": "Beheerder"
+      }
+    }
   },
   "article": {
     "loading": "Artikel laden...",
@@ -482,7 +528,8 @@
     "offline": "Offline",
     "userNotFound": "Gebruiker niet gevonden",
     "backToFriends": "Terug naar Mijn vrienden",
-    "loadError": "Berichten konden niet worden geladen"
+    "loadError": "Berichten konden niet worden geladen",
+    "notFriends": "Je kunt geen berichten meer sturen omdat jullie geen vrienden meer zijn."
   },
   "friends": {
     "title": "Vrienden",

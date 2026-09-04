@@ -52,11 +52,17 @@ export function useNotifications() {
       void fetch()
     }
 
+    function onMessagesRead() {
+      void fetch()
+    }
+
     socket.on('notification:new', onNewNotification)
+    socket.on('notifications:messages-read', onMessagesRead)
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       socket.off('notification:new', onNewNotification)
+      socket.off('notifications:messages-read', onMessagesRead)
     };
   }, [fetch]);
 

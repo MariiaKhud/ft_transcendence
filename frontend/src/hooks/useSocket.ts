@@ -20,8 +20,16 @@ export function useSocket() {
     socket.on('connect_error', onConnectError)
     connectSocket()
 
+    const heartbeat = () => {
+      if (socket.connected) socket.emit('presence:heartbeat')
+    }
+
+    heartbeat()
+    const heartbeatTimer = window.setInterval(heartbeat, 30_000)
+
     return () => {
       socket.off('connect_error', onConnectError)
+      window.clearInterval(heartbeatTimer)
     }
   }, [currentUser])
 }

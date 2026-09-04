@@ -74,6 +74,7 @@
       "validation_content_required": "Зміст обов'язковий.",
       "validation_content_invalid": "Зміст має бути непорожнім текстом.",
       "validation_content_min_length": "Зміст має містити щонайменше 100 символів.",
+      "validation_content_max_length": "Зміст має містити не більше 10000 символів.",
       "validation_category_required": "Категорія обов'язкова.",
       "validation_category_invalid": "Оберіть дійсну категорію.",
       "validation_article_fields_required": "Заголовок, зміст і категорія обов'язкові.",
@@ -173,7 +174,7 @@
     "preview": "Перегляд",
     "nothingToPreview": "Поки що нічого переглядати.",
     "contentPlaceholder": "Напишіть статтю в форматі Markdown...",
-    "contentCounter": "{{count}} / {{min}} мінімум",
+    "validCharactersHint": "{{count}} дійсних символів (мінімум {{min}})",
     "saving": "Збереження...",
     "cancel": "Скасувати",
     "errors": {
@@ -181,6 +182,7 @@
       "titleMaxLength": "Заголовок має містити не більше {{max}} символів",
       "contentRequired": "Зміст обов'язковий",
       "contentMinLength": "Зміст має містити щонайменше {{min}} символів",
+      "contentMaxLength": "Зміст має містити не більше {{max}} символів",
       "unableToSave": "Не вдалося зберегти статтю"
     }
   },
@@ -401,14 +403,31 @@
     "toNextLevel": "{{current}} / {{needed}} до наступного рівня",
     "badges": "Значки",
     "badgesCollected": "{{count}} зібрано",
-    "noBadges": "Поки що немає розблокованих значків.",
+    "badgeLocked": "Заблоковано",
+    "badgeLockedLabel": "Ще не розблоковано",
+    "badgeDescriptions": {
+      "First Post": "Опубліковано першу статтю.",
+      "Consistent Writer": "Опубліковано 10 статей.",
+      "Prolific Author": "Опубліковано 50 статей.",
+      "First Like": "Отримано перший лайк.",
+      "Rising Voice": "Отримано 100 лайків.",
+      "Popular Writer": "Отримано 1000 лайків."
+    },
     "badgeNames": {
-      "First Post": "Перша публікація",
-      "Consistent Writer": "Стабільний автор",
+      "First Post": "Перший пост",
+      "Consistent Writer": "Послідовний автор",
       "Prolific Author": "Плідний автор",
       "First Like": "Перший лайк",
       "Rising Voice": "Голос, що зростає",
       "Popular Writer": "Популярний автор"
+    },
+    "badgeRequirements": {
+      "sparkles": "Опублікуйте першу статтю, щоб розблокувати цей бейдж.",
+      "pen": "Напишіть 10 статей, щоб розблокувати цей бейдж.",
+      "book-open": "Напишіть 50 статей, щоб розблокувати цей бейдж.",
+      "heart": "Отримайте 1 лайк, щоб розблокувати цей бейдж.",
+      "trending-up": "Отримайте 100 лайків, щоб розблокувати цей бейдж.",
+      "trophy": "Отримайте 1000 лайків, щоб розблокувати цей бейдж."
     },
     "articlesHeading": "Статті",
     "articlesShown": "{{count}} показано",
@@ -428,7 +447,7 @@
     "content": "Контент",
     "users": "Користувачі",
     "allContent": "Весь контент",
-    "removed": "Видалені",
+    "removed": "Видаленo",
     "remove": "Видалити",
     "removeArticle": "Видалити статтю",
     "removeArticleReasonHelp": "Вкажіть причину видалення. Автора буде повідомлено.",
@@ -438,10 +457,37 @@
     "activeArticles": "Активні статті",
     "removedArticles": "Видалені статті",
     "removedComments": "Видалені коментарі",
+    "noRemovedComments": "Немає видалених коментарів.",
+    "noRemovedArticles": "Немає видалених статей.",
+    "contentBy": "Автор: {{username}}",
+    "categories": {
+      "ALL": "Усі категорії",
+      "PROGRAMMING": "Програмування",
+      "CAREER": "Кар'єра",
+      "STUDY_NOTES": "Конспекти",
+      "PROJECTS": "Проєкти",
+      "LIFE": "Життя",
+      "OPINION": "Думки"
+    },
+    "removedReason": "Причина: {{reason}}",
+    "removedAt": "Видалено: {{date}}",
+    "unknownDate": "Невідомо",
     "totalUsers": "Всього користувачів",
     "moderators": "Модератори",
     "admins": "Адміністратори",
-    "refresh": "Оновити"
+    "refresh": "Оновити",
+    "usersTab": {
+      "user": "Користувач",
+      "role": "Роль",
+      "articles": "Статті",
+      "created": "Створено",
+      "action": "Дія",
+      "roles": {
+        "USER": "Користувач",
+        "MODERATOR": "Модератор",
+        "ADMIN": "Адміністратор"
+      }
+    }
   },
   "article": {
     "loading": "Завантаження статті...",
@@ -486,7 +532,8 @@
     "offline": "Не в мережі",
     "userNotFound": "Користувача не знайдено",
     "backToFriends": "Назад до Мої друзі",
-    "loadError": "Не вдалося завантажити повідомлення"
+    "loadError": "Не вдалося завантажити повідомлення",
+    "notFriends": "Ви більше не можете надсилати повідомлення, оскільки ви більше не друзі."
   },
   "friends": {
     "title": "Друзі",

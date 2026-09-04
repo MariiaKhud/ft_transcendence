@@ -74,6 +74,7 @@
       "validation_content_required": "Content is required.",
       "validation_content_invalid": "Content must be a non-empty string.",
       "validation_content_min_length": "Content must be at least 100 characters.",
+      "validation_content_max_length": "Content must be at most 10000 characters.",
       "validation_category_required": "Category is required.",
       "validation_category_invalid": "Please choose a valid category.",
       "validation_article_fields_required": "Title, content, and category are required.",
@@ -171,7 +172,7 @@
     "preview": "Preview",
     "nothingToPreview": "Nothing to preview yet.",
     "contentPlaceholder": "Write your article in Markdown...",
-    "contentCounter": "{{count}} / {{min}} minimum",
+    "validCharactersHint": "{{count}} valid characters (minimum {{min}})",
     "saving": "Saving...",
     "cancel": "Cancel",
     "errors": {
@@ -179,6 +180,7 @@
       "titleMaxLength": "Title must be at most {{max}} characters",
       "contentRequired": "Content is required",
       "contentMinLength": "Content must be at least {{min}} characters",
+      "contentMaxLength": "Content must be at most {{max}} characters",
       "unableToSave": "Unable to save article"
     }
   },
@@ -399,7 +401,16 @@
     "toNextLevel": "{{current}} / {{needed}} to next level",
     "badges": "Badges",
     "badgesCollected": "{{count}} collected",
-    "noBadges": "No badges unlocked yet.",
+    "badgeLocked": "Locked",
+    "badgeLockedLabel": "Not yet unlocked",
+    "badgeDescriptions": {
+      "First Post": "Published your first article.",
+      "Consistent Writer": "Published 10 articles.",
+      "Prolific Author": "Published 50 articles.",
+      "First Like": "Received your first like.",
+      "Rising Voice": "Received 100 likes.",
+      "Popular Writer": "Received 1,000 likes."
+    },
     "badgeNames": {
       "First Post": "First Post",
       "Consistent Writer": "Consistent Writer",
@@ -407,6 +418,14 @@
       "First Like": "First Like",
       "Rising Voice": "Rising Voice",
       "Popular Writer": "Popular Writer"
+    },
+    "badgeRequirements": {
+      "sparkles": "Publish your first article to unlock this badge.",
+      "pen": "Write 10 articles to unlock this badge.",
+      "book-open": "Write 50 articles to unlock this badge.",
+      "heart": "Get 1 like to unlock this badge.",
+      "trending-up": "Get 100 likes to unlock this badge.",
+      "trophy": "Get 1,000 likes to unlock this badge."
     },
     "articlesHeading": "Articles",
     "articlesShown": "{{count}} shown",
@@ -434,10 +453,37 @@
       "activeArticles": "Active articles",
       "removedArticles": "Removed articles",
       "removedComments": "Removed comments",
+      "noRemovedComments": "No removed comments.",
+      "noRemovedArticles": "No removed articles.",
+      "contentBy": "By {{username}}",
+      "categories": {
+        "ALL": "All Categories",
+        "PROGRAMMING": "Programming",
+        "CAREER": "Career",
+        "STUDY_NOTES": "Study Notes",
+        "PROJECTS": "Projects",
+        "LIFE": "Life",
+        "OPINION": "Opinion"
+      },
+      "removedReason": "Reason: {{reason}}",
+      "removedAt": "Removed at: {{date}}",
+      "unknownDate": "Unknown",
       "totalUsers": "Total users",
       "moderators": "Moderators",
       "admins": "Admins",
-      "refresh": "Refresh"
+      "refresh": "Refresh",
+      "usersTab": {
+        "user": "User",
+        "role": "Role",
+        "articles": "Articles",
+        "created": "Created",
+        "action": "Action",
+        "roles": {
+          "USER": "User",
+          "MODERATOR": "Moderator",
+          "ADMIN": "Admin"
+        }
+      }
   },
   "article": {
     "loading": "Loading article...",
@@ -482,7 +528,8 @@
     "offline": "Offline",
     "userNotFound": "User not found",
     "backToFriends": "Back to My Friends",
-    "loadError": "Failed to load messages"
+    "loadError": "Failed to load messages",
+    "notFriends": "You can no longer send messages because you are not friends."
   },
   "friends": {
     "title": "Friends",

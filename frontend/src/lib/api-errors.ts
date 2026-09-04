@@ -10,17 +10,24 @@ const getPayloadCode = (payload: unknown): string | null => {
   return null
 }
 
+// Extract the backend's stable error `code` from a caught API error, if present.
+// Useful for callers that need to branch on the code itself (e.g. routing a
+// validation error to a specific form field) rather than just its translated text.
+export const getApiErrorCode = (error: unknown): string | null => {
+  if (!error || typeof error !== 'object') {
+    return null
+  }
+
+  return getPayloadCode((error as { payload?: unknown }).payload)
+}
+
 // Translate a caught API error into a user-facing message: prefers the
 // backend's stable error `code` (translated via `api.errors.<code>`) so the
 // message respects the active language, and falls back to the raw English
 // `error`/`message` text — via the caller-supplied `fallbackMessage` — for
 // codes without a translation (e.g. an unmapped edge case).
 export const translateApiError = (error: unknown, fallbackMessage: string): string => {
-  if (!error || typeof error !== 'object') {
-    return fallbackMessage
-  }
-
-  const code = getPayloadCode((error as { payload?: unknown }).payload)
+  const code = getApiErrorCode(error)
 
   if (code && i18n.exists(`api.errors.${code}`)) {
     return i18n.t(`api.errors.${code}`)

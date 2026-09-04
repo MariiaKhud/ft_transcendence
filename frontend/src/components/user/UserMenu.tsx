@@ -138,6 +138,15 @@ export function UserMenu({ currentUser, logout }: UserMenuProps) {
             {t('nav.settings')}
           </Link>
 
+          <Link
+            to="/friends"
+            onClick={closeMenu}
+            className={menuItemClassName}
+            role="menuitem"
+          >
+            {t('profile.friends')}
+          </Link>
+
           {isStaff ? (
             <Link
               to="/admin"
