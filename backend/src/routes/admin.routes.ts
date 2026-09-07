@@ -6,8 +6,18 @@ import { requireRole } from '../middleware/role.middleware.js'
 import { handleAsyncErrors } from '../middleware/error.middleware.js'
 import * as notificationsService from '../services/notifications.service.js'
 import { NotificationType } from '@prisma/client'
+import { validateUuid } from '../lib/validation.js'
 
 const router = Router()
+
+router.param('id', (req, _res, next) => {
+  try {
+    validateUuid(req.params.id)
+    next()
+  } catch (error) {
+    next(error)
+  }
+})
 
 const VALID_ROLES = ['USER', 'MODERATOR', 'ADMIN'] as const
 type UserRole = (typeof VALID_ROLES)[number]

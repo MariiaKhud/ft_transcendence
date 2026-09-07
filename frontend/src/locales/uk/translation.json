@@ -68,6 +68,7 @@
       "validation_password_whitespace": "Пароль не може містити пробілів.",
       "validation_register_fields_required": "Електронна пошта, ім'я користувача та пароль обов'язкові.",
       "validation_login_fields_required": "Електронна пошта та пароль обов'язкові.",
+      "validation_invalid_uuid": "Цей ідентифікатор недійсний.",
       "validation_title_required": "Заголовок обов'язковий.",
       "validation_title_invalid": "Заголовок має бути непорожнім текстом.",
       "validation_title_max_length": "Заголовок має містити не більше 120 символів.",
@@ -201,13 +202,10 @@
     "remove": "Видалити з друзів",
     "sendAria": "Надіслати запит у друзі",
     "sendTitle": "Натисніть, щоб надіслати запит",
-    "cancelAria": "Скасувати запит у друзі",
-    "cancelTitle": "Натисніть, щоб скасувати запит",
     "acceptAria": "Прийняти запит у друзі",
     "acceptTitle": "Натисніть, щоб прийняти запит",
     "declineAria": "Відхилити запит у друзі",
     "declineTitle": "Натисніть, щоб відхилити запит",
-    "removeAria": "Видалити з друзів",
     "removeTitle": "Натисніть, щоб видалити з друзів"
   },
   "notification": {

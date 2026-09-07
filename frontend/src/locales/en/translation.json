@@ -68,6 +68,7 @@
       "validation_password_whitespace": "Password cannot contain spaces.",
       "validation_register_fields_required": "Email, username, and password are required.",
       "validation_login_fields_required": "Email and password are required.",
+      "validation_invalid_uuid": "That identifier is not valid.",
       "validation_title_required": "Title is required.",
       "validation_title_invalid": "Title must be a non-empty string.",
       "validation_title_max_length": "Title must be at most 120 characters.",
@@ -199,13 +200,10 @@
     "remove": "Unfriend",
     "sendAria": "Send friend request",
     "sendTitle": "Click to send request",
-    "cancelAria": "Cancel friend request",
-    "cancelTitle": "Click to cancel request",
     "acceptAria": "Accept friend request",
     "acceptTitle": "Click to accept request",
     "declineAria": "Decline friend request",
     "declineTitle": "Click to decline request",
-    "removeAria": "Remove friend",
     "removeTitle": "Click to remove friend"
   },
   "notification": {

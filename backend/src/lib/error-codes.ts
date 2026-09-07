@@ -29,6 +29,7 @@ export const ErrorCode = {
   VALIDATION_PASSWORD_WHITESPACE: 'validation_password_whitespace',
   VALIDATION_REGISTER_FIELDS_REQUIRED: 'validation_register_fields_required',
   VALIDATION_LOGIN_FIELDS_REQUIRED: 'validation_login_fields_required',
+  VALIDATION_INVALID_UUID: 'validation_invalid_uuid',
 
   // Validation — articles
   VALIDATION_TITLE_REQUIRED: 'validation_title_required',
