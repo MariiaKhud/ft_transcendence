@@ -49,8 +49,11 @@ npm i @prisma/client@latest
 From repository root:
 
 ```bash
-make up
+make start
 ```
+
+This one command generates the local HTTPS certificate, starts the containers,
+waits for the backend, and seeds the database.
 
 Backend is available through Nginx at:
 
@@ -125,6 +128,12 @@ npm run db:reset     # reset prisma database
 npm run type-check   # TypeScript type check
 npm run test:backend # backend flow bash test script
 npm run test:auth    # alias of test:backend
+```
+
+Run Socket.IO realtime integration tests from the repository root:
+
+```bash
+make test-realtime
 ```
 
 ## Auth API
@@ -526,11 +535,18 @@ The backend integration flow script lives in:
 - `scripts/test-friends-flow.sh`
 - `scripts/test-messages.sh`
 - `scripts/test-gamification-flow.sh`
+- `scripts/test-realtime-flow.sh`
 
 Run it with:
 
 ```bash
 npm run test:backend
+```
+
+Run the Socket.IO realtime tests from the repository root:
+
+```bash
+make test-realtime
 ```
 
 Current flow also checks:

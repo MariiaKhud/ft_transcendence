@@ -113,7 +113,7 @@ Important:
 ### OAuth Setup Steps
 
 1. Copy env template and fill OAuth credentials.
-2. Start stack with `make up`.
+2. Start the app with `make start`.
 3. Verify enabled providers:
 
 ```bash
@@ -297,29 +297,18 @@ OAUTH_SUCCESS_REDIRECT=https://localhost:8443/
 OAUTH_ERROR_REDIRECT=https://localhost:8443/login
 ```
 
-### 3. Generate a local HTTPS certificate
-
-For local browser testing, generate a localhost certificate and install the local CA where supported:
+### 3. Start the project
 
 ```bash
-make setup-local-cert
+make start
 ```
 
-Then restart nginx:
+`make start` generates the local HTTPS certificate, starts the containers, waits
+for the backend, and seeds the database. If your browser still warns about the
+certificate, trust the CA from `~/.mkcert/rootCA.pem` in your browser or OS
+certificate store.
 
-```bash
-docker compose restart nginx
-```
-
-> The setup script now bootstraps mkcert automatically when needed, generates the certificate files locally, and keeps them out of Git. If your browser still warns about the certificate, trust the CA from ~/.mkcert/rootCA.pem in your browser or OS certificate store.
-
-### 4. Start the project
-
-```bash
-make up
-```
-
-### 5. Open the app
+### 4. Open the app
 
 - https://localhost:8443
 
@@ -346,13 +335,15 @@ Known limitations:
 ## Available Commands
 
 ```bash
-make up        # build and run all services
-make down      # stop all services
-make clean     # stop all services and remove volumes
-make logs      # stream logs
-make migrate   # run prisma migrations in backend container
-make seed      # seed database in backend container
-make test-all  # run every automated test suite
+make start         # generate HTTPS cert, start services, and seed database
+make up            # build and run all services in the foreground
+make down          # stop all services
+make clean         # stop all services and remove volumes
+make logs          # stream logs
+make migrate       # run prisma migrations in backend container
+make seed          # seed database in backend container
+make test-realtime # run Socket.IO realtime integration tests
+make test-all      # run every automated test suite
 ```
 
 ## Test Commands
@@ -369,6 +360,12 @@ Frontend smoke tests:
 ```bash
 cd frontend
 npm run test:frontend
+```
+
+Socket.IO realtime tests (chat, live comment/like updates, and notifications):
+
+```bash
+make test-realtime
 ```
 
 ## Project Structure
@@ -480,7 +477,7 @@ Optional modules (not required for this 14-point plan): real-time WebSockets.
 | Service     | Internal Port | Host Port (default) |
 |-------------|--------------:|--------------------:|
 | postgres    | 5432          | not exposed         |
-| backend     | 3000          | 3000                |
+| backend     | 3000          | not exposed         |
 | frontend    | 5173          | 5173                |
 | nginx http  | 80            | 8080                |
 | nginx https | 443           | 8443                |
@@ -494,8 +491,8 @@ Optional modules (not required for this 14-point plan): real-time WebSockets.
 Rebuild cleanly:
 
 ```bash
-make down
-docker compose up --build
+make clean
+make start
 ```
 
 ## Getting Help

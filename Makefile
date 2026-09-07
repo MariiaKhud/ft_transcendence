@@ -1,9 +1,9 @@
-.PHONY: help up down clean logs migrate seed setup-local-cert \
+.PHONY: help up start down clean logs migrate seed setup-local-cert \
 		test-backend test-frontend test-browser-compat test-i18n \
 		test-friends test-follows test-messages test-gamification \
 		test-articles test-articles-backend test-articles-frontend \
-		test-all \
 		test-realtime \
+		test-all \
 
 CYAN := \033[0;34m
 GREEN := \033[0;32m
@@ -12,32 +12,38 @@ RESET := \033[0m
 
 help:
 	@printf "  $(CYAN)     * * * * * AVAILABLE COMMANDS: * * * * *\n$(RESET)"
-	@printf "  $(GREEN)make up$(RESET)               - Start all services with Docker\n"
-	@printf "  $(GREEN)make down$(RESET)             - Stop all services\n"
-	@printf "  $(GREEN)make clean$(RESET)            - Stop services and remove volumes\n"
-	@printf "  $(GREEN)make logs$(RESET)             - Show live logs from all services\n"
-	@printf "  $(GREEN)make migrate$(RESET)          - Run Prisma migrations\n"
-	@printf "  $(GREEN)make seed$(RESET)             - Seed database with test data\n"
-	@printf "  $(GREEN)make setup-local-cert$(RESET) - Generate a trusted local HTTPS certificate for localhost\n"
+	@printf "  $(GREEN)make up$(RESET)                     - Start all services with Docker\n"
+	@printf "  $(GREEN)make start$(RESET)                  - Generate HTTPS cert, start services, and seed database\n"
+	@printf "  $(GREEN)make down$(RESET)                   - Stop all services\n"
+	@printf "  $(GREEN)make clean$(RESET)                  - Stop services and remove volumes\n"
+	@printf "  $(GREEN)make logs$(RESET)                   - Show live logs from all services\n"
+	@printf "  $(GREEN)make migrate$(RESET)                - Run Prisma migrations\n"
+	@printf "  $(GREEN)make seed$(RESET)                   - Seed database with test data\n"
+	@printf "  $(GREEN)make setup-local-cert$(RESET)       - Generate a trusted local HTTPS certificate for localhost\n"
 	@printf "  $(CYAN)\n          * * * * * T E S T S * * * * *\n$(RESET)"
-	@printf "  $(GREEN)make test-backend$(RESET)        - Run backend flow tests\n"
-	@printf "  $(GREEN)make test-frontend$(RESET)       - Run frontend smoke tests\n"
-	@printf "  $(GREEN)make test-browser-compat$(RESET) - Run browser compatibility regression test\n"
-	@printf "  $(GREEN)make test-i18n$(RESET)           - Run i18n module regression test\n"
-	@printf "  $(GREEN)make test-friends$(RESET)        - Run friends flow integration test\n"
-	@printf "  $(GREEN)make test-follows$(RESET)        - Run follows flow integration test\n"
-	@printf "  $(GREEN)make test-messages$(RESET)       - Run messages integration test\n"
-	@printf "  $(GREEN)make test-gamification$(RESET)   - Run gamification integration test\n"
-	@printf "  $(GREEN)make test-articles$(RESET)       - Run articles/comments/likes/search tests (backend + frontend)\n"
+	@printf "  $(GREEN)make test-backend$(RESET)           - Run backend flow tests\n"
+	@printf "  $(GREEN)make test-frontend$(RESET)          - Run frontend smoke tests\n"
+	@printf "  $(GREEN)make test-browser-compat$(RESET)    - Run browser compatibility regression test\n"
+	@printf "  $(GREEN)make test-i18n$(RESET)              - Run i18n module regression test\n"
+	@printf "  $(GREEN)make test-friends$(RESET)           - Run friends flow integration test\n"
+	@printf "  $(GREEN)make test-follows$(RESET)           - Run follows flow integration test\n"
+	@printf "  $(GREEN)make test-messages$(RESET)          - Run messages integration test\n"
+	@printf "  $(GREEN)make test-gamification$(RESET)      - Run gamification integration test\n"
+	@printf "  $(GREEN)make test-articles$(RESET)          - Run articles/comments/likes/search tests (backend + frontend)\n"
 	@printf "  $(GREEN)make test-articles-backend$(RESET)  - Run articles/comments/likes/search backend tests only\n"
 	@printf "  $(GREEN)make test-articles-frontend$(RESET) - Run articles/comments/likes/search frontend proxy tests only\n"
-	@printf "  $(GREEN)make test-all$(RESET)            - Run every test suite in sequence\n"
-	@printf "  $(GREEN)make test-realtime$(RESET)       - Run Socket.IO live-update + notification-suppression tests\n"
+	@printf "  $(GREEN)make test-realtime$(RESET)          - Run Socket.IO live-update + notification-suppression tests\n"
+	@printf "  $(GREEN)make test-all$(RESET)               - Run every test suite in sequence\n"
 
 up:
 	@printf "$(YELLOW)Starting Docker Compose...$(RESET)\n"
 	docker compose up --build
 	@printf "$(YELLOW)Docker Compose finished.$(RESET)\n"
+
+start: setup-local-cert
+	docker compose up -d --build --wait
+	$(MAKE) seed
+	@printf "$(GREEN)App is ready at https://localhost:8443$(RESET)\n"
 
 down:
 	docker compose down
@@ -93,8 +99,17 @@ test-realtime:
 	cd backend && ./scripts/test-realtime-flow.sh
 
 # Runs every test suite back to back; stops at the first failure.
-test-all: test-backend test-frontend test-browser-compat test-i18n \
-	test-friends test-follows test-messages test-gamification test-articles test-realtime
+test-all:
+	$(MAKE) test-backend
+	$(MAKE) test-frontend
+	$(MAKE) test-browser-compat
+	$(MAKE) test-i18n
+	$(MAKE) test-friends
+	$(MAKE) test-follows
+	$(MAKE) test-messages
+	$(MAKE) test-gamification
+	$(MAKE) test-articles
+	$(MAKE) test-realtime
 
 
 .DEFAULT_GOAL := help
