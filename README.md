@@ -317,19 +317,19 @@ certificate store.
 Tested browsers in this environment:
 
 - Google Chrome
-- Chromium
 - Microsoft Edge
+- Chromium
 
 Current compatibility status:
 
 - Critical user flows were verified against the local app URL at `https://localhost:8443`.
-- Login/registration, feed/article browsing, profile/avatar editing, chat/messaging, and follows/notifications were re-tested successfully.
+- Login/registration, feed/article browsing, profile/avatar editing, chat/messaging, and follows/notifications were re-tested successfully in Microsoft Edge and Chromium.
 - Moderator moderation behavior was verified through the automated backend flow.
 
 Known limitations:
 
 - `https://localhost:8443` can still show a certificate warning until the local mkcert CA is trusted in the OS or browser certificate store.
-- Firefox and Safari were not available in this environment, so they were not part of the verified browser matrix.
+- Firefox was not available in this environment and was not part of the verified browser matrix.
 - Dedicated admin endpoint-path checks depend on local environment configuration (`ROLE_ADMIN_PATH`) and were not fully exercised here.
 
 ## Available Commands
@@ -425,20 +425,22 @@ This section tracks only modules that are implemented and currently claimable.
 
 ### Claimed Modules
 
-| Category                               | Module                                                              | Type  | Points |
-|----------------------------------------|---------------------------------------------------------------------|-------|--------|
-| Web                                    | Use a framework for both frontend and backend                       | Major | 2      |
-| Web                                    | Use an ORM for the database                                         | Minor | 1      |
-| Web                                    | Advanced search functionality (filters, sorting, pagination)        | Minor | 1      |
-| Web                                    | Allow users to interact with other users (chat + profile + friends) | Major | 2      |
-| User Management                        | Standard user management and authentication                         | Major | 2      |
-| User Management                        | OAuth 2.0 remote authentication (GitHub, Google, 42)                | Minor | 1      |
-| Web                                    | Real-time features using WebSockets                                 | Major | 2      |
-| Gaming and User Experience             | Gamification system (XP, levels, badges, leaderboard)               | Minor | 1      |
-| Web                                    | Progressive Web App with offline support and installability         | Minor | 1      |
-| Accessibility and Internationalization | Support for multiple languages (English, Dutch, Ukrainian)          | Minor | 1      |
+| Category                               | Module                                                                | Type  | Points |
+|----------------------------------------|-----------------------------------------------------------------------|-------|--------|
+| Web                                    | Use a framework for both frontend and backend                         | Major | 2      |
+| Web                                    | Use an ORM for the database                                           | Minor | 1      |
+| Web                                    | Advanced search functionality (filters, sorting, pagination)          | Minor | 1      |
+| Web                                    | Allow users to interact with other users (chat + profile + friends)   | Major | 2      |
+| User Management                        | Standard user management and authentication                           | Major | 2      |
+| User Management                        | OAuth 2.0 remote authentication (GitHub, Google, 42)                  | Minor | 1      |
+| Web                                    | Real-time features using WebSockets                                   | Major | 2      |
+| Gaming and User Experience             | Gamification system (XP, levels, badges, leaderboard)                 | Minor | 1      |
+| Web                                    | Progressive Web App with offline support and installability           | Minor | 1      |
+| Web                                    | Custom-made design system with reusable components                    | Minor | 1      |
+| Accessibility and Internationalization | Support for multiple languages (English, Dutch, Ukrainian)            | Minor | 1      |
+| Accessibility and Internationalization | Support for additional browsers (Microsoft Edge, Chromium)            | Minor | 1      |
 
-**Claimed subtotal: 14 points**
+**Claimed subtotal: 16 points**
 
 Evidence used for this checklist:
 - Email/password authentication with hashed passwords, session cookies, and `/api/auth/me`
@@ -451,24 +453,26 @@ Evidence used for this checklist:
 - Real-time Socket.IO connections with authenticated users, online/offline events, chat messages, notifications, and article/feed updates
 - Persistent gamification: XP, level calculation, badges, and leaderboard data stored in PostgreSQL
 - PWA manifest, application icons, service-worker registration, and an offline navigation fallback
+- Custom design system with reusable components: Button, icon set, ArticleCard, ArticleForm, UserAvatar, UserMenu, UserSearchBar, FriendButton, FollowButton, NotificationBell, MessageButtonLink, XPBar, BadgeList, and admin dashboard components
+- Shared visual language: Tailwind CSS, purple/fuchsia/emerald status palette, reusable button variants, typography, spacing, borders, and icon components
 - Backend integration scripts for friends/messages/follows flows
+- Manual compatibility checks in Microsoft Edge and Chromium for core authentication, content, profile, social, and responsive UI flows
 - i18n: 3 complete languages (English, Dutch, Ukrainian) across all shipped UI, navbar language switcher, `localStorage` + account-level (`preferredLanguage`) persistence, translated backend API error codes
 - Automated i18n regression suite (`frontend/scripts/i18n.test.mjs`) plus a live multi-language, multi-page QA pass (see Internationalization section above)
 
 ### Additional Modules Not Yet Claimed
 
-| Category                               | Module                                                          | Type  | Points | Current Status |
-|----------------------------------------|-----------------------------------------------------------------|-------|--------|----------------|
-| User Management                        | Advanced permissions system                                     | Major | 2      | Partial: lacks full user CRUD |
-| Web                                    | Complete notification system (create/update/delete actions)     | Minor | 1      | Partial: coverage is not complete |
-| Web                                    | File upload and management system                               | Minor | 1      | Partial: images only, no documents |
-| Accessibility and Internationalization | Support for additional browsers                                 | Minor | 1      | Pending: test two distinct extra browsers |
+| Category                               | Module                                                          | Type  | Points | Current Status                            |
+|----------------------------------------|-----------------------------------------------------------------|-------|--------|-------------------------------------------|
+| User Management                        | Advanced permissions system                                     | Major | 2      | Partial: lacks full user CRUD             |
+| Web                                    | Complete notification system (create/update/delete actions)     | Minor | 1      | Partial: coverage is not complete         |
+| Web                                    | File upload and management system                               | Minor | 1      | Partial: images only, no documents        |
 
 ### Point Summary
 
 - Mandatory target: **14 points**
-- Currently claimed: **14 points**
-- Remaining to reach target: **0 points**
+- Currently claimed: **16 points**
+- Above the mandatory target by: **2 points**
 
 > Important: We only claim modules during evaluation when all required criteria in the subject are fully met and demonstrable.
 

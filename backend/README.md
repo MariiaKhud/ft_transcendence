@@ -36,6 +36,7 @@ npm i @prisma/client@latest
 - **Admin API** (`/api/admin/*`) for user roles and content moderation
 - **Gamification services** (persistent XP, levels, badge awarding, leaderboard data)
 - **Socket.IO server** (authenticated real-time chat, notifications, online status, comments, likes, and feed updates)
+- **Custom frontend design system** (reusable UI components, shared color palette, typography, and icons)
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses

@@ -369,6 +369,16 @@ The frontend is installable through `public/manifest.json` and registers `public
 after load. The service worker provides an offline page for navigation requests and
 does not cache API responses or user data.
 
+## Design System
+
+The frontend uses a custom Tailwind CSS design system with a shared purple/fuchsia/
+emerald palette, consistent typography, spacing, borders, and reusable button variants.
+
+Reusable components include `Button`, `ArticleCard`, `ArticleForm`, `UserAvatar`,
+`UserMenu`, `UserSearchBar`, `FriendButton`, `FollowButton`, `NotificationBell`,
+`MessageButtonLink`, `XPBar`, `BadgeList`, admin dashboard components, and shared
+icons from `src/components/ui/icons.tsx`.
+
 ## Project Structure
 
 ```text
