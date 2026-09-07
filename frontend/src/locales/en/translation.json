@@ -96,6 +96,8 @@
       "validation_bio_invalid": "Bio must be a string or null.",
       "validation_avatar_required": "An avatar file is required.",
       "validation_avatar_format": "Avatar must be a JPEG, PNG, or WebP image.",
+      "validation_cv_required": "A CV file is required.",
+      "validation_cv_format": "CV must be a TXT, PDF, DOC, or DOCX file.",
       "validation_preferred_language_invalid": "That language isn't supported.",
       "file_too_large": "That file is too large.",
       "validation_message_content_required": "Message content is required.",
@@ -259,6 +261,12 @@
     "title": "Edit Profile",
     "subtitle": "Update your display name, bio, and avatar",
     "avatarHeading": "Avatar",
+    "cvHeading": "Curriculum Vitae",
+    "cvHint": "TXT, PDF, DOC, or DOCX · max {{maxMb}} MB",
+    "noCvChosen": "No CV uploaded",
+    "chooseCv": "Choose CV",
+    "uploadCv": "Upload CV",
+    "removeCv": "Remove CV",
     "noFileChosen": "No file chosen",
     "fileHint": "JPEG, PNG or WebP · max {{maxMb}} MB",
     "chooseImage": "Choose image",
@@ -282,13 +290,17 @@
     "errors": {
       "invalidImageType": "Please choose a JPEG, PNG, or WebP image",
       "imageTooLarge": "Image must be {{maxMb}} MB or smaller",
+      "invalidCvType": "Please choose a TXT, PDF, DOC, or DOCX file",
+      "cvTooLarge": "CV must be {{maxMb}} MB or smaller",
       "displayNameMaxLength": "Display name must be {{max}} characters or fewer",
       "bioMaxLength": "Bio must be {{max}} characters or fewer"
     },
     "success": {
       "profileUpdated": "Profile updated successfully",
       "avatarUploaded": "Avatar uploaded successfully",
-      "avatarRemoved": "Avatar removed successfully"
+      "avatarRemoved": "Avatar removed successfully",
+      "cvUploaded": "CV uploaded successfully",
+      "cvRemoved": "CV removed successfully"
     }
   },
   "auth": {
@@ -392,6 +404,7 @@
     "usernameMissing": "Profile username is missing",
     "friends": "My Friends",
     "noBio": "No bio yet. This user has not added a profile bio.",
+    "downloadCv": "Download CV",
     "statArticles": "Articles",
     "statFollowers": "Followers",
     "statFollowing": "Following",

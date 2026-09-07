@@ -394,7 +394,8 @@ ft_transcendence/
 ### Completed ✓
 - **User authentication** (JWT + HttpOnly cookies)
 - **Session restore on refresh** (frontend restores user via `/api/auth/me`)
-- **Profile management** (displayName, bio, avatar upload/delete/preview)
+- **Profile management** (displayName, bio, avatar upload/delete/preview, CV upload/delete)
+- **CV document upload and download** (TXT, PDF, DOC, DOCX; validation, replacement cleanup, and public profile download)
 - **Public profiles** (read-only user profiles with stats)
 - **Edit profile form** (displayName, bio, avatar upload/delete, field validation)
 - **Self-service account deletion** (confirmation, cascade cleanup, session clearing)
@@ -437,10 +438,11 @@ This section tracks only modules that are implemented and currently claimable.
 | Gaming and User Experience             | Gamification system (XP, levels, badges, leaderboard)                 | Minor | 1      |
 | Web                                    | Progressive Web App with offline support and installability           | Minor | 1      |
 | Web                                    | Custom-made design system with reusable components                    | Minor | 1      |
+| Web                                    | File upload and management system (images and CV documents)          | Minor | 1      |
 | Accessibility and Internationalization | Support for multiple languages (English, Dutch, Ukrainian)            | Minor | 1      |
 | Accessibility and Internationalization | Support for additional browsers (Microsoft Edge, Chromium)            | Minor | 1      |
 
-**Claimed subtotal: 16 points**
+**Claimed subtotal: 17 points**
 
 Evidence used for this checklist:
 - Email/password authentication with hashed passwords, session cookies, and `/api/auth/me`
@@ -453,6 +455,7 @@ Evidence used for this checklist:
 - Real-time Socket.IO connections with authenticated users, online/offline events, chat messages, notifications, and article/feed updates
 - Persistent gamification: XP, level calculation, badges, and leaderboard data stored in PostgreSQL
 - PWA manifest, application icons, service-worker registration, and an offline navigation fallback
+- File uploads: avatar images plus TXT, PDF, DOC, and DOCX CV documents with frontend/backend type and size validation, replacement cleanup, deletion, and profile download
 - Custom design system with reusable components: Button, icon set, ArticleCard, ArticleForm, UserAvatar, UserMenu, UserSearchBar, FriendButton, FollowButton, NotificationBell, MessageButtonLink, XPBar, BadgeList, and admin dashboard components
 - Shared visual language: Tailwind CSS, purple/fuchsia/emerald status palette, reusable button variants, typography, spacing, borders, and icon components
 - Backend integration scripts for friends/messages/follows flows
@@ -466,13 +469,12 @@ Evidence used for this checklist:
 |----------------------------------------|-----------------------------------------------------------------|-------|--------|-------------------------------------------|
 | User Management                        | Advanced permissions system                                     | Major | 2      | Partial: lacks full user CRUD             |
 | Web                                    | Complete notification system (create/update/delete actions)     | Minor | 1      | Partial: coverage is not complete         |
-| Web                                    | File upload and management system                               | Minor | 1      | Partial: images only, no documents        |
 
 ### Point Summary
 
 - Mandatory target: **14 points**
-- Currently claimed: **16 points**
-- Above the mandatory target by: **2 points**
+- Currently claimed: **17 points**
+- Above the mandatory target by: **3 points**
 
 > Important: We only claim modules during evaluation when all required criteria in the subject are fully met and demonstrable.
 

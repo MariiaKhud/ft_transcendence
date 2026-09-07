@@ -3,7 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { deleteMyAccount } from '@/api/auth'
-import { deleteMyAvatar, updateMyProfile, uploadMyAvatar } from '@/api/users'
+import { deleteMyAvatar, deleteMyCv, updateMyProfile, uploadMyAvatar, uploadMyCv } from '@/api/users'
 import { useAuth } from '@/hooks/useAuth'
 import { useStore } from '@/store/store'
 import { translateApiError } from '@/lib/api-errors'
@@ -42,6 +42,14 @@ const MAX_BIO_LENGTH = 500
 const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 const MAX_FILE_SIZE_MB = 2
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+const CV_MAX_FILE_SIZE_MB = 5
+const CV_MAX_FILE_SIZE_BYTES = CV_MAX_FILE_SIZE_MB * 1024 * 1024
+const ALLOWED_CV_MIME_TYPES = new Set([
+  'text/plain',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+])
 
 export const EditProfile = () => {
   const { t } = useTranslation()
@@ -78,10 +86,16 @@ export const EditProfile = () => {
   const [avatarSuccess, setAvatarSuccess] = useState('')
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [isDeletingAvatar, setIsDeletingAvatar] = useState(false)
+  const [pendingCv, setPendingCv] = useState<File | null>(null)
+  const [cvError, setCvError] = useState('')
+  const [cvSuccess, setCvSuccess] = useState('')
+  const [isUploadingCv, setIsUploadingCv] = useState(false)
+  const [isDeletingCv, setIsDeletingCv] = useState(false)
   const [isDeletingAccount, setIsDeletingAccount] = useState(false)
   const [accountDeleteError, setAccountDeleteError] = useState('')
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const cvInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     setDisplayName(currentUser?.displayName ?? '')
@@ -275,6 +289,61 @@ export const EditProfile = () => {
     }
   }
 
+  const handleCvChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setCvError('')
+    setCvSuccess('')
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) return
+
+    if (!ALLOWED_CV_MIME_TYPES.has(file.type)) {
+      setCvError(t('editProfile.errors.invalidCvType'))
+      return
+    }
+
+    if (file.size > CV_MAX_FILE_SIZE_BYTES) {
+      setCvError(t('editProfile.errors.cvTooLarge', { maxMb: CV_MAX_FILE_SIZE_MB }))
+      return
+    }
+
+    setPendingCv(file)
+  }
+
+  const handleUploadCv = async () => {
+    if (!pendingCv) return
+
+    setCvError('')
+    setCvSuccess('')
+    setIsUploadingCv(true)
+
+    try {
+      setCurrentUser(await uploadMyCv(pendingCv))
+      setPendingCv(null)
+      setCvSuccess(t('editProfile.success.cvUploaded'))
+    } catch (error) {
+      setCvError(error instanceof Error ? translateApiError(error, error.message) : t('common.unableToConnect'))
+    } finally {
+      setIsUploadingCv(false)
+    }
+  }
+
+  const handleDeleteCv = async () => {
+    setCvError('')
+    setCvSuccess('')
+    setIsDeletingCv(true)
+
+    try {
+      setCurrentUser(await deleteMyCv())
+      setPendingCv(null)
+      setCvSuccess(t('editProfile.success.cvRemoved'))
+    } catch (error) {
+      setCvError(error instanceof Error ? translateApiError(error, error.message) : t('common.unableToConnect'))
+    } finally {
+      setIsDeletingCv(false)
+    }
+  }
+
   // Require explicit confirmation before permanently deleting the account.
   const handleDeleteAccount = async () => {
     if (!window.confirm(t('editProfile.deleteAccountConfirm'))) {
@@ -412,6 +481,70 @@ export const EditProfile = () => {
             {avatarSuccess}
           </p>
         ) : null}
+      </div>
+
+      <div className="space-y-6 rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
+        <h2 className="text-xl font-bold text-slate-900">{t('editProfile.cvHeading')}</h2>
+
+        <div className="min-w-0 space-y-1">
+          <p className="truncate text-sm font-semibold text-slate-900">
+            {pendingCv?.name ?? currentUser.cvFilename ?? t('editProfile.noCvChosen')}
+          </p>
+          <p className="text-xs text-slate-500">{t('editProfile.cvHint', { maxMb: CV_MAX_FILE_SIZE_MB })}</p>
+        </div>
+
+        <input
+          ref={cvInputRef}
+          type="file"
+          accept=".txt,.pdf,.doc,.docx,text/plain,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          className="sr-only"
+          aria-label={t('editProfile.chooseCv')}
+          onChange={handleCvChange}
+        />
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() => cvInputRef.current?.click()}
+            disabled={isUploadingCv || isDeletingCv}
+            className="rounded-lg border border-purple-200 bg-white/70 px-4 py-2 text-sm font-semibold text-purple-700 transition-all hover:border-purple-300 hover:bg-white disabled:opacity-50"
+          >
+            {t('editProfile.chooseCv')}
+          </button>
+
+          {pendingCv ? (
+            <>
+              <Button
+                type="button"
+                onClick={handleUploadCv}
+                disabled={isUploadingCv}
+                className="rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-2 text-sm font-semibold text-white shadow-lg transition-all hover:scale-105 hover:shadow-xl disabled:opacity-50"
+              >
+                {isUploadingCv ? t('editProfile.uploading') : t('editProfile.uploadCv')}
+              </Button>
+              <button
+                type="button"
+                onClick={() => setPendingCv(null)}
+                disabled={isUploadingCv}
+                className="rounded-lg border border-slate-200 bg-white/70 px-4 py-2 text-sm font-semibold text-slate-600 transition-all hover:bg-white disabled:opacity-50"
+              >
+                {t('common.cancel')}
+              </button>
+            </>
+          ) : null}
+
+          {currentUser.cvUrl && !pendingCv ? (
+            <button
+              type="button"
+              onClick={handleDeleteCv}
+              disabled={isDeletingCv}
+              className="rounded-lg border border-red-200 bg-red-50/70 px-4 py-2 text-sm font-semibold text-red-600 transition-all hover:bg-red-100 disabled:opacity-50"
+            >
+              {isDeletingCv ? t('editProfile.removing') : t('editProfile.removeCv')}
+            </button>
+          ) : null}
+        </div>
+        {cvError.length > 0 ? <p className="rounded-lg border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600">{cvError}</p> : null}
+        {cvSuccess.length > 0 ? <p className="rounded-lg border border-green-200/50 bg-green-50/80 px-4 py-3 text-sm font-medium text-green-600">{cvSuccess}</p> : null}
       </div>
 
       {/* ── Profile details block: displayName and bio ── */}

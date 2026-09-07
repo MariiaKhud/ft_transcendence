@@ -24,6 +24,7 @@ npm i @prisma/client@latest
 - **Self-account deletion** (`DELETE /api/users/me`) — permanently deletes the authenticated user's account and cascaded data
 - **Avatar management** (`POST /api/users/me/avatar`) — upload PNG/JPG, max 2MB
 - **Avatar delete** (`DELETE /api/users/me/avatar`) — remove user avatar
+- **CV management** (`POST/DELETE /api/users/me/cv`) — upload, replace, and remove TXT/PDF/DOC/DOCX CV files, max 5MB
 - **Global articles feed** (`GET /api/articles`) — paginated, searchable, filterable, sortable
 - **Article CRUD** (`POST/PATCH/DELETE /api/articles/:id` + `GET /api/articles/:id`)
 - **Article comments** (`GET/POST /api/articles/:id/comments`, `PATCH/DELETE /api/comments/:id`)
@@ -499,6 +500,13 @@ Author hard-deletes their own comment; moderator/admin can soft-remove with reas
 - `PATCH /request/:userId`
 - `DELETE /request/:userId`
 - `DELETE /:userId`
+
+### CV (`/api/users/me/cv`)
+
+- `POST /` — upload or replace the authenticated user's CV (`.txt`, `.pdf`, `.doc`, `.docx`; max 5MB)
+- `DELETE /` — remove the authenticated user's CV and stored file
+
+Public profile responses include `cvUrl` and `cvFilename` when a CV is available for download.
 
 ### Follows (`/api/follows`)
 

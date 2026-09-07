@@ -296,6 +296,16 @@ export const Profile = () => {
           {profile.bio ?? t('profile.noBio')}
         </p>
 
+        {profile.cvUrl && profile.cvFilename ? (
+          <a
+            href={profile.cvUrl}
+            download={profile.cvFilename}
+            className="relative mt-5 inline-flex items-center rounded-lg border border-purple-200 bg-white/70 px-4 py-2 text-sm font-semibold text-purple-700 transition-colors hover:border-purple-300 hover:bg-white"
+          >
+            {t('profile.downloadCv')}
+          </a>
+        ) : null}
+
         {/* Stats row: articles, followers, following */}
         <div className="relative mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-2xl border border-white/50 bg-white/60 p-4">

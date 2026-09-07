@@ -96,6 +96,8 @@
       "validation_bio_invalid": "Біографія має бути текстом або null.",
       "validation_avatar_required": "Потрібен файл аватара.",
       "validation_avatar_format": "Аватар має бути зображенням у форматі JPEG, PNG або WebP.",
+      "validation_cv_required": "Потрібен файл резюме.",
+      "validation_cv_format": "Резюме має бути файлом TXT, PDF, DOC або DOCX.",
       "validation_preferred_language_invalid": "Ця мова не підтримується.",
       "file_too_large": "Цей файл занадто великий.",
       "validation_message_content_required": "Зміст повідомлення обов'язковий.",
@@ -261,6 +263,12 @@
     "title": "Редагування профілю",
     "subtitle": "Оновіть ваше ім'я, біографію та аватар",
     "avatarHeading": "Аватар",
+    "cvHeading": "Резюме",
+    "cvHint": "TXT, PDF, DOC або DOCX · макс {{maxMb}} МБ",
+    "noCvChosen": "Резюме не завантажено",
+    "chooseCv": "Обрати резюме",
+    "uploadCv": "Завантажити резюме",
+    "removeCv": "Видалити резюме",
     "noFileChosen": "Файл не обрано",
     "fileHint": "JPEG, PNG або WebP · макс {{maxMb}} МБ",
     "chooseImage": "Обрати зображення",
@@ -284,13 +292,17 @@
     "errors": {
       "invalidImageType": "Оберіть зображення у форматі JPEG, PNG або WebP",
       "imageTooLarge": "Зображення має бути {{maxMb}} МБ або менше",
+      "invalidCvType": "Оберіть файл TXT, PDF, DOC або DOCX",
+      "cvTooLarge": "Резюме має бути {{maxMb}} МБ або менше",
       "displayNameMaxLength": "Ім'я для показу має містити не більше {{max}} символів",
       "bioMaxLength": "Біографія має містити не більше {{max}} символів"
     },
     "success": {
       "profileUpdated": "Профіль успішно оновлено",
       "avatarUploaded": "Аватар успішно завантажено",
-      "avatarRemoved": "Аватар успішно видалено"
+      "avatarRemoved": "Аватар успішно видалено",
+      "cvUploaded": "Резюме успішно завантажено",
+      "cvRemoved": "Резюме успішно видалено"
     }
   },
   "auth": {
@@ -394,6 +406,7 @@
     "usernameMissing": "Відсутнє ім'я користувача профілю",
     "friends": "Мої друзі",
     "noBio": "Поки що немає біографії. Цей користувач не додав біографію профілю.",
+    "downloadCv": "Завантажити резюме",
     "statArticles": "Статті",
     "statFollowers": "Підписники",
     "statFollowing": "Підписки",

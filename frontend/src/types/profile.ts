@@ -10,6 +10,8 @@ export interface PublicProfile {
   displayName: string | null
   username: string
   avatarUrl: string | null
+  cvUrl: string | null
+  cvFilename: string | null
   bio: string | null
   isOnline: boolean
   lastSeenAt: string | null

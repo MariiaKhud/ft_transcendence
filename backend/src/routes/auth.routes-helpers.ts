@@ -92,6 +92,8 @@ const publicUserSelect = {
   username: true,
   displayName: true,
   avatarUrl: true,
+  cvUrl: true,
+  cvFilename: true,
   bio: true,
   role: true,
   preferredLanguage: true,

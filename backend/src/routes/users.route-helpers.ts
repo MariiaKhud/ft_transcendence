@@ -16,10 +16,23 @@ const SUPPORTED_LANGUAGES = new Set(['en', 'nl', 'uk'])
 const EDIT_PROFILE_ALLOWED_FIELDS = new Set(['displayName', 'bio', 'preferredLanguage'])
 const AVATAR_MAX_SIZE = 2 * 1024 * 1024
 const ALLOWED_AVATAR_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+export const CV_MAX_SIZE = 5 * 1024 * 1024
+const ALLOWED_CV_MIMES = new Set([
+  'text/plain',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+])
 const AVATAR_MIME_TO_EXT: Record<string, string> = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
+}
+const CV_MIME_TO_EXT: Record<string, string> = {
+  'text/plain': 'txt',
+  'application/pdf': 'pdf',
+  'application/msword': 'doc',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': 'docx',
 }
 
 export interface PublicBadge {
@@ -33,6 +46,8 @@ export interface PublicProfile {
   displayName: string | null
   username: string
   avatarUrl: string | null
+  cvUrl: string | null
+  cvFilename: string | null
   bio: string | null
   isOnline: boolean
   lastSeenAt: Date | null
@@ -65,6 +80,8 @@ export interface EditableProfile {
   username: string
   displayName: string | null
   avatarUrl: string | null
+  cvUrl: string | null
+  cvFilename: string | null
   bio: string | null
   role: 'USER' | 'MODERATOR' | 'ADMIN'
   preferredLanguage: string | null
@@ -81,6 +98,8 @@ interface PublicProfileUserRecord {
   username: string
   displayName: string | null
   avatarUrl: string | null
+  cvUrl: string | null
+  cvFilename: string | null
   bio: string | null
   isOnline: boolean
   lastSeenAt: Date | null
@@ -105,6 +124,8 @@ export const publicProfileSelect = {
   username: true,
   displayName: true,
   avatarUrl: true,
+  cvUrl: true,
+  cvFilename: true,
   bio: true,
   isOnline: true,
   lastSeenAt: true,
@@ -159,6 +180,8 @@ export const editableProfileSelect = {
   username: true,
   displayName: true,
   avatarUrl: true,
+  cvUrl: true,
+  cvFilename: true,
   bio: true,
   role: true,
   preferredLanguage: true,
@@ -285,6 +308,8 @@ export const mapUserToPublicProfile = (user: PublicProfileUserRecord): PublicPro
     displayName: user.displayName,
     username: user.username,
     avatarUrl: user.avatarUrl,
+    cvUrl: user.cvUrl,
+    cvFilename: user.cvFilename,
     bio: user.bio,
     isOnline: user.isOnline,
     lastSeenAt: user.lastSeenAt,
@@ -310,6 +335,12 @@ export const validateAvatarMimetype = (mimetype: string | undefined) => {
   }
 }
 
+export const validateCvMimetype = (mimetype: string | undefined) => {
+  if (!mimetype || !ALLOWED_CV_MIMES.has(mimetype)) {
+    throw new AppError(400, ErrorCode.VALIDATION_CV_FORMAT, 'Validation failed: CV must be txt, pdf, doc, or docx')
+  }
+}
+
 // Get file extension from mimetype.
 export const getAvatarExtension = (mimetype: string): string => {
   return AVATAR_MIME_TO_EXT[mimetype] || 'jpg'
@@ -324,6 +355,10 @@ export const getUploadsDir = (): string => {
 export const generateAvatarFilename = (mimetype: string): string => {
   const ext = getAvatarExtension(mimetype)
   return `${randomUUID()}.${ext}`
+}
+
+export const generateCvFilename = (mimetype: string): string => {
+  return `${randomUUID()}.${CV_MIME_TO_EXT[mimetype] ?? 'txt'}`
 }
 
 // Delete old avatar file if it exists.
@@ -342,5 +377,20 @@ export const deleteOldAvatar = async (oldAvatarUrl: string | null) => {
       return
     }
     console.error('Failed to delete old avatar:', error)
+  }
+}
+
+export const deleteOldCv = async (oldCvUrl: string | null) => {
+  if (!oldCvUrl || !oldCvUrl.startsWith('/uploads/')) {
+    return
+  }
+
+  try {
+    await fs.unlink(`${getUploadsDir()}/${oldCvUrl.replace('/uploads/', '')}`)
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('ENOENT')) {
+      return
+    }
+    console.error('Failed to delete old CV:', error)
   }
 }

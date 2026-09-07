@@ -96,6 +96,8 @@
       "validation_bio_invalid": "Bio moet een tekst of null zijn.",
       "validation_avatar_required": "Een avatarbestand is verplicht.",
       "validation_avatar_format": "Avatar moet een JPEG-, PNG- of WebP-afbeelding zijn.",
+      "validation_cv_required": "Een cv-bestand is verplicht.",
+      "validation_cv_format": "Cv moet een TXT-, PDF-, DOC- of DOCX-bestand zijn.",
       "validation_preferred_language_invalid": "Die taal wordt niet ondersteund.",
       "file_too_large": "Dat bestand is te groot.",
       "validation_message_content_required": "Berichtinhoud is verplicht.",
@@ -259,6 +261,12 @@
     "title": "Profiel bewerken",
     "subtitle": "Werk uw weergavenaam, bio en avatar bij",
     "avatarHeading": "Avatar",
+    "cvHeading": "Curriculum vitae",
+    "cvHint": "TXT, PDF, DOC of DOCX · max {{maxMb}} MB",
+    "noCvChosen": "Geen cv geüpload",
+    "chooseCv": "Cv kiezen",
+    "uploadCv": "Cv uploaden",
+    "removeCv": "Cv verwijderen",
     "noFileChosen": "Geen bestand gekozen",
     "fileHint": "JPEG, PNG of WebP · max {{maxMb}} MB",
     "chooseImage": "Afbeelding kiezen",
@@ -282,13 +290,17 @@
     "errors": {
       "invalidImageType": "Kies een JPEG-, PNG- of WebP-afbeelding",
       "imageTooLarge": "Afbeelding moet {{maxMb}} MB of kleiner zijn",
+      "invalidCvType": "Kies een TXT-, PDF-, DOC- of DOCX-bestand",
+      "cvTooLarge": "Cv moet {{maxMb}} MB of kleiner zijn",
       "displayNameMaxLength": "Weergavenaam mag maximaal {{max}} tekens bevatten",
       "bioMaxLength": "Bio mag maximaal {{max}} tekens bevatten"
     },
     "success": {
       "profileUpdated": "Profiel succesvol bijgewerkt",
       "avatarUploaded": "Avatar succesvol geüpload",
-      "avatarRemoved": "Avatar succesvol verwijderd"
+      "avatarRemoved": "Avatar succesvol verwijderd",
+      "cvUploaded": "Cv succesvol geüpload",
+      "cvRemoved": "Cv succesvol verwijderd"
     }
   },
   "auth": {
@@ -392,6 +404,7 @@
     "usernameMissing": "Gebruikersnaam van profiel ontbreekt",
     "friends": "Mijn vrienden",
     "noBio": "Nog geen bio. Deze gebruiker heeft geen profielbio toegevoegd.",
+    "downloadCv": "Cv downloaden",
     "statArticles": "Artikelen",
     "statFollowers": "Volgers",
     "statFollowing": "Volgend",

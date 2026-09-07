@@ -148,6 +148,11 @@ perform_request "Users API proxy" "${BASE_URL}${USERS_PROXY_PATH}"
 assert_status_one_of "Users API proxy" "200" "400" "404"
 assert_header_contains 'content-type: application/json' "Users API proxy"
 
+color_echo "$BLUE" "8a. Checking protected CV upload proxy"
+perform_request "CV upload proxy" -X POST "${BASE_URL}/api/users/me/cv"
+assert_status "401" "CV upload proxy"
+assert_header_contains 'content-type: application/json' "CV upload proxy"
+
 # ============================================================================
 # [OAUTH] Frontend proxy: provider start + failure/cancellation edge cases
 # ============================================================================

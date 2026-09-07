@@ -121,7 +121,7 @@ Routes are configured in `src/app/router.tsx`:
 - `/profile/:username` -> `Profile` (read-only public profile)
 - `/articles/new` -> `CreateArticle` (auth required)
 - `/articles/:id` -> `Article` (detail, likes, comments, author actions)
-- `/settings/profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
+- `/settings/profile` -> `EditProfile` ✓ (edit displayName, bio, avatar, and CV)
 - `/privacy-policy` -> `PrivacyPolicy` ✓ (static policy page, guest accessible)
 - `/terms-of-service` -> `TermsOfService` ✓ (static terms page, guest accessible)
 - `*` -> `NotFound`
@@ -132,7 +132,7 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 
 **Route:** `/settings/profile`
 
-**Description:** Form for authenticated users to edit their profile information and avatar.
+**Description:** Form for authenticated users to edit their profile information, avatar, and CV.
 
 **Features:**
 - Update `displayName` (optional, max 20 chars)
@@ -141,6 +141,8 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 - Upload avatar (PNG/JPG, max 2MB)
 - Preview avatar before upload
 - Delete existing avatar
+- Upload, replace, or delete a CV (`.txt`, `.pdf`, `.doc`, `.docx`; max 5MB)
+- Download an uploaded CV from the public profile page
 - Permanently delete own account from the Danger Zone after confirmation
 - Field validation and error handling
 
@@ -148,6 +150,8 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 - `PATCH /api/users/me` — update displayName and bio
 - `POST /api/users/me/avatar` — upload new avatar
 - `DELETE /api/users/me/avatar` — remove avatar
+- `POST /api/users/me/cv` — upload or replace CV
+- `DELETE /api/users/me/cv` — remove CV
 - `DELETE /api/users/me` — permanently delete account and clear session
 
 **Implementation files:**
