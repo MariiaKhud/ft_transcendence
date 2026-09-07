@@ -34,13 +34,15 @@ npm i @prisma/client@latest
 - **Notifications API** (`GET /api/notifications`, mark one/all read)
 - **Leaderboard API** (`GET /api/users/leaderboard`)
 - **Admin API** (`/api/admin/*`) for user roles and content moderation
+- **Gamification services** (persistent XP, levels, badge awarding, leaderboard data)
+- **Socket.IO server** (authenticated real-time chat, notifications, online status, comments, likes, and feed updates)
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses
 
-### In Progress
-- Gamification module routes
-- Admin moderation routes
+### Module Limits
+- Avatar upload supports JPEG, PNG, and WebP images. It does not yet support document uploads.
+- Role management and moderation are available, but full user CRUD is not yet implemented.
 
 ## Run Modes
 

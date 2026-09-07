@@ -185,14 +185,14 @@ After successful account deletion, the user is redirected to Login and sees a lo
 **Implementation files:**
 - `src/pages/Home.tsx` — feed page component with filtering UI
 
-## Backend-supported Features Pending Frontend UI
+## Social, Gamification, and Admin UI
 
-The backend currently exposes these APIs, but dedicated frontend pages/components are still pending:
+The frontend includes dedicated pages and components for these backend features:
 
-- `GET/POST /api/messages/:userId` — private conversations
-- `GET/PATCH /api/notifications` — notification listing and read state
-- `GET /api/users/leaderboard` — leaderboard data
-- `/api/admin/*` — admin user and moderation tools
+- `GET/POST /api/messages/:userId` — private conversation UI with real-time delivery
+- `GET/PATCH /api/notifications` — notification bell, read state, and paginated notification page
+- `GET /api/users/leaderboard` — leaderboard page with levels and badges
+- `/api/admin/*` — admin dashboard for users and article/comment moderation
 
 ## Article Detail and Publishing ✓
 
@@ -362,6 +362,12 @@ Run:
 ```bash
 npm run test:frontend
 ```
+
+## Progressive Web App
+
+The frontend is installable through `public/manifest.json` and registers `public/sw.js`
+after load. The service worker provides an offline page for navigation requests and
+does not cache API responses or user data.
 
 ## Project Structure
 
