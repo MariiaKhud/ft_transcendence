@@ -67,7 +67,7 @@ export function AdminDashboard() {
         setUsers(userData)
     } catch (err) {
       setError(
-        translateApiError(err, 'Failed to load admin dashboard'),
+        translateApiError(err, t('admin.loadError')),
       )
     } finally {
       setIsLoading(false)

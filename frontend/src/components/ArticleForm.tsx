@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react'
+import { useState, type SubmitEvent } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -123,7 +123,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
     return isValid
   }
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: SubmitEvent) => {
     event.preventDefault()
 
     setTitleError(null)

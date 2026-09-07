@@ -1039,6 +1039,145 @@ else
   color_echo "$YELLOW" "101. Cascade delete DB check skipped (seed step unavailable)"
 fi
 
+# ============================================================================
+# [LIKES] POST /api/articles/:id/like — concurrent toggle race
+# ============================================================================
+# Description: Regression test for a race between two simultaneous like
+# requests from the same user on the same article. Before the fix, the
+# loser of the race hit an unhandled Prisma unique-constraint error and the
+# endpoint returned a bare 500 instead of resolving idempotently.
+# Epic Link: Articles + Feed
+# Status: Done ✓
+# ============================================================================
+
+# Test 102: seed a fresh article for the race test, independent of the
+# article already deleted above.
+color_echo "$BLUE" "102. POST /api/articles — create article for like race test"
+perform_request "Create race-test article" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/articles" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"Like Race Test Article\",\"content\":\"${VALID_CONTENT}\",\"category\":\"PROGRAMMING\"}"
+assert_status "201" "Create race-test article"
+RACE_ARTICLE_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')"
+
+RACE_NOTIF_CHECK_ENABLED=0
+count_author_race_like_notifications() {
+  docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -tAc \"SELECT COUNT(*) FROM notifications WHERE user_id = '${AUTHOR_ID}' AND type = 'LIKE' AND ref_id = '${RACE_ARTICLE_ID}';\"" 2>/dev/null | tr -d '[:space:]'
+}
+if command -v docker >/dev/null 2>&1 && [[ -n "$AUTHOR_ID" ]]; then
+  RACE_NOTIF_BASELINE="$(count_author_race_like_notifications)"
+  if [[ "$RACE_NOTIF_BASELINE" =~ ^[0-9]+$ ]]; then
+    RACE_NOTIF_CHECK_ENABLED=1
+  fi
+fi
+
+# Test 103: fire two simultaneous like requests from the same (non-author)
+# user and confirm both resolve cleanly and agree on the final state.
+color_echo "$BLUE" "103. POST /api/articles/:id/like — two concurrent requests from the same user"
+RACE_STATUS_A_FILE="$(mktemp)"
+RACE_BODY_A_FILE="$(mktemp)"
+RACE_STATUS_B_FILE="$(mktemp)"
+RACE_BODY_B_FILE="$(mktemp)"
+
+curl -sS -b "$COOKIE_JAR2" -o "$RACE_BODY_A_FILE" -w '%{http_code}' -X POST "${BASE_URL}/api/articles/${RACE_ARTICLE_ID}/like" > "$RACE_STATUS_A_FILE" &
+PID_A=$!
+curl -sS -b "$COOKIE_JAR2" -o "$RACE_BODY_B_FILE" -w '%{http_code}' -X POST "${BASE_URL}/api/articles/${RACE_ARTICLE_ID}/like" > "$RACE_STATUS_B_FILE" &
+PID_B=$!
+wait "$PID_A"
+wait "$PID_B"
+
+RACE_STATUS_A="$(cat "$RACE_STATUS_A_FILE")"
+RACE_BODY_A="$(cat "$RACE_BODY_A_FILE")"
+RACE_STATUS_B="$(cat "$RACE_STATUS_B_FILE")"
+RACE_BODY_B="$(cat "$RACE_BODY_B_FILE")"
+rm -f "$RACE_STATUS_A_FILE" "$RACE_BODY_A_FILE" "$RACE_STATUS_B_FILE" "$RACE_BODY_B_FILE"
+
+color_echo "$DIM" "  -> Concurrent like A: HTTP ${RACE_STATUS_A}"
+color_echo "$DIM" "  -> Concurrent like B: HTTP ${RACE_STATUS_B}"
+
+if [[ "$RACE_STATUS_A" == "200" && "$RACE_STATUS_B" == "200" ]]; then
+  pass_check "Both concurrent like requests returned HTTP 200 (no unhandled race error)"
+else
+  LAST_STATUS="${RACE_STATUS_A}/${RACE_STATUS_B}"
+  LAST_BODY="A: ${RACE_BODY_A} | B: ${RACE_BODY_B}"
+  fail_check "Concurrent like requests" "expected both HTTP 200, got A=${RACE_STATUS_A} B=${RACE_STATUS_B}"
+fi
+
+if grep -qF '"liked":true' <<<"$RACE_BODY_A" && grep -qF '"liked":true' <<<"$RACE_BODY_B" \
+  && grep -qF '"likeCount":1' <<<"$RACE_BODY_A" && grep -qF '"likeCount":1' <<<"$RACE_BODY_B"; then
+  pass_check "Both concurrent responses agree on the resolved state (liked:true, likeCount:1)"
+else
+  LAST_STATUS="${RACE_STATUS_A}/${RACE_STATUS_B}"
+  LAST_BODY="A: ${RACE_BODY_A} | B: ${RACE_BODY_B}"
+  fail_check "Concurrent like responses" "expected both to report liked:true and likeCount:1"
+fi
+
+# Test 104: GET /api/articles/:id — final likeCount reflects exactly one like
+color_echo "$BLUE" "104. GET /api/articles/:id — likeCount is 1 after the race resolves"
+perform_request "Get race-test article" "${BASE_URL}/api/articles/${RACE_ARTICLE_ID}"
+assert_status "200" "Get race-test article"
+assert_body_contains '"likeCount":1' "Get race-test article"
+
+# Test 105: only one LIKE notification was created despite two requests
+if [[ "$RACE_NOTIF_CHECK_ENABLED" == "1" ]]; then
+  color_echo "$BLUE" "105. Verifying only one LIKE notification was created for the race"
+  RACE_NOTIF_AFTER="$(count_author_race_like_notifications)"
+  EXPECTED_RACE_NOTIF_COUNT=$((RACE_NOTIF_BASELINE + 1))
+  if [[ "$RACE_NOTIF_AFTER" == "$EXPECTED_RACE_NOTIF_COUNT" ]]; then
+    pass_check "Exactly one LIKE notification created for the race (${RACE_NOTIF_AFTER})"
+  else
+    fail_check "Race notification count" "expected ${EXPECTED_RACE_NOTIF_COUNT} LIKE notifications, got ${RACE_NOTIF_AFTER}"
+  fi
+else
+  color_echo "$YELLOW" "105. Race notification DB check skipped (docker/psql not reachable)"
+fi
+
+# ============================================================================
+# [USERS] DELETE /api/users/me — account deletion decrements liked articles'
+# like counts
+# ============================================================================
+# Description: Regression test verifying that deleting an account which has
+# liked another user's article decrements that article's denormalized
+# likeCount, instead of leaving it overcounted once the like row is
+# cascade-deleted at the DB level (the user-like cascade bypasses the
+# application code that normally keeps the counter in sync).
+# Epic Link: Articles + Feed
+# Status: Done ✓
+# ============================================================================
+
+# Test 106: DELETE /api/users/me — the liking user (user2, still holding the
+# like from the race test above) deletes their own account.
+color_echo "$BLUE" "106. DELETE /api/users/me — liking user deletes their own account"
+RACE_CSRF_TOKEN="$(awk '$6=="csrf_token" { print $7 }' "$COOKIE_JAR2" | tail -n 1)"
+perform_request "Delete liker's account" -b "$COOKIE_JAR2" -X DELETE "${BASE_URL}/api/users/me" \
+  -H "x-csrf-token: ${RACE_CSRF_TOKEN}"
+assert_status "200" "Delete liker's account"
+assert_body_contains '"success":true' "Delete liker's account"
+
+# Test 107: GET /api/articles/:id — likeCount is decremented, not left stale
+color_echo "$BLUE" "107. GET /api/articles/:id — likeCount decremented after liker's account deletion"
+perform_request "Get race-test article after liker deletion" "${BASE_URL}/api/articles/${RACE_ARTICLE_ID}"
+assert_status "200" "Get race-test article after liker deletion"
+assert_body_contains '"likeCount":0' "Get race-test article after liker deletion"
+
+# Test 108: articles.like_count and the article_likes row count stay in sync
+if command -v docker >/dev/null 2>&1; then
+  color_echo "$BLUE" "108. Verifying like_count and article_likes stay consistent at the DB level"
+  DB_LIKE_COUNT="$(docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -tAc \"SELECT like_count FROM articles WHERE id = '${RACE_ARTICLE_ID}';\"" 2>/dev/null | tr -d '[:space:]')"
+  DB_LIKE_ROWS="$(docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -tAc \"SELECT COUNT(*) FROM article_likes WHERE article_id = '${RACE_ARTICLE_ID}';\"" 2>/dev/null | tr -d '[:space:]')"
+
+  if [[ "$DB_LIKE_COUNT" == "0" && "$DB_LIKE_ROWS" == "0" ]]; then
+    pass_check "articles.like_count (0) matches article_likes row count (0) after account deletion"
+  else
+    fail_check "Post-deletion like count consistency" "expected like_count=0 and article_likes rows=0, got like_count=${DB_LIKE_COUNT} rows=${DB_LIKE_ROWS}"
+  fi
+else
+  color_echo "$YELLOW" "108. DB consistency check skipped (docker not reachable)"
+fi
+
+# Cleanup: user1 still owns the race-test article; remove it like the rest.
+perform_request "Delete race-test article" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/articles/${RACE_ARTICLE_ID}"
+assert_status "200" "Delete race-test article"
+
 color_echo "$GREEN" "=============================================="
 color_echo "$GREEN" " ALL ${PASS} CHECKS PASSED"
 color_echo "$GREEN" "=============================================="

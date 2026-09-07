@@ -34,7 +34,7 @@ export const XPBar = ({ level, experiencePoints, className = '' }: XPBarProps) =
           aria-valuenow={percentage}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label={`Level ${level} progress: ${Math.round(percentage)}%`}
+          aria-label={t('profile.levelProgressAria', { level, percent: Math.round(percentage) })}
         />
       </div>
       

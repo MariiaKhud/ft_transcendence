@@ -13,6 +13,8 @@ import {
   buildArticlesFilter,
   buildArticlesOrderBy,
   calculateLevelForXp,
+  isPrismaRecordNotFoundError,
+  isPrismaUniqueConstraintError,
   mapArticleToDetails,
   validateArticlesQuery,
   validateCreateArticleInput,
@@ -286,25 +288,65 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
     where: { userId_articleId: { userId, articleId: article.id } },
   })
 
-  const { liked, likeCount } = await prisma.$transaction(async (tx) => {
-    if (existingLike) {
-      await tx.articleLike.delete({ where: { id: existingLike.id } })
+  let liked: boolean
+  let likeCount: number
+
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      if (existingLike) {
+        await tx.articleLike.delete({ where: { id: existingLike.id } })
+        const updated = await tx.article.update({
+          where: { id: article.id },
+          data: { likeCount: { decrement: 1 } },
+          select: { likeCount: true },
+        })
+        return { liked: false, likeCount: updated.likeCount }
+      }
+
+      await tx.articleLike.create({ data: { userId, articleId: article.id } })
       const updated = await tx.article.update({
         where: { id: article.id },
-        data: { likeCount: { decrement: 1 } },
+        data: { likeCount: { increment: 1 } },
         select: { likeCount: true },
       })
-      return { liked: false, likeCount: updated.likeCount }
+      return { liked: true, likeCount: updated.likeCount }
+    })
+    liked = result.liked
+    likeCount = result.likeCount
+  } catch (error) {
+    // A concurrent toggle from the same user beat this request to the same
+    // transition (duplicate create -> P2002, or delete of an already-deleted
+    // row -> P2025). Resolve idempotently against the current state instead
+    // of failing the request.
+    if (!isPrismaUniqueConstraintError(error) && !isPrismaRecordNotFoundError(error)) {
+      throw error
     }
 
-    await tx.articleLike.create({ data: { userId, articleId: article.id } })
-    const updated = await tx.article.update({
-      where: { id: article.id },
-      data: { likeCount: { increment: 1 } },
-      select: { likeCount: true },
+    const [currentLike, currentArticle] = await Promise.all([
+      prisma.articleLike.findUnique({
+        where: { userId_articleId: { userId, articleId: article.id } },
+      }),
+      prisma.article.findUnique({
+        where: { id: article.id },
+        select: { likeCount: true },
+      }),
+    ])
+
+    // Rare: the article itself was hard-deleted mid-request (racing an admin
+    // delete), not just the like row — report it as gone rather than 500ing
+    // on a re-read of a record that no longer exists.
+    if (!currentArticle) {
+      throw new AppError(404, ErrorCode.ARTICLE_NOT_FOUND, 'Article not found')
+    }
+
+    // The request that actually made this transition already emitted the
+    // live update and notification, so just report the resulting state.
+    res.status(200).json({
+      success: true,
+      data: { liked: currentLike !== null, likeCount: currentArticle.likeCount },
     })
-    return { liked: true, likeCount: updated.likeCount }
-  })
+    return
+  }
 
   // Push the updated like count live to anyone currently viewing the article, and to the feed.
   io.to(`article:${article.id}`).emit('article:like-updated', { likeCount })

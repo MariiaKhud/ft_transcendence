@@ -221,7 +221,7 @@ This project implements the "Support for multiple languages" minor module with:
 - All application UI chrome: navigation, forms, buttons, validation messages, empty states, and the Privacy Policy / Terms of Service pages.
 - Backend API error responses include a stable, machine-readable `code` field (e.g. `user_not_found`, `validation_password_length`) alongside the English `error` text. The frontend translates the `code`, so API-originated errors — not just client-side validation — respect the active language.
 - User-generated content (article titles/bodies, comments, display names) is intentionally left untranslated, as is the platform's brand name — only application UI chrome is translated.
-- The moderator/admin dashboard is still under active development on a separate ticket; its Dutch/Ukrainian translations are intentionally pending until that feature's copy is finalized (falls back to English in the meantime). See [I18N.md](I18N.md#pending-admin-dashboard-translations).
+- The moderator/admin dashboard is fully translated across all three languages, same as the rest of the app.
 
 ### Evaluator Validation Steps (Module Evidence)
 
@@ -414,7 +414,7 @@ ft_transcendence/
 - **Privacy Policy page** (static content, linked from footer, guest accessible)
 - **Terms of Service page** (acceptable use, content ownership, moderation policy, guest accessible)
 - **Minimal footer links** (Privacy Policy, Terms of Service, GitHub repo)
-- **Internationalization** (English, Dutch, Ukrainian — full UI coverage outside the in-progress admin dashboard, navbar language switcher, account-level persistence, translated API error codes)
+- **Internationalization** (English, Dutch, Ukrainian — full UI coverage including the admin dashboard, navbar language switcher, account-level persistence, translated API error codes)
 
 ### In Progress
 - Advanced permissions system: user listing and role management are complete, but full user CRUD is not yet claimable.
