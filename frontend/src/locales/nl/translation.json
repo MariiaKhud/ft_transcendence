@@ -90,7 +90,7 @@
       "validation_search_query_max_length": "Zoekopdracht mag maximaal 50 tekens bevatten.",
       "validation_profile_fields_required": "Weergavenaam en/of bio moet worden opgegeven.",
       "validation_profile_unknown_fields": "Die profielupdate bevat niet-ondersteunde velden.",
-      "validation_display_name_max_length": "Weergavenaam mag maximaal 50 tekens bevatten.",
+      "validation_display_name_max_length": "Weergavenaam mag maximaal 20 tekens bevatten.",
       "validation_display_name_invalid": "Weergavenaam moet een tekst of null zijn.",
       "validation_bio_max_length": "Bio mag maximaal 500 tekens bevatten.",
       "validation_bio_invalid": "Bio moet een tekst of null zijn.",

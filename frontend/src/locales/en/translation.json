@@ -90,7 +90,7 @@
       "validation_search_query_max_length": "Search query must be at most 50 characters.",
       "validation_profile_fields_required": "Display name and/or bio must be provided.",
       "validation_profile_unknown_fields": "That profile update includes unsupported fields.",
-      "validation_display_name_max_length": "Display name must be at most 50 characters.",
+      "validation_display_name_max_length": "Display name must be at most 20 characters.",
       "validation_display_name_invalid": "Display name must be a string or null.",
       "validation_bio_max_length": "Bio must be at most 500 characters.",
       "validation_bio_invalid": "Bio must be a string or null.",

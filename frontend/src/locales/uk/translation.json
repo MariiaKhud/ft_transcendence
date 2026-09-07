@@ -90,7 +90,7 @@
       "validation_search_query_max_length": "Пошуковий запит має містити не більше 50 символів.",
       "validation_profile_fields_required": "Потрібно вказати ім'я для показу та/або біографію.",
       "validation_profile_unknown_fields": "Це оновлення профілю містить непідтримувані поля.",
-      "validation_display_name_max_length": "Ім'я для показу має містити не більше 50 символів.",
+      "validation_display_name_max_length": "Ім'я для показу має містити не більше 20 символів.",
       "validation_display_name_invalid": "Ім'я для показу має бути текстом або null.",
       "validation_bio_max_length": "Біографія має містити не більше 500 символів.",
       "validation_bio_invalid": "Біографія має бути текстом або null.",
