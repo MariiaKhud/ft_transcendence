@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type SubmitEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
@@ -136,7 +136,7 @@ export const EditProfile = () => {
   }
 
   // Submit PATCH /api/users/me.
-  const handleProfileSubmit = async (event: FormEvent<HTMLFormElement>) => {
+  const handleProfileSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
     event.preventDefault()
     clearProfileErrors()
 
