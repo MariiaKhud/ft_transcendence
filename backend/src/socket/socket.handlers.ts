@@ -66,7 +66,10 @@ export function registerChatHandlers(io: Server, socket: Socket) {
 
     } catch (err) {
       console.error('Chat message save failed:', err)
-      socket.emit('chat:error', { message: 'Failed to send message' })
+      socket.emit('chat:error', {
+        code: ErrorCode.MESSAGE_SEND_FAILED,
+        message: 'Failed to send message',
+      })
       return
     }
 

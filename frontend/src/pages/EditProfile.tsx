@@ -329,7 +329,7 @@ export const EditProfile = () => {
         <div className="flex items-center gap-5">
           <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/50 bg-gradient-to-br from-purple-500 to-pink-500 text-2xl font-bold text-white shadow-lg">
             {activeAvatarUrl ? (
-              <img src={activeAvatarUrl} alt="Avatar preview" className="h-full w-full object-cover" />
+              <img src={activeAvatarUrl} alt={t('editProfile.avatarPreviewAlt')} className="h-full w-full object-cover" />
             ) : (
               <span>{activeInitials}</span>
             )}

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { getSocket } from '@/lib/socket'
 import { apiRequest } from '@/api/client'
+import i18n from '@/lib/i18n'
 
 export interface ChatMessage {
   id: string
@@ -63,11 +64,12 @@ export function useChat(otherUserId: string) {
 
     function onError(payload: { code?: string; message: string }) {
       setSending(false)
-      setError(
-        payload.code === 'friendship_not_found'
-          ? t('chat.notFriends')
-          : payload.message,
-      )
+      if (payload.code === 'friendship_not_found') {
+        setError(t('chat.notFriends'))
+        return
+      }
+      const key = payload.code ? `api.errors.${payload.code}` : null
+      setError(key && i18n.exists(key) ? i18n.t(key) : payload.message)
     }
 
     socket.on('chat:message', onMessage)

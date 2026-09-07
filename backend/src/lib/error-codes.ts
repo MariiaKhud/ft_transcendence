@@ -105,6 +105,7 @@ export const ErrorCode = {
 
   // Messages
   MESSAGE_SELF_FORBIDDEN: 'message_self_forbidden',
+  MESSAGE_SEND_FAILED: 'message_send_failed',
 
   // Validation — misc
   VALIDATION_FRIEND_ACTION_INVALID: 'validation_friend_action_invalid',
