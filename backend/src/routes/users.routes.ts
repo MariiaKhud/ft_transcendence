@@ -24,7 +24,11 @@ import {
   generateAvatarFilename,
   getUploadsDir,
   deleteOldAvatar,
+  deleteOldCv,
+  CV_MAX_SIZE,
+  generateCvFilename,
   USER_SEARCH_RESULTS_LIMIT,
+  validateCvMimetype,
 } from './users.route-helpers.js'
 import type { EditableProfile } from './users.route-helpers.js'
 import { updateOnlineStatus, getUserById } from '../controllers/users.controller.js';
@@ -53,6 +57,11 @@ const upload = multer({
   limits: {
     fileSize: 2 * 1024 * 1024,
   },
+})
+
+const uploadCv = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: CV_MAX_SIZE },
 })
 
 // Middleware to handle multer errors (converts LIMIT_FILE_SIZE to HTTP 413)
@@ -343,6 +352,70 @@ const deleteMyAvatarHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: updatedUser })
 }
 
+const uploadCvHandler = async (req: FileRequest, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
+  }
+
+  if (!req.file) {
+    throw new AppError(400, ErrorCode.VALIDATION_CV_REQUIRED, 'Validation failed: CV file is required')
+  }
+
+  validateCvMimetype(req.file.mimetype)
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: req.user.userId },
+    select: { cvUrl: true },
+  })
+
+  if (!currentUser) {
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found')
+  }
+
+  const filename = generateCvFilename(req.file.mimetype)
+  const uploadsDir = getUploadsDir()
+  await fs.mkdir(uploadsDir, { recursive: true })
+  await fs.writeFile(`${uploadsDir}/${filename}`, req.file.buffer)
+
+  try {
+    await deleteOldCv(currentUser.cvUrl)
+    const updatedUser: EditableProfile = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { cvUrl: `/uploads/${filename}`, cvFilename: req.file.originalname },
+      select: editableProfileSelect,
+    })
+
+    res.status(200).json({ success: true, data: updatedUser })
+  } catch (error) {
+    await deleteOldCv(`/uploads/${filename}`)
+    throw error
+  }
+}
+
+const deleteMyCvHandler = async (req: Request, res: Response) => {
+  if (!req.user?.userId) {
+    throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
+  }
+
+  const currentUser = await prisma.user.findUnique({
+    where: { id: req.user.userId },
+    select: { cvUrl: true },
+  })
+
+  if (!currentUser) {
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found')
+  }
+
+  await deleteOldCv(currentUser.cvUrl)
+  const updatedUser: EditableProfile = await prisma.user.update({
+    where: { id: req.user.userId },
+    data: { cvUrl: null, cvFilename: null },
+    select: editableProfileSelect,
+  })
+
+  res.status(200).json({ success: true, data: updatedUser })
+}
+
 // Permanently delete the authenticated user's account and all cascaded data.
 const deleteMyAccountHandler = async (req: Request, res: Response) => {
   if (!req.user?.userId) {
@@ -351,17 +424,38 @@ const deleteMyAccountHandler = async (req: Request, res: Response) => {
 
   validateCsrfToken(req, req.user.csrfToken)
 
+  const userId = req.user.userId
+
   const currentUser = await prisma.user.findUnique({
-    where: { id: req.user.userId },
-    select: { avatarUrl: true },
+    where: { id: userId },
+    select: { avatarUrl: true, cvUrl: true },
   })
 
   if (!currentUser) {
     throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found')
   }
 
-  await prisma.user.delete({ where: { id: req.user.userId } })
+  await prisma.$transaction(async (tx) => {
+    // The user-article cascade deletes this user's own articles (and their
+    // likes) wholesale, but likes they gave on *other* articles are removed
+    // by the user-like cascade alone, which would leave those articles'
+    // denormalized likeCount overcounted. Decrement those first.
+    const likedArticles = await tx.articleLike.findMany({
+      where: { userId },
+      select: { articleId: true },
+    })
+
+    if (likedArticles.length > 0) {
+      await tx.article.updateMany({
+        where: { id: { in: likedArticles.map((like) => like.articleId) } },
+        data: { likeCount: { decrement: 1 } },
+      })
+    }
+
+    await tx.user.delete({ where: { id: userId } })
+  })
   await deleteOldAvatar(currentUser.avatarUrl)
+  await deleteOldCv(currentUser.cvUrl)
   clearAuthCookies(res)
 
   res.status(200).json({ success: true })
@@ -369,6 +463,8 @@ const deleteMyAccountHandler = async (req: Request, res: Response) => {
 
 router.post('/me/avatar', authMiddleware, upload.single('avatar'), handleMulterError, handleAsyncErrors(uploadAvatarHandler))
 router.delete('/me/avatar', authMiddleware, handleAsyncErrors(deleteMyAvatarHandler))
+router.post('/me/cv', authMiddleware, uploadCv.single('cv'), handleMulterError, handleAsyncErrors(uploadCvHandler))
+router.delete('/me/cv', authMiddleware, handleAsyncErrors(deleteMyCvHandler))
 router.delete('/me', authMiddleware, handleAsyncErrors(deleteMyAccountHandler))
 router.patch('/me', authMiddleware, handleAsyncErrors(editMyProfileHandler))
 // Must be registered before '/:username' so a search request isn't swallowed by the username route.

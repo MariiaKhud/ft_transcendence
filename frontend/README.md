@@ -106,7 +106,8 @@ Current behavior:
 
 - `VITE_DEV_API_PROXY_TARGET`
   - Used by Vite dev server proxy in `vite.config.ts`
-  - Default: `http://localhost:3000` (or `http://backend:3000` in Docker env)
+  - Default: `https://localhost:8443` for host development; Docker uses the internal `http://backend:3000` service address
+  - The HTTPS default accepts the local development certificate in Vite
 
 ## Routing
 
@@ -120,7 +121,7 @@ Routes are configured in `src/app/router.tsx`:
 - `/profile/:username` -> `Profile` (read-only public profile)
 - `/articles/new` -> `CreateArticle` (auth required)
 - `/articles/:id` -> `Article` (detail, likes, comments, author actions)
-- `/settings/profile` -> `EditProfile` ✓ (edit displayName, bio, avatar)
+- `/settings/profile` -> `EditProfile` ✓ (edit displayName, bio, avatar, and CV)
 - `/privacy-policy` -> `PrivacyPolicy` ✓ (static policy page, guest accessible)
 - `/terms-of-service` -> `TermsOfService` ✓ (static terms page, guest accessible)
 - `*` -> `NotFound`
@@ -131,7 +132,7 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 
 **Route:** `/settings/profile`
 
-**Description:** Form for authenticated users to edit their profile information and avatar.
+**Description:** Form for authenticated users to edit their profile information, avatar, and CV.
 
 **Features:**
 - Update `displayName` (optional, max 20 chars)
@@ -140,6 +141,8 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 - Upload avatar (PNG/JPG, max 2MB)
 - Preview avatar before upload
 - Delete existing avatar
+- Upload, replace, or delete a CV (`.txt`, `.pdf`, `.doc`, `.docx`; max 5MB)
+- Download an uploaded CV from the public profile page
 - Permanently delete own account from the Danger Zone after confirmation
 - Field validation and error handling
 
@@ -147,6 +150,8 @@ Routes are lazy-loaded with `React.lazy`, so each page is split into its own JS 
 - `PATCH /api/users/me` — update displayName and bio
 - `POST /api/users/me/avatar` — upload new avatar
 - `DELETE /api/users/me/avatar` — remove avatar
+- `POST /api/users/me/cv` — upload or replace CV
+- `DELETE /api/users/me/cv` — remove CV
 - `DELETE /api/users/me` — permanently delete account and clear session
 
 **Implementation files:**
@@ -184,14 +189,14 @@ After successful account deletion, the user is redirected to Login and sees a lo
 **Implementation files:**
 - `src/pages/Home.tsx` — feed page component with filtering UI
 
-## Backend-supported Features Pending Frontend UI
+## Social, Gamification, and Admin UI
 
-The backend currently exposes these APIs, but dedicated frontend pages/components are still pending:
+The frontend includes dedicated pages and components for these backend features:
 
-- `GET/POST /api/messages/:userId` — private conversations
-- `GET/PATCH /api/notifications` — notification listing and read state
-- `GET /api/users/leaderboard` — leaderboard data
-- `/api/admin/*` — admin user and moderation tools
+- `GET/POST /api/messages/:userId` — private conversation UI with real-time delivery
+- `GET/PATCH /api/notifications` — notification bell, read state, and paginated notification page
+- `GET /api/users/leaderboard` — leaderboard page with levels and badges
+- `/api/admin/*` — admin dashboard for users and article/comment moderation
 
 ## Article Detail and Publishing ✓
 
@@ -361,6 +366,22 @@ Run:
 ```bash
 npm run test:frontend
 ```
+
+## Progressive Web App
+
+The frontend is installable through `public/manifest.json` and registers `public/sw.js`
+after load. The service worker provides an offline page for navigation requests and
+does not cache API responses or user data.
+
+## Design System
+
+The frontend uses a custom Tailwind CSS design system with a shared purple/fuchsia/
+emerald palette, consistent typography, spacing, borders, and reusable button variants.
+
+Reusable components include `Button`, `ArticleCard`, `ArticleForm`, `UserAvatar`,
+`UserMenu`, `UserSearchBar`, `FriendButton`, `FollowButton`, `NotificationBell`,
+`MessageButtonLink`, `XPBar`, `BadgeList`, admin dashboard components, and shared
+icons from `src/components/ui/icons.tsx`.
 
 ## Project Structure
 

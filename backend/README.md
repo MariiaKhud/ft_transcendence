@@ -24,6 +24,7 @@ npm i @prisma/client@latest
 - **Self-account deletion** (`DELETE /api/users/me`) — permanently deletes the authenticated user's account and cascaded data
 - **Avatar management** (`POST /api/users/me/avatar`) — upload PNG/JPG, max 2MB
 - **Avatar delete** (`DELETE /api/users/me/avatar`) — remove user avatar
+- **CV management** (`POST/DELETE /api/users/me/cv`) — upload, replace, and remove TXT/PDF/DOC/DOCX CV files, max 5MB
 - **Global articles feed** (`GET /api/articles`) — paginated, searchable, filterable, sortable
 - **Article CRUD** (`POST/PATCH/DELETE /api/articles/:id` + `GET /api/articles/:id`)
 - **Article comments** (`GET/POST /api/articles/:id/comments`, `PATCH/DELETE /api/comments/:id`)
@@ -34,13 +35,16 @@ npm i @prisma/client@latest
 - **Notifications API** (`GET /api/notifications`, mark one/all read)
 - **Leaderboard API** (`GET /api/users/leaderboard`)
 - **Admin API** (`/api/admin/*`) for user roles and content moderation
+- **Gamification services** (persistent XP, levels, badge awarding, leaderboard data)
+- **Socket.IO server** (authenticated real-time chat, notifications, online status, comments, likes, and feed updates)
+- **Custom frontend design system** (reusable UI components, shared color palette, typography, and icons)
 - Cookie-based auth session with JWT and CSRF token checks
 - Prisma integration for PostgreSQL
 - Centralized error handling with typed API responses
 
-### In Progress
-- Gamification module routes
-- Admin moderation routes
+### Module Limits
+- Avatar upload supports JPEG, PNG, and WebP images. It does not yet support document uploads.
+- Role management and moderation are available, but full user CRUD is not yet implemented.
 
 ## Run Modes
 
@@ -49,14 +53,17 @@ npm i @prisma/client@latest
 From repository root:
 
 ```bash
-make up
+make start
 ```
+
+This one command generates the local HTTPS certificate, starts the containers,
+waits for the backend, and seeds the database.
 
 Backend is available through Nginx at:
 
 - https://localhost:8443/api
 
-### B) Local backend-only development
+### B) Local backend development
 
 From `backend/`:
 
@@ -65,9 +72,9 @@ npm install
 npm run dev
 ```
 
-Default local URL:
-
-- http://localhost:3000
+`npm run dev` starts the backend on its internal development port. Do not access
+that port from a browser, script, or external client; use the Docker/Nginx HTTPS
+endpoint at `https://localhost:8443/api` for all public API requests.
 
 ## Environment Variables
 
@@ -125,6 +132,12 @@ npm run db:reset     # reset prisma database
 npm run type-check   # TypeScript type check
 npm run test:backend # backend flow bash test script
 npm run test:auth    # alias of test:backend
+```
+
+Run Socket.IO realtime integration tests from the repository root:
+
+```bash
+make test-realtime
 ```
 
 ## Auth API
@@ -428,16 +441,16 @@ Examples:
 
 ```bash
 # Get latest articles
-curl http://localhost:3000/api/articles
+curl -k https://localhost:8443/api/articles
 
 # Get programming articles, sorted by most liked
-curl 'http://localhost:3000/api/articles?category=PROGRAMMING&sort=most_liked'
+curl -k 'https://localhost:8443/api/articles?category=PROGRAMMING&sort=most_liked'
 
 # Search articles
-curl 'http://localhost:3000/api/articles?search=typescript'
+curl -k 'https://localhost:8443/api/articles?search=typescript'
 
 # Paginate with custom limit
-curl 'http://localhost:3000/api/articles?page=2&limit=10'
+curl -k 'https://localhost:8443/api/articles?page=2&limit=10'
 ```
 
 ### GET /api/articles/:id
@@ -488,6 +501,13 @@ Author hard-deletes their own comment; moderator/admin can soft-remove with reas
 - `DELETE /request/:userId`
 - `DELETE /:userId`
 
+### CV (`/api/users/me/cv`)
+
+- `POST /` — upload or replace the authenticated user's CV (`.txt`, `.pdf`, `.doc`, `.docx`; max 5MB)
+- `DELETE /` — remove the authenticated user's CV and stored file
+
+Public profile responses include `cvUrl` and `cvFilename` when a CV is available for download.
+
 ### Follows (`/api/follows`)
 
 - `GET /status/:userId`
@@ -526,11 +546,18 @@ The backend integration flow script lives in:
 - `scripts/test-friends-flow.sh`
 - `scripts/test-messages.sh`
 - `scripts/test-gamification-flow.sh`
+- `scripts/test-realtime-flow.sh`
 
 Run it with:
 
 ```bash
 npm run test:backend
+```
+
+Run the Socket.IO realtime tests from the repository root:
+
+```bash
+make test-realtime
 ```
 
 Current flow also checks:
@@ -565,7 +592,7 @@ The backend is gradually being standardized to the `success/data/error` envelope
 Register:
 
 ```bash
-curl -X POST http://localhost:3000/api/auth/register \
+curl -k -X POST https://localhost:8443/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"new.user@example.com","username":"new_user","password":"strongPass123"}'
 ```
@@ -573,7 +600,7 @@ curl -X POST http://localhost:3000/api/auth/register \
 Login (save cookies):
 
 ```bash
-curl -X POST http://localhost:3000/api/auth/login \
+curl -k -X POST https://localhost:8443/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"new.user@example.com","password":"strongPass123"}' \
   -c cookies.txt
@@ -582,5 +609,5 @@ curl -X POST http://localhost:3000/api/auth/login \
 Me (send cookies):
 
 ```bash
-curl http://localhost:3000/api/auth/me -b cookies.txt
+curl -k https://localhost:8443/api/auth/me -b cookies.txt
 ```

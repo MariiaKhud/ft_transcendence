@@ -7,6 +7,8 @@ export interface AuthUser {
   username: string
   displayName: string | null
   avatarUrl: string | null
+  cvUrl: string | null
+  cvFilename: string | null
   bio: string | null
   role: UserRole
   preferredLanguage: string | null

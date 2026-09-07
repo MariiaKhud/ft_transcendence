@@ -113,7 +113,7 @@ Important:
 ### OAuth Setup Steps
 
 1. Copy env template and fill OAuth credentials.
-2. Start stack with `make up`.
+2. Start the app with `make start`.
 3. Verify enabled providers:
 
 ```bash
@@ -221,7 +221,7 @@ This project implements the "Support for multiple languages" minor module with:
 - All application UI chrome: navigation, forms, buttons, validation messages, empty states, and the Privacy Policy / Terms of Service pages.
 - Backend API error responses include a stable, machine-readable `code` field (e.g. `user_not_found`, `validation_password_length`) alongside the English `error` text. The frontend translates the `code`, so API-originated errors — not just client-side validation — respect the active language.
 - User-generated content (article titles/bodies, comments, display names) is intentionally left untranslated, as is the platform's brand name — only application UI chrome is translated.
-- The moderator/admin dashboard is still under active development on a separate ticket; its Dutch/Ukrainian translations are intentionally pending until that feature's copy is finalized (falls back to English in the meantime). See [I18N.md](I18N.md#pending-admin-dashboard-translations).
+- The moderator/admin dashboard is fully translated across all three languages, same as the rest of the app.
 
 ### Evaluator Validation Steps (Module Evidence)
 
@@ -297,63 +297,53 @@ OAUTH_SUCCESS_REDIRECT=https://localhost:8443/
 OAUTH_ERROR_REDIRECT=https://localhost:8443/login
 ```
 
-### 3. Generate a local HTTPS certificate
-
-For local browser testing, generate a localhost certificate and install the local CA where supported:
+### 3. Start the project
 
 ```bash
-make setup-local-cert
+make start
 ```
 
-Then restart nginx:
+`make start` generates the local HTTPS certificate, starts the containers, waits
+for the backend, and seeds the database. If your browser still warns about the
+certificate, trust the CA from `~/.mkcert/rootCA.pem` in your browser or OS
+certificate store.
 
-```bash
-docker compose restart nginx
-```
+### 4. Open the app
 
-> The setup script now bootstraps mkcert automatically when needed, generates the certificate files locally, and keeps them out of Git. If your browser still warns about the certificate, trust the CA from ~/.mkcert/rootCA.pem in your browser or OS certificate store.
-
-### 4. Start the project
-
-```bash
-make up
-```
-
-### 5. Open the app
-
-- http://127.0.0.1:8080
-- https://localhost:8443 (if you want the HTTPS endpoint)
+- https://localhost:8443
 
 ## Browser Compatibility
 
 Tested browsers in this environment:
 
 - Google Chrome
-- Chromium
 - Microsoft Edge
+- Chromium
 
 Current compatibility status:
 
-- Critical user flows were verified against the local app URL at `http://127.0.0.1:8080`.
-- Login/registration, feed/article browsing, profile/avatar editing, chat/messaging, and follows/notifications were re-tested successfully.
+- Critical user flows were verified against the local app URL at `https://localhost:8443`.
+- Login/registration, feed/article browsing, profile/avatar editing, chat/messaging, and follows/notifications were re-tested successfully in Microsoft Edge and Chromium.
 - Moderator moderation behavior was verified through the automated backend flow.
 
 Known limitations:
 
 - `https://localhost:8443` can still show a certificate warning until the local mkcert CA is trusted in the OS or browser certificate store.
-- In this environment, `http://127.0.0.1:8080` is the recommended browser URL for manual testing; `localhost` may be less reliable depending on local browser/network setup.
-- Firefox and Safari were not available in this environment, so they were not part of the verified browser matrix.
+- Firefox was not available in this environment and was not part of the verified browser matrix.
 - Dedicated admin endpoint-path checks depend on local environment configuration (`ROLE_ADMIN_PATH`) and were not fully exercised here.
 
 ## Available Commands
 
 ```bash
-make up        # build and run all services
-make down      # stop all services
-make clean     # stop all services and remove volumes
-make logs      # stream logs
-make migrate   # run prisma migrations in backend container
-make seed      # seed database in backend container
+make start         # generate HTTPS cert, start services, and seed database
+make up            # build and run all services in the foreground
+make down          # stop all services
+make clean         # stop all services and remove volumes
+make logs          # stream logs
+make migrate       # run prisma migrations in backend container
+make seed          # seed database in backend container
+make test-realtime # run Socket.IO realtime integration tests
+make test-all      # run every automated test suite
 ```
 
 ## Test Commands
@@ -370,6 +360,12 @@ Frontend smoke tests:
 ```bash
 cd frontend
 npm run test:frontend
+```
+
+Socket.IO realtime tests (chat, live comment/like updates, and notifications):
+
+```bash
+make test-realtime
 ```
 
 ## Project Structure
@@ -398,7 +394,8 @@ ft_transcendence/
 ### Completed ✓
 - **User authentication** (JWT + HttpOnly cookies)
 - **Session restore on refresh** (frontend restores user via `/api/auth/me`)
-- **Profile management** (displayName, bio, avatar upload/delete/preview)
+- **Profile management** (displayName, bio, avatar upload/delete/preview, CV upload/delete)
+- **CV document upload and download** (TXT, PDF, DOC, DOCX; validation, replacement cleanup, and public profile download)
 - **Public profiles** (read-only user profiles with stats)
 - **Edit profile form** (displayName, bio, avatar upload/delete, field validation)
 - **Self-service account deletion** (confirmation, cascade cleanup, session clearing)
@@ -408,18 +405,20 @@ ft_transcendence/
 - **Article publishing and detail pages** (create, view, edit, delete)
 - **Comments and likes** (create/edit/delete comments, toggle likes)
 - **Follow and friend actions** (profile follow/unfollow, friend request flows)
-- **Leaderboard API** (top users by likes, article counts, levels, and badges)
-- **Admin API** (user role management and article/comment moderation)
+- **Direct messaging** (persistent conversations with real-time message delivery)
+- **Notification center** (real-time notification bell, read state, and paginated notification page)
+- **Gamification** (persistent XP, levels, badges, and leaderboard)
+- **Admin dashboard and API** (role management and article/comment moderation)
+- **Real-time updates** (Socket.IO for chat, online status, notifications, comments, likes, and feed statistics)
+- **Progressive Web App** (install manifest, service worker, and offline navigation fallback)
 - **Privacy Policy page** (static content, linked from footer, guest accessible)
 - **Terms of Service page** (acceptable use, content ownership, moderation policy, guest accessible)
 - **Minimal footer links** (Privacy Policy, Terms of Service, GitHub repo)
-- **Internationalization** (English, Dutch, Ukrainian — full UI coverage outside the in-progress admin dashboard, navbar language switcher, account-level persistence, translated API error codes)
+- **Internationalization** (English, Dutch, Ukrainian — full UI coverage including the admin dashboard, navbar language switcher, account-level persistence, translated API error codes)
 
 ### In Progress
-- Direct messaging frontend UI (backend conversation API is available)
-- Notifications frontend UI (backend list/read API is available)
-- Gamification frontend UI (badge awarding and leaderboard backend support are available)
-- Admin dashboard frontend UI (backend moderation/user-management endpoints are available)
+- Advanced permissions system: user listing and role management are complete, but full user CRUD is not yet claimable.
+- Complete notification coverage for every creation, update, and deletion action is not yet claimable.
 
 ## Modules Checklist (Evaluation)
 
@@ -427,19 +426,23 @@ This section tracks only modules that are implemented and currently claimable.
 
 ### Claimed Modules
 
-| Category                               | Module                                                              | Type  | Points |
-|----------------------------------------|---------------------------------------------------------------------|-------|--------|
-| Web                                    | Use a framework for both frontend and backend                       | Major | 2      |
-| Web                                    | Use an ORM for the database                                         | Minor | 1      |
-| Web                                    | Advanced search functionality (filters, sorting, pagination)        | Minor | 1      |
-| Web                                    | Allow users to interact with other users (chat + profile + friends) | Major | 2      |
-| User Management                        | Standard user management and authentication                         | Major | 2      |
-| User Management                        | OAuth 2.0 remote authentication (GitHub, Google, 42)                | Minor | 1      |
-| Web                                    | File upload and management system                                   | Minor | 1      |
-| Accessibility and Internationalization | Support for additional browsers                                     | Minor | 1      |
-| Accessibility and Internationalization | Support for multiple languages (English, Dutch, Ukrainian)          | Minor | 1      |
+| Category                               | Module                                                                | Type  | Points |
+|----------------------------------------|-----------------------------------------------------------------------|-------|--------|
+| Web                                    | Use a framework for both frontend and backend                         | Major | 2      |
+| Web                                    | Use an ORM for the database                                           | Minor | 1      |
+| Web                                    | Advanced search functionality (filters, sorting, pagination)          | Minor | 1      |
+| Web                                    | Allow users to interact with other users (chat + profile + friends)   | Major | 2      |
+| User Management                        | Standard user management and authentication                           | Major | 2      |
+| User Management                        | OAuth 2.0 remote authentication (GitHub, Google, 42)                  | Minor | 1      |
+| Web                                    | Real-time features using WebSockets                                   | Major | 2      |
+| Gaming and User Experience             | Gamification system (XP, levels, badges, leaderboard)                 | Minor | 1      |
+| Web                                    | Progressive Web App with offline support and installability           | Minor | 1      |
+| Web                                    | Custom-made design system with reusable components                    | Minor | 1      |
+| Web                                    | File upload and management system (images and CV documents)          | Minor | 1      |
+| Accessibility and Internationalization | Support for multiple languages (English, Dutch, Ukrainian)            | Minor | 1      |
+| Accessibility and Internationalization | Support for additional browsers (Microsoft Edge, Chromium)            | Minor | 1      |
 
-**Claimed subtotal: 12 points**
+**Claimed subtotal: 17 points**
 
 Evidence used for this checklist:
 - Email/password authentication with hashed passwords, session cookies, and `/api/auth/me`
@@ -447,32 +450,31 @@ Evidence used for this checklist:
 - OAuth callback state validation and error-code redirects
 - Account linking via `oauth_accounts` with verified-email resolution
 - Profile system (public profile page, edit profile, avatar upload/remove)
-- File upload and management system (avatar upload, validation, storage, display, delete)
 - Friends system (send/accept/decline/remove + status checks)
 - Online status backend flow (`/api/users/me/online`, friend records include `isOnline` and `lastSeenAt`)
-- Basic chat API (send/receive conversation endpoints)
+- Real-time Socket.IO connections with authenticated users, online/offline events, chat messages, notifications, and article/feed updates
+- Persistent gamification: XP, level calculation, badges, and leaderboard data stored in PostgreSQL
+- PWA manifest, application icons, service-worker registration, and an offline navigation fallback
+- File uploads: avatar images plus TXT, PDF, DOC, and DOCX CV documents with frontend/backend type and size validation, replacement cleanup, deletion, and profile download
+- Custom design system with reusable components: Button, icon set, ArticleCard, ArticleForm, UserAvatar, UserMenu, UserSearchBar, FriendButton, FollowButton, NotificationBell, MessageButtonLink, XPBar, BadgeList, and admin dashboard components
+- Shared visual language: Tailwind CSS, purple/fuchsia/emerald status palette, reusable button variants, typography, spacing, borders, and icon components
 - Backend integration scripts for friends/messages/follows flows
-- Browser compatibility verification across Chrome, Chromium, and Microsoft Edge
-- Browser compatibility documentation and known limitations in the README
+- Manual compatibility checks in Microsoft Edge and Chromium for core authentication, content, profile, social, and responsive UI flows
 - i18n: 3 complete languages (English, Dutch, Ukrainian) across all shipped UI, navbar language switcher, `localStorage` + account-level (`preferredLanguage`) persistence, translated backend API error codes
 - Automated i18n regression suite (`frontend/scripts/i18n.test.mjs`) plus a live multi-language, multi-page QA pass (see Internationalization section above)
 
-### Planned Modules to Reach 14 (from team summary)
+### Additional Modules Not Yet Claimed
 
-| Category                   | Module                                                          | Type  | Points | Current Status |
-|----------------------------|-----------------------------------------------------------------|-------|--------|----------------|
-| User Management            | Advanced permissions system                                     | Major | 2      | In progress    |
-| Web                        | Complete notification system (create/update/delete actions)     | Minor | 1      | In progress    |
-| Gaming and User Experience | Gamification system (persistent, at least 3 features)           | Minor | 1      | In progress    |
-| Web                        | PWA support (installable app, service worker, offline fallback) | Minor | 1      | Planned        |
-
-Optional modules (not required for this 14-point plan): real-time WebSockets.
+| Category                               | Module                                                          | Type  | Points | Current Status                            |
+|----------------------------------------|-----------------------------------------------------------------|-------|--------|-------------------------------------------|
+| User Management                        | Advanced permissions system                                     | Major | 2      | Partial: lacks full user CRUD             |
+| Web                                    | Complete notification system (create/update/delete actions)     | Minor | 1      | Partial: coverage is not complete         |
 
 ### Point Summary
 
 - Mandatory target: **14 points**
-- Currently claimed: **12 points**
-- Remaining to reach target: **2 points**
+- Currently claimed: **17 points**
+- Above the mandatory target by: **3 points**
 
 > Important: We only claim modules during evaluation when all required criteria in the subject are fully met and demonstrable.
 
@@ -481,7 +483,7 @@ Optional modules (not required for this 14-point plan): real-time WebSockets.
 | Service     | Internal Port | Host Port (default) |
 |-------------|--------------:|--------------------:|
 | postgres    | 5432          | not exposed         |
-| backend     | 3000          | 3000                |
+| backend     | 3000          | not exposed         |
 | frontend    | 5173          | 5173                |
 | nginx http  | 80            | 8080                |
 | nginx https | 443           | 8443                |
@@ -495,8 +497,8 @@ Optional modules (not required for this 14-point plan): real-time WebSockets.
 Rebuild cleanly:
 
 ```bash
-make down
-docker compose up --build
+make clean
+make start
 ```
 
 ## Getting Help

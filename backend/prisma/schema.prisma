@@ -57,6 +57,8 @@ model User {
   passwordHash             String           @map("password_hash")
   displayName              String?          @map("display_name")
   avatarUrl                String?          @map("avatar_url")
+  cvUrl                    String?          @map("cv_url")
+  cvFilename               String?          @map("cv_filename")
   bio                      String?
   role                     Role             @default(USER)
   preferredLanguage        String?          @map("preferred_language")

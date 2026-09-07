@@ -7,9 +7,30 @@
   </head>
   <body>
     <main>
-      <h1>You are offline</h1>
-      <p>Please reconnect to the internet and try again.</p>
-      <button onclick="location.reload()">Retry</button>
+      <h1 data-i18n="title">You are offline</h1>
+      <p data-i18n="body">Please reconnect to the internet and try again.</p>
+      <button onclick="location.reload()" data-i18n="retry">Retry</button>
     </main>
+    <script>
+      // Standalone page served by the service worker when the network is
+      // down, outside the React/i18next bundle — so translations are
+      // inlined here rather than pulled from the app's locale files.
+      var STRINGS = {
+        en: { title: 'You are offline', body: 'Please reconnect to the internet and try again.', retry: 'Retry' },
+        nl: { title: 'Je bent offline', body: 'Maak opnieuw verbinding met internet en probeer het nogmaals.', retry: 'Opnieuw proberen' },
+        uk: { title: 'Ви офлайн', body: 'Підключіться до інтернету та спробуйте ще раз.', retry: 'Повторити спробу' },
+      }
+
+      try {
+        var lang = (localStorage.getItem('i18nextLng') || navigator.language || 'en').slice(0, 2)
+        var strings = STRINGS[lang] || STRINGS.en
+        document.documentElement.lang = STRINGS[lang] ? lang : 'en'
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+          el.textContent = strings[el.getAttribute('data-i18n')]
+        })
+      } catch (e) {
+        // localStorage may be unavailable (e.g. private browsing); fall back to the English defaults already in the markup.
+      }
+    </script>
   </body>
 </html>

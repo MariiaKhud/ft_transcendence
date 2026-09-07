@@ -65,6 +65,8 @@ export const ErrorCode = {
   VALIDATION_BIO_INVALID: 'validation_bio_invalid',
   VALIDATION_AVATAR_REQUIRED: 'validation_avatar_required',
   VALIDATION_AVATAR_FORMAT: 'validation_avatar_format',
+  VALIDATION_CV_REQUIRED: 'validation_cv_required',
+  VALIDATION_CV_FORMAT: 'validation_cv_format',
   VALIDATION_PREFERRED_LANGUAGE_INVALID: 'validation_preferred_language_invalid',
   FILE_TOO_LARGE: 'file_too_large',
 
@@ -107,6 +109,7 @@ export const ErrorCode = {
 
   // Messages
   MESSAGE_SELF_FORBIDDEN: 'message_self_forbidden',
+  MESSAGE_SEND_FAILED: 'message_send_failed',
 
   // Validation — misc
   VALIDATION_FRIEND_ACTION_INVALID: 'validation_friend_action_invalid',

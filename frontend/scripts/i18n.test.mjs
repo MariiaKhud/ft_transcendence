@@ -91,7 +91,7 @@ const normalizePluralKeys = (keys) => [...new Set(keys.map((key) => key.replace(
 // ticket, who owns adding the nl/uk translations. Remove an entry here once
 // that namespace has full nl/uk coverage — don't add to this list to silence
 // a real gap in a namespace you own.
-const PENDING_NAMESPACES = ['admin'];
+const PENDING_NAMESPACES = [];
 
 const dropPendingNamespaces = (keys) =>
   keys.filter((key) => !PENDING_NAMESPACES.some((ns) => key === ns || key.startsWith(`${ns}.`)));

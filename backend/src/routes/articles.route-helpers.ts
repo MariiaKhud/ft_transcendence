@@ -5,8 +5,11 @@ import type { Category, Prisma } from '@prisma/client'
 const TITLE_MAX_LENGTH = 120
 const CONTENT_MIN_LENGTH = 100
 const CONTENT_MAX_LENGTH = 10000
-const SEARCH_MAX_LENGTH = 100
+const SEARCH_FIELD_MAX_LENGTH = 100
 const AUTHOR_FILTER_MAX_LENGTH = 20
+// Bounds `page` so an absurd value (e.g. page=1e20) can't produce a `skip`
+// large enough for Postgres to reject the query outright.
+const MAX_PAGE = 100_000
 const VALID_CATEGORIES = new Set<string>([
   'PROGRAMMING',
   'CAREER',
@@ -27,6 +30,18 @@ export interface CreateArticleInput {
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
+}
+
+// Prisma code P2002 means a unique field already exists (e.g. a concurrent
+// request already inserted the same like row).
+export const isPrismaUniqueConstraintError = (error: unknown): boolean => {
+  return isRecord(error) && error.code === 'P2002'
+}
+
+// Prisma code P2025 means the record targeted by an update/delete no longer
+// exists (e.g. a concurrent request already deleted the same like row).
+export const isPrismaRecordNotFoundError = (error: unknown): boolean => {
+  return isRecord(error) && error.code === 'P2025'
 }
 
 // The minimum-length check counts only non-whitespace characters so it can't be
@@ -165,30 +180,35 @@ const parseDateParam = (value: unknown, label: string): Date | undefined => {
   return date
 }
 
+const parseSearchField = (value: unknown, label: string, maxLength = SEARCH_FIELD_MAX_LENGTH): string | undefined => {
+  if (value === undefined || value === null || value === '') {
+    return undefined
+  }
+
+  const trimmed = String(value).trim()
+  if (trimmed.length === 0) {
+    return undefined
+  }
+
+  if (trimmed.length > maxLength) {
+    throw new AppError(400, ErrorCode.VALIDATION_ARTICLE_FILTER_MAX_LENGTH, `Invalid ${label} parameter: must be at most ${maxLength} characters`)
+  }
+
+  return trimmed
+}
+
 export const validateArticlesQuery = (query: Record<string, any>) => {
-  const page = Math.max(1, parseInt(String(query.page || 1), 10) || 1)
+  const page = Math.min(MAX_PAGE, Math.max(1, parseInt(String(query.page || 1), 10) || 1))
   const limit = Math.max(1, Math.min(100, parseInt(String(query.limit || 20), 10) || 20))
   const category = query.category ? String(query.category).toUpperCase() : undefined
   const sort = (query.sort as string)?.toLowerCase() || 'newest'
-  const search = query.search ? String(query.search).trim() : undefined
-  const title = query.title ? String(query.title).trim() : undefined
-  const author = query.author ? String(query.author).trim() : undefined
-  const content = query.content ? String(query.content).trim() : undefined
+  const search = parseSearchField(query.search, 'search')
+  const title = parseSearchField(query.title, 'title')
+  const author = parseSearchField(query.author, 'author', AUTHOR_FILTER_MAX_LENGTH)
+  const content = parseSearchField(query.content, 'content')
 
   if (category && !VALID_CATEGORIES.has(category)) {
     throw new AppError(400, ErrorCode.VALIDATION_CATEGORY_INVALID, `Validation failed: category must be one of ${Array.from(VALID_CATEGORIES).join(', ')}`)
-  }
-
-  const filterLengths: Array<[string, string | undefined, number]> = [
-    ['search', search, SEARCH_MAX_LENGTH],
-    ['title', title, TITLE_MAX_LENGTH],
-    ['author', author, AUTHOR_FILTER_MAX_LENGTH],
-    ['content', content, SEARCH_MAX_LENGTH],
-  ]
-  for (const [fieldName, value, maxLength] of filterLengths) {
-    if (value && value.length > maxLength) {
-      throw new AppError(400, ErrorCode.VALIDATION_ARTICLE_FILTER_MAX_LENGTH, `Validation failed: ${fieldName} filter must be at most ${maxLength} characters`)
-    }
   }
 
   if (!['newest', 'oldest', 'most_liked'].includes(sort)) {
@@ -197,6 +217,10 @@ export const validateArticlesQuery = (query: Record<string, any>) => {
 
   const postedFrom = parseDateParam(query.postedFrom, 'postedFrom')
   const postedTo = parseDateParam(query.postedTo, 'postedTo')
+
+  if (postedFrom && postedTo && postedFrom.getTime() > postedTo.getTime()) {
+    throw new AppError(400, ErrorCode.VALIDATION_DATE_INVALID, 'Invalid date range: postedFrom must be before or equal to postedTo')
+  }
 
   return { page, limit, category, sort, search, title, author, content, postedFrom, postedTo }
 }
@@ -227,7 +251,7 @@ export const buildArticlesFilter = ({
   }
 
   if (category) {
-    where.category = category as any
+    where.category = category as Category
   }
 
   if (search) {

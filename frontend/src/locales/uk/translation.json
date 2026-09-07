@@ -98,6 +98,8 @@
       "validation_bio_invalid": "Біографія має бути текстом або null.",
       "validation_avatar_required": "Потрібен файл аватара.",
       "validation_avatar_format": "Аватар має бути зображенням у форматі JPEG, PNG або WebP.",
+      "validation_cv_required": "Потрібен файл резюме.",
+      "validation_cv_format": "Резюме має бути файлом TXT, PDF, DOC або DOCX.",
       "validation_preferred_language_invalid": "Ця мова не підтримується.",
       "file_too_large": "Цей файл занадто великий.",
       "validation_message_content_required": "Зміст повідомлення обов'язковий.",
@@ -128,6 +130,7 @@
       "follow_unfollow_self_forbidden": "Ви не можете відписатися від себе.",
       "follow_not_following": "Ви не підписані на цього користувача.",
       "message_self_forbidden": "Ви не можете надіслати повідомлення собі.",
+      "message_send_failed": "Не вдалося надіслати повідомлення.",
       "validation_friend_action_invalid": "Ця дія недійсна.",
       "oauth_profile_missing_provider_id": "У профілі OAuth відсутня обов'язкова інформація.",
       "oauth_account_already_linked": "Цей акаунт OAuth вже пов'язаний з іншим користувачем.",
@@ -216,7 +219,6 @@
     "seeAll": "Переглянути всі",
     "empty": "У вас немає нових сповіщень",
     "emptyHint": "Коли хтось підписується на вас, ставить лайк вашій статті або надсилає вам запит у друзі, це з’явиться тут.",
-    "allCaughtUp": "У вас немає непрочитаних сповіщень",
     "unread": "{{count}} непрочитаних",
     "viewAll": "Переглянути всі сповіщення",
     "accept": "Прийняти",
@@ -228,7 +230,6 @@
     "someone": "Хтось",
     "chatHint": "Тепер ви можете спілкуватися та бачити активність одне одного",
     "loadError": "Не вдалося завантажити сповіщення",
-    "comingSoon": "Сторінка сповіщень — скоро",
     "time": {
       "justNow": "щойно",
       "minutesAgo": "{{count}} хв тому",
@@ -240,7 +241,6 @@
       "friendRequest": "надіслав(-ла) вам запит у друзі",
       "friendRequestDeclined": "запит у друзі відхилено",
       "friendAccepted": "прийняв(-ла) ваш запит у друзі",
-      "friendDeclined": "запит у друзі відхилено",
       "friendCancelled": "Цей запит більше недоступний",
       "newFriendHint": "Тепер ви можете спілкуватися в чаті та бачити активність одне одного",
       "nowFriends": "тепер ваш друг",
@@ -260,6 +260,13 @@
     "title": "Редагування профілю",
     "subtitle": "Оновіть ваше ім'я, біографію та аватар",
     "avatarHeading": "Аватар",
+    "cvHeading": "Резюме",
+    "cvHint": "TXT, PDF, DOC або DOCX · макс {{maxMb}} МБ",
+    "noCvChosen": "Резюме не завантажено",
+    "chooseCv": "Обрати резюме",
+    "uploadCv": "Завантажити резюме",
+    "removeCv": "Видалити резюме",
+    "avatarPreviewAlt": "Попередній перегляд аватара",
     "noFileChosen": "Файл не обрано",
     "fileHint": "JPEG, PNG або WebP · макс {{maxMb}} МБ",
     "chooseImage": "Обрати зображення",
@@ -283,13 +290,17 @@
     "errors": {
       "invalidImageType": "Оберіть зображення у форматі JPEG, PNG або WebP",
       "imageTooLarge": "Зображення має бути {{maxMb}} МБ або менше",
+      "invalidCvType": "Оберіть файл TXT, PDF, DOC або DOCX",
+      "cvTooLarge": "Резюме має бути {{maxMb}} МБ або менше",
       "displayNameMaxLength": "Ім'я для показу має містити не більше {{max}} символів",
       "bioMaxLength": "Біографія має містити не більше {{max}} символів"
     },
     "success": {
       "profileUpdated": "Профіль успішно оновлено",
       "avatarUploaded": "Аватар успішно завантажено",
-      "avatarRemoved": "Аватар успішно видалено"
+      "avatarRemoved": "Аватар успішно видалено",
+      "cvUploaded": "Резюме успішно завантажено",
+      "cvRemoved": "Резюме успішно видалено"
     }
   },
   "auth": {
@@ -393,6 +404,7 @@
     "usernameMissing": "Відсутнє ім'я користувача профілю",
     "friends": "Мої друзі",
     "noBio": "Поки що немає біографії. Цей користувач не додав біографію профілю.",
+    "downloadCv": "Завантажити резюме",
     "statArticles": "Статті",
     "statFollowers": "Підписники",
     "statFollowing": "Підписки",
@@ -400,6 +412,7 @@
     "statLevel": "Рівень",
     "xpTotal": "{{xp}} XP загалом",
     "toNextLevel": "{{current}} / {{needed}} до наступного рівня",
+    "levelProgressAria": "Прогрес рівня {{level}}: {{percent}}%",
     "badges": "Значки",
     "badgesCollected": "{{count}} зібрано",
     "badgeLocked": "Заблоковано",
@@ -443,6 +456,7 @@
   "admin": {
     "title": "Панель керування",
     "forbidden": "У вас немає дозволу переглядати цю сторінку.",
+    "loadError": "Не вдалося завантажити панель адміністратора",
     "content": "Контент",
     "users": "Користувачі",
     "allContent": "Весь контент",
@@ -544,7 +558,6 @@
     "online": "У мережі",
     "lastSeen": "Востаннє в мережі {{time}}",
     "message": "Надіслати повідомлення",
-    "since": "Друзі з {{date}}",
     "loadError": "Не вдалося завантажити список друзів",
     "acceptError": "Не вдалося прийняти запит на дружбу",
     "declineError": "Не вдалося відхилити запит на дружбу"

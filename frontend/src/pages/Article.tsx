@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type SubmitEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
@@ -188,7 +188,7 @@ export const Article = () => {
     }
   }
 
-  const handleSubmitComment = async (event: FormEvent) => {
+  const handleSubmitComment = async (event: SubmitEvent) => {
     event.preventDefault()
 
     const trimmedComment = newComment.trim()

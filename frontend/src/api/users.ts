@@ -35,6 +35,8 @@ export const getPublicProfile = async (username: string) => {
     displayName: data.displayName,
     username: data.username,
     avatarUrl: data.avatarUrl,
+    cvUrl: data.cvUrl,
+    cvFilename: data.cvFilename,
     bio: data.bio,
     isOnline: data.isOnline,
     lastSeenAt: data.lastSeenAt,
@@ -78,6 +80,24 @@ export const deleteMyAvatar = async () => {
   return apiRequestData<import('@/types/auth').AuthUser>('/users/me/avatar', {
     method: 'DELETE',
     fallbackMessage: 'Unable to delete avatar',
+  })
+}
+
+export const uploadMyCv = async (file: File) => {
+  const formData = new FormData()
+  formData.append('cv', file)
+
+  return apiRequestData<import('@/types/auth').AuthUser>('/users/me/cv', {
+    method: 'POST',
+    body: formData,
+    fallbackMessage: 'Unable to upload CV',
+  })
+}
+
+export const deleteMyCv = async () => {
+  return apiRequestData<import('@/types/auth').AuthUser>('/users/me/cv', {
+    method: 'DELETE',
+    fallbackMessage: 'Unable to delete CV',
   })
 }
 

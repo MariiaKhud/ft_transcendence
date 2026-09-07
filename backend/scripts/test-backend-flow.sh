@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${BACKEND_BASE_URL:-http://localhost:3000}"
+BASE_URL="${BACKEND_BASE_URL:-https://localhost:8443}"
 COOKIE_JAR="$(mktemp)"
 EMPTY_COOKIE_JAR="$(mktemp)"
 COOKIE_JAR2="$(mktemp)"
@@ -59,7 +59,7 @@ perform_request() {
   headers_file="$(mktemp)"
 
   local status
-  status="$(curl -sS -D "$headers_file" -o "$response_file" -w '%{http_code}' "$@")"
+  status="$(curl -ksS -D "$headers_file" -o "$response_file" -w '%{http_code}' "$@")"
 
   LAST_STATUS="$status"
   LAST_BODY="$(cat "$response_file")"
@@ -295,6 +295,14 @@ printf '\x89\x50\x4e\x47\x0d\x0a\x1a\x0a\x00\x00\x00\x0d\x49\x48\x44\x52\x00\x00
 # Minimal 1x1 JPEG (125 bytes)
 printf '\xff\xd8\xff\xe0\x00\x10\x4a\x46\x49\x46\x00\x01\x01\x00\x00\x01\x00\x01\x00\x00\xff\xdb\x00\x43\x00\x08\x06\x06\x07\x06\x05\x08\x07\x07\x07\x09\x09\x08\x0a\x0c\x14\x0d\x0c\x0b\x0b\x0c\x19\x12\x13\x0f\x14\x1d\x1a\x1f\x1e\x1d\x1a\x1c\x1c\x20\x24\x2e\x27\x20\x22\x2c\x23\x1c\x1c\x28\x37\x29\x2c\x30\x31\x34\x34\x34\x1f\x27\x39\x3d\x38\x32\x3c\x2e\x33\x34\x32\xff\xc0\x00\x0b\x08\x00\x01\x00\x01\x01\x01\x11\x00\xff\xc4\x00\x1f\x00\x00\x01\x05\x01\x01\x01\x01\x01\x01\x00\x00\x00\x00\x00\x00\x00\x00\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\xff\xc4\x00\xb5\x10\x00\x02\x01\x03\x03\x02\x04\x03\x05\x05\x04\x04\x00\x00\x01\x7d\x01\x02\x03\x00\x04\x11\x05\x12\x21\x31\x41\x06\x13\x51\x61\x07\x22\x71\x14\x32\x81\x91\xa1\x08\x23\x42\xb1\xc1\x15\x52\xd1\xf0\x24\x33\x62\x72\x82\x09\x0a\x16\x17\x18\x19\x1a\x25\x26\x27\x28\x29\x2a\x34\x35\x36\x37\x38\x39\x3a\x43\x44\x45\x46\x47\x48\x49\x4a\x53\x54\x55\x56\x57\x58\x59\x5a\x63\x64\x65\x66\x67\x68\x69\x6a\x73\x74\x75\x76\x77\x78\x79\x7a\x83\x84\x85\x86\x87\x88\x89\x8a\x92\x93\x94\x95\x96\x97\x98\x99\x9a\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xff\xda\x00\x08\x01\x01\x00\x00\x3f\x00\xfb\xd3\xff\xd9' > "$TEST_IMAGE_JPG"
 dd if=/dev/zero bs=1M count=3 of="$TEST_IMAGE_OVERSIZED" 2>/dev/null
+TEST_CV_TXT="${TMPDIR:-/tmp}/test_cv_$$.txt"
+TEST_CV_REPLACEMENT="${TMPDIR:-/tmp}/test_cv_replacement_$$.txt"
+TEST_CV_INVALID="${TMPDIR:-/tmp}/test_cv_invalid_$$.jpg"
+TEST_CV_OVERSIZED="${TMPDIR:-/tmp}/test_cv_oversized_$$.txt"
+printf 'First CV' > "$TEST_CV_TXT"
+printf 'Replacement CV' > "$TEST_CV_REPLACEMENT"
+printf 'Invalid CV' > "$TEST_CV_INVALID"
+dd if=/dev/zero bs=1M count=6 of="$TEST_CV_OVERSIZED" 2>/dev/null
 
 # ============================================================================
 # [USERS] Backend: Edit profile form with displayName, bio, avatar
@@ -426,6 +434,29 @@ perform_request "Delete avatar" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/user
 assert_status "200" "Delete avatar"
 assert_body_contains '"avatarUrl":null' "Delete avatar"
 
+color_echo "$BLUE" "31a. POST /api/users/me/cv — upload and replace a TXT CV"
+perform_request "Upload CV TXT" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/users/me/cv" -F "cv=@${TEST_CV_TXT};type=text/plain"
+assert_status "200" "Upload CV TXT"
+assert_body_contains '"cvFilename":"'"$(basename "$TEST_CV_TXT")"'"' "Upload CV TXT"
+perform_request "Replace CV" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/users/me/cv" -F "cv=@${TEST_CV_REPLACEMENT};type=text/plain"
+assert_status "200" "Replace CV"
+assert_body_contains '"cvFilename":"'"$(basename "$TEST_CV_REPLACEMENT")"'"' "Replace CV"
+
+color_echo "$BLUE" "31b. POST /api/users/me/cv — reject invalid, oversized, and unauthenticated uploads"
+perform_request "Upload invalid CV" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/users/me/cv" -F "cv=@${TEST_CV_INVALID};type=image/jpeg"
+assert_status "400" "Upload invalid CV"
+perform_request "Upload oversized CV" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/users/me/cv" -F "cv=@${TEST_CV_OVERSIZED};type=text/plain"
+assert_status "413" "Upload oversized CV"
+perform_request "Upload CV (no auth)" -b "$EMPTY_COOKIE_JAR" -X POST "${BASE_URL}/api/users/me/cv" -F "cv=@${TEST_CV_TXT};type=text/plain"
+assert_status "401" "Upload CV (no auth)"
+
+color_echo "$BLUE" "31c. DELETE /api/users/me/cv — remove CV and reject unauthenticated requests"
+perform_request "Delete CV" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/users/me/cv"
+assert_status "200" "Delete CV"
+assert_body_contains '"cvUrl":null' "Delete CV"
+perform_request "Delete CV (no auth)" -b "$EMPTY_COOKIE_JAR" -X DELETE "${BASE_URL}/api/users/me/cv"
+assert_status "401" "Delete CV (no auth)"
+
 # Test 32: DELETE /api/users/me/avatar — unauthenticated request
 color_echo "$BLUE" "32. DELETE /api/users/me/avatar — unauthenticated request"
 perform_request "Delete avatar (no auth)" -b "$EMPTY_COOKIE_JAR" -X DELETE "${BASE_URL}/api/users/me/avatar"
@@ -437,7 +468,8 @@ perform_request "Get profile (invalid username)" "${BASE_URL}/api/users/!!"
 assert_status "400" "Get profile (invalid username)"
 
 # Cleanup test images
-rm -f "$TEST_IMAGE_PNG" "$TEST_IMAGE_JPG" "$TEST_IMAGE_OVERSIZED"
+# Cleanup upload fixtures
+rm -f "$TEST_IMAGE_PNG" "$TEST_IMAGE_JPG" "$TEST_IMAGE_OVERSIZED" "$TEST_CV_TXT" "$TEST_CV_REPLACEMENT" "$TEST_CV_INVALID" "$TEST_CV_OVERSIZED"
 
 # ============================================================================
 # Articles, comments, likes, and article search are covered by
