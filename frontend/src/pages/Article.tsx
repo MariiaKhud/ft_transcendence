@@ -23,6 +23,7 @@ import {
 } from '@/api/articles'
 
 const COMMENT_MAX_LENGTH = 1000
+const REMOVE_REASON_MAX_LENGTH = 500
 
 export const Article = () => {
   const { t } = useTranslation()
@@ -276,7 +277,17 @@ export const Article = () => {
       if (promptedReason === null || promptedReason.trim().length === 0) {
         return
       }
-      reason = promptedReason.trim()
+
+      const trimmedReason = promptedReason.trim()
+      if (trimmedReason.length > REMOVE_REASON_MAX_LENGTH) {
+        setCommentActionErrors((prev) => ({
+          ...prev,
+          [comment.id]: t('article.errors.removeReasonTooLong', { max: REMOVE_REASON_MAX_LENGTH }),
+        }))
+        return
+      }
+
+      reason = trimmedReason
     }
 
     setCommentActionErrors((prev) => ({ ...prev, [comment.id]: '' }))

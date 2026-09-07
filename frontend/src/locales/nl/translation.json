@@ -515,6 +515,7 @@
       "loadFailed": "Kan artikel niet laden",
       "postCommentFailed": "Kan reactie niet plaatsen",
       "commentTooLong": "Reactie mag maximaal {{max}} tekens bevatten.",
+      "removeReasonTooLong": "De reden mag maximaal {{max}} tekens bevatten.",
       "updateCommentFailed": "Kan reactie niet bijwerken",
       "deleteCommentFailed": "Kan reactie niet verwijderen",
       "deleteArticleFailed": "Kan artikel niet verwijderen"
