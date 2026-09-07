@@ -78,6 +78,7 @@
       "validation_content_max_length": "Inhoud mag maximaal 10000 tekens bevatten.",
       "validation_category_required": "Categorie is verplicht.",
       "validation_category_invalid": "Kies een geldige categorie.",
+      "validation_article_filter_max_length": "Een artikelzoekfilter is te lang.",
       "validation_article_fields_required": "Titel, inhoud en categorie zijn verplicht.",
       "validation_article_update_fields_required": "Ten minste één van titel, inhoud of categorie is verplicht.",
       "validation_sort_invalid": "Ongeldige sorteeroptie.",

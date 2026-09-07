@@ -78,6 +78,7 @@
       "validation_content_max_length": "Зміст має містити не більше 10000 символів.",
       "validation_category_required": "Категорія обов'язкова.",
       "validation_category_invalid": "Оберіть дійсну категорію.",
+      "validation_article_filter_max_length": "Фільтр пошуку статей задовгий.",
       "validation_article_fields_required": "Заголовок, зміст і категорія обов'язкові.",
       "validation_article_update_fields_required": "Потрібно вказати принаймні один з полів: заголовок, зміст або категорія.",
       "validation_sort_invalid": "Недійсний варіант сортування.",

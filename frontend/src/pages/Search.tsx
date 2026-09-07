@@ -4,10 +4,14 @@ import { useTranslation } from 'react-i18next'
 import { ArticleCard } from '@/components/ArticleCard'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { getArticles, type Article, type ArticlesResponse } from '@/api/articles'
+import { translateApiError } from '@/lib/api-errors'
 
 type SortOption = 'newest' | 'oldest' | 'most_liked'
 
 const SORT_OPTIONS: SortOption[] = ['newest', 'oldest', 'most_liked']
+const TITLE_FILTER_MAX_LENGTH = 120
+const AUTHOR_FILTER_MAX_LENGTH = 20
+const CONTENT_FILTER_MAX_LENGTH = 100
 
 const CATEGORY_VALUES = ['', 'PROGRAMMING', 'CAREER', 'STUDY_NOTES', 'PROJECTS', 'LIFE', 'OPINION']
 
@@ -84,7 +88,7 @@ export const Search = () => {
       }
     } catch (err) {
       console.error('Error searching articles:', err)
-      setError(t('common.errors.loadArticlesFailedRetry'))
+      setError(translateApiError(err, t('common.errors.loadArticlesFailedRetry')))
     } finally {
       setLoading(false)
     }
@@ -170,6 +174,7 @@ export const Search = () => {
               placeholder={t('search.titlePlaceholder')}
               value={fields.title}
               onChange={(e) => updateField('title', e.target.value)}
+              maxLength={TITLE_FILTER_MAX_LENGTH}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
             />
           </div>
@@ -184,6 +189,7 @@ export const Search = () => {
               placeholder={t('search.authorPlaceholder')}
               value={fields.author}
               onChange={(e) => updateField('author', e.target.value)}
+              maxLength={AUTHOR_FILTER_MAX_LENGTH}
               className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
             />
           </div>
@@ -199,6 +205,7 @@ export const Search = () => {
             placeholder={t('search.contentPlaceholder')}
             value={fields.content}
             onChange={(e) => updateField('content', e.target.value)}
+            maxLength={CONTENT_FILTER_MAX_LENGTH}
             className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
           />
         </div>

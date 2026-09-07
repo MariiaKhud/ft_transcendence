@@ -5,6 +5,8 @@ import type { Category, Prisma } from '@prisma/client'
 const TITLE_MAX_LENGTH = 120
 const CONTENT_MIN_LENGTH = 100
 const CONTENT_MAX_LENGTH = 10000
+const SEARCH_MAX_LENGTH = 100
+const AUTHOR_FILTER_MAX_LENGTH = 20
 const VALID_CATEGORIES = new Set<string>([
   'PROGRAMMING',
   'CAREER',
@@ -175,6 +177,18 @@ export const validateArticlesQuery = (query: Record<string, any>) => {
 
   if (category && !VALID_CATEGORIES.has(category)) {
     throw new AppError(400, ErrorCode.VALIDATION_CATEGORY_INVALID, `Validation failed: category must be one of ${Array.from(VALID_CATEGORIES).join(', ')}`)
+  }
+
+  const filterLengths: Array<[string, string | undefined, number]> = [
+    ['search', search, SEARCH_MAX_LENGTH],
+    ['title', title, TITLE_MAX_LENGTH],
+    ['author', author, AUTHOR_FILTER_MAX_LENGTH],
+    ['content', content, SEARCH_MAX_LENGTH],
+  ]
+  for (const [fieldName, value, maxLength] of filterLengths) {
+    if (value && value.length > maxLength) {
+      throw new AppError(400, ErrorCode.VALIDATION_ARTICLE_FILTER_MAX_LENGTH, `Validation failed: ${fieldName} filter must be at most ${maxLength} characters`)
+    }
   }
 
   if (!['newest', 'oldest', 'most_liked'].includes(sort)) {

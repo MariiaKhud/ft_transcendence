@@ -78,6 +78,7 @@
       "validation_content_max_length": "Content must be at most 10000 characters.",
       "validation_category_required": "Category is required.",
       "validation_category_invalid": "Please choose a valid category.",
+      "validation_article_filter_max_length": "An article search filter is too long.",
       "validation_article_fields_required": "Title, content, and category are required.",
       "validation_article_update_fields_required": "At least one of title, content, or category is required.",
       "validation_sort_invalid": "Invalid sort option.",
