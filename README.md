@@ -321,8 +321,7 @@ make up
 
 ### 5. Open the app
 
-- http://127.0.0.1:8080
-- https://localhost:8443 (if you want the HTTPS endpoint)
+- https://localhost:8443
 
 ## Browser Compatibility
 
@@ -334,14 +333,13 @@ Tested browsers in this environment:
 
 Current compatibility status:
 
-- Critical user flows were verified against the local app URL at `http://127.0.0.1:8080`.
+- Critical user flows were verified against the local app URL at `https://localhost:8443`.
 - Login/registration, feed/article browsing, profile/avatar editing, chat/messaging, and follows/notifications were re-tested successfully.
 - Moderator moderation behavior was verified through the automated backend flow.
 
 Known limitations:
 
 - `https://localhost:8443` can still show a certificate warning until the local mkcert CA is trusted in the OS or browser certificate store.
-- In this environment, `http://127.0.0.1:8080` is the recommended browser URL for manual testing; `localhost` may be less reliable depending on local browser/network setup.
 - Firefox and Safari were not available in this environment, so they were not part of the verified browser matrix.
 - Dedicated admin endpoint-path checks depend on local environment configuration (`ROLE_ADMIN_PATH`) and were not fully exercised here.
 
@@ -354,6 +352,7 @@ make clean     # stop all services and remove volumes
 make logs      # stream logs
 make migrate   # run prisma migrations in backend container
 make seed      # seed database in backend container
+make test-all  # run every automated test suite
 ```
 
 ## Test Commands

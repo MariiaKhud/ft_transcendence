@@ -106,7 +106,8 @@ Current behavior:
 
 - `VITE_DEV_API_PROXY_TARGET`
   - Used by Vite dev server proxy in `vite.config.ts`
-  - Default: `http://localhost:3000` (or `http://backend:3000` in Docker env)
+  - Default: `https://localhost:8443` for host development; Docker uses the internal `http://backend:3000` service address
+  - The HTTPS default accepts the local development certificate in Vite
 
 ## Routing
 

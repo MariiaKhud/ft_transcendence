@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -uo pipefail
 
-BASE_URL="${BACKEND_BASE_URL:-http://localhost:3000}"
+BASE_URL="${BACKEND_BASE_URL:-https://localhost:8443}"
 
 COOKIE_A="$(mktemp)"
 COOKIE_B="$(mktemp)"
@@ -79,7 +79,7 @@ perform_request() {
     local response
     response="$(mktemp)"
 
-    LAST_STATUS="$(curl -sS \
+    LAST_STATUS="$(curl -ksS \
         -o "$response" \
         -w "%{http_code}" \
         "$@")"

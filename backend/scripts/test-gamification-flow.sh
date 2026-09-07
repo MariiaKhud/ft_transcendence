@@ -8,7 +8,7 @@ set -uo pipefail
 # TRAN-65: Leaderboard endpoint, ranking, limit and removed articles
 # ============================================================
 
-BASE_URL="${BACKEND_BASE_URL:-http://localhost:3000}"
+BASE_URL="${BACKEND_BASE_URL:-https://localhost:8443}"
 RUN_ID="$(date +%s | tail -c 5)"
 PASSWORD="Password123!"
 XP_REWARD_CREATE_ARTICLE=25
@@ -40,7 +40,7 @@ query_db() {
 
 perform_request() {
   local label="$1"; shift; local response; response="$(mktemp)"
-  LAST_STATUS="$(curl -sS -o "$response" -w "%{http_code}" "$@")"
+  LAST_STATUS="$(curl -ksS -o "$response" -w "%{http_code}" "$@")"
   LAST_BODY="$(cat "$response")"; rm -f "$response"
   if [[ "$LAST_STATUS" =~ ^2 ]]; then color_echo "$GREEN" "$label : HTTP $LAST_STATUS"; elif [[ "$LAST_STATUS" =~ ^4 ]]; then color_echo "$YELLOW" "$label : HTTP $LAST_STATUS"; else color_echo "$RED" "$label : HTTP $LAST_STATUS"; fi
   echo "$LAST_BODY"; echo
@@ -62,7 +62,7 @@ create_article() {
   check "$title returns 201" "$LAST_STATUS" "201"
 }
 
-like_article() { curl -sS -o /dev/null -X POST "$BASE_URL/api/articles/$2/like" -b "$1"; }
+like_article() { curl -ksS -o /dev/null -X POST "$BASE_URL/api/articles/$2/like" -b "$1"; }
 
 cleanup() {
   rm -f "$COOKIE_A" "$COOKIE_B" "$COOKIE_C" "$COOKIE_D" "$COOKIE_E" "$COOKIE_F"
@@ -140,7 +140,7 @@ check "Leaderboard response success is true" "$LB_OK" "true"
 rm -f "$LB_TMP"
 
 LEADERBOARD_CREATED=0
-for ((i=1; i<=51; i++)); do username="leaderboard_${RUN_ID}_${i}"; email="${username}@example.com"; status="$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$BASE_URL/api/auth/register" -H 'Content-Type: application/json' -d "{\"email\":\"$email\",\"username\":\"$username\",\"password\":\"$PASSWORD\"}")"; [[ "$status" == 201 ]] && ((LEADERBOARD_CREATED++)); done
+for ((i=1; i<=51; i++)); do username="leaderboard_${RUN_ID}_${i}"; email="${username}@example.com"; status="$(curl -ksS -o /dev/null -w '%{http_code}' -X POST "$BASE_URL/api/auth/register" -H 'Content-Type: application/json' -d "{\"email\":\"$email\",\"username\":\"$username\",\"password\":\"$PASSWORD\"}")"; [[ "$status" == 201 ]] && ((LEADERBOARD_CREATED++)); done
 check "Created 51 leaderboard users" "$LEADERBOARD_CREATED" "51"
 
 perform_request "Get leaderboard with 51 users" "$BASE_URL/api/users/leaderboard"

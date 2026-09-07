@@ -56,7 +56,7 @@ Backend is available through Nginx at:
 
 - https://localhost:8443/api
 
-### B) Local backend-only development
+### B) Local backend development
 
 From `backend/`:
 
@@ -65,9 +65,9 @@ npm install
 npm run dev
 ```
 
-Default local URL:
-
-- http://localhost:3000
+`npm run dev` starts the backend on its internal development port. Do not access
+that port from a browser, script, or external client; use the Docker/Nginx HTTPS
+endpoint at `https://localhost:8443/api` for all public API requests.
 
 ## Environment Variables
 
@@ -428,16 +428,16 @@ Examples:
 
 ```bash
 # Get latest articles
-curl http://localhost:3000/api/articles
+curl -k https://localhost:8443/api/articles
 
 # Get programming articles, sorted by most liked
-curl 'http://localhost:3000/api/articles?category=PROGRAMMING&sort=most_liked'
+curl -k 'https://localhost:8443/api/articles?category=PROGRAMMING&sort=most_liked'
 
 # Search articles
-curl 'http://localhost:3000/api/articles?search=typescript'
+curl -k 'https://localhost:8443/api/articles?search=typescript'
 
 # Paginate with custom limit
-curl 'http://localhost:3000/api/articles?page=2&limit=10'
+curl -k 'https://localhost:8443/api/articles?page=2&limit=10'
 ```
 
 ### GET /api/articles/:id
@@ -565,7 +565,7 @@ The backend is gradually being standardized to the `success/data/error` envelope
 Register:
 
 ```bash
-curl -X POST http://localhost:3000/api/auth/register \
+curl -k -X POST https://localhost:8443/api/auth/register \
   -H "Content-Type: application/json" \
   -d '{"email":"new.user@example.com","username":"new_user","password":"strongPass123"}'
 ```
@@ -573,7 +573,7 @@ curl -X POST http://localhost:3000/api/auth/register \
 Login (save cookies):
 
 ```bash
-curl -X POST http://localhost:3000/api/auth/login \
+curl -k -X POST https://localhost:8443/api/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"new.user@example.com","password":"strongPass123"}' \
   -c cookies.txt
@@ -582,5 +582,5 @@ curl -X POST http://localhost:3000/api/auth/login \
 Me (send cookies):
 
 ```bash
-curl http://localhost:3000/api/auth/me -b cookies.txt
+curl -k https://localhost:8443/api/auth/me -b cookies.txt
 ```

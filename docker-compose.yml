@@ -47,8 +47,6 @@ services:
       OAUTH_SUCCESS_REDIRECT: ${OAUTH_SUCCESS_REDIRECT:-}
       OAUTH_ERROR_REDIRECT: ${OAUTH_ERROR_REDIRECT:-}
       CHOKIDAR_USEPOLLING: ${CHOKIDAR_USEPOLLING:-true}
-    ports:
-      - "${BACKEND_PORT:-3000}:3000"
     volumes:
       - ./backend:/app
       - ./shared:/shared
