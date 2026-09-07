@@ -190,7 +190,13 @@ export const Article = () => {
   const handleSubmitComment = async (event: FormEvent) => {
     event.preventDefault()
 
-    if (!id || newComment.trim().length === 0) {
+    const trimmedComment = newComment.trim()
+    if (!id || trimmedComment.length === 0) {
+      return
+    }
+
+    if (trimmedComment.length > COMMENT_MAX_LENGTH) {
+      setCommentError(t('article.errors.commentTooLong', { max: COMMENT_MAX_LENGTH }))
       return
     }
 
@@ -198,7 +204,7 @@ export const Article = () => {
     setIsSubmittingComment(true)
 
     try {
-      const comment = await createComment(id, newComment.trim())
+      const comment = await createComment(id, trimmedComment)
       // The server pushes this comment over the socket before the HTTP response
       // arrives, so it may already be in state (added by the socket listener) by
       // the time we get here — guard against adding it twice.
@@ -229,6 +235,14 @@ export const Article = () => {
   const handleSaveEditComment = async (commentId: string) => {
     const trimmed = editingCommentContent.trim()
     if (trimmed.length === 0) {
+      return
+    }
+
+    if (trimmed.length > COMMENT_MAX_LENGTH) {
+      setCommentActionErrors((prev) => ({
+        ...prev,
+        [commentId]: t('article.errors.commentTooLong', { max: COMMENT_MAX_LENGTH }),
+      }))
       return
     }
 

@@ -518,6 +518,7 @@
     "errors": {
       "loadFailed": "Не вдалося завантажити статтю",
       "postCommentFailed": "Не вдалося опублікувати коментар",
+      "commentTooLong": "Коментар має містити не більше {{max}} символів.",
       "updateCommentFailed": "Не вдалося оновити коментар",
       "deleteCommentFailed": "Не вдалося видалити коментар",
       "deleteArticleFailed": "Не вдалося видалити статтю"

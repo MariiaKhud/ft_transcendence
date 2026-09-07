@@ -514,6 +514,7 @@
     "errors": {
       "loadFailed": "Unable to load article",
       "postCommentFailed": "Unable to post comment",
+      "commentTooLong": "Comment must be at most {{max}} characters.",
       "updateCommentFailed": "Unable to update comment",
       "deleteCommentFailed": "Unable to delete comment",
       "deleteArticleFailed": "Unable to delete article"
