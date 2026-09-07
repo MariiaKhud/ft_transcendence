@@ -173,6 +173,10 @@ export const validateArticlesQuery = (query: Record<string, any>) => {
   const author = query.author ? String(query.author).trim() : undefined
   const content = query.content ? String(query.content).trim() : undefined
 
+  if (category && !VALID_CATEGORIES.has(category)) {
+    throw new AppError(400, ErrorCode.VALIDATION_CATEGORY_INVALID, `Validation failed: category must be one of ${Array.from(VALID_CATEGORIES).join(', ')}`)
+  }
+
   if (!['newest', 'oldest', 'most_liked'].includes(sort)) {
     throw new AppError(400, ErrorCode.VALIDATION_SORT_INVALID, 'Invalid sort parameter: must be newest, oldest, or most_liked')
   }
