@@ -341,8 +341,10 @@ const deleteMyAccountHandler = async (req: Request, res: Response) => {
 
   validateCsrfToken(req, req.user.csrfToken)
 
+  const userId = req.user.userId
+
   const currentUser = await prisma.user.findUnique({
-    where: { id: req.user.userId },
+    where: { id: userId },
     select: { avatarUrl: true },
   })
 
@@ -350,7 +352,25 @@ const deleteMyAccountHandler = async (req: Request, res: Response) => {
     throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found')
   }
 
-  await prisma.user.delete({ where: { id: req.user.userId } })
+  await prisma.$transaction(async (tx) => {
+    // The user-article cascade deletes this user's own articles (and their
+    // likes) wholesale, but likes they gave on *other* articles are removed
+    // by the user-like cascade alone, which would leave those articles'
+    // denormalized likeCount overcounted. Decrement those first.
+    const likedArticles = await tx.articleLike.findMany({
+      where: { userId },
+      select: { articleId: true },
+    })
+
+    if (likedArticles.length > 0) {
+      await tx.article.updateMany({
+        where: { id: { in: likedArticles.map((like) => like.articleId) } },
+        data: { likeCount: { decrement: 1 } },
+      })
+    }
+
+    await tx.user.delete({ where: { id: userId } })
+  })
   await deleteOldAvatar(currentUser.avatarUrl)
   clearAuthCookies(res)
 
