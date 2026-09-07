@@ -20,6 +20,12 @@ const normalizeEmail = (email: string) => {
   return email.trim().toLowerCase()
 }
 
+const validateEmail = (email: string) => {
+  if (email.length > 254 || !EMAIL_REGEX.test(email)) {
+    throw new AppError(400, ErrorCode.VALIDATION_EMAIL_INVALID, 'Validation failed: invalid email format')
+  }
+}
+
 // Small type guard for unknown values.
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null
@@ -128,9 +134,7 @@ const validateRegisterInput = (body: unknown) => {
   const username = body.username.trim()
   const password = body.password
 
-  if (!EMAIL_REGEX.test(email)) {
-    throw new AppError(400, ErrorCode.VALIDATION_EMAIL_INVALID, 'Validation failed: invalid email format')
-  }
+  validateEmail(email)
 
   if (!USERNAME_REGEX.test(username)) {
     throw new AppError(400, ErrorCode.VALIDATION_USERNAME_INVALID, 'Validation failed: username must be 3-20 characters and contain only letters, numbers, or _')
@@ -160,9 +164,7 @@ const validateLoginInput = (body: unknown) => {
   const email = normalizeEmail(body.email)
   const password = body.password
 
-  if (!EMAIL_REGEX.test(email)) {
-    throw new AppError(400, ErrorCode.VALIDATION_EMAIL_INVALID, 'Validation failed: invalid email format')
-  }
+  validateEmail(email)
 
   return { email, password }
 }
