@@ -469,6 +469,12 @@
     "noRemovedComments": "Geen verwijderde reacties.",
     "noRemovedArticles": "Geen verwijderde artikelen.",
     "contentBy": "Door {{username}}",
+    "filterCategoryLabel": "Categorie",
+    "filterAuthorLabel": "Auteur",
+    "filterAuthorPlaceholder": "Zoeken op gebruikersnaam van auteur...",
+    "clearFilters": "Filters wissen",
+    "contentShown": "{{count}} van {{total}} getoond",
+    "noMatchingContent": "Geen artikelen komen overeen met de huidige filters.",
     "categories": {
       "ALL": "Alle categorieën",
       "PROGRAMMING": "Programmeren",

@@ -473,6 +473,12 @@
     "noRemovedComments": "Немає видалених коментарів.",
     "noRemovedArticles": "Немає видалених статей.",
     "contentBy": "Автор: {{username}}",
+    "filterCategoryLabel": "Категорія",
+    "filterAuthorLabel": "Автор",
+    "filterAuthorPlaceholder": "Пошук за іменем автора...",
+    "clearFilters": "Скинути фільтри",
+    "contentShown": "Показано {{count}} з {{total}}",
+    "noMatchingContent": "Жодна стаття не відповідає обраним фільтрам.",
     "categories": {
       "ALL": "Усі категорії",
       "PROGRAMMING": "Програмування",
