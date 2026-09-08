@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getNotifications, markOneAsRead, markAllAsRead } from '../api/notifications';
 import { getSocket } from '@/lib/socket'
+import { useStore } from '@/store/store'
 
 export interface Notification {
   id: string;
@@ -22,6 +23,7 @@ const POLL_INTERVAL = 30_000; // 30 seconds
 
 export function useNotifications() {
   const { t } = useTranslation();
+  const currentUser = useStore((state) => state.auth.currentUser)
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -43,6 +45,14 @@ export function useNotifications() {
 
   // Initial fetch + polling
   useEffect(() => {
+    if (!currentUser) {
+      setNotifications([])
+      setUnreadCount(0)
+      setError(null)
+      setLoading(false)
+      return
+    }
+
     void fetch();
     intervalRef.current = setInterval(fetch, POLL_INTERVAL);
     const socket = getSocket();
@@ -70,7 +80,7 @@ export function useNotifications() {
       socket.off('notifications:messages-read', onMessagesRead)
       socket.off('notifications:comments-read', onCommentsRead)
     };
-  }, [fetch]);
+  }, [currentUser, fetch]);
 
   // Optimistically mark one as read in local state
   const markRead = useCallback(async (id: string) => {
