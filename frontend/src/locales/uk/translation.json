@@ -477,7 +477,7 @@
     "filterAuthorLabel": "Автор",
     "filterAuthorPlaceholder": "Пошук за іменем автора...",
     "clearFilters": "Скинути фільтри",
-    "contentShown": "Показано {{count}} з {{total}}",
+    "contentShown": "{{count}} з {{total}}",
     "noMatchingContent": "Жодна стаття не відповідає обраним фільтрам.",
     "categories": {
       "ALL": "Усі категорії",

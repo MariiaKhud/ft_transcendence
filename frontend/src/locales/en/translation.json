@@ -474,7 +474,7 @@
       "filterAuthorLabel": "Author",
       "filterAuthorPlaceholder": "Search by author username...",
       "clearFilters": "Clear filters",
-      "contentShown": "{{count}} of {{total}} shown",
+      "contentShown": "{{count}} of {{total}}",
       "noMatchingContent": "No articles match the current filters.",
       "categories": {
         "ALL": "All Categories",

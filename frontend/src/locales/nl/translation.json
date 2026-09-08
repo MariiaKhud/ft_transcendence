@@ -473,7 +473,7 @@
     "filterAuthorLabel": "Auteur",
     "filterAuthorPlaceholder": "Zoeken op gebruikersnaam van auteur...",
     "clearFilters": "Filters wissen",
-    "contentShown": "{{count}} van {{total}} getoond",
+    "contentShown": "{{count}} van {{total}}",
     "noMatchingContent": "Geen artikelen komen overeen met de huidige filters.",
     "categories": {
       "ALL": "Alle categorieën",
