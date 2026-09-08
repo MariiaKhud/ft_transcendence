@@ -83,7 +83,10 @@ export function getProgressToNextLevel(totalXP: number, level: number): {
 } {
   const currentLevelXP = getXPForLevel(level)
   const nextLevelXP = getNextLevelXP(level)
-  const xpInCurrentLevel = totalXP - currentLevelXP
+  // Clamped to 0: a stored level/xp pair that's out of sync (e.g. level set
+  // higher than the xp actually supports) would otherwise put xpInCurrentLevel
+  // below the level's own floor, showing negative progress.
+  const xpInCurrentLevel = Math.max(0, totalXP - currentLevelXP)
   const xpNeeded = nextLevelXP - currentLevelXP
   const percentage = Math.min(100, (xpInCurrentLevel / xpNeeded) * 100)
 

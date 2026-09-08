@@ -1,12 +1,12 @@
 import { prisma } from '../lib/prisma.js'
 import { validateUuid } from '../lib/validation.js'
+import { getLevelFromXP } from '../../../shared/types/gamification.js'
 import type { Prisma } from '@prisma/client'
 
 type Db = typeof prisma | Prisma.TransactionClient
 
-// Every 100 XP earns one level, starting at level 1.
 export function calculateLevel(xp: number): number {
-  return Math.floor(xp / 100) + 1
+  return getLevelFromXP(xp)
 }
 
 // Adds (or, with a negative amount, removes) XP for a user and recomputes
