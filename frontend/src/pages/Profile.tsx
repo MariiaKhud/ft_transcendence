@@ -285,7 +285,7 @@ export const Profile = () => {
               />
 
               {friendshipState === 'friends' ? (
-                <div className="flex w-[22rem] max-w-full gap-2">
+                <div className={profile.cvUrl && profile.cvFilename ? 'flex w-[22rem] max-w-full gap-2' : 'flex justify-end'}>
                   {profile.cvUrl && profile.cvFilename ? (
                     <a
                       href={profile.cvUrl}
