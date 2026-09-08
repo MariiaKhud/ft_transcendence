@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma.js'
+import { validateUuid } from '../lib/validation.js'
 import type { Prisma } from '@prisma/client'
 
 type Db = typeof prisma | Prisma.TransactionClient
@@ -13,6 +14,8 @@ export function calculateLevel(xp: number): number {
 // writes (e.g. the article that earned the XP); defaults to a standalone
 // query otherwise. XP never drops below 0.
 export async function awardXP(userId: string, amount: number, db: Db = prisma) {
+  validateUuid(userId, 'userId')
+
   if (!Number.isInteger(amount) || amount === 0) {
     throw new Error('XP amount must be a non-zero integer')
   }
@@ -52,6 +55,8 @@ function getBadgeCondition(badgeName: string, articleCount: number, totalLikes: 
 }
 
 export async function checkAndAwardBadges(userId: string) {
+  validateUuid(userId, 'userId')
+
   const [articleCount, likesAggregate, allBadges, earnedBadges] = await Promise.all([
     prisma.article.count({
       where: {

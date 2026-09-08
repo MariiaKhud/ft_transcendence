@@ -547,7 +547,10 @@
     "userNotFound": "Gebruiker niet gevonden",
     "backToFriends": "Terug naar Mijn vrienden",
     "loadError": "Berichten konden niet worden geladen",
-    "notFriends": "Je kunt geen berichten meer sturen omdat jullie geen vrienden meer zijn."
+    "notFriends": "Je kunt geen berichten meer sturen omdat jullie geen vrienden meer zijn.",
+    "selfTitle": "Dit is jouw profiel",
+    "selfDescription": "Je kunt geen gesprek met jezelf openen. Kies een vriend om te chatten.",
+    "viewYourProfile": "Bekijk je profiel"
   },
   "friends": {
     "title": "Vrienden",

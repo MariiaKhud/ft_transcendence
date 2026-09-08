@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { formatCategoryLabel } from '@/lib/article-display'
-import { getApiErrorCode } from '@/lib/api-errors'
+import { getApiErrorCode, translateApiError } from '@/lib/api-errors'
 
 const CATEGORIES = ['PROGRAMMING', 'CAREER', 'STUDY_NOTES', 'PROJECTS', 'LIFE', 'OPINION']
 
@@ -93,7 +93,7 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
       return
     }
 
-    setFormError(err instanceof Error ? err.message : t('articleForm.errors.unableToSave'))
+    setFormError(translateApiError(err, t('articleForm.errors.unableToSave')))
   }
 
   const validate = (): boolean => {

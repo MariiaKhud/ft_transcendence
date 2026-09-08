@@ -2,8 +2,12 @@ import { prisma } from '../lib/prisma.js';
 import { AppError } from '../middleware/error.middleware.js';
 import { ErrorCode } from '../lib/error-codes.js';
 import { createNotification } from './notifications.service.js';
+import { validateUuid } from '../lib/validation.js';
 
 export async function followUser(followerId: string, followingId: string) {
+  validateUuid(followerId, 'followerId');
+  validateUuid(followingId, 'followingId');
+
   if (followerId === followingId) {
     throw new AppError(400, ErrorCode.FOLLOW_SELF_FORBIDDEN, "You can't follow yourself");
   }
@@ -47,6 +51,9 @@ export async function followUser(followerId: string, followingId: string) {
 }
 
 export async function unfollowUser(followerId: string, followingId: string) {
+  validateUuid(followerId, 'followerId');
+  validateUuid(followingId, 'followingId');
+
   if (followerId === followingId) {
     throw new AppError(400, ErrorCode.FOLLOW_UNFOLLOW_SELF_FORBIDDEN, "You can't unfollow yourself");
   }
@@ -78,6 +85,9 @@ export async function getFollowStatus(
   followerId: string,
   followingId: string
 ): Promise<boolean> {
+  validateUuid(followerId, 'followerId');
+  validateUuid(followingId, 'followingId');
+
   if (followerId === followingId) return false;
 
   const follow = await prisma.follow.findUnique({

@@ -20,9 +20,10 @@ export function Chat() {
   const [otherUserOnline, setOtherUserOnline] = useState(false)
   const [canSend, setCanSend] = useState(false)
   const [loadingUser, setLoadingUser] = useState(true)
+  const isSelfChat = otherUser?.id === currentUser?.id
 
   const { messages, loading, error, sending, sendMessage } = useChat(
-    otherUser?.id ?? ''
+    isSelfChat ? '' : otherUser?.id ?? ''
   )
 
   // Load the other user's profile for the header
@@ -168,14 +169,18 @@ export function Chat() {
         {loading ? (
           <MessagesSkeleton />
         ) : (
-          <ChatWindow
-            messages={messages}
-            currentUserId={currentUser.id}
-            sending={sending}
-            error={error}
-            canSend={canSend}
-            onSend={sendMessage}
-          />
+          isSelfChat ? (
+            <SelfChatState username={otherUser?.username ?? username} />
+          ) : (
+            <ChatWindow
+              messages={messages}
+              currentUserId={currentUser.id}
+              sending={sending}
+              error={error}
+              canSend={canSend}
+              onSend={sendMessage}
+            />
+          )
         )}
       </div>
     </div>
@@ -230,6 +235,49 @@ function MessagesSkeleton() {
           }`} />
         </div>
       ))}
+    </div>
+  )
+}
+
+function SelfChatState({ username }: { username: string }) {
+  const { t } = useTranslation()
+
+  return (
+    <div className="flex
+                    h-full
+                    flex-col
+                    items-center
+                    justify-center
+                    px-6
+                    text-center">
+      <p className="text-base
+                    font-semibold
+                    text-slate-800">
+        {t('chat.selfTitle')}
+      </p>
+      <p className="mt-2
+                    max-w-sm
+                    text-sm
+                    leading-relaxed
+                    text-slate-500">
+        {t('chat.selfDescription')}
+      </p>
+      <Link
+        to={`/profile/${encodeURIComponent(username)}`}
+        className="mt-5
+                   rounded-full
+                   bg-purple-600
+                   px-4
+                   py-2
+                   text-sm
+                   font-semibold
+                   text-white
+                   transition
+                   colors
+                   hover:bg-purple-700"
+      >
+        {t('chat.viewYourProfile')}
+      </Link>
     </div>
   )
 }
