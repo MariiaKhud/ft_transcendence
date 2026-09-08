@@ -96,6 +96,20 @@ const buttonVariants = cva(
                   hover:bg-red-100 \
                   sm:px-5 \
                   sm:text-sm',
+
+        destructiveSoft:
+                    'rounded-lg \
+                    border \
+                    border-red-200 \
+                    bg-red-50/70 \
+                    px-4 \
+                    py-2 \
+                    text-xs \
+                    font-semibold \
+                    text-red-600 \
+                    transition-all \
+                    hover:bg-red-100 \
+                    sm:text-sm',
       },
 
       size: {

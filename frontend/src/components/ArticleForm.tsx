@@ -2,6 +2,7 @@ import { useState, type SubmitEvent } from 'react'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { StatusMessage } from '@/components/ui/status-message'
 import { formatCategoryLabel } from '@/lib/article-display'
 import { getApiErrorCode, translateApiError } from '@/lib/api-errors'
 
@@ -251,9 +252,9 @@ export const ArticleForm = ({ initialValues, submitLabel, isSubmitting, onSubmit
       </div>
 
       {formError && (
-        <p className="rounded-lg border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600">
+        <StatusMessage tone="error">
           {resolveFieldError(formError)}
-        </p>
+        </StatusMessage>
       )}
 
       <div className="flex gap-3">

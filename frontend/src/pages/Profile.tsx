@@ -12,6 +12,7 @@ import type { FriendshipState } from '@shared/types/friendship'
 import { getFriendshipStatus } from '../api/friends';
 import { XPBar } from '@/components/gamification/XPBar'
 import { BadgeList } from '@/components/gamification/BadgeList'
+import { StatusMessage } from '@/components/ui/status-message'
 
 // Convert relative avatar path to full URL for browser image tag.
 const toSafeImageUrl = (avatarUrl: string | null) => {
@@ -424,9 +425,9 @@ export const Profile = () => {
 
         {/* Loading failed. */}
         {!isLoadingArticles && resolvedArticlesError ? (
-          <p className="mt-5 rounded-lg border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600">
+          <StatusMessage tone="error" className="mt-5">
             {resolvedArticlesError}
-          </p>
+          </StatusMessage>
         ) : null}
 
         {/* Backend endpoint not ready yet — show soft message instead of error. */}

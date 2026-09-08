@@ -2,6 +2,7 @@ import { useState, type SubmitEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { StatusMessage } from '@/components/ui/status-message'
 import { registerUser } from '@/api/auth'
 import { translateApiError } from '@/lib/api-errors'
 
@@ -328,9 +329,9 @@ export const Register = () => {
         </div>
 
         {formError.length > 0 ? (
-          <p className="rounded-lg border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600">
+          <StatusMessage tone="error">
             {formError}
-          </p>
+          </StatusMessage>
         ) : null}
 
         <Button

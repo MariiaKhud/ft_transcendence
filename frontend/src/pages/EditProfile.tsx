@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type SubmitEvent } from 
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { StatusMessage } from '@/components/ui/status-message'
 import { deleteMyAccount } from '@/api/auth'
 import { deleteMyAvatar, deleteMyCv, updateMyProfile, uploadMyAvatar, uploadMyCv } from '@/api/users'
 import { useAuth } from '@/hooks/useAuth'
@@ -462,27 +463,27 @@ export const EditProfile = () => {
 
           {/* Show delete button only when user has a saved avatar and no file is pending. */}
           {hasCurrentAvatar && !pendingFile ? (
-            <button
+            <Button
               type="button"
               onClick={handleDeleteAvatar}
               disabled={isDeletingAvatar}
-              className="rounded-lg border border-red-200 bg-red-50/70 px-4 py-2 text-sm font-semibold text-red-600 transition-all hover:bg-red-100 disabled:opacity-50"
+              variant="destructiveSoft"
             >
               {isDeletingAvatar ? t('editProfile.removing') : t('editProfile.removeAvatar')}
-            </button>
+            </Button>
           ) : null}
         </div>
 
         {avatarError.length > 0 ? (
-          <p className="rounded-lg border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600">
+          <StatusMessage tone="error">
             {avatarError}
-          </p>
+          </StatusMessage>
         ) : null}
 
         {avatarSuccess.length > 0 ? (
-          <p className="rounded-lg border border-green-200/50 bg-green-50/80 px-4 py-3 text-sm font-medium text-green-600">
+          <StatusMessage tone="success">
             {avatarSuccess}
-          </p>
+          </StatusMessage>
         ) : null}
       </div>
 
@@ -546,8 +547,8 @@ export const EditProfile = () => {
             </button>
           ) : null}
         </div>
-        {cvError.length > 0 ? <p className="rounded-lg border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600">{cvError}</p> : null}
-        {cvSuccess.length > 0 ? <p className="rounded-lg border border-green-200/50 bg-green-50/80 px-4 py-3 text-sm font-medium text-green-600">{cvSuccess}</p> : null}
+        {cvError.length > 0 ? <StatusMessage tone="error">{cvError}</StatusMessage> : null}
+        {cvSuccess.length > 0 ? <StatusMessage tone="success">{cvSuccess}</StatusMessage> : null}
       </div>
 
       {/* ── Profile details block: displayName and bio ── */}
@@ -606,15 +607,15 @@ export const EditProfile = () => {
         </div>
 
         {profileFormError.length > 0 ? (
-          <p className="rounded-lg border border-red-200/50 bg-red-50/80 px-4 py-3 text-sm font-medium text-red-600">
+          <StatusMessage tone="error">
             {profileFormError}
-          </p>
+          </StatusMessage>
         ) : null}
 
         {profileSuccess.length > 0 ? (
-          <p className="rounded-lg border border-green-200/50 bg-green-50/80 px-4 py-3 text-sm font-medium text-green-600">
+          <StatusMessage tone="success">
             {profileSuccess}
-          </p>
+          </StatusMessage>
         ) : null}
 
         <Button

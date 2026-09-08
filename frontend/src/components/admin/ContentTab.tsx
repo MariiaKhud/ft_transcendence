@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom' // or your router's link component
 import { Search, Tag, X } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 import type { AdminArticle } from '@/types/admin'
 
 // Mirrors the backend's cap on article/comment removal reasons (see
@@ -14,8 +15,6 @@ type ContentTabProps = {
   articles: AdminArticle[]
   onRemoveArticle: (articleId: string, reason: string) => Promise<void>
 }
-
-const REMOVE_REASON_MAX_LENGTH = 500
 
 export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
   const { t } = useTranslation()
@@ -162,17 +161,17 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
                 {t('admin.removed')}
               </span>
             ) : (
-              <button
+              <Button
                 type="button"
                 onClick={(e) => {
                   e.preventDefault()
                   e.stopPropagation()
                   startRemove(article)
                 }}
-                className="rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                variant="destructiveSoft"
               >
                 {t('admin.remove')}
-              </button>
+              </Button>
             )}
           </li>
         )))}
@@ -191,7 +190,6 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
             <textarea
               className="mt-4 w-full rounded-xl border border-slate-300 p-3 text-sm focus:border-purple-600 focus:outline-none"
               rows={4}
-              maxLength={REMOVE_REASON_MAX_LENGTH}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t('admin.removeArticleReasonPlaceholder')}
@@ -212,14 +210,14 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
               >
                 {t('common.cancel')}
               </button>
-              <button
+              <Button
                 type="button"
                 onClick={confirmRemove}
                 disabled={reason.trim().length === 0 || reason.trim().length > REASON_MAX_LENGTH}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 hover:bg-red-700"
+                variant="destructiveSoft"
               >
                 {t('admin.remove')}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
