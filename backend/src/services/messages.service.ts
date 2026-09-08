@@ -1,10 +1,14 @@
 import { prisma } from '../lib/prisma.js';
 import { AppError } from '../middleware/error.middleware.js';
 import { ErrorCode } from '../lib/error-codes.js';
+import { validateUuid } from '../lib/validation.js';
 
 const MAX_LENGTH = 2000;
 
 export async function sendMessage(senderId: string, receiverId: string, content: string) {
+  validateUuid(senderId, 'senderId');
+  validateUuid(receiverId, 'receiverId');
+
   // Can't message yourself
   if (senderId === receiverId) {
     throw new AppError(400, ErrorCode.MESSAGE_SELF_FORBIDDEN, "You can't send a message to yourself");
@@ -58,6 +62,9 @@ export async function sendMessage(senderId: string, receiverId: string, content:
 }
 
 export async function getConversation(currentUserId: string, otherUserId: string) {
+  validateUuid(currentUserId, 'currentUserId');
+  validateUuid(otherUserId, 'otherUserId');
+
   if (currentUserId === otherUserId) {
     throw new AppError(400, ErrorCode.MESSAGE_SELF_FORBIDDEN, "You can't open a conversation with yourself")
   }
