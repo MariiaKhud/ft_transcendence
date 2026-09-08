@@ -22,6 +22,9 @@ const VALID_CATEGORIES = new Set<string>([
 // XP awarded to the author each time they publish a new article.
 export const XP_REWARD_CREATE_ARTICLE = 25
 
+// XP awarded to the author each time their article receives a new like.
+export const XP_REWARD_RECEIVE_LIKE = 5
+
 export interface CreateArticleInput {
   title: string
   content: string
@@ -147,11 +150,6 @@ export const validateUpdateArticleInput = (body: unknown): UpdateArticleInput =>
   }
 
   return result
-}
-
-// Every 100 XP earns one level, starting at level 1.
-export const calculateLevelForXp = (xp: number): number => {
-  return Math.floor(xp / 100) + 1
 }
 
 export interface ArticlesQueryParams {

@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { getProgressToNextLevel } from '@shared/types/gamification'
 
 interface XPBarProps {
   level: number
@@ -8,11 +9,11 @@ interface XPBarProps {
 
 export const XPBar = ({ level, experiencePoints, className = '' }: XPBarProps) => {
   const { t } = useTranslation()
-  
-  // Calculate XP in current level (assuming 100 XP per level)
-  const xpInCurrentLevel = experiencePoints % 100
-  const xpNeeded = 100
-  const percentage = Math.min(100, (xpInCurrentLevel / xpNeeded) * 100)
+
+  const { current: xpInCurrentLevel, needed: xpNeeded, percentage } = getProgressToNextLevel(
+    experiencePoints,
+    level,
+  )
 
   return (
     <div className={`rounded-2xl border border-white/50 bg-white/60 p-4 ${className}`}>

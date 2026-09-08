@@ -7,9 +7,9 @@ import { handleAsyncErrors } from '../middleware/error.middleware.js'
 import * as notificationsService from '../services/notifications.service.js'
 import { NotificationType } from '@prisma/client'
 import { validateUuid } from '../lib/validation.js'
+import { deleteOldAvatar, deleteOldCv } from './users.route-helpers.js'
+import { REMOVE_REASON_MAX_LENGTH } from './comments.route-helpers.js'
 import { ErrorCode } from '../lib/error-codes.js'
-
-const REMOVE_REASON_MAX_LENGTH = 500
 
 const router = Router()
 
@@ -135,6 +135,67 @@ const changeUserRoleHandler = async (req: Request, res: Response) => {
   })
 }
 
+const deleteUserHandler = async (req: Request, res: Response) => {
+  const { id } = req.params
+
+  if (req.user?.userId === id) {
+    res.status(400).json({
+      success: false,
+      error: 'Use account settings to delete your own account',
+    })
+    return
+  }
+
+  const targetUser = await prisma.user.findUnique({
+    where: { id },
+    select: { id: true, role: true, avatarUrl: true, cvUrl: true },
+  })
+
+  if (!targetUser) {
+    res.status(404).json({
+      success: false,
+      error: 'User not found',
+    })
+    return
+  }
+
+  if (targetUser.role === 'ADMIN') {
+    res.status(403).json({
+      success: false,
+      error: 'Cannot delete another administrator',
+    })
+    return
+  }
+
+  // Mirrors the self-delete cascade in users.routes.ts: the user-article
+  // cascade removes this user's own articles (and their likes) wholesale,
+  // but likes they gave on *other* articles need their denormalized
+  // likeCount decremented explicitly first.
+  await prisma.$transaction(async (tx) => {
+    const likedArticles = await tx.articleLike.findMany({
+      where: { userId: id },
+      select: { articleId: true },
+    })
+
+    if (likedArticles.length > 0) {
+      await tx.article.updateMany({
+        where: { id: { in: likedArticles.map((like) => like.articleId) } },
+        data: { likeCount: { decrement: 1 } },
+      })
+    }
+
+    await tx.user.delete({ where: { id } })
+  })
+
+  await deleteOldAvatar(targetUser.avatarUrl)
+  await deleteOldCv(targetUser.cvUrl)
+
+  res.status(200).json({
+    success: true,
+    data: { id },
+  })
+}
+
 const getAdminArticlesHandler = async (req: Request, res: Response) => {
   const articles = await prisma.article.findMany({
     select: {
@@ -204,7 +265,7 @@ const removeArticleHandler = async (req: Request, res: Response) => {
     res.status(400).json({
       success: false,
       code: ErrorCode.VALIDATION_REMOVE_REASON_MAX_LENGTH,
-      error: `Validation failed: reason must be at most ${REMOVE_REASON_MAX_LENGTH} characters`,
+      error: `Removal reason must be at most ${REMOVE_REASON_MAX_LENGTH} characters`,
     })
     return
   }
@@ -346,6 +407,14 @@ const removeCommentHandler = async (req: Request, res: Response) => {
     return
   }
 
+  if (removedReason.trim().length > REMOVE_REASON_MAX_LENGTH) {
+    res.status(400).json({
+      success: false,
+      error: `Removal reason must be at most ${REMOVE_REASON_MAX_LENGTH} characters`,
+    })
+    return
+  }
+
   const comment = await prisma.comment.findUnique({
     where: { id },
     select: {
@@ -444,6 +513,7 @@ const restoreCommentHandler = async (req: Request, res: Response) => {
 // Admin routes: user management, role management, and content moderation.
 router.get('/users', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(getAdminUsersHandler),)
 router.patch('/users/:id/role', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(changeUserRoleHandler),)
+router.delete('/users/:id', authMiddleware, requireRole('ADMIN'), handleAsyncErrors(deleteUserHandler),)
 router.get('/articles', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(getAdminArticlesHandler),)
 router.patch('/articles/:id/remove', authMiddleware, requireRole('MODERATOR'), handleAsyncErrors(removeArticleHandler),)
 router.patch('/articles/:id/restore', authMiddleware,requireRole('MODERATOR'),handleAsyncErrors(restoreArticleHandler),)

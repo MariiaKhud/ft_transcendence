@@ -6,6 +6,8 @@
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient, Role, Category, FriendStatus } from '@prisma/client'
 import bcrypt from 'bcryptjs'
+import { getLevelFromXP } from '../../shared/types/gamification.js'
+import { XP_REWARD_CREATE_ARTICLE, XP_REWARD_RECEIVE_LIKE } from '../src/routes/articles.route-helpers.js'
 
 // Read database connection URL from environment.
 const databaseUrl = process.env.DATABASE_URL
@@ -48,8 +50,6 @@ const main = async () => {
       displayName: 'Alice',
       bio: 'Frontend developer and coffee enthusiast.',
       role: Role.USER,
-      xp: 120,
-      level: 2,
     },
   })
 
@@ -61,8 +61,6 @@ const main = async () => {
       displayName: 'Bob',
       bio: 'Backend engineer. Loves Postgres.',
       role: Role.USER,
-      xp: 80,
-      level: 1,
     },
   })
 
@@ -74,8 +72,6 @@ const main = async () => {
       displayName: 'Carol',
       bio: 'Moderator and technical writer.',
       role: Role.MODERATOR,
-      xp: 300,
-      level: 4,
     },
   })
 
@@ -87,8 +83,6 @@ const main = async () => {
       displayName: 'Admin',
       bio: 'System administrator.',
       role: Role.ADMIN,
-      xp: 500,
-      level: 6,
     },
   })
 
@@ -102,7 +96,12 @@ const main = async () => {
 
 When I am not writing code, you will find me reading about software architecture, arguing about tabs vs spaces (spaces, obviously), mentoring junior developers.`,
       role: Role.USER,
-      xp: 950,
+      // Hand-picked "power user" showcase values (not derived from
+      // articles/likes like the other seeded users). 3100 XP sits inside
+      // level 8's real range (2800-3599) under getXPForLevel in
+      // shared/types/gamification.ts, so the profile's progress bar renders
+      // correctly instead of showing negative progress.
+      xp: 3100,
       level: 8,
     },
   })
@@ -176,7 +175,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Getting started with Prisma and PostgreSQL',
       content: '# Getting started\n\nPrisma makes database access easy and type-safe. Combined with PostgreSQL, you get a powerful stack.',
       category: Category.PROGRAMMING,
-      likeCount: 5,
     },
   })
 
@@ -186,7 +184,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'My journey learning TypeScript',
       content: '# TypeScript journey\n\nI started using TypeScript six months ago and it has transformed how I write JavaScript.',
       category: Category.CAREER,
-      likeCount: 3,
     },
   })
 
@@ -196,7 +193,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Study notes: Docker fundamentals',
       content: '# Docker fundamentals\n\nA container is a lightweight runtime that packages code and dependencies together.',
       category: Category.STUDY_NOTES,
-      likeCount: 8,
     },
   })
 
@@ -206,7 +202,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Project planning with Docker Compose',
       content: '# Docker Compose\n\nCompose helps keep the whole stack reproducible, from local development to production.',
       category: Category.PROJECTS,
-      likeCount: 2,
     },
   })
 
@@ -216,7 +211,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Life as a developer: routines and balance',
       content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
       category: Category.LIFE,
-      likeCount: 4,
     },
   })
 
@@ -226,7 +220,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Test Article 6',
       content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
       category: Category.LIFE,
-      likeCount: 4,
     },
   })
 
@@ -236,7 +229,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Test Article 7',
       content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
       category: Category.LIFE,
-      likeCount: 4,
     },
   })
 
@@ -246,7 +238,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Test Article 8',
       content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
       category: Category.LIFE,
-      likeCount: 4,
     },
   })
 
@@ -256,7 +247,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Test Article 9',
       content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
       category: Category.LIFE,
-      likeCount: 4,
     },
   })
 
@@ -266,7 +256,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Test Article 10',
       content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
       category: Category.LIFE,
-      likeCount: 4,
     },
   })
 
@@ -276,7 +265,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Test Article 11',
       content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
       category: Category.LIFE,
-      likeCount: 4,
     },
   })
 
@@ -286,7 +274,6 @@ When I am not writing code, you will find me reading about software architecture
       title: 'Test Article 12',
       content: '# Developer routines\n\nA simple routine keeps me productive and sane. Here is what I do every day.',
       category: Category.LIFE,
-      likeCount: 4,
     },
   })
 
@@ -519,7 +506,6 @@ When I am not writing code, you will find me reading about software architecture
 
   If you made it to the end of this very long article, thank you for your patience. Go drink some water. You deserve it.`,
       category: Category.PROGRAMMING,
-      likeCount: 0,
     },
   })
 
@@ -575,6 +561,24 @@ When I am not writing code, you will find me reading about software architecture
       { userId: mainuser.id, articleId: article5.id },
     ],
   })
+
+  // likeCount is a denormalized counter that production keeps in sync with
+  // real ArticleLike rows on every like/unlike (see articles.routes.ts).
+  // Derive it here the same way instead of hardcoding it on each article,
+  // so it can't drift from the likes actually seeded above.
+  const likeCounts = await prisma.articleLike.groupBy({
+    by: ['articleId'],
+    _count: { articleId: true },
+  })
+
+  await Promise.all(
+    likeCounts.map((row) =>
+      prisma.article.update({
+        where: { id: row.articleId },
+        data: { likeCount: row._count.articleId },
+      }),
+    ),
+  )
 
   console.log('✅ Likes created')
 
@@ -653,9 +657,26 @@ When I am not writing code, you will find me reading about software architecture
       })
     }
 
-    console.log(
-      `🏅 ${user.username}: ${articleCount} articles, ${receivedLikes} received likes, ${userBadges.length} badges`,
-    )
+    // mainuser keeps its hand-picked xp/level (it's the demo "power user"
+    // account); everyone else's xp is derived from what they actually did,
+    // using the same per-action rewards the app awards in production.
+    if (user.id !== mainuser.id) {
+      const xp = articleCount * XP_REWARD_CREATE_ARTICLE + receivedLikes * XP_REWARD_RECEIVE_LIKE
+      const level = getLevelFromXP(xp)
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { xp, level },
+      })
+
+      console.log(
+        `🏅 ${user.username}: ${articleCount} articles, ${receivedLikes} received likes, ${userBadges.length} badges, ${xp} xp, level ${level}`,
+      )
+    } else {
+      console.log(
+        `🏅 ${user.username}: ${articleCount} articles, ${receivedLikes} received likes, ${userBadges.length} badges`,
+      )
+    }
   }
   
   console.log('🎉 Seeding complete!')

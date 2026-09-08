@@ -7,6 +7,7 @@ import { DashboardRefreshButton } from '@/components/admin/DashboardRefreshButto
 import type { UserRole } from '@shared/types/user'
 
 import {
+  deleteAdminUser,
   getAdminArticles,
   getAdminComments,
   getAdminUsers,
@@ -175,6 +176,12 @@ export function AdminDashboard() {
     )
   }
 
+  const handleDeleteUser = async (userId: string) => {
+    await deleteAdminUser(userId)
+
+    setUsers((current) => current.filter((user) => user.id !== userId))
+  }
+
   return (
     <main className="mx-auto w-full max-w-3xl space-y-6">
         <div className="flex items-center justify-between">
@@ -321,6 +328,7 @@ export function AdminDashboard() {
           users={users}
           currentUserId={currentUser.id}
           onRoleChange={handleRoleChange}
+          onDeleteUser={handleDeleteUser}
         />
       )}
     </main>
