@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { getCurrentUser, loginUser, logoutUser } from '@/api/auth'
+import { getCurrentUser, hasAuthSessionCookie, loginUser, logoutUser } from '@/api/auth'
 import { useStore } from '@/store/store'
 import { applyPreferredLanguage } from '@/lib/i18n'
 import type { LoginCredentials } from '@/types/auth'
@@ -70,6 +70,13 @@ export const useAuth = (options: UseAuthOptions = {}) => {
 
   const restoreSession = useCallback(
     async () => {
+      // Guests have no readable CSRF session cookie, so avoid an expected 401 request.
+      if (!hasAuthSessionCookie()) {
+        clearCurrentUser()
+        setHasRestoredSession(true)
+        return
+      }
+
       setIsLoading(true)
 
       try {
