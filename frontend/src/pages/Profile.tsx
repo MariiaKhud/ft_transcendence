@@ -302,7 +302,16 @@ export const Profile = () => {
           </div>
 
           {!isOwnProfile ? (
-            <div className="flex flex-col items-end gap-2">
+            <div className="flex
+                            w-full
+                            flex-row
+                            flex-wrap
+                            items-start
+                            justify-start
+                            gap-2
+                            md:w-auto
+                            md:flex-col
+                            md:items-end">
               <FollowButton
                 targetUserId={profile.id}
                 onFollowChange={(isFollowing) => {
