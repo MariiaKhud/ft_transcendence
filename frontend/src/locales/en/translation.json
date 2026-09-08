@@ -499,8 +499,13 @@
         "created": "Created",
         "action": "Action",
         "delete": "Delete",
+        "you": "You",
         "confirmDeleteTitle": "Delete user",
         "confirmDeleteBody": "Are you sure you want to permanently delete @{{username}}? This will remove their account, articles, and all associated data. This cannot be undone.",
+        "confirmRoleChangeTitle": "Change user role",
+        "confirmRoleChangeBody": "Change @{{username}}'s role from {{fromRole}} to {{toRole}}?",
+        "confirmPromoteAdminWarning": "Admins have full access to manage all users, content, and settings. Only grant this role to people you trust.",
+        "confirmRoleChangeButton": "Change role",
         "roles": {
           "USER": "User",
           "MODERATOR": "Moderator",

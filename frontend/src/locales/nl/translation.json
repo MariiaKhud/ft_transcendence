@@ -498,8 +498,13 @@
       "created": "Aangemaakt",
       "action": "Actie",
       "delete": "Verwijderen",
+      "you": "Jij",
       "confirmDeleteTitle": "Gebruiker verwijderen",
       "confirmDeleteBody": "Weet je zeker dat je @{{username}} permanent wilt verwijderen? Dit verwijdert hun account, artikelen en alle bijbehorende gegevens. Dit kan niet ongedaan worden gemaakt.",
+      "confirmRoleChangeTitle": "Gebruikersrol wijzigen",
+      "confirmRoleChangeBody": "De rol van @{{username}} wijzigen van {{fromRole}} naar {{toRole}}?",
+      "confirmPromoteAdminWarning": "Beheerders hebben volledige toegang om alle gebruikers, inhoud en instellingen te beheren. Geef deze rol alleen aan mensen die je vertrouwt.",
+      "confirmRoleChangeButton": "Rol wijzigen",
       "roles": {
         "USER": "Gebruiker",
         "MODERATOR": "Moderator",
