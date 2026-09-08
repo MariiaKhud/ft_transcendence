@@ -206,8 +206,13 @@ const getLeaderboardHandler = async (_req: Request, res: Response) => {
 const getPublicProfileHandler = async (req: Request, res: Response) => {
   const username = validateUsernameParam(req.params.username)
 
-  const user = await prisma.user.findUnique({
-    where: { username },
+  const user = await prisma.user.findFirst({
+    where: {
+      username: {
+        equals: username,
+        mode: 'insensitive',
+      },
+    },
     select: publicProfileSelect,
   })
 
@@ -224,8 +229,13 @@ const getPublicProfileHandler = async (req: Request, res: Response) => {
 const getProfileArticlesHandler = async (req: Request, res: Response) => {
   const username = validateUsernameParam(req.params.username)
 
-  const user = await prisma.user.findUnique({
-    where: { username },
+  const user = await prisma.user.findFirst({
+    where: {
+      username: {
+        equals: username,
+        mode: 'insensitive',
+      },
+    },
     select: {
       articles: {
         where: { isRemoved: false },

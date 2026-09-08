@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { useChat } from '@/hooks/useChat'
@@ -14,7 +14,7 @@ import { BackIcon } from '@/components/ui/icons'
 export function Chat() {
   const { t } = useTranslation()
   const { username } = useParams<{ username: string }>()
-  const { currentUser } = useAuth()
+  const { currentUser, hasRestoredSession, isLoading } = useAuth({ restoreOnMount: true })
 
   const [otherUser, setOtherUser] = useState<PublicProfile | null>(null)
   const [otherUserOnline, setOtherUserOnline] = useState(false)
@@ -27,7 +27,7 @@ export function Chat() {
 
   // Load the other user's profile for the header
   useEffect(() => {
-    if (!username) return
+    if (!username || !currentUser) return
     setLoadingUser(true)
     apiRequest<PublicProfile>(`/users/${encodeURIComponent(username)}`, {
       fallbackMessage: 'Failed to load user',
@@ -42,7 +42,7 @@ export function Chat() {
       })
       .catch(() => {})
       .finally(() => setLoadingUser(false))
-  }, [username])
+  }, [currentUser, username])
 
   // Listen for online/offline events for this specific user
   useEffect(() => {
@@ -67,7 +67,11 @@ export function Chat() {
     }
   }, [otherUser?.id])
 
-  if (!currentUser || !username) return null
+  if (!hasRestoredSession || isLoading) return null
+
+  if (!currentUser) return <Navigate to="/login" replace />
+
+  if (!username) return <Navigate to="/friends" replace />
 
   return (
     <div className="mx-auto
