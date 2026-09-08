@@ -2,6 +2,7 @@ import { prisma } from '../lib/prisma.js'
 import { NotificationType } from '@prisma/client';
 import { AppError } from '../middleware/error.middleware.js';
 import { ErrorCode } from '../lib/error-codes.js';
+import { validateUuid } from '../lib/validation.js';
 
 export async function createNotification(
   userId: string,
@@ -9,6 +10,9 @@ export async function createNotification(
   message: string,
   refId?: string
 ) {
+  validateUuid(userId, 'userId');
+  if (refId) validateUuid(refId, 'refId');
+
   return prisma.notification.create({
     data: {
       userId,
@@ -20,6 +24,8 @@ export async function createNotification(
 }
 
 export async function getNotifications(userId: string, unreadOnly: boolean) {
+  validateUuid(userId, 'userId');
+
   const where = {
     userId,
     ...(unreadOnly ? { isRead: false } : {}),
@@ -65,6 +71,9 @@ export async function getNotifications(userId: string, unreadOnly: boolean) {
 }
 
 export async function markOneAsRead(notificationId: string, userId: string) {
+  validateUuid(notificationId, 'notificationId');
+  validateUuid(userId, 'userId');
+
   // Check notification exists first
   const notification = await prisma.notification.findUnique({
     where: { id: notificationId },
@@ -91,6 +100,8 @@ export async function markOneAsRead(notificationId: string, userId: string) {
 }
 
 export async function markAllAsRead(userId: string) {
+  validateUuid(userId, 'userId');
+
   const result = await prisma.notification.updateMany({
     where: {
       userId,

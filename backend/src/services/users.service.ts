@@ -1,7 +1,10 @@
 import { prisma } from '../lib/prisma.js'
+import { validateUuid } from '../lib/validation.js'
 
 // Sets the user as online and updates their last seen timestamp.
 export async function setUserOnline(userId: string) {
+  validateUuid(userId, 'userId')
+
   await prisma.user.update({
     where: { id: userId },
     data: {
@@ -13,6 +16,8 @@ export async function setUserOnline(userId: string) {
 
 // Sets the user as offline and updates their last seen timestamp.
 export async function getPublicProfileById(userId: string) {
+  validateUuid(userId, 'userId')
+
   return prisma.user.findUnique({
     where: { id: userId },
     select: {

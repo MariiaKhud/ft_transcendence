@@ -6,6 +6,8 @@ import { Spinner } from '@/components/ui/icons'
 import { UserAvatar } from '@/components/user/UserAvatar'
 import { formatMessageTime } from '@/lib/utils'
 
+const MESSAGE_MAX_LENGTH = 2000
+
 interface ChatWindowProps {
   messages: ChatMessage[]
   currentUserId: string
@@ -34,8 +36,9 @@ export function ChatWindow({
   }, [messages])
 
   function handleSend() {
-    if (!draft.trim() || sending || !canSend) return
-    onSend(draft)
+    const trimmed = draft.trim()
+    if (!trimmed || sending || !canSend || trimmed.length > MESSAGE_MAX_LENGTH) return
+    onSend(trimmed)
     setDraft('')
     textareaRef.current?.focus()
   }

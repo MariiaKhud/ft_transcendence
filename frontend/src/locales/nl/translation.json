@@ -244,6 +244,7 @@
       "newFriendHint": "Jullie kunnen nu met elkaar chatten en elkaars activiteit bekijken",
       "nowFriends": "is nu je vriend(in)",
       "message": "heeft je een bericht gestuurd",
+      "badge": "heeft de badge {{badge}} verdiend",
       "comment": "heeft gereageerd op je artikel \"{{title}}\"",
       "like": "vindt je artikel \"{{title}}\" leuk",
       "contentRemovedArticle": "Je artikel \"{{title}}\" is verwijderd door een moderator.",
@@ -545,7 +546,10 @@
     "userNotFound": "Gebruiker niet gevonden",
     "backToFriends": "Terug naar Mijn vrienden",
     "loadError": "Berichten konden niet worden geladen",
-    "notFriends": "Je kunt geen berichten meer sturen omdat jullie geen vrienden meer zijn."
+    "notFriends": "Je kunt geen berichten meer sturen omdat jullie geen vrienden meer zijn.",
+    "selfTitle": "Dit is jouw profiel",
+    "selfDescription": "Je kunt geen gesprek met jezelf openen. Kies een vriend om te chatten.",
+    "viewYourProfile": "Bekijk je profiel"
   },
   "friends": {
     "title": "Vrienden",

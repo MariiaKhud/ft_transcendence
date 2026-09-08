@@ -2,12 +2,16 @@ import { prisma } from '../lib/prisma.js'
 import { createNotification } from './notifications.service';
 import { AppError } from '../middleware/error.middleware.js';
 import { ErrorCode } from '../lib/error-codes.js';
+import { validateUuid } from '../lib/validation.js';
 import type { FriendshipState } from '../../../shared/types/friendship.js';
 
 export async function sendFriendRequest(
   requesterId: string,
   addresseeId: string
 ) {
+  validateUuid(requesterId, 'requesterId');
+  validateUuid(addresseeId, 'addresseeId');
+
   if (requesterId === addresseeId) {
     throw new AppError(
       400,
@@ -86,6 +90,9 @@ export async function respondToFriendRequest(
   addresseeId: string,
   action: 'ACCEPTED' | 'DECLINED'
 ) {
+  validateUuid(requesterId, 'requesterId');
+  validateUuid(addresseeId, 'addresseeId');
+
   // 403 — user is trying to respond to their own sent request
   if (requesterId === addresseeId) {
     throw new AppError(
@@ -175,6 +182,8 @@ export async function respondToFriendRequest(
 }
 
 export async function getIncomingRequests(addresseeId: string) {
+  validateUuid(addresseeId, 'addresseeId');
+
   const requests = await prisma.friendship.findMany({
     where: {
       addresseeId,
@@ -199,6 +208,8 @@ export async function getIncomingRequests(addresseeId: string) {
 }
 
 export async function getFriends(userId: string) {
+  validateUuid(userId, 'userId');
+
   const friendships = await prisma.friendship.findMany({
     where: {
       status: 'ACCEPTED',
@@ -246,6 +257,9 @@ export async function getFriends(userId: string) {
 }
 
 export async function removeFriend(currentUserId: string, friendId: string) {
+  validateUuid(currentUserId, 'currentUserId');
+  validateUuid(friendId, 'friendId');
+
   if (currentUserId === friendId) {
     throw new AppError(
       400,
@@ -279,6 +293,9 @@ export async function removeFriend(currentUserId: string, friendId: string) {
 }
 
 export async function cancelFriendRequest(requesterId: string, addresseeId: string) {
+  validateUuid(requesterId, 'requesterId');
+  validateUuid(addresseeId, 'addresseeId');
+
   if (requesterId === addresseeId) {
     throw new AppError(
       400,
@@ -330,6 +347,9 @@ export async function getFriendshipStatus(
   currentUserId: string,
   targetUserId: string
 ): Promise<{ state: FriendshipState }> {
+  validateUuid(currentUserId, 'currentUserId');
+  validateUuid(targetUserId, 'targetUserId');
+
   if (currentUserId === targetUserId) {
     return { state: 'self' };  // profile page uses this to hide the button entirely
   }

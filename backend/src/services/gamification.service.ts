@@ -1,4 +1,5 @@
 import { prisma } from '../lib/prisma.js'
+import { validateUuid } from '../lib/validation.js'
 
 export function calculateLevel(xp: number): number {
   if (xp >= 1000) return 5
@@ -9,6 +10,8 @@ export function calculateLevel(xp: number): number {
 }
 
 export async function awardXP(userId: string, amount: number) {
+  validateUuid(userId, 'userId')
+
   if (!Number.isInteger(amount) || amount <= 0) {
     throw new Error('XP amount must be a positive integer')
   }
@@ -52,6 +55,8 @@ function getBadgeCondition(badgeName: string, articleCount: number, totalLikes: 
 }
 
 export async function checkAndAwardBadges(userId: string) {
+  validateUuid(userId, 'userId')
+
   const [articleCount, likesAggregate, allBadges, earnedBadges] = await Promise.all([
     prisma.article.count({
       where: {
@@ -104,12 +109,29 @@ export async function checkAndAwardBadges(userId: string) {
     return { awardedCount: 0 }
   }
 
-  const result = await prisma.userBadge.createMany({
-    data: newBadges.map((badge) => ({
-      userId,
-      badgeId: badge.id,
-    })),
-    skipDuplicates: true,
+  const result = await prisma.$transaction(async (tx) => {
+    const awarded = await tx.userBadge.createMany({
+      data: newBadges.map((badge) => ({
+        userId,
+        badgeId: badge.id,
+      })),
+      skipDuplicates: true,
+    })
+
+    await Promise.all(
+      newBadges.map((badge) =>
+        tx.notification.create({
+          data: {
+            userId,
+            type: 'BADGE',
+            message: badge.name,
+            refId: userId,
+          },
+        }),
+      ),
+    )
+
+    return awarded
   })
 
   return {

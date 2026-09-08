@@ -2,6 +2,24 @@ import type { Server, Socket } from 'socket.io'
 import { prisma } from '../lib/prisma.js'
 import { createNotification } from '../services/notifications.service.js'
 import { ErrorCode } from '../lib/error-codes.js'
+import { AppError } from '../middleware/error.middleware.js'
+import { validateUuid } from '../lib/validation.js'
+
+function validateChatUserId(socket: Socket, value: unknown, fieldName: string) {
+  try {
+    if (typeof value !== 'string') {
+      throw new AppError(400, ErrorCode.VALIDATION_INVALID_UUID, `Validation failed: ${fieldName} must be a valid UUID`)
+    }
+
+    validateUuid(value, fieldName)
+    return true
+  } catch (error) {
+    if (error instanceof AppError) {
+      socket.emit('chat:error', { code: error.code, message: error.message })
+    }
+    return false
+  }
+}
 
 export function registerChatHandlers(io: Server, socket: Socket) {
   const senderId = socket.data.userId as string
@@ -23,6 +41,7 @@ export function registerChatHandlers(io: Server, socket: Socket) {
     const { receiverId, content } = payload
 
     // Validate
+    if (!validateChatUserId(socket, receiverId, 'receiverId')) return
     if (!content || typeof content !== 'string') return
     const trimmed = content.trim()
     if (trimmed.length === 0 || trimmed.length > 2000) return
@@ -106,6 +125,7 @@ export function registerChatHandlers(io: Server, socket: Socket) {
   // Client emits when user opens a conversation — marks messages as read
   socket.on('chat:read', async (payload: { senderId: string }) => {
     if (!payload || typeof payload.senderId !== 'string' || !payload.senderId) return
+    if (!validateChatUserId(socket, payload.senderId, 'senderId')) return
 
     socket.data.activeChatUserId = payload.senderId
 

@@ -29,7 +29,12 @@ export function useChat(otherUserId: string) {
 
   // Load history on mount via REST
   useEffect(() => {
-    if (!otherUserId) return
+    if (!otherUserId) {
+      setMessages([])
+      setError(null)
+      setLoading(false)
+      return
+    }
 
     setLoading(true)
     apiRequest<ChatMessage[]>(`/messages/${otherUserId}`, {
