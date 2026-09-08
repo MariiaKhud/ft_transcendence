@@ -6,7 +6,7 @@ import { deleteMyAccount } from '@/api/auth'
 import { deleteMyAvatar, deleteMyCv, updateMyProfile, uploadMyAvatar, uploadMyCv } from '@/api/users'
 import { useAuth } from '@/hooks/useAuth'
 import { useStore } from '@/store/store'
-import { translateApiError } from '@/lib/api-errors'
+import { getApiErrorCode, translateApiError } from '@/lib/api-errors'
 
 // Convert relative avatar path to full URL for browser image tag.
 const toSafeImageUrl = (avatarUrl: string | null) => {
@@ -49,6 +49,14 @@ const ALLOWED_CV_MIME_TYPES = new Set([
   'application/pdf',
   'application/msword',
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+])
+const DISPLAY_NAME_ERROR_CODES = new Set([
+  'validation_display_name_max_length',
+  'validation_display_name_invalid',
+])
+const BIO_ERROR_CODES = new Set([
+  'validation_bio_max_length',
+  'validation_bio_invalid',
 ])
 
 export const EditProfile = () => {
@@ -102,6 +110,14 @@ export const EditProfile = () => {
     setBio(currentUser?.bio ?? '')
   }, [currentUser])
 
+  useEffect(() => {
+    return () => {
+      if (previewUrl) {
+        URL.revokeObjectURL(previewUrl)
+      }
+    }
+  }, [previewUrl])
+
   // Current avatar URL from store, or the preview of the pending file.
   const activeAvatarUrl = previewUrl ?? toSafeImageUrl(currentUser?.avatarUrl ?? null)
   const activeInitials = getInitials(currentUser?.displayName ?? null, currentUser?.username ?? '')
@@ -124,7 +140,7 @@ export const EditProfile = () => {
       isValid = false
     }
 
-    if (bio.length > MAX_BIO_LENGTH) {
+    if (bio.trim().length > MAX_BIO_LENGTH) {
       setBioError(t('editProfile.errors.bioMaxLength', { max: MAX_BIO_LENGTH }))
       isValid = false
     }
@@ -133,15 +149,16 @@ export const EditProfile = () => {
   }
 
   // Map API errors to specific fields.
-  const applyProfileApiError = (message: string) => {
-    const lowerMessage = message.toLowerCase()
+  const applyProfileApiError = (error: unknown) => {
+    const code = getApiErrorCode(error)
+    const message = translateApiError(error, t('common.unableToConnect'))
 
-    if (lowerMessage.includes('display') || lowerMessage.includes('displayname')) {
+    if (code && DISPLAY_NAME_ERROR_CODES.has(code)) {
       setDisplayNameError(message)
       return
     }
 
-    if (lowerMessage.includes('bio')) {
+    if (code && BIO_ERROR_CODES.has(code)) {
       setBioError(message)
       return
     }
@@ -171,12 +188,7 @@ export const EditProfile = () => {
       setCurrentUser(updatedUser)
       setProfileSuccess(t('editProfile.success.profileUpdated'))
     } catch (error) {
-      if (error instanceof Error) {
-        applyProfileApiError(translateApiError(error, error.message))
-        return
-      }
-
-      setProfileFormError(t('common.unableToConnect'))
+      applyProfileApiError(error)
     } finally {
       setIsSubmittingProfile(false)
     }
@@ -197,18 +209,17 @@ export const EditProfile = () => {
     }
 
     if (!ALLOWED_MIME_TYPES.has(file.type)) {
+      setPendingFile(null)
+      setPreviewUrl(null)
       setAvatarError(t('editProfile.errors.invalidImageType'))
       return
     }
 
     if (file.size > MAX_FILE_SIZE_BYTES) {
+      setPendingFile(null)
+      setPreviewUrl(null)
       setAvatarError(t('editProfile.errors.imageTooLarge', { maxMb: MAX_FILE_SIZE_MB }))
       return
-    }
-
-    // Revoke previous preview URL to free memory.
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
     }
 
     setPendingFile(file)
@@ -229,11 +240,6 @@ export const EditProfile = () => {
       const updatedUser = await uploadMyAvatar(pendingFile)
       setCurrentUser(updatedUser)
 
-      // Clear preview since the server now has the real URL.
-      if (previewUrl) {
-        URL.revokeObjectURL(previewUrl)
-      }
-
       setPreviewUrl(null)
       setPendingFile(null)
       setAvatarSuccess(t('editProfile.success.avatarUploaded'))
@@ -251,10 +257,6 @@ export const EditProfile = () => {
 
   // Cancel file selection and discard preview.
   const handleCancelPreview = () => {
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
-    }
-
     setPreviewUrl(null)
     setPendingFile(null)
     setAvatarError('')
@@ -267,8 +269,7 @@ export const EditProfile = () => {
     setIsDeletingAvatar(true)
 
     // Also discard any pending preview.
-    if (previewUrl) {
-      URL.revokeObjectURL(previewUrl)
+    if (previewUrl || pendingFile) {
       setPreviewUrl(null)
       setPendingFile(null)
     }
@@ -298,11 +299,13 @@ export const EditProfile = () => {
     if (!file) return
 
     if (!ALLOWED_CV_MIME_TYPES.has(file.type)) {
+      setPendingCv(null)
       setCvError(t('editProfile.errors.invalidCvType'))
       return
     }
 
     if (file.size > CV_MAX_FILE_SIZE_BYTES) {
+      setPendingCv(null)
       setCvError(t('editProfile.errors.cvTooLarge', { maxMb: CV_MAX_FILE_SIZE_MB }))
       return
     }
