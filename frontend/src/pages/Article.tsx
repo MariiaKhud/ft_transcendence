@@ -8,7 +8,8 @@ import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
 import { useStore } from '@/store/store'
 import { getSocket } from '@/lib/socket'
 import { formatCategoryLabel, getInitials, toSafeImageUrl } from '@/lib/article-display'
-import { translateApiError } from '@/lib/api-errors'
+import { getApiErrorCode, translateApiError } from '@/lib/api-errors'
+import { getCurrentUser } from '@/api/auth'
 import {
   createComment,
   deleteArticle,
@@ -24,15 +25,21 @@ import {
 
 const COMMENT_MAX_LENGTH = 1000
 
+// A per-comment action error is either a stable backend error code (re-resolved
+// on every render so it follows language switches) or an already-resolved
+// message string, used when there's no matching code (e.g. a network failure).
+type ActionError = { code: string } | string
+
 export const Article = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const currentUser = useStore((state) => state.auth.currentUser)
+  const setCurrentUser = useStore((state) => state.authActions.setCurrentUser)
 
   const [article, setArticle] = useState<ArticleDetail | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<ActionError | null>(null)
 
   // Like button state.
   const [isLiked, setIsLiked] = useState(false)
@@ -49,7 +56,7 @@ export const Article = () => {
   const [commentsLoading, setCommentsLoading] = useState(true)
   const [newComment, setNewComment] = useState('')
   const [isSubmittingComment, setIsSubmittingComment] = useState(false)
-  const [commentError, setCommentError] = useState('')
+  const [commentError, setCommentError] = useState<ActionError>('')
 
   // Per-comment edit state.
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
@@ -58,7 +65,22 @@ export const Article = () => {
 
   // Per-comment delete state and errors, keyed by comment id.
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
-  const [commentActionErrors, setCommentActionErrors] = useState<Record<string, string>>({})
+  const [commentActionErrors, setCommentActionErrors] = useState<Record<string, ActionError>>({})
+
+  // Resolve an ActionError for display: a backend code is re-translated on every
+  // render (so it follows language switches); a plain string is shown as-is.
+  const resolveActionError = (error: ActionError | null | undefined): string => {
+    if (!error) return ''
+    return typeof error === 'string' ? error : t(`api.errors.${error.code}`)
+  }
+
+  // Route a caught API error into an ActionError: a known backend code is stored
+  // as-is (translated lazily at render time); anything else falls back to the
+  // already-resolved message text.
+  const toActionError = (err: unknown, fallbackMessage: string): ActionError => {
+    const code = getApiErrorCode(err)
+    return code && i18n.exists(`api.errors.${code}`) ? { code } : translateApiError(err, fallbackMessage)
+  }
 
   // Edit mode state.
   const [isEditing, setIsEditing] = useState(false)
@@ -66,7 +88,7 @@ export const Article = () => {
 
   // Delete state.
   const [isDeleting, setIsDeleting] = useState(false)
-  const [deleteError, setDeleteError] = useState('')
+  const [deleteError, setDeleteError] = useState<ActionError>('')
 
   useEffect(() => {
     if (!id) {
@@ -83,7 +105,7 @@ export const Article = () => {
         setLikeCount(data.likeCount)
       })
       .catch((err) => {
-        setError(translateApiError(err, err instanceof Error ? err.message : t('article.errors.loadFailed')))
+        setError(toActionError(err, err instanceof Error ? err.message : t('article.errors.loadFailed')))
       })
       .finally(() => {
         setLoading(false)
@@ -209,7 +231,7 @@ export const Article = () => {
       }
       setNewComment('')
     } catch (err) {
-      setCommentError(translateApiError(err, err instanceof Error ? err.message : t('article.errors.postCommentFailed')))
+      setCommentError(toActionError(err, err instanceof Error ? err.message : t('article.errors.postCommentFailed')))
     } finally {
       setIsSubmittingComment(false)
     }
@@ -241,7 +263,7 @@ export const Article = () => {
     } catch (err) {
       setCommentActionErrors((prev) => ({
         ...prev,
-        [commentId]: translateApiError(err, err instanceof Error ? err.message : t('article.errors.updateCommentFailed')),
+        [commentId]: toActionError(err, err instanceof Error ? err.message : t('article.errors.updateCommentFailed')),
       }))
     } finally {
       setIsSavingCommentEdit(false)
@@ -263,6 +285,22 @@ export const Article = () => {
         return
       }
       reason = promptedReason.trim()
+
+      // Moderator/admin status can be revoked by an admin after this page loaded,
+      // leaving a stale "Remove" button visible. Re-check against the server before
+      // attempting the delete, so a since-demoted user gets the same "not allowed"
+      // message without an avoidable 403 hitting the console.
+      try {
+        const freshUser = await getCurrentUser()
+        setCurrentUser(freshUser)
+        if (freshUser.role !== 'MODERATOR' && freshUser.role !== 'ADMIN') {
+          setCommentActionErrors((prev) => ({ ...prev, [comment.id]: { code: 'comment_delete_forbidden' } }))
+          return
+        }
+      } catch {
+        // Freshness check itself failed (e.g. session expired) — fall through and
+        // let the real delete request surface whatever the actual error is.
+      }
     }
 
     setCommentActionErrors((prev) => ({ ...prev, [comment.id]: '' }))
@@ -285,7 +323,7 @@ export const Article = () => {
     } catch (err) {
       setCommentActionErrors((prev) => ({
         ...prev,
-        [comment.id]: translateApiError(err, err instanceof Error ? err.message : t('article.errors.deleteCommentFailed')),
+        [comment.id]: toActionError(err, err instanceof Error ? err.message : t('article.errors.deleteCommentFailed')),
       }))
     } finally {
       setDeletingCommentId(null)
@@ -332,7 +370,7 @@ export const Article = () => {
       await deleteArticle(id)
       navigate('/')
     } catch (err) {
-      setDeleteError(translateApiError(err, err instanceof Error ? err.message : t('article.errors.deleteArticleFailed')))
+      setDeleteError(toActionError(err, err instanceof Error ? err.message : t('article.errors.deleteArticleFailed')))
       setIsDeleting(false)
     }
   }
@@ -351,7 +389,7 @@ export const Article = () => {
     return (
       <div className="mx-auto w-full max-w-4xl">
         <div className="rounded-2xl border border-red-300/30 bg-red-50/40 p-8 shadow-xl backdrop-blur-md">
-          <p className="text-red-700">{error ?? t('article.notFound')}</p>
+          <p className="text-red-700">{error ? resolveActionError(error) : t('article.notFound')}</p>
           <Link to="/" className="mt-4 inline-block text-purple-700 hover:text-purple-900 font-semibold">
             {t('article.backToFeed')}
           </Link>
@@ -387,7 +425,7 @@ export const Article = () => {
           </div>
         )}
 
-        {deleteError.length > 0 && <p className="mt-2 text-sm font-medium text-red-600">{deleteError}</p>}
+        {deleteError && <p className="mt-2 text-sm font-medium text-red-600">{resolveActionError(deleteError)}</p>}
 
         {isEditing ? (
           <div className="mt-4">
@@ -491,7 +529,7 @@ export const Article = () => {
             <p className={`text-right text-xs ${newComment.length > COMMENT_MAX_LENGTH * 0.9 ? 'text-pink-500' : 'text-slate-400'}`}>
               {t('common.counter', { count: newComment.length, max: COMMENT_MAX_LENGTH })}
             </p>
-            {commentError.length > 0 && <p className="text-sm font-medium text-red-600">{commentError}</p>}
+            {commentError && <p className="text-sm font-medium text-red-600">{resolveActionError(commentError)}</p>}
             <Button
               type="submit"
               disabled={isSubmittingComment || newComment.trim().length === 0}
@@ -638,7 +676,7 @@ export const Article = () => {
                         </>
                       )}
 
-                      {actionError && <p className="mt-1 text-xs font-medium text-red-600">{actionError}</p>}
+                      {actionError && <p className="mt-1 text-xs font-medium text-red-600">{resolveActionError(actionError)}</p>}
                     </div>
                   </div>
                 </div>
