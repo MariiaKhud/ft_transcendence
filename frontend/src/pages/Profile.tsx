@@ -284,7 +284,7 @@ export const Profile = () => {
                 onStateChange={setFriendshipState}
               />
 
-              {friendshipState === 'friends' ? (
+              {!isOwnProfile && friendshipState === 'friends' ? (
                 <MessageButtonLink username={profile.username} />
               ) : null}
             </div>

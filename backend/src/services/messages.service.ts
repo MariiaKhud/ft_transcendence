@@ -58,6 +58,10 @@ export async function sendMessage(senderId: string, receiverId: string, content:
 }
 
 export async function getConversation(currentUserId: string, otherUserId: string) {
+  if (currentUserId === otherUserId) {
+    throw new AppError(400, ErrorCode.MESSAGE_SELF_FORBIDDEN, "You can't open a conversation with yourself")
+  }
+  
   // Check the other user exists
   const otherUser = await prisma.user.findUnique({
     where: { id: otherUserId },
