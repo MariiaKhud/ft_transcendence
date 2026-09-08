@@ -437,7 +437,7 @@ This section tracks only modules that are implemented and currently claimable.
 | Gaming and User Experience             | Gamification system (XP, levels, badges, leaderboard)                 | Minor | 1      |
 | Web                                    | Progressive Web App with offline support and installability           | Minor | 1      |
 | Web                                    | Custom-made design system with reusable components                    | Minor | 1      |
-| Web                                    | File upload and management system (images and CV documents)          | Minor | 1      |
+| Web                                    | File upload and management system (images and CV documents)           | Minor | 1      |
 | Accessibility and Internationalization | Support for multiple languages (English, Dutch, Ukrainian)            | Minor | 1      |
 | Accessibility and Internationalization | Support for additional browsers (Microsoft Edge, Chromium)            | Minor | 1      |
 | User Management                        | Advanced permissions system (view/edit/delete users, roles)          | Major | 2      |

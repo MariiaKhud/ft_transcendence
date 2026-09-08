@@ -70,15 +70,21 @@ export function useNotifications() {
       void fetch()
     }
 
+    function onNotificationsChanged() {
+      void fetch()
+    }
+
     socket.on('notification:new', onNewNotification)
     socket.on('notifications:messages-read', onMessagesRead)
     socket.on('notifications:comments-read', onCommentsRead)
+    window.addEventListener('notifications:changed', onNotificationsChanged)
 
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       socket.off('notification:new', onNewNotification)
       socket.off('notifications:messages-read', onMessagesRead)
       socket.off('notifications:comments-read', onCommentsRead)
+      window.removeEventListener('notifications:changed', onNotificationsChanged)
     };
   }, [currentUser, fetch]);
 

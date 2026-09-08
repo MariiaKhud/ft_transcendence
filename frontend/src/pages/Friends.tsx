@@ -27,15 +27,24 @@ export function Friends() {
       return
     }
 
-    getFriends()
-      .then((res) => setFriends(res.data ?? []))
-      .catch(() => setError(t('friends.loadError')))
-      .finally(() => setLoadingFriends(false))
+    const loadFriendData = () => {
+      getFriends()
+        .then((res) => setFriends(res.data ?? []))
+        .catch(() => setError(t('friends.loadError')))
+        .finally(() => setLoadingFriends(false))
 
-    getIncomingRequests()
-      .then((res) => setRequests(res.data ?? []))
-      .catch(() => {})
-      .finally(() => setLoadingRequests(false))
+      getIncomingRequests()
+        .then((res) => setRequests(res.data ?? []))
+        .catch(() => {})
+        .finally(() => setLoadingRequests(false))
+    }
+
+    loadFriendData()
+    window.addEventListener('friendship:changed', loadFriendData)
+
+    return () => {
+      window.removeEventListener('friendship:changed', loadFriendData)
+    }
   }, [currentUser, t])
 
   function handleAccepted(friendshipId: string) {
@@ -178,6 +187,7 @@ function RequestCard({
     try {
       await respondToFriendRequest(request.requester.id, 'ACCEPTED')
       onAccepted()
+      window.dispatchEvent(new Event('notifications:changed'))
     } catch {
       setError(t('friends.acceptError'))
     } finally {
@@ -191,6 +201,7 @@ function RequestCard({
     try {
       await respondToFriendRequest(request.requester.id, 'DECLINED')
       onDeclined()
+      window.dispatchEvent(new Event('notifications:changed'))
     } catch {
       setError(t('friends.declineError'))
     } finally {

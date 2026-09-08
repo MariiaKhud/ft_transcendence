@@ -104,9 +104,18 @@ export const Home = () => {
 
     socket.on('article:stats-updated', onStatsUpdated)
 
+    // Drop a card the moment its article is deleted elsewhere, instead of
+    // leaving a stale link that 404s when clicked.
+    const onArticleDeleted = (payload: { articleId: string }) => {
+      setArticles((prev) => prev.filter((article) => article.id !== payload.articleId))
+    }
+
+    socket.on('article:deleted', onArticleDeleted)
+
     return () => {
       socket.emit('feed:leave')
       socket.off('article:stats-updated', onStatsUpdated)
+      socket.off('article:deleted', onArticleDeleted)
     }
   }, [])
 

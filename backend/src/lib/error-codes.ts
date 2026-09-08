@@ -96,6 +96,7 @@ export const ErrorCode = {
   FRIEND_ALREADY: 'friend_already',
   FRIEND_REQUEST_ALREADY_PENDING: 'friend_request_already_pending',
   FRIEND_REQUEST_DECLINED: 'friend_request_declined',
+  FRIEND_REQUEST_ALREADY_DECLINED: 'friend_request_already_declined',
   FRIEND_RESPOND_SELF_FORBIDDEN: 'friend_respond_self_forbidden',
   FRIEND_NOT_ADDRESSEE: 'friend_not_addressee',
   FRIEND_REMOVE_SELF_FORBIDDEN: 'friend_remove_self_forbidden',

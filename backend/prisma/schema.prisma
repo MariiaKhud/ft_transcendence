@@ -38,6 +38,7 @@ enum NotificationType {
   CONTENT_REMOVED
   FRIEND_REQUEST
   FRIEND_ACCEPTED
+  BADGE
 }
 
 enum FriendStatus {

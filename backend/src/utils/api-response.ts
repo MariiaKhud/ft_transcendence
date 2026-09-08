@@ -23,6 +23,7 @@ export function sendError(
   return res.status(status).json({
     success: false,
     data: null,
+    code: error instanceof AppError ? error.code : undefined,
     error: error instanceof Error ? error.message : 'Unknown error',
   })
 }

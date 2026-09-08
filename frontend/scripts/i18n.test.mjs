@@ -382,8 +382,10 @@ test('frontend catch sites route API errors through translateApiError instead of
   for (const relativePath of filesThatMustUseIt) {
     const source = readFileSync(path.join(frontendRoot, relativePath), 'utf8');
     assert.match(
+      // Allow either a solo import or one sharing a named-import list with a
+      // sibling helper (e.g. `{ getApiErrorCode, translateApiError }`).
       source,
-      /import \{ translateApiError \} from '@\/lib\/api-errors'/,
+      /import \{[^}]*\btranslateApiError\b[^}]*\} from '@\/lib\/api-errors'/,
       `${relativePath} does not import translateApiError`,
     );
     assert.match(source, /translateApiError\(/, `${relativePath} imports but never calls translateApiError`);
@@ -398,13 +400,30 @@ test('ArticleForm routes API errors by their backend code (getApiErrorCode + i18
   const source = readFileSync(path.join(frontendRoot, 'src/components/ArticleForm.tsx'), 'utf8');
   assert.match(
     source,
-    /import \{ getApiErrorCode \} from '@\/lib\/api-errors'/,
+    /import \{[^}]*\bgetApiErrorCode\b[^}]*\} from '@\/lib\/api-errors'/,
     'ArticleForm.tsx does not import getApiErrorCode',
   );
   assert.match(source, /getApiErrorCode\(/, 'ArticleForm.tsx imports but never calls getApiErrorCode');
   assert.match(source, /i18n\.exists\(`api\.errors\.\$\{code\}`\)/, 'ArticleForm.tsx does not guard on i18n.exists before treating a code as translated');
   assert.match(source, /key:\s*`api\.errors\.\$\{code\}`/, 'ArticleForm.tsx does not store the matched code as an api.errors.<code> translation key');
   assert.match(source, /t\(error\.key,\s*error\.params\)/, 'ArticleForm.tsx does not resolve the stored error key via t() at render time');
+});
+
+test('Article page stores per-comment action errors as a backend code, not a pre-resolved string, so they follow language switches', () => {
+  // Regression guard: commentActionErrors used to store translateApiError's
+  // already-resolved string, so a moderator's "reason too long" error (and a
+  // comment-edit error) stayed in whatever language was active when it fired,
+  // even after switching the UI language. Storing the bare code and resolving
+  // it with t() at render time keeps it reactive.
+  const source = readFileSync(path.join(frontendRoot, 'src/pages/Article.tsx'), 'utf8');
+  assert.match(
+    source,
+    /import \{[^}]*\bgetApiErrorCode\b[^}]*\} from '@\/lib\/api-errors'/,
+    'Article.tsx does not import getApiErrorCode',
+  );
+  assert.match(source, /i18n\.exists\(`api\.errors\.\$\{code\}`\)/, 'Article.tsx does not guard on i18n.exists before treating a code as translated');
+  assert.match(source, /code\s*&&\s*i18n\.exists\(`api\.errors\.\$\{code\}`\)\s*\?\s*\{\s*code\s*\}/, 'Article.tsx does not store a matched code as { code } for lazy resolution');
+  assert.match(source, /t\(`api\.errors\.\$\{error\.code\}`\)/, 'Article.tsx does not resolve the stored action-error code via t() at render time');
 });
 
 test('LanguageSwitcher syncs the choice to the account when authenticated', () => {

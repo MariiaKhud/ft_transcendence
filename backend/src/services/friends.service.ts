@@ -130,19 +130,11 @@ export async function respondToFriendRequest(
     }
 
     if (exists.status === 'ACCEPTED') {
-      throw new AppError(
-        409,
-        ErrorCode.FRIEND_ALREADY,
-        'Already friends'
-      );
+      return { status: 'ACCEPTED', alreadyAccepted: true };
     }
 
     if (exists.status === 'DECLINED') {
-      throw new AppError(
-        409,
-        ErrorCode.FRIEND_ALREADY,
-        'Already declined'
-      );
+      return { status: 'DECLINED', alreadyDeclined: true };
     }
 
     throw new AppError(

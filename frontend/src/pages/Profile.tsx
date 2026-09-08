@@ -193,9 +193,41 @@ export const Profile = () => {
       return
     }
 
-    getFriendshipStatus(profile.id)
-      .then((res) => setFriendshipState(res.state))
-      .catch(() => setFriendshipState('none'))
+    const loadFriendshipState = () => {
+      getFriendshipStatus(profile.id)
+        .then((res) => setFriendshipState(res.state))
+        .catch(() => setFriendshipState('none'))
+    }
+
+    const onFriendshipChanged = (event: Event) => {
+      const detail = (event as CustomEvent<{ userId?: string; state?: FriendshipState }>).detail
+      const changedUserId = detail?.userId
+      if (changedUserId === profile.id) {
+        if (detail?.state) {
+          setFriendshipState(detail.state)
+        }
+        loadFriendshipState()
+      }
+    }
+
+    const refreshOnReturn = () => {
+      if (document.visibilityState === 'visible') {
+        loadFriendshipState()
+      }
+    }
+
+    loadFriendshipState()
+    window.addEventListener('friendship:changed', onFriendshipChanged)
+    window.addEventListener('focus', refreshOnReturn)
+    window.addEventListener('pageshow', refreshOnReturn)
+    document.addEventListener('visibilitychange', refreshOnReturn)
+
+    return () => {
+      window.removeEventListener('friendship:changed', onFriendshipChanged)
+      window.removeEventListener('focus', refreshOnReturn)
+      window.removeEventListener('pageshow', refreshOnReturn)
+      document.removeEventListener('visibilitychange', refreshOnReturn)
+    }
   }, [profile, currentUser])
 
   const resolvedProfileError = profileError

@@ -188,6 +188,10 @@ const deleteArticleHandler = async (req: Request, res: Response) => {
     await awardXP(existing.authorId, -XP_REWARD_CREATE_ARTICLE, tx)
   })
 
+  // Let anyone currently browsing the feed or search results drop this card
+  // live, instead of it sitting there until they click into a 404.
+  io.to('feed').emit('article:deleted', { articleId: existing.id })
+
   res.status(200).json({ success: true, data: { id: existing.id } })
 }
 

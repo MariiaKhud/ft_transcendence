@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArticleCard } from '@/components/ArticleCard'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import { getSocket } from '@/lib/socket'
 import { getArticles, type Article, type ArticlesResponse } from '@/api/articles'
 import { translateApiError } from '@/lib/api-errors'
 
@@ -122,6 +123,24 @@ export const Search = () => {
     fetchArticles(page)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page])
+
+  // Join the feed room so a card is dropped live if its article is deleted
+  // elsewhere, instead of leaving a stale link that 404s when clicked.
+  useEffect(() => {
+    const socket = getSocket()
+    socket.emit('feed:join')
+
+    const onArticleDeleted = (payload: { articleId: string }) => {
+      setArticles((prev) => prev.filter((article) => article.id !== payload.articleId))
+    }
+
+    socket.on('article:deleted', onArticleDeleted)
+
+    return () => {
+      socket.emit('feed:leave')
+      socket.off('article:deleted', onArticleDeleted)
+    }
+  }, [])
 
   // Keep the URL in sync with the current filters so this search can be
   // bookmarked or shared. Uses `replace` so typing doesn't spam history.

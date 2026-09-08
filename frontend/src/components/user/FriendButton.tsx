@@ -16,6 +16,7 @@ import {
   XIcon,
 } from '@/components/ui/icons'
 import { translateApiError } from '@/lib/api-errors'
+import { getApiErrorCode } from '@/lib/api-errors'
 import { useAuth } from '@/hooks/useAuth'
 import { getFriendshipStatus } from '../../api/friends'
 
@@ -25,18 +26,23 @@ interface FriendButtonProps {
   onStateChange?: (newState: FriendshipState) => void
 }
 
-function FriendButtonError({ error }: { error: string | null }) {
+interface FriendButtonErrorState {
+  code: string | null
+  message: string
+  translationKey?: string
+}
+
+function FriendButtonError({ error }: { error: FriendButtonErrorState | null }) {
+  const { t } = useTranslation()
+
   if (!error) return null
 
   return (
-    <p className="absolute
-                  top-full
-                  left-0
-                  mt-1
-                  text-xs
-                  text-pink-600
-                  whitespace-nowrap">
-      {error}
+    <p
+      role="status"
+      className="mt-2 w-full max-w-72 rounded-lg border border-amber-200/50 bg-amber-50/80 px-3 py-2 text-xs font-medium leading-snug text-amber-700"
+    >
+      {error.translationKey ? t(error.translationKey) : error.code ? t(`api.errors.${error.code}`) : error.message}
     </p>
   )
 }
@@ -46,7 +52,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
   const { currentUser } = useAuth();
   const [state, setState] = useState<FriendshipState>(initialState);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<FriendButtonErrorState | null>(null);
   const [isHovered, setIsHovered] = useState(false);
   const [hasActed, setHasActed] = useState(false);
 
@@ -60,19 +66,30 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
   if (!currentUser || currentUser.id === targetUserId) return null;
 
   // Run action, then transition to the expected next UI state
-  async function handle(action: () => Promise<void>, nextState: FriendshipState) {
+  async function handle(action: () => Promise<unknown>, nextState: FriendshipState) {
     setLoading(true);
     setError(null);
     setHasActed(true);
     try {
-      await action();
-      setState(nextState);
-      onStateChange?.(nextState);
+      const result = await action() as { alreadyAccepted?: boolean; alreadyDeclined?: boolean }
+      const resolvedState = result?.alreadyAccepted
+        ? 'friends'
+        : result?.alreadyDeclined
+          ? 'none'
+          : nextState
+      setState(resolvedState);
+      onStateChange?.(resolvedState);
+      window.dispatchEvent(new Event('notifications:changed'))
+      if (result?.alreadyAccepted) {
+        setError({ code: null, message: '', translationKey: 'notification.alreadyAccepted' })
+      } else if (result?.alreadyDeclined) {
+        setError({ code: null, message: '', translationKey: 'notification.alreadyDeclined' })
+      }
     } catch (error) {
-      setError(translateApiError(
-        error,
-        error instanceof Error ? error.message : t('common.somethingWrong')
-      ))
+      setError({
+        code: getApiErrorCode(error),
+        message: translateApiError(error, error instanceof Error ? error.message : t('common.somethingWrong')),
+      })
     } finally {
       setLoading(false);
     }
@@ -80,7 +97,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   if (state === 'none') {
     return (
-      <div className="relative flex flex-col items-start gap-1">
+      <div className="relative flex flex-col items-end gap-1">
         <Button
           variant="profile"
           onClick={() => handle(() => sendFriendRequest(targetUserId), 'pending_sent')}
@@ -99,7 +116,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   if (state === 'pending_sent') {
     return (
-      <div className="relative flex flex-col items-start gap-1">
+      <div className="relative flex flex-col items-end gap-1">
         <Button
           variant="profileSecondary"
           onClick={async () => {
@@ -124,10 +141,10 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
                   onStateChange?.('none')
                 }
               } else {
-                setError(translateApiError(
-                  err,
-                  err instanceof Error ? err.message : t('common.somethingWrong')
-                ))
+                setError({
+                  code: getApiErrorCode(err),
+                  message: translateApiError(err, err instanceof Error ? err.message : t('common.somethingWrong')),
+                })
               }
             } finally {
               setLoading(false)
@@ -149,7 +166,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   if (state === 'pending_received') {
     return (
-      <div className="relative flex flex-col items-start gap-1">
+      <div className="relative flex flex-col items-end gap-1">
         <div className="flex gap-2">
           <Button
             variant="profileSuccess"
@@ -180,7 +197,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   // state === 'friends'
   return (
-    <div className="relative flex flex-col items-start gap-1">
+    <div className="relative flex flex-col items-end gap-1">
       <Button
         variant="profileSecondary"
         onClick={() => handle(() => removeFriend(targetUserId), 'none')}

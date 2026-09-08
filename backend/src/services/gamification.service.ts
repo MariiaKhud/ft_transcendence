@@ -109,12 +109,29 @@ export async function checkAndAwardBadges(userId: string) {
     return { awardedCount: 0 }
   }
 
-  const result = await prisma.userBadge.createMany({
-    data: newBadges.map((badge) => ({
-      userId,
-      badgeId: badge.id,
-    })),
-    skipDuplicates: true,
+  const result = await prisma.$transaction(async (tx) => {
+    const awarded = await tx.userBadge.createMany({
+      data: newBadges.map((badge) => ({
+        userId,
+        badgeId: badge.id,
+      })),
+      skipDuplicates: true,
+    })
+
+    await Promise.all(
+      newBadges.map((badge) =>
+        tx.notification.create({
+          data: {
+            userId,
+            type: 'BADGE',
+            message: badge.name,
+            refId: userId,
+          },
+        }),
+      ),
+    )
+
+    return awarded
   })
 
   return {
