@@ -13,6 +13,10 @@ const getCookie = (name: string) => {
   return match ? decodeURIComponent(match[1]) : undefined
 }
 
+export const hasAuthSessionCookie = () => {
+  return Boolean(getCookie('csrf_token'))
+}
+
 // Create a new account.
 export const registerUser = async (credentials: RegisterCredentials) => {
   return apiRequestData<AuthUser>('/auth/register', {

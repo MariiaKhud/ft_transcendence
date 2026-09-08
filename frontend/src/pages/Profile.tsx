@@ -285,7 +285,20 @@ export const Profile = () => {
               />
 
               {!isOwnProfile && friendshipState === 'friends' ? (
-                <MessageButtonLink username={profile.username} />
+                <div className={profile.cvUrl && profile.cvFilename ? 'flex w-[22rem] max-w-full gap-2' : 'flex justify-end'}>
+                  {profile.cvUrl && profile.cvFilename ? (
+                    <a
+                      href={profile.cvUrl}
+                      download={profile.cvFilename}
+                      className="inline-flex flex-1 items-center justify-center rounded-lg border border-purple-200 bg-white/70 px-4 py-2 text-sm font-semibold text-purple-700 transition-colors hover:border-purple-300 hover:bg-white"
+                    >
+                      {t('profile.downloadCv')}
+                    </a>
+                  ) : null}
+                  <div className={profile.cvUrl && profile.cvFilename ? 'flex-1' : 'w-full'}>
+                    <MessageButtonLink username={profile.username} />
+                  </div>
+                </div>
               ) : null}
             </div>
           ) : null}
@@ -295,16 +308,6 @@ export const Profile = () => {
         <p className="relative mt-6 break-words whitespace-pre-wrap text-slate-700">
           {profile.bio ?? t('profile.noBio')}
         </p>
-
-        {profile.cvUrl && profile.cvFilename ? (
-          <a
-            href={profile.cvUrl}
-            download={profile.cvFilename}
-            className="relative mt-5 inline-flex items-center rounded-lg border border-purple-200 bg-white/70 px-4 py-2 text-sm font-semibold text-purple-700 transition-colors hover:border-purple-300 hover:bg-white"
-          >
-            {t('profile.downloadCv')}
-          </a>
-        ) : null}
 
         {/* Stats row: articles, followers, following */}
         <div className="relative mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
