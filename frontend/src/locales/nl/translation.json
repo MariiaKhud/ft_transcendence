@@ -491,6 +491,9 @@
       "articles": "Artikelen",
       "created": "Aangemaakt",
       "action": "Actie",
+      "delete": "Verwijderen",
+      "confirmDeleteTitle": "Gebruiker verwijderen",
+      "confirmDeleteBody": "Weet je zeker dat je @{{username}} permanent wilt verwijderen? Dit verwijdert hun account, artikelen en alle bijbehorende gegevens. Dit kan niet ongedaan worden gemaakt.",
       "roles": {
         "USER": "Gebruiker",
         "MODERATOR": "Moderator",

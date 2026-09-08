@@ -12,7 +12,6 @@ import {
   articleWithAuthorSelect,
   buildArticlesFilter,
   buildArticlesOrderBy,
-  calculateLevelForXp,
   isPrismaRecordNotFoundError,
   isPrismaUniqueConstraintError,
   mapArticleToDetails,
@@ -20,9 +19,10 @@ import {
   validateCreateArticleInput,
   validateUpdateArticleInput,
   XP_REWARD_CREATE_ARTICLE,
+  XP_REWARD_RECEIVE_LIKE,
 } from './articles.route-helpers.js'
 import { commentWithAuthorSelect, validateCreateCommentInput } from './comments.route-helpers.js'
-import { checkAndAwardBadges } from '../services/gamification.service.js'
+import { awardXP, checkAndAwardBadges } from '../services/gamification.service.js'
 import { validateUuid } from '../lib/validation.js'
 
 const router = Router()
@@ -57,16 +57,7 @@ const createArticleHandler = async (req: Request, res: Response) => {
     })
 
     // Award XP and recompute level in the same transaction as the publish.
-    const author = await tx.user.findUniqueOrThrow({
-      where: { id: authorId },
-      select: { xp: true },
-    })
-
-    const newXp = author.xp + XP_REWARD_CREATE_ARTICLE
-    await tx.user.update({
-      where: { id: authorId },
-      data: { xp: newXp, level: calculateLevelForXp(newXp) },
-    })
+    await awardXP(authorId, XP_REWARD_CREATE_ARTICLE, tx)
 
     return created
   })
@@ -194,17 +185,7 @@ const deleteArticleHandler = async (req: Request, res: Response) => {
   // Revert the publish XP in the same transaction so delete-then-republish can't farm XP.
   await prisma.$transaction(async (tx) => {
     await tx.article.delete({ where: { id: existing.id } })
-
-    const author = await tx.user.findUniqueOrThrow({
-      where: { id: existing.authorId },
-      select: { xp: true },
-    })
-
-    const newXp = Math.max(0, author.xp - XP_REWARD_CREATE_ARTICLE)
-    await tx.user.update({
-      where: { id: existing.authorId },
-      data: { xp: newXp, level: calculateLevelForXp(newXp) },
-    })
+    await awardXP(existing.authorId, -XP_REWARD_CREATE_ARTICLE, tx)
   })
 
   res.status(200).json({ success: true, data: { id: existing.id } })
@@ -362,8 +343,9 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
   io.to(`article:${article.id}`).emit('article:like-updated', { likeCount })
   io.to('feed').emit('article:stats-updated', { articleId: article.id, likeCount })
 
-  // Only notify on the like transition, not the unlike, and not if the author is already viewing.
+  // Only award XP/notify on the like transition, not the unlike, and not if the author is already viewing.
   if (liked) {
+    await awardXP(article.authorId, XP_REWARD_RECEIVE_LIKE)
     await checkAndAwardBadges(article.authorId)
 
     const authorSockets = await io.in(article.authorId).fetchSockets()

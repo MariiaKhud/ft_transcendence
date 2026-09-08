@@ -1,31 +1,31 @@
 import { prisma } from '../lib/prisma.js'
+import type { Prisma } from '@prisma/client'
 
+type Db = typeof prisma | Prisma.TransactionClient
+
+// Every 100 XP earns one level, starting at level 1.
 export function calculateLevel(xp: number): number {
-  if (xp >= 1000) return 5
-  if (xp >= 600) return 4
-  if (xp >= 300) return 3
-  if (xp >= 100) return 2
-  return 1
+  return Math.floor(xp / 100) + 1
 }
 
-export async function awardXP(userId: string, amount: number) {
-  if (!Number.isInteger(amount) || amount <= 0) {
-    throw new Error('XP amount must be a positive integer')
+// Adds (or, with a negative amount, removes) XP for a user and recomputes
+// their level. Pass a transaction client to keep this atomic with other
+// writes (e.g. the article that earned the XP); defaults to a standalone
+// query otherwise. XP never drops below 0.
+export async function awardXP(userId: string, amount: number, db: Db = prisma) {
+  if (!Number.isInteger(amount) || amount === 0) {
+    throw new Error('XP amount must be a non-zero integer')
   }
 
-  const user = await prisma.user.findUnique({
+  const user = await db.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { id: true, xp: true },
+    select: { xp: true },
   })
 
-  if (!user) {
-    throw new Error('User not found')
-  }
-
-  const xp = user.xp + amount
+  const xp = Math.max(0, user.xp + amount)
   const level = calculateLevel(xp)
 
-  return prisma.user.update({
+  return db.user.update({
     where: { id: userId },
     data: { xp, level },
     select: { id: true, xp: true, level: true },

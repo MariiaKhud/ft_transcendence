@@ -491,6 +491,9 @@
         "articles": "Articles",
         "created": "Created",
         "action": "Action",
+        "delete": "Delete",
+        "confirmDeleteTitle": "Delete user",
+        "confirmDeleteBody": "Are you sure you want to permanently delete @{{username}}? This will remove their account, articles, and all associated data. This cannot be undone.",
         "roles": {
           "USER": "User",
           "MODERATOR": "Moderator",

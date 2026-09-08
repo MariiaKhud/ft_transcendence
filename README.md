@@ -408,7 +408,7 @@ ft_transcendence/
 - **Direct messaging** (persistent conversations with real-time message delivery)
 - **Notification center** (real-time notification bell, read state, and paginated notification page)
 - **Gamification** (persistent XP, levels, badges, and leaderboard)
-- **Admin dashboard and API** (role management and article/comment moderation)
+- **Admin dashboard and API** (user role management, user deletion, and article/comment moderation)
 - **Real-time updates** (Socket.IO for chat, online status, notifications, comments, likes, and feed statistics)
 - **Progressive Web App** (install manifest, service worker, and offline navigation fallback)
 - **Privacy Policy page** (static content, linked from footer, guest accessible)
@@ -417,7 +417,6 @@ ft_transcendence/
 - **Internationalization** (English, Dutch, Ukrainian — full UI coverage including the admin dashboard, navbar language switcher, account-level persistence, translated API error codes)
 
 ### In Progress
-- Advanced permissions system: user listing and role management are complete, but full user CRUD is not yet claimable.
 - Complete notification coverage for every creation, update, and deletion action is not yet claimable.
 
 ## Modules Checklist (Evaluation)
@@ -441,8 +440,9 @@ This section tracks only modules that are implemented and currently claimable.
 | Web                                    | File upload and management system (images and CV documents)          | Minor | 1      |
 | Accessibility and Internationalization | Support for multiple languages (English, Dutch, Ukrainian)            | Minor | 1      |
 | Accessibility and Internationalization | Support for additional browsers (Microsoft Edge, Chromium)            | Minor | 1      |
+| User Management                        | Advanced permissions system (view/edit/delete users, roles)          | Major | 2      |
 
-**Claimed subtotal: 17 points**
+**Claimed subtotal: 19 points**
 
 Evidence used for this checklist:
 - Email/password authentication with hashed passwords, session cookies, and `/api/auth/me`
@@ -462,19 +462,19 @@ Evidence used for this checklist:
 - Manual compatibility checks in Microsoft Edge and Chromium for core authentication, content, profile, social, and responsive UI flows
 - i18n: 3 complete languages (English, Dutch, Ukrainian) across all shipped UI, navbar language switcher, `localStorage` + account-level (`preferredLanguage`) persistence, translated backend API error codes
 - Automated i18n regression suite (`frontend/scripts/i18n.test.mjs`) plus a live multi-language, multi-page QA pass (see Internationalization section above)
+- Advanced permissions: admin can view all users, change roles (USER/MODERATOR/ADMIN), and delete a user's account (cascades articles/likes, cleans up avatar/CV files); different dashboard views/actions for ADMIN vs MODERATOR
 
 ### Additional Modules Not Yet Claimed
 
 | Category                               | Module                                                          | Type  | Points | Current Status                            |
 |----------------------------------------|-----------------------------------------------------------------|-------|--------|-------------------------------------------|
-| User Management                        | Advanced permissions system                                     | Major | 2      | Partial: lacks full user CRUD             |
 | Web                                    | Complete notification system (create/update/delete actions)     | Minor | 1      | Partial: coverage is not complete         |
 
 ### Point Summary
 
 - Mandatory target: **14 points**
-- Currently claimed: **17 points**
-- Above the mandatory target by: **3 points**
+- Currently claimed: **19 points**
+- Above the mandatory target by: **5 points**
 
 > Important: We only claim modules during evaluation when all required criteria in the subject are fully met and demonstrable.
 

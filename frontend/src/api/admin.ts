@@ -68,3 +68,13 @@ export function updateAdminUserRole(
     },
   )
 }
+
+export function deleteAdminUser(id: string) {
+  return apiRequestData<{ id: string }>(
+    `/admin/users/${id}`,
+    {
+      method: 'DELETE',
+      fallbackMessage: 'Failed to delete user',
+    },
+  )
+}
