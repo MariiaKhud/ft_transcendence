@@ -17,6 +17,7 @@ export function navigateToNotification(
     case 'FRIEND_REQUEST':
     case 'FRIEND_ACCEPTED':
     case 'FOLLOWED':
+    case 'BADGE':
       goToProfile(navigate, notif.actor?.username)
       break
 
