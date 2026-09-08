@@ -23,8 +23,18 @@ import {
 } from './articles.route-helpers.js'
 import { commentWithAuthorSelect, validateCreateCommentInput } from './comments.route-helpers.js'
 import { checkAndAwardBadges } from '../services/gamification.service.js'
+import { validateUuid } from '../lib/validation.js'
 
 const router = Router()
+
+router.param('id', (req, _res, next) => {
+  try {
+    validateUuid(req.params.id)
+    next()
+  } catch (error) {
+    next(error)
+  }
+})
 
 // Publish a new article immediately and award the author XP.
 const createArticleHandler = async (req: Request, res: Response) => {

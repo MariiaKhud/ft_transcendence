@@ -366,11 +366,11 @@ perform_request "Unknown field" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/users
   -d '{"unknownField":"value"}'
 assert_status "400" "Unknown field"
 
-# Test 23: PATCH /api/users/me — displayName too long (>50 chars)
+# Test 23: PATCH /api/users/me — displayName too long (>20 chars)
 color_echo "$BLUE" "23. PATCH /api/users/me — displayName too long"
 perform_request "DisplayName too long" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/users/me" \
   -H "Content-Type: application/json" \
-  -d '{"displayName":"This is a very long display name that exceeds the fifty character limit"}'
+  -d '{"displayName":"This display name exceeds twenty characters"}'
 assert_status "400" "DisplayName too long"
 
 # Test 24: PATCH /api/users/me — bio too long (>500 chars)

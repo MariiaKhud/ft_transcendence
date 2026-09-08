@@ -29,6 +29,7 @@ export const ErrorCode = {
   VALIDATION_PASSWORD_WHITESPACE: 'validation_password_whitespace',
   VALIDATION_REGISTER_FIELDS_REQUIRED: 'validation_register_fields_required',
   VALIDATION_LOGIN_FIELDS_REQUIRED: 'validation_login_fields_required',
+  VALIDATION_INVALID_UUID: 'validation_invalid_uuid',
 
   // Validation — articles
   VALIDATION_TITLE_REQUIRED: 'validation_title_required',
@@ -40,6 +41,7 @@ export const ErrorCode = {
   VALIDATION_CONTENT_MAX_LENGTH: 'validation_content_max_length',
   VALIDATION_CATEGORY_REQUIRED: 'validation_category_required',
   VALIDATION_CATEGORY_INVALID: 'validation_category_invalid',
+  VALIDATION_ARTICLE_FILTER_MAX_LENGTH: 'validation_article_filter_max_length',
   VALIDATION_ARTICLE_FIELDS_REQUIRED: 'validation_article_fields_required',
   VALIDATION_ARTICLE_UPDATE_FIELDS_REQUIRED: 'validation_article_update_fields_required',
   VALIDATION_SORT_INVALID: 'validation_sort_invalid',

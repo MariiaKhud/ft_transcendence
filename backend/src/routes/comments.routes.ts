@@ -10,8 +10,18 @@ import {
   validateCreateCommentInput,
   validateRemoveCommentInput,
 } from './comments.route-helpers.js'
+import { validateUuid } from '../lib/validation.js'
 
 const router = Router()
+
+router.param('id', (req, _res, next) => {
+  try {
+    validateUuid(req.params.id)
+    next()
+  } catch (error) {
+    next(error)
+  }
+})
 
 // Update a comment's content. Author only.
 const updateCommentHandler = async (req: Request, res: Response) => {

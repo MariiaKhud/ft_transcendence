@@ -68,6 +68,7 @@
       "validation_password_whitespace": "Wachtwoord mag geen spaties bevatten.",
       "validation_register_fields_required": "E-mailadres, gebruikersnaam en wachtwoord zijn verplicht.",
       "validation_login_fields_required": "E-mailadres en wachtwoord zijn verplicht.",
+      "validation_invalid_uuid": "Die identifier is ongeldig.",
       "validation_title_required": "Titel is verplicht.",
       "validation_title_invalid": "Titel moet een niet-lege tekst zijn.",
       "validation_title_max_length": "Titel mag maximaal 120 tekens bevatten.",
@@ -77,6 +78,7 @@
       "validation_content_max_length": "Inhoud mag maximaal 10000 tekens bevatten.",
       "validation_category_required": "Categorie is verplicht.",
       "validation_category_invalid": "Kies een geldige categorie.",
+      "validation_article_filter_max_length": "Een artikelzoekfilter is te lang.",
       "validation_article_fields_required": "Titel, inhoud en categorie zijn verplicht.",
       "validation_article_update_fields_required": "Ten minste één van titel, inhoud of categorie is verplicht.",
       "validation_sort_invalid": "Ongeldige sorteeroptie.",
@@ -90,7 +92,7 @@
       "validation_search_query_max_length": "Zoekopdracht mag maximaal 50 tekens bevatten.",
       "validation_profile_fields_required": "Weergavenaam en/of bio moet worden opgegeven.",
       "validation_profile_unknown_fields": "Die profielupdate bevat niet-ondersteunde velden.",
-      "validation_display_name_max_length": "Weergavenaam mag maximaal 50 tekens bevatten.",
+      "validation_display_name_max_length": "Weergavenaam mag maximaal 20 tekens bevatten.",
       "validation_display_name_invalid": "Weergavenaam moet een tekst of null zijn.",
       "validation_bio_max_length": "Bio mag maximaal 500 tekens bevatten.",
       "validation_bio_invalid": "Bio moet een tekst of null zijn.",
@@ -202,13 +204,10 @@
     "remove": "Vriend verwijderen",
     "sendAria": "Vriendschapsverzoek versturen",
     "sendTitle": "Klik om verzoek te versturen",
-    "cancelAria": "Vriendschapsverzoek annuleren",
-    "cancelTitle": "Klik om verzoek te annuleren",
     "acceptAria": "Vriendschapsverzoek accepteren",
     "acceptTitle": "Klik om verzoek te accepteren",
     "declineAria": "Vriendschapsverzoek afwijzen",
     "declineTitle": "Klik om verzoek af te wijzen",
-    "removeAria": "Vriend verwijderen",
     "removeTitle": "Klik om vriend te verwijderen"
   },
   "notification": {
@@ -530,6 +529,8 @@
     "errors": {
       "loadFailed": "Kan artikel niet laden",
       "postCommentFailed": "Kan reactie niet plaatsen",
+      "commentTooLong": "Reactie mag maximaal {{max}} tekens bevatten.",
+      "removeReasonTooLong": "De reden mag maximaal {{max}} tekens bevatten.",
       "updateCommentFailed": "Kan reactie niet bijwerken",
       "deleteCommentFailed": "Kan reactie niet verwijderen",
       "deleteArticleFailed": "Kan artikel niet verwijderen"

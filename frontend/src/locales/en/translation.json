@@ -68,6 +68,7 @@
       "validation_password_whitespace": "Password cannot contain spaces.",
       "validation_register_fields_required": "Email, username, and password are required.",
       "validation_login_fields_required": "Email and password are required.",
+      "validation_invalid_uuid": "That identifier is not valid.",
       "validation_title_required": "Title is required.",
       "validation_title_invalid": "Title must be a non-empty string.",
       "validation_title_max_length": "Title must be at most 120 characters.",
@@ -77,6 +78,7 @@
       "validation_content_max_length": "Content must be at most 10000 characters.",
       "validation_category_required": "Category is required.",
       "validation_category_invalid": "Please choose a valid category.",
+      "validation_article_filter_max_length": "An article search filter is too long.",
       "validation_article_fields_required": "Title, content, and category are required.",
       "validation_article_update_fields_required": "At least one of title, content, or category is required.",
       "validation_sort_invalid": "Invalid sort option.",
@@ -90,7 +92,7 @@
       "validation_search_query_max_length": "Search query must be at most 50 characters.",
       "validation_profile_fields_required": "Display name and/or bio must be provided.",
       "validation_profile_unknown_fields": "That profile update includes unsupported fields.",
-      "validation_display_name_max_length": "Display name must be at most 50 characters.",
+      "validation_display_name_max_length": "Display name must be at most 20 characters.",
       "validation_display_name_invalid": "Display name must be a string or null.",
       "validation_bio_max_length": "Bio must be at most 500 characters.",
       "validation_bio_invalid": "Bio must be a string or null.",
@@ -202,13 +204,10 @@
     "remove": "Unfriend",
     "sendAria": "Send friend request",
     "sendTitle": "Click to send request",
-    "cancelAria": "Cancel friend request",
-    "cancelTitle": "Click to cancel request",
     "acceptAria": "Accept friend request",
     "acceptTitle": "Click to accept request",
     "declineAria": "Decline friend request",
     "declineTitle": "Click to decline request",
-    "removeAria": "Remove friend",
     "removeTitle": "Click to remove friend"
   },
   "notification": {
@@ -530,6 +529,8 @@
     "errors": {
       "loadFailed": "Unable to load article",
       "postCommentFailed": "Unable to post comment",
+      "commentTooLong": "Comment must be at most {{max}} characters.",
+      "removeReasonTooLong": "Removal reason must be at most {{max}} characters.",
       "updateCommentFailed": "Unable to update comment",
       "deleteCommentFailed": "Unable to delete comment",
       "deleteArticleFailed": "Unable to delete article"

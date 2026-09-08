@@ -320,6 +320,7 @@ export const Login = () => {
             id="email"
             name="email"
             type="email"
+            maxLength={254}
             autoComplete="email"
             value={email}
             onChange={(event) => {

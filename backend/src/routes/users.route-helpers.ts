@@ -7,7 +7,7 @@ import { AppError } from '../middleware/error.middleware.js'
 import { ErrorCode } from '../lib/error-codes.js'
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/
-const MAX_DISPLAY_NAME_LENGTH = 50
+const MAX_DISPLAY_NAME_LENGTH = 20
 const MAX_BIO_LENGTH = 500
 const MAX_SEARCH_QUERY_LENGTH = 50
 export const USER_SEARCH_RESULTS_LIMIT = 10

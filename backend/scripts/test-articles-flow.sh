@@ -1078,9 +1078,9 @@ RACE_BODY_A_FILE="$(mktemp)"
 RACE_STATUS_B_FILE="$(mktemp)"
 RACE_BODY_B_FILE="$(mktemp)"
 
-curl -sS -b "$COOKIE_JAR2" -o "$RACE_BODY_A_FILE" -w '%{http_code}' -X POST "${BASE_URL}/api/articles/${RACE_ARTICLE_ID}/like" > "$RACE_STATUS_A_FILE" &
+curl -ksS -b "$COOKIE_JAR2" -o "$RACE_BODY_A_FILE" -w '%{http_code}' -X POST "${BASE_URL}/api/articles/${RACE_ARTICLE_ID}/like" > "$RACE_STATUS_A_FILE" &
 PID_A=$!
-curl -sS -b "$COOKIE_JAR2" -o "$RACE_BODY_B_FILE" -w '%{http_code}' -X POST "${BASE_URL}/api/articles/${RACE_ARTICLE_ID}/like" > "$RACE_STATUS_B_FILE" &
+curl -ksS -b "$COOKIE_JAR2" -o "$RACE_BODY_B_FILE" -w '%{http_code}' -X POST "${BASE_URL}/api/articles/${RACE_ARTICLE_ID}/like" > "$RACE_STATUS_B_FILE" &
 PID_B=$!
 wait "$PID_A"
 wait "$PID_B"

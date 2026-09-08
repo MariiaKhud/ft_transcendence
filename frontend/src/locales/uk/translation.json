@@ -68,6 +68,7 @@
       "validation_password_whitespace": "Пароль не може містити пробілів.",
       "validation_register_fields_required": "Електронна пошта, ім'я користувача та пароль обов'язкові.",
       "validation_login_fields_required": "Електронна пошта та пароль обов'язкові.",
+      "validation_invalid_uuid": "Цей ідентифікатор недійсний.",
       "validation_title_required": "Заголовок обов'язковий.",
       "validation_title_invalid": "Заголовок має бути непорожнім текстом.",
       "validation_title_max_length": "Заголовок має містити не більше 120 символів.",
@@ -77,6 +78,7 @@
       "validation_content_max_length": "Зміст має містити не більше 10000 символів.",
       "validation_category_required": "Категорія обов'язкова.",
       "validation_category_invalid": "Оберіть дійсну категорію.",
+      "validation_article_filter_max_length": "Фільтр пошуку статей задовгий.",
       "validation_article_fields_required": "Заголовок, зміст і категорія обов'язкові.",
       "validation_article_update_fields_required": "Потрібно вказати принаймні один з полів: заголовок, зміст або категорія.",
       "validation_sort_invalid": "Недійсний варіант сортування.",
@@ -90,7 +92,7 @@
       "validation_search_query_max_length": "Пошуковий запит має містити не більше 50 символів.",
       "validation_profile_fields_required": "Потрібно вказати ім'я для показу та/або біографію.",
       "validation_profile_unknown_fields": "Це оновлення профілю містить непідтримувані поля.",
-      "validation_display_name_max_length": "Ім'я для показу має містити не більше 50 символів.",
+      "validation_display_name_max_length": "Ім'я для показу має містити не більше 20 символів.",
       "validation_display_name_invalid": "Ім'я для показу має бути текстом або null.",
       "validation_bio_max_length": "Біографія має містити не більше 500 символів.",
       "validation_bio_invalid": "Біографія має бути текстом або null.",
@@ -204,13 +206,10 @@
     "remove": "Видалити з друзів",
     "sendAria": "Надіслати запит у друзі",
     "sendTitle": "Натисніть, щоб надіслати запит",
-    "cancelAria": "Скасувати запит у друзі",
-    "cancelTitle": "Натисніть, щоб скасувати запит",
     "acceptAria": "Прийняти запит у друзі",
     "acceptTitle": "Натисніть, щоб прийняти запит",
     "declineAria": "Відхилити запит у друзі",
     "declineTitle": "Натисніть, щоб відхилити запит",
-    "removeAria": "Видалити з друзів",
     "removeTitle": "Натисніть, щоб видалити з друзів"
   },
   "notification": {
@@ -534,6 +533,8 @@
     "errors": {
       "loadFailed": "Не вдалося завантажити статтю",
       "postCommentFailed": "Не вдалося опублікувати коментар",
+      "commentTooLong": "Коментар має містити не більше {{max}} символів.",
+      "removeReasonTooLong": "Причина видалення має містити не більше {{max}} символів.",
       "updateCommentFailed": "Не вдалося оновити коментар",
       "deleteCommentFailed": "Не вдалося видалити коментар",
       "deleteArticleFailed": "Не вдалося видалити статтю"

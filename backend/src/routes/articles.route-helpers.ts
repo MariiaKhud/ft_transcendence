@@ -6,6 +6,7 @@ const TITLE_MAX_LENGTH = 120
 const CONTENT_MIN_LENGTH = 100
 const CONTENT_MAX_LENGTH = 10000
 const SEARCH_FIELD_MAX_LENGTH = 100
+const AUTHOR_FILTER_MAX_LENGTH = 20
 // Bounds `page` so an absurd value (e.g. page=1e20) can't produce a `skip`
 // large enough for Postgres to reject the query outright.
 const MAX_PAGE = 100_000
@@ -179,7 +180,7 @@ const parseDateParam = (value: unknown, label: string): Date | undefined => {
   return date
 }
 
-const parseSearchField = (value: unknown, label: string): string | undefined => {
+const parseSearchField = (value: unknown, label: string, maxLength = SEARCH_FIELD_MAX_LENGTH): string | undefined => {
   if (value === undefined || value === null || value === '') {
     return undefined
   }
@@ -189,8 +190,8 @@ const parseSearchField = (value: unknown, label: string): string | undefined => 
     return undefined
   }
 
-  if (trimmed.length > SEARCH_FIELD_MAX_LENGTH) {
-    throw new AppError(400, ErrorCode.VALIDATION_SEARCH_QUERY_MAX_LENGTH, `Invalid ${label} parameter: must be at most ${SEARCH_FIELD_MAX_LENGTH} characters`)
+  if (trimmed.length > maxLength) {
+    throw new AppError(400, ErrorCode.VALIDATION_ARTICLE_FILTER_MAX_LENGTH, `Invalid ${label} parameter: must be at most ${maxLength} characters`)
   }
 
   return trimmed
@@ -203,15 +204,15 @@ export const validateArticlesQuery = (query: Record<string, any>) => {
   const sort = (query.sort as string)?.toLowerCase() || 'newest'
   const search = parseSearchField(query.search, 'search')
   const title = parseSearchField(query.title, 'title')
-  const author = parseSearchField(query.author, 'author')
+  const author = parseSearchField(query.author, 'author', AUTHOR_FILTER_MAX_LENGTH)
   const content = parseSearchField(query.content, 'content')
-
-  if (!['newest', 'oldest', 'most_liked'].includes(sort)) {
-    throw new AppError(400, ErrorCode.VALIDATION_SORT_INVALID, 'Invalid sort parameter: must be newest, oldest, or most_liked')
-  }
 
   if (category && !VALID_CATEGORIES.has(category)) {
     throw new AppError(400, ErrorCode.VALIDATION_CATEGORY_INVALID, `Validation failed: category must be one of ${Array.from(VALID_CATEGORIES).join(', ')}`)
+  }
+
+  if (!['newest', 'oldest', 'most_liked'].includes(sort)) {
+    throw new AppError(400, ErrorCode.VALIDATION_SORT_INVALID, 'Invalid sort parameter: must be newest, oldest, or most_liked')
   }
 
   const postedFrom = parseDateParam(query.postedFrom, 'postedFrom')

@@ -6,6 +6,9 @@ import { ArticleCard } from '@/components/ArticleCard'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { useStore } from '@/store/store'
 import { getSocket } from '@/lib/socket'
+import { translateApiError } from '@/lib/api-errors'
+
+const SEARCH_MAX_LENGTH = 100
 import { getArticles, type Article, type ArticlesResponse } from '@/api/articles'
 
 type SortOption = 'newest' | 'oldest' | 'most_liked'
@@ -59,7 +62,7 @@ export const Home = () => {
       }
     } catch (err) {
       console.error('Error fetching articles:', err)
-      setError(t('common.errors.loadArticlesFailedRetry'))
+      setError(translateApiError(err, t('common.errors.loadArticlesFailedRetry')))
     } finally {
       setLoading(false)
     }
@@ -148,6 +151,7 @@ export const Home = () => {
               placeholder={t('home.searchPlaceholder')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              maxLength={SEARCH_MAX_LENGTH}
               className="w-full flex-1 rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
             />
             <Link

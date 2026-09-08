@@ -23,6 +23,7 @@ import {
 } from '@/api/articles'
 
 const COMMENT_MAX_LENGTH = 1000
+const REMOVE_REASON_MAX_LENGTH = 500
 
 export const Article = () => {
   const { t } = useTranslation()
@@ -190,7 +191,13 @@ export const Article = () => {
   const handleSubmitComment = async (event: SubmitEvent) => {
     event.preventDefault()
 
-    if (!id || newComment.trim().length === 0) {
+    const trimmedComment = newComment.trim()
+    if (!id || trimmedComment.length === 0) {
+      return
+    }
+
+    if (trimmedComment.length > COMMENT_MAX_LENGTH) {
+      setCommentError(t('article.errors.commentTooLong', { max: COMMENT_MAX_LENGTH }))
       return
     }
 
@@ -198,7 +205,7 @@ export const Article = () => {
     setIsSubmittingComment(true)
 
     try {
-      const comment = await createComment(id, newComment.trim())
+      const comment = await createComment(id, trimmedComment)
       // The server pushes this comment over the socket before the HTTP response
       // arrives, so it may already be in state (added by the socket listener) by
       // the time we get here — guard against adding it twice.
@@ -232,6 +239,14 @@ export const Article = () => {
       return
     }
 
+    if (trimmed.length > COMMENT_MAX_LENGTH) {
+      setCommentActionErrors((prev) => ({
+        ...prev,
+        [commentId]: t('article.errors.commentTooLong', { max: COMMENT_MAX_LENGTH }),
+      }))
+      return
+    }
+
     setIsSavingCommentEdit(true)
 
     try {
@@ -262,7 +277,17 @@ export const Article = () => {
       if (promptedReason === null || promptedReason.trim().length === 0) {
         return
       }
-      reason = promptedReason.trim()
+
+      const trimmedReason = promptedReason.trim()
+      if (trimmedReason.length > REMOVE_REASON_MAX_LENGTH) {
+        setCommentActionErrors((prev) => ({
+          ...prev,
+          [comment.id]: t('article.errors.removeReasonTooLong', { max: REMOVE_REASON_MAX_LENGTH }),
+        }))
+        return
+      }
+
+      reason = trimmedReason
     }
 
     setCommentActionErrors((prev) => ({ ...prev, [comment.id]: '' }))

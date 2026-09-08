@@ -33,6 +33,7 @@ import {
 import type { EditableProfile } from './users.route-helpers.js'
 import { updateOnlineStatus, getUserById } from '../controllers/users.controller.js';
 import { clearAuthCookies, validateCsrfToken } from './auth.routes-helpers.js'
+import { validateUuid } from '../lib/validation.js'
 
 // Type for request with file from multer
 interface FileRequest extends Request {
@@ -40,6 +41,15 @@ interface FileRequest extends Request {
 }
 
 const router = Router() // Creating a new router instance for user-related routes
+
+router.param('userId', (req, _res, next) => {
+  try {
+    validateUuid(req.params.userId, 'userId')
+    next()
+  } catch (error) {
+    next(error)
+  }
+})
 
 // Configure multer for avatar uploads.
 const upload = multer({

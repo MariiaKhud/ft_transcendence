@@ -9,8 +9,17 @@ import {
   cancelFriendRequest,
   getFriendshipStatus,
 } from '../controllers/friends.controller.js';
+import { validateUuid } from '../lib/validation.js';
 
 const router = Router();
+router.param('userId', (req, _res, next) => {
+  try {
+    validateUuid(req.params.userId, 'userId');
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
 router.get('/requests', authMiddleware, getIncomingRequests); // must stay above /:userId
 router.get('/', authMiddleware, getFriends);
 router.get('/status/:userId', authMiddleware, getFriendshipStatus);
