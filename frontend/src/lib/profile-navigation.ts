@@ -33,6 +33,9 @@ export function navigateToNotification(
       break
 
     case 'CONTENT_REMOVED':
+      navigate('/notifications')
+      break
+
     default:
       break
   }

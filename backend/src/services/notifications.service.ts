@@ -43,6 +43,31 @@ export async function getNotifications(userId: string, unreadOnly: boolean) {
 
   const notificationsWithUsers = await Promise.all(
     notifications.map(async (notification) => {
+      if (notification.type === 'CONTENT_REMOVED') {
+        if (!notification.refId) {
+          return {
+            ...notification,
+            removalReason: null,
+          }
+        }
+
+        const isArticle = notification.message.startsWith('Your article ')
+        const removedContent = isArticle
+          ? await prisma.article.findUnique({
+              where: { id: notification.refId },
+              select: { removedReason: true },
+            })
+          : await prisma.comment.findUnique({
+              where: { id: notification.refId },
+              select: { removedReason: true },
+            })
+
+        return {
+          ...notification,
+          removalReason: removedContent?.removedReason ?? null,
+        }
+      }
+
       if (!notification.refId) {
         return notification;
       }

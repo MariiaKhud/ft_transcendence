@@ -248,7 +248,8 @@
       "comment": "commented on your article \"{{title}}\"",
       "like": "liked your article \"{{title}}\"",
       "contentRemovedArticle": "Your article \"{{title}}\" was removed by a moderator.",
-      "contentRemovedComment": "Your comment was removed by a moderator."
+      "contentRemovedComment": "Your comment was removed by a moderator.",
+      "removalReason": "The reason: {{reason}}"
     }
   },
   "createArticle": {

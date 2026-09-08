@@ -248,7 +248,8 @@
       "comment": "heeft gereageerd op je artikel \"{{title}}\"",
       "like": "vindt je artikel \"{{title}}\" leuk",
       "contentRemovedArticle": "Je artikel \"{{title}}\" is verwijderd door een moderator.",
-      "contentRemovedComment": "Je reactie is verwijderd door een moderator."
+      "contentRemovedComment": "Je reactie is verwijderd door een moderator.",
+      "removalReason": "De reden: {{reason}}"
     }
   },
   "createArticle": {

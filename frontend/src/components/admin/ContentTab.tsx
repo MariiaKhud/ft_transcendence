@@ -8,6 +8,8 @@ type ContentTabProps = {
   onRemoveArticle: (articleId: string, reason: string) => Promise<void>
 }
 
+const REMOVE_REASON_MAX_LENGTH = 500
+
 export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
   const { t } = useTranslation()
   const [removingId, setRemovingId] = useState<string | null>(null)
@@ -89,6 +91,7 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
             <textarea
               className="mt-4 w-full rounded-xl border border-slate-300 p-3 text-sm focus:border-purple-600 focus:outline-none"
               rows={4}
+              maxLength={REMOVE_REASON_MAX_LENGTH}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t('admin.removeArticleReasonPlaceholder')}

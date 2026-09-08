@@ -7,6 +7,9 @@ import { handleAsyncErrors } from '../middleware/error.middleware.js'
 import * as notificationsService from '../services/notifications.service.js'
 import { NotificationType } from '@prisma/client'
 import { validateUuid } from '../lib/validation.js'
+import { ErrorCode } from '../lib/error-codes.js'
+
+const REMOVE_REASON_MAX_LENGTH = 500
 
 const router = Router()
 
@@ -193,6 +196,15 @@ const removeArticleHandler = async (req: Request, res: Response) => {
     res.status(400).json({
       success: false,
       error: 'Removal reason is required',
+    })
+    return
+  }
+
+  if (removedReason.trim().length > REMOVE_REASON_MAX_LENGTH) {
+    res.status(400).json({
+      success: false,
+      code: ErrorCode.VALIDATION_REMOVE_REASON_MAX_LENGTH,
+      error: `Validation failed: reason must be at most ${REMOVE_REASON_MAX_LENGTH} characters`,
     })
     return
   }

@@ -268,6 +268,12 @@ function NotificationRow({
               />
             </p>
 
+            {notif.type === 'CONTENT_REMOVED' && notif.removalReason ? (
+              <p className="mt-2 text-sm text-slate-600">
+                {t('notification.types.removalReason', { reason: notif.removalReason })}
+              </p>
+            ) : null}
+
             {/* Sub-line — hint after accept, or timestamp */}
             <p className={`mt-0.5 text-xs ${
               actionResult === 'accepted'

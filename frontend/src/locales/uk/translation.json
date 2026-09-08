@@ -250,7 +250,8 @@
       "comment": "прокоментував(-ла) вашу статтю «{{title}}»",
       "like": "вподобав(-ла) вашу статтю «{{title}}»",
       "contentRemovedArticle": "Вашу статтю «{{title}}» видалено модератором.",
-      "contentRemovedComment": "Ваш коментар видалено модератором."
+      "contentRemovedComment": "Ваш коментар видалено модератором.",
+      "removalReason": "Причина: {{reason}}"
     }
   },
   "createArticle": {

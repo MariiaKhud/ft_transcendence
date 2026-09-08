@@ -9,6 +9,7 @@ export interface Notification {
   type: string;
   message: string;
   refId: string | null;
+  removalReason?: string | null;
   isRead: boolean;
   createdAt: string;
   actor?: {
