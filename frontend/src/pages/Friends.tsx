@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getFriends, getIncomingRequests, respondToFriendRequest } from '@/api/friends'
 import { FriendButton } from '@/components/user/FriendButton'
@@ -9,11 +9,13 @@ import { Button } from '@/components/ui/button'
 import { CheckIcon, XIcon, Spinner, UserPlusIcon } from '@/components/ui/icons'
 import { formatLastSeen } from '@/lib/utils'
 import type { Friend, IncomingRequest } from '@/types/friends'
+import { useAuth } from '@/hooks/useAuth'
 
 // ─── Page ─────────────────────────────────────────────────────
 
 export function Friends() {
   const { t } = useTranslation()
+  const { currentUser, hasRestoredSession, isLoading } = useAuth({ restoreOnMount: true })
   const [friends, setFriends] = useState<Friend[]>([])
   const [requests, setRequests] = useState<IncomingRequest[]>([])
   const [loadingFriends, setLoadingFriends] = useState(true)
@@ -21,6 +23,10 @@ export function Friends() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!currentUser) {
+      return
+    }
+
     getFriends()
       .then((res) => setFriends(res.data ?? []))
       .catch(() => setError(t('friends.loadError')))
@@ -30,7 +36,7 @@ export function Friends() {
       .then((res) => setRequests(res.data ?? []))
       .catch(() => {})
       .finally(() => setLoadingRequests(false))
-  }, [t])
+  }, [currentUser, t])
 
   function handleAccepted(friendshipId: string) {
     setRequests((prev) => prev.filter((r) => r.id !== friendshipId))
@@ -46,6 +52,14 @@ export function Friends() {
 
   function handleFriendRemoved(friendId: string) {
     setFriends((prev) => prev.filter((f) => f.id !== friendId))
+  }
+
+  if (!hasRestoredSession || isLoading) {
+    return null
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />
   }
 
   return (
