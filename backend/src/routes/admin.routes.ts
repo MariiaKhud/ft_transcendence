@@ -8,6 +8,7 @@ import * as notificationsService from '../services/notifications.service.js'
 import { NotificationType } from '@prisma/client'
 import { validateUuid } from '../lib/validation.js'
 import { deleteOldAvatar, deleteOldCv } from './users.route-helpers.js'
+import { REMOVE_REASON_MAX_LENGTH } from './comments.route-helpers.js'
 
 const router = Router()
 
@@ -259,6 +260,14 @@ const removeArticleHandler = async (req: Request, res: Response) => {
     return
   }
 
+  if (removedReason.trim().length > REMOVE_REASON_MAX_LENGTH) {
+    res.status(400).json({
+      success: false,
+      error: `Removal reason must be at most ${REMOVE_REASON_MAX_LENGTH} characters`,
+    })
+    return
+  }
+
   const article = await prisma.article.findUnique({
     where: { id },
     select: {
@@ -392,6 +401,14 @@ const removeCommentHandler = async (req: Request, res: Response) => {
     res.status(400).json({
       success: false,
       error: 'Removal reason is required',
+    })
+    return
+  }
+
+  if (removedReason.trim().length > REMOVE_REASON_MAX_LENGTH) {
+    res.status(400).json({
+      success: false,
+      error: `Removal reason must be at most ${REMOVE_REASON_MAX_LENGTH} characters`,
     })
     return
   }

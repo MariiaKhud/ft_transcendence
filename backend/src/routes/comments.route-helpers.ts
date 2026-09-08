@@ -3,7 +3,8 @@ import { ErrorCode } from '../lib/error-codes.js'
 
 const CONTENT_MIN_LENGTH = 1
 const CONTENT_MAX_LENGTH = 1000
-const REMOVE_REASON_MAX_LENGTH = 500
+// Shared with admin.routes.ts, which enforces the same cap on article/comment removal reasons.
+export const REMOVE_REASON_MAX_LENGTH = 500
 
 const isRecord = (value: unknown): value is Record<string, unknown> => {
   return typeof value === 'object' && value !== null

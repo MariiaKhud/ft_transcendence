@@ -3,6 +3,10 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom' // or your router's link component
 import type { AdminArticle } from '@/types/admin'
 
+// Mirrors the backend's cap on article/comment removal reasons (see
+// REMOVE_REASON_MAX_LENGTH in admin.routes.ts / comments.route-helpers.ts).
+const REASON_MAX_LENGTH = 500
+
 type ContentTabProps = {
   articles: AdminArticle[]
   onRemoveArticle: (articleId: string, reason: string) => Promise<void>
@@ -92,7 +96,11 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder={t('admin.removeArticleReasonPlaceholder')}
+              maxLength={REASON_MAX_LENGTH}
             />
+            <p className={`mt-1 text-right text-xs ${reason.length > REASON_MAX_LENGTH * 0.9 ? 'text-pink-500' : 'text-slate-400'}`}>
+              {t('common.counter', { count: reason.length, max: REASON_MAX_LENGTH })}
+            </p>
 
             <div className="mt-4 flex justify-end gap-2">
               <button
@@ -108,7 +116,7 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
               <button
                 type="button"
                 onClick={confirmRemove}
-                disabled={reason.trim().length === 0}
+                disabled={reason.trim().length === 0 || reason.trim().length > REASON_MAX_LENGTH}
                 className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-50 hover:bg-red-700"
               >
                 {t('admin.remove')}
