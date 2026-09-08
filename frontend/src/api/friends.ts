@@ -15,7 +15,7 @@ export async function sendFriendRequest(userId: string) {
 
 // Accept or decline a received friend request.
 export async function respondToFriendRequest(userId: string, action: 'ACCEPTED' | 'DECLINED') {
-  await apiRequest(`${BASE}/request/${userId}`, {
+  return apiRequestData<{ alreadyAccepted?: boolean; alreadyDeclined?: boolean }>(`${BASE}/request/${userId}`, {
     method: 'PATCH',
     body: { action },
     fallbackMessage: 'Unable to respond to friend request',

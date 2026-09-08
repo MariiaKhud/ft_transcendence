@@ -22,6 +22,8 @@ export async function sendFriendRequest(req: Request, res: Response) {
 }
 
 export async function respondToFriendRequest(req: Request, res: Response) {
+  const action = req.body?.action
+
   try {
     if (!req.user) {
       return sendError(res, new Error('Unauthorized'), 401);
@@ -29,7 +31,6 @@ export async function respondToFriendRequest(req: Request, res: Response) {
 
     const addresseeId = req.user.userId;
     const requesterId = req.params.userId;
-    const { action } = req.body;
 
     if (action !== 'ACCEPTED' && action !== 'DECLINED') {
       throw new AppError(
@@ -47,6 +48,14 @@ export async function respondToFriendRequest(req: Request, res: Response) {
 
     return sendSuccess(res, 200, friendship);
   } catch (err) {
+    if (err instanceof AppError && err.code === ErrorCode.FRIEND_REQUEST_ALREADY_DECLINED) {
+      return sendSuccess(res, 200, { status: 'DECLINED', alreadyDeclined: true });
+    }
+
+    if (err instanceof AppError && action === 'ACCEPTED' && err.code === ErrorCode.FRIEND_ALREADY) {
+      return sendSuccess(res, 200, { status: 'ACCEPTED', alreadyAccepted: true });
+    }
+
     return sendError(res, err, 400);
   }
 }

@@ -121,6 +121,7 @@
       "friend_already": "U bent al vrienden.",
       "friend_request_already_pending": "Er is al een vriendschapsverzoek in behandeling.",
       "friend_request_declined": "Dit vriendschapsverzoek is afgewezen.",
+      "friend_request_already_declined": "U hebt dit vriendschapsverzoek al afgewezen.",
       "friend_respond_self_forbidden": "U kunt niet reageren op uw eigen vriendschapsverzoek.",
       "friend_not_addressee": "U bent niet de geadresseerde van dit verzoek.",
       "friend_remove_self_forbidden": "U kunt uzelf niet verwijderen.",

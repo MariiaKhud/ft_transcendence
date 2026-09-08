@@ -48,6 +48,7 @@ export function Notifications() {
       await respondToFriendRequest(notif.refId, 'ACCEPTED')
       if (!notif.isRead) await markRead(notif.id)
       setActedOn((prev) => new Map(prev).set(notif.id, 'accepted'))
+      window.dispatchEvent(new CustomEvent('friendship:changed', { detail: { userId: notif.refId, state: 'friends' } }))
     } catch (err: any) {
       if (err?.status === 404 || err?.error?.includes('not found')) {
         removeNotification(notif.id)
@@ -67,6 +68,7 @@ export function Notifications() {
       await respondToFriendRequest(notif.refId, 'DECLINED')
       if (!notif.isRead) await markRead(notif.id)
       setActedOn((prev) => new Map(prev).set(notif.id, 'declined'))
+      window.dispatchEvent(new CustomEvent('friendship:changed', { detail: { userId: notif.refId, state: 'none' } }))
     } catch (err: any) {
       if (err?.status === 404 || err?.statusCode === 404) {
         removeNotification(notif.id)

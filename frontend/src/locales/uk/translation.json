@@ -121,6 +121,7 @@
       "friend_already": "Ви вже друзі.",
       "friend_request_already_pending": "Запит у друзі вже очікує на розгляд.",
       "friend_request_declined": "Цей запит у друзі було відхилено.",
+      "friend_request_already_declined": "Ви вже відхилили цей запит у друзі.",
       "friend_respond_self_forbidden": "Ви не можете відповісти на власний запит у друзі.",
       "friend_not_addressee": "Ви не є отримувачем цього запиту.",
       "friend_remove_self_forbidden": "Ви не можете видалити себе.",

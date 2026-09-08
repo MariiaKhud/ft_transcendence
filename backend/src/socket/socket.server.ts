@@ -62,11 +62,16 @@ export function initSocketServer(httpServer: HttpServer) {
     // Each user joins their personal room (their userId)
     await socket.join(userId)
 
-    // Mark online in DB
-    await prisma.user.update({
+    // A token can outlive account deletion; close that stale socket without crashing the server.
+    const onlineUpdate = await prisma.user.updateMany({
       where: { id: userId },
       data: { isOnline: true, lastSeenAt: new Date() },
     })
+
+    if (onlineUpdate.count === 0) {
+      socket.disconnect(true)
+      return
+    }
 
     // Fetch friends once — reused for both online and disconnect events
     const friends = await prisma.friendship.findMany({

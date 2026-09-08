@@ -121,6 +121,7 @@
       "friend_already": "You're already friends.",
       "friend_request_already_pending": "A friend request is already pending.",
       "friend_request_declined": "This friend request was declined.",
+      "friend_request_already_declined": "You already declined this friend request.",
       "friend_respond_self_forbidden": "You cannot respond to your own friend request.",
       "friend_not_addressee": "You are not the addressee of this request.",
       "friend_remove_self_forbidden": "You can't remove yourself.",
