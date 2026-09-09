@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Завантаження...",
+    "dismiss": "Закрити",
     "retry": "Повторити",
     "cancel": "Скасувати",
     "save": "Зберегти",
@@ -413,6 +414,8 @@
     "statFollowing": "Підписки",
     "statProgress": "Прогрес",
     "statLevel": "Рівень",
+    "levelUpToastTitle": "Новий рівень!",
+    "levelUpToastBody": "Ви досягли {{level}} рівня.",
     "xpTotal": "{{xp}} XP загалом",
     "toNextLevel": "{{current}} / {{needed}} до наступного рівня",
     "levelProgressAria": "Прогрес рівня {{level}}: {{percent}}%",

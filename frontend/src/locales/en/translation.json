@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Loading...",
+    "dismiss": "Dismiss",
     "retry": "Retry",
     "cancel": "Cancel",
     "save": "Save",
@@ -411,6 +412,8 @@
     "statFollowing": "Following",
     "statProgress": "Progress",
     "statLevel": "Level",
+    "levelUpToastTitle": "Level up!",
+    "levelUpToastBody": "You reached Level {{level}}.",
     "xpTotal": "{{xp}} XP total",
     "toNextLevel": "{{current}} / {{needed}} to next level",
     "levelProgressAria": "Level {{level}} progress: {{percent}}%",

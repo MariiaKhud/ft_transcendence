@@ -1,6 +1,7 @@
 {
   "common": {
     "loading": "Laden...",
+    "dismiss": "Sluiten",
     "retry": "Opnieuw proberen",
     "cancel": "Annuleren",
     "save": "Opslaan",
@@ -411,6 +412,8 @@
     "statFollowing": "Volgend",
     "statProgress": "Voortgang",
     "statLevel": "Niveau",
+    "levelUpToastTitle": "Level omhoog!",
+    "levelUpToastBody": "Je hebt niveau {{level}} bereikt.",
     "xpTotal": "{{xp}} XP totaal",
     "toNextLevel": "{{current}} / {{needed}} tot volgend niveau",
     "levelProgressAria": "Niveau {{level}} voortgang: {{percent}}%",

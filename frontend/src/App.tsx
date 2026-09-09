@@ -8,6 +8,7 @@ import { UserSearchBar } from '@/components/user/UserSearchBar'
 import { NotificationBell } from '@/components/user/NotificationBell'
 import { LeaderboardButton } from '@/components/user/LeaderboardButton'
 import { UserMenu } from '@/components/user/UserMenu'
+import { LevelUpToast } from '@/components/gamification/LevelUpToast'
 import { useSocket } from '@/hooks/useSocket'
 
 const headerButtonClassName = `
@@ -50,6 +51,8 @@ const App = () => {
 
   return (
     <div className="relative flex flex-col min-h-screen overflow-x-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+      {currentUser ? <LevelUpToast /> : null}
+
       {/* Decorative gradient blob */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -right-40 top-20 h-80 w-80 rounded-full bg-gradient-to-br from-pink-200/20 via-purple-200/20 to-blue-200/20 blur-3xl" />

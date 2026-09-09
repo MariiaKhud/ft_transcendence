@@ -22,17 +22,19 @@ export async function awardXP(userId: string, amount: number, db: Db = prisma) {
 
   const user = await db.user.findUniqueOrThrow({
     where: { id: userId },
-    select: { xp: true },
+    select: { xp: true, level: true },
   })
 
   const xp = Math.max(0, user.xp + amount)
   const level = calculateLevel(xp)
 
-  return db.user.update({
+  const updated = await db.user.update({
     where: { id: userId },
     data: { xp, level },
     select: { id: true, xp: true, level: true },
   })
+
+  return { ...updated, leveledUp: level > user.level }
 }
 
 function getBadgeCondition(badgeName: string, articleCount: number, totalLikes: number): boolean {

@@ -45,7 +45,7 @@ const createArticleHandler = async (req: Request, res: Response) => {
   const authorId = req.user.userId
   const { title, content, category } = validateCreateArticleInput(req.body)
 
-  const article = await prisma.$transaction(async (tx) => {
+  const { article, xpResult } = await prisma.$transaction(async (tx) => {
     const created = await tx.article.create({
       data: {
         authorId,
@@ -57,13 +57,17 @@ const createArticleHandler = async (req: Request, res: Response) => {
     })
 
     // Award XP and recompute level in the same transaction as the publish.
-    await awardXP(authorId, XP_REWARD_CREATE_ARTICLE, tx)
+    const xpResult = await awardXP(authorId, XP_REWARD_CREATE_ARTICLE, tx)
 
-    return created
+    return { article: created, xpResult }
   })
 
   // After article + XP are committed, check and award badges.
   await checkAndAwardBadges(authorId)
+
+  if (xpResult.leveledUp) {
+    io.to(authorId).emit('gamification:level-up', { level: xpResult.level })
+  }
 
   res.status(201).json({ success: true, data: { ...article, commentsCount: 0 } })
 }
@@ -349,8 +353,12 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
 
   // Only award XP/notify on the like transition, not the unlike, and not if the author is already viewing.
   if (liked) {
-    await awardXP(article.authorId, XP_REWARD_RECEIVE_LIKE)
+    const xpResult = await awardXP(article.authorId, XP_REWARD_RECEIVE_LIKE)
     await checkAndAwardBadges(article.authorId)
+
+    if (xpResult.leveledUp) {
+      io.to(article.authorId).emit('gamification:level-up', { level: xpResult.level })
+    }
 
     const authorSockets = await io.in(article.authorId).fetchSockets()
     const authorIsViewing = authorSockets.some((s) => s.data.activeArticleId === article.id)
