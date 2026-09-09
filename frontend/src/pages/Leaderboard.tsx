@@ -77,8 +77,15 @@ export const Leaderboard = () => {
       ) : (
         <div className="overflow-hidden rounded-2xl border border-white/30 bg-white/50 shadow-xl backdrop-blur-md">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[680px] text-left">
+            <table className="w-full min-w-[680px] table-fixed text-left">
               <caption className="sr-only">{t('leaderboard.title')}</caption>
+              <colgroup>
+                <col className="w-20" />
+                <col />
+                <col className="w-32" />
+                <col className="w-28" />
+                <col className="w-28" />
+              </colgroup>
               <thead className="border-b border-slate-200/80 bg-white/50 text-xs uppercase tracking-wide text-slate-500">
                 <tr>
                   <th scope="col" className="px-5 py-4">{t('leaderboard.rank')}</th>
@@ -108,7 +115,7 @@ export const Leaderboard = () => {
                       <td className="px-5 py-4">
                         <Link
                           to={`/profile/${user.username}`}
-                          className="flex min-w-0 items-center gap-3"
+                          className="flex w-full min-w-0 items-center gap-3"
                         >
                           <span className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-semibold text-white ${getRankFrameClass(rank)}`}>
                             {avatarUrl ? (
@@ -117,7 +124,7 @@ export const Leaderboard = () => {
                               <span aria-hidden="true">{getInitials(user)}</span>
                             )}
                           </span>
-                          <span className="min-w-0">
+                          <span className="min-w-0 flex-1">
                             <span className="block truncate font-semibold text-slate-900">{displayName}</span>
                             <span className="block truncate text-sm text-slate-500">@{user.username}</span>
                           </span>

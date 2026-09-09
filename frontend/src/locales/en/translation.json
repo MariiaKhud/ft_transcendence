@@ -482,6 +482,8 @@
       "clearFilters": "Clear filters",
       "contentShown": "{{count}} of {{total}}",
       "noMatchingContent": "No articles match the current filters.",
+      "noMatchingRemovedArticles": "No removed articles match the current filters.",
+      "noMatchingRemovedComments": "No removed comments match the current filters.",
       "categories": {
         "ALL": "All Categories",
         "PROGRAMMING": "Programming",

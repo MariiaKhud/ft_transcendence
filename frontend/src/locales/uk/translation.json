@@ -485,6 +485,8 @@
     "clearFilters": "Скинути фільтри",
     "contentShown": "{{count}} з {{total}}",
     "noMatchingContent": "Жодна стаття не відповідає обраним фільтрам.",
+    "noMatchingRemovedArticles": "Жодна видалена стаття не відповідає обраним фільтрам.",
+    "noMatchingRemovedComments": "Жоден видалений коментар не відповідає обраним фільтрам.",
     "categories": {
       "ALL": "Усі категорії",
       "PROGRAMMING": "Програмування",

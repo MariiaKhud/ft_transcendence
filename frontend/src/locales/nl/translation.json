@@ -481,6 +481,8 @@
     "clearFilters": "Filters wissen",
     "contentShown": "{{count}} van {{total}}",
     "noMatchingContent": "Geen artikelen komen overeen met de huidige filters.",
+    "noMatchingRemovedArticles": "Geen verwijderde artikelen komen overeen met de huidige filters.",
+    "noMatchingRemovedComments": "Geen verwijderde reacties komen overeen met de huidige filters.",
     "categories": {
       "ALL": "Alle categorieën",
       "PROGRAMMING": "Programmeren",

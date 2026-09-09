@@ -13,5 +13,5 @@ export const getRankFrameClass = (rank: number | undefined, thickness: 'thin' | 
   const color = RANK_RING_COLORS[rank]
   if (!color) return ''
   const ringWidth = thickness === 'thin' ? 'ring-2' : 'ring-[3px]'
-  return `${ringWidth} ${color} ring-offset-2 ring-offset-white`
+  return `${ringWidth} ${color} ring-offset-2 ring-offset-transparent`
 }
