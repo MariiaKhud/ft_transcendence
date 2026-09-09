@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/icons'
 import { UserAvatar } from '@/components/user/UserAvatar'
 import { formatMessageTime } from '@/lib/utils'
+import { useTopRanks } from '@/hooks/useTopRanks'
 
 const MESSAGE_MAX_LENGTH = 2000
 
@@ -26,6 +27,7 @@ export function ChatWindow({
   onSend,
 }: ChatWindowProps) {
   const { t } = useTranslation()
+  const topRanks = useTopRanks()
   const [draft, setDraft] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -89,6 +91,7 @@ export function ChatWindow({
                     avatarUrl={msg.sender.avatarUrl}
                     username={msg.sender.username}
                     size="small"
+                    rank={topRanks.get(msg.sender.id)}
                   />
                 )}
               </div>

@@ -1,13 +1,18 @@
+import { getRankFrameClass } from '@/lib/rank-frame'
+
 interface UserAvatarProps {
   avatarUrl: string | null
   username: string
   size?: 'small' | 'medium'
+  /** Leaderboard rank (1-3) to draw a gold/silver/bronze frame around the avatar. */
+  rank?: number
 }
 
 export function UserAvatar({
   avatarUrl,
   username,
   size = 'medium',
+  rank,
 }: UserAvatarProps) {
   const sizeClasses = {
     small: {
@@ -21,6 +26,7 @@ export function UserAvatar({
   }
 
   const classes = sizeClasses[size]
+  const frameClass = getRankFrameClass(rank, size === 'small' ? 'thin' : 'thick')
   const colors = [
     'from-purple-400    to-pink-400',
     'from-blue-400      to-cyan-400',
@@ -37,7 +43,8 @@ export function UserAvatar({
         alt={username}
         className={`${classes.avatar}
                    rounded-full
-                   object-cover`}
+                   object-cover
+                   ${frameClass}`}
       />
     )
   }
@@ -51,7 +58,8 @@ export function UserAvatar({
                      justify-center
                      ${classes.text}
                      font-bold
-                     text-white`}>
+                     text-white
+                     ${frameClass}`}>
       {username[0].toUpperCase()}
     </div>
   )

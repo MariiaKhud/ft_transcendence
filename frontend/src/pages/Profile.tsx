@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getProfileArticles, getPublicProfile } from '@/api/users'
 import { translateApiError } from '@/lib/api-errors'
+import { getInitials, toSafeImageUrl } from '@/lib/article-display'
 import { useStore } from '@/store/store'
 import type { ProfileArticle, PublicProfile } from '@/types/profile'
 import { FriendButton } from '@/components/user/FriendButton'
@@ -13,37 +14,8 @@ import { getFriendshipStatus } from '../api/friends';
 import { XPBar } from '@/components/gamification/XPBar'
 import { BadgeList } from '@/components/gamification/BadgeList'
 import { StatusMessage } from '@/components/ui/status-message'
-
-// Convert relative avatar path to full URL for browser image tag.
-const toSafeImageUrl = (avatarUrl: string | null) => {
-  if (!avatarUrl) {
-    return null
-  }
-
-  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
-    return avatarUrl
-  }
-
-  return `${window.location.origin}${avatarUrl}`
-}
-
-// Create initials when user has no avatar image.
-const getInitials = (profile: PublicProfile) => {
-  const source = (profile.displayName ?? profile.username).trim()
-  const parts = source.split(/\s+/).filter(Boolean)
-
-  // return "U" for unknown if no name parts are available.
-  if (parts.length === 0) {
-    return 'U'
-  }
-
-  // return first two letters of first name if only one part is available.
-  if (parts.length === 1) {
-    return parts[0].slice(0, 2).toUpperCase()
-  }
-
-  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
-}
+import { useTopRanks } from '@/hooks/useTopRanks'
+import { getRankFrameClass } from '@/lib/rank-frame'
 
 // Show readable date like "Jun 25, 2026".
 const formatDate = (isoDate: string, unknownDateLabel: string) => {
@@ -68,6 +40,7 @@ export const Profile = () => {
   const currentUser = useStore((state) => {
     return state.auth.currentUser
   })
+  const topRanks = useTopRanks()
 
   const [profile, setProfile] = useState<PublicProfile | null>(null)
   const [followerCount, setFollowerCount] = useState(0)
@@ -287,7 +260,7 @@ export const Profile = () => {
         <div className="relative flex flex-col gap-4 sm:gap-6 md:flex-row md:items-start md:justify-between">
           <div className="flex min-w-0 items-center gap-5">
             {/* Avatar image or initials if no image. */}
-            <div className="flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/50 bg-gradient-to-br from-purple-500 to-pink-500 text-2xl font-bold text-white shadow-lg">
+            <div className={`flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/50 bg-gradient-to-br from-purple-500 to-pink-500 text-2xl font-bold text-white shadow-lg ${getRankFrameClass(topRanks.get(profile.id))}`}>
               {avatarUrl ? (
                 <img src={avatarUrl} alt={`${displayName} avatar`} className="h-full w-full object-cover" />
               ) : (

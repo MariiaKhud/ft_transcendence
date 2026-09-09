@@ -4,6 +4,7 @@ import type { AdminUser } from '@/types/admin'
 import { useTranslation } from 'react-i18next'
 import { AlertTriangle, ShieldAlert, Trash2 } from 'lucide-react'
 import { UserAvatar } from '@/components/user/UserAvatar'
+import { useTopRanks } from '@/hooks/useTopRanks'
 
 const ROLE_BADGE_STYLES: Record<UserRole, string> = {
   ADMIN: 'bg-purple-100 text-purple-700',
@@ -28,6 +29,7 @@ export function UsersTab({
   onDeleteUser,
 }: UsersTabProps) {
   const { t } = useTranslation()
+  const topRanks = useTopRanks()
   const [deletingUser, setDeletingUser] = useState<AdminUser | null>(null)
   const [pendingRoleChange, setPendingRoleChange] = useState<{
     user: AdminUser
@@ -66,7 +68,7 @@ export function UsersTab({
               <tr key={user.id} className="transition-colors hover:bg-purple-50/40">
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
-                    <UserAvatar avatarUrl={user.avatarUrl} username={user.username} size="small" />
+                    <UserAvatar avatarUrl={user.avatarUrl} username={user.username} size="small" rank={topRanks.get(user.id)} />
                     <div>
                       <p className="flex items-center gap-2 font-semibold text-slate-900">
                         {user.displayName ?? user.username}

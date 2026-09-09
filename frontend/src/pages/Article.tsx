@@ -8,6 +8,8 @@ import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
 import { useStore } from '@/store/store'
 import { getSocket } from '@/lib/socket'
 import { formatCategoryLabel, getInitials, toSafeImageUrl } from '@/lib/article-display'
+import { useTopRanks } from '@/hooks/useTopRanks'
+import { getRankFrameClass } from '@/lib/rank-frame'
 import { getApiErrorCode, translateApiError } from '@/lib/api-errors'
 import { getCurrentUser } from '@/api/auth'
 import {
@@ -37,6 +39,7 @@ export const Article = () => {
   const navigate = useNavigate()
   const currentUser = useStore((state) => state.auth.currentUser)
   const setCurrentUser = useStore((state) => state.authActions.setCurrentUser)
+  const topRanks = useTopRanks()
 
   const [article, setArticle] = useState<ArticleDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -469,7 +472,7 @@ export const Article = () => {
             <div className="mt-4 flex items-center gap-3">
               <Link
                 to={`/profile/${article.author.username}`}
-                className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-semibold text-white"
+                className={`flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-semibold text-white ${getRankFrameClass(topRanks.get(article.author.id))}`}
               >
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={authorName} className="h-full w-full object-cover" />

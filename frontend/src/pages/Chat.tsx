@@ -8,6 +8,7 @@ import { apiRequest } from '@/api/client'
 import { getFriendshipStatus } from '@/api/friends'
 import { ChatWindow } from '@/components/user/ChatWindow'
 import { UserAvatar } from '@/components/user/UserAvatar'
+import { useTopRanks } from '@/hooks/useTopRanks'
 import type { PublicProfile } from '@/types/profile'
 import { BackIcon } from '@/components/ui/icons'
 
@@ -15,6 +16,7 @@ export function Chat() {
   const { t } = useTranslation()
   const { username } = useParams<{ username: string }>()
   const { currentUser, hasRestoredSession, isLoading } = useAuth({ restoreOnMount: true })
+  const topRanks = useTopRanks()
 
   const [otherUser, setOtherUser] = useState<PublicProfile | null>(null)
   const [otherUserOnline, setOtherUserOnline] = useState(false)
@@ -124,6 +126,7 @@ export function Chat() {
                 <UserAvatar
                   avatarUrl={otherUser.avatarUrl}
                   username={otherUser.username}
+                  rank={topRanks.get(otherUser.id)}
                 />
                 <span
                   className={`absolute bottom-0

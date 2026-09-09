@@ -3,22 +3,10 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getLeaderboard } from '@/api/leaderboard'
 import { translateApiError } from '@/lib/api-errors'
+import { getInitials, toSafeImageUrl } from '@/lib/article-display'
 import { useAuth } from '@/hooks/useAuth'
 import type { LeaderboardUser } from '@/types/leaderboard'
-
-const toSafeImageUrl = (avatarUrl: string | null) => {
-  if (!avatarUrl) return null
-  if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) return avatarUrl
-  return `${window.location.origin}${avatarUrl}`
-}
-
-const getInitials = (user: LeaderboardUser) => {
-  const source = (user.displayName ?? user.username).trim()
-  const parts = source.split(/\s+/).filter(Boolean)
-  if (parts.length === 0) return 'U'
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return `${parts[0][0] ?? ''}${parts[1][0] ?? ''}`.toUpperCase()
-}
+import { getRankFrameClass } from '@/lib/rank-frame'
 
 const rankClass = (rank: number) => {
   if (rank === 1) return 'text-amber-500'
@@ -122,7 +110,7 @@ export const Leaderboard = () => {
                           to={`/profile/${user.username}`}
                           className="flex min-w-0 items-center gap-3"
                         >
-                          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-semibold text-white">
+                          <span className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-semibold text-white ${getRankFrameClass(rank)}`}>
                             {avatarUrl ? (
                               <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
                             ) : (

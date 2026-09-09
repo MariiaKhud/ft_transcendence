@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom'
 import type { Article } from '@/api/articles'
 import { formatCategoryLabel, getInitials, stripMarkdown, toSafeImageUrl } from '@/lib/article-display'
+import { useTopRanks } from '@/hooks/useTopRanks'
+import { getRankFrameClass } from '@/lib/rank-frame'
 
 interface ArticleCardProps {
   article: Article
@@ -11,8 +13,10 @@ interface ArticleCardProps {
  * navigates to the full article page.
  */
 export const ArticleCard = ({ article }: ArticleCardProps) => {
+  const topRanks = useTopRanks()
   const avatarUrl = toSafeImageUrl(article.author.avatarUrl)
   const authorName = article.author.displayName ?? article.author.username
+  const frameClass = getRankFrameClass(topRanks.get(article.author.id), 'thin')
 
   return (
     <article className="relative rounded-2xl border border-white/30 bg-white/40 p-6 shadow-xl backdrop-blur-md transition-shadow hover:shadow-2xl">
@@ -34,7 +38,7 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
           <div className="flex items-center gap-2">
             <Link
               to={`/profile/${article.author.username}`}
-              className="pointer-events-auto flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-semibold text-white"
+              className={`pointer-events-auto flex h-8 w-8 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs font-semibold text-white ${frameClass}`}
             >
               {avatarUrl ? (
                 <img src={avatarUrl} alt={authorName} className="h-full w-full object-cover" />

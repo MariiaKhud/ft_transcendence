@@ -6,11 +6,14 @@ import { searchUsers, type UserSearchResult } from '@/api/users'
 import { getInitials, toSafeImageUrl } from '@/lib/article-display'
 import { translateApiError } from '@/lib/api-errors'
 import { SearchIcon } from '@/components/ui/icons'
+import { useTopRanks } from '@/hooks/useTopRanks'
+import { getRankFrameClass } from '@/lib/rank-frame'
 
 // Username search box for the top nav: type a full or partial username and
 // pick a match to jump straight to their profile.
 export const UserSearchBar = () => {
   const { t } = useTranslation()
+  const topRanks = useTopRanks()
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const [results, setResults] = useState<UserSearchResult[]>([])
@@ -122,10 +125,10 @@ export const UserSearchBar = () => {
                         <img
                           src={toSafeImageUrl(user.avatarUrl) ?? undefined}
                           alt=""
-                          className="h-8 w-8 shrink-0 rounded-full object-cover"
+                          className={`h-8 w-8 shrink-0 rounded-full object-cover ${getRankFrameClass(topRanks.get(user.id), 'thin')}`}
                         />
                       ) : (
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-semibold text-purple-700">
+                        <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-purple-100 text-xs font-semibold text-purple-700 ${getRankFrameClass(topRanks.get(user.id), 'thin')}`}>
                           {getInitials(user)}
                         </span>
                       )}

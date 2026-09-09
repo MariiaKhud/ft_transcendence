@@ -10,6 +10,7 @@ import { CheckIcon, XIcon, Spinner, UserPlusIcon } from '@/components/ui/icons'
 import { formatLastSeen } from '@/lib/utils'
 import type { Friend, IncomingRequest } from '@/types/friends'
 import { useAuth } from '@/hooks/useAuth'
+import { useTopRanks } from '@/hooks/useTopRanks'
 
 // ─── Page ─────────────────────────────────────────────────────
 
@@ -178,6 +179,7 @@ function RequestCard({
   onDeclined: () => void
 }) {
   const { t } = useTranslation()
+  const topRanks = useTopRanks()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -233,6 +235,7 @@ function RequestCard({
           <UserAvatar
             avatarUrl={request.requester.avatarUrl}
             username={request.requester.username}
+            rank={topRanks.get(request.requester.id)}
           />
           <div className="min-w-0">
             <p className="truncate
@@ -292,6 +295,7 @@ function FriendCard({
   onRemoved: () => void
 }) {
   const { t } = useTranslation()
+  const topRanks = useTopRanks()
 
   return (
     <li className="rounded-2xl
@@ -316,6 +320,7 @@ function FriendCard({
             <UserAvatar
               avatarUrl={friend.avatarUrl}
               username={friend.username}
+              rank={topRanks.get(friend.id)}
             />
             <span
               className={`absolute
