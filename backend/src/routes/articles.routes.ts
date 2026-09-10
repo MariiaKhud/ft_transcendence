@@ -289,8 +289,12 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
 
   let liked: boolean
   let likeCount: number
+  let leveledUpTo: number | null = null
 
   try {
+    // The author's XP is adjusted in the same transaction as the like itself:
+    // if either half fails, the whole toggle rolls back, so the client can
+    // never get an error for a like that already landed and was broadcast.
     const result = await prisma.$transaction(async (tx) => {
       if (existingLike) {
         await tx.articleLike.delete({ where: { id: existingLike.id } })
@@ -299,7 +303,12 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
           data: { likeCount: { decrement: 1 } },
           select: { likeCount: true },
         })
-        return { liked: false, likeCount: updated.likeCount }
+
+        // Revert the XP this like earned, so toggling like -> unlike -> like
+        // repeatedly can't be farmed for free XP.
+        await awardXP(article.authorId, -XP_REWARD_RECEIVE_LIKE, tx)
+
+        return { liked: false, likeCount: updated.likeCount, leveledUpTo: null }
       }
 
       await tx.articleLike.create({ data: { userId, articleId: article.id } })
@@ -308,10 +317,18 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
         data: { likeCount: { increment: 1 } },
         select: { likeCount: true },
       })
-      return { liked: true, likeCount: updated.likeCount }
+
+      const xpResult = await awardXP(article.authorId, XP_REWARD_RECEIVE_LIKE, tx)
+
+      return {
+        liked: true,
+        likeCount: updated.likeCount,
+        leveledUpTo: xpResult.leveledUp ? xpResult.level : null,
+      }
     })
     liked = result.liked
     likeCount = result.likeCount
+    leveledUpTo = result.leveledUpTo
   } catch (error) {
     // A concurrent toggle from the same user beat this request to the same
     // transition (duplicate create -> P2002, or delete of an already-deleted
@@ -351,13 +368,13 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
   io.to(`article:${article.id}`).emit('article:like-updated', { likeCount })
   io.to('feed').emit('article:stats-updated', { articleId: article.id, likeCount })
 
-  // Only award XP/notify on the like transition, not the unlike, and not if the author is already viewing.
+  // Badges and the like notification only apply to the like transition, and
+  // the author doesn't need notifying if they're already viewing the article.
   if (liked) {
-    const xpResult = await awardXP(article.authorId, XP_REWARD_RECEIVE_LIKE)
     await checkAndAwardBadges(article.authorId)
 
-    if (xpResult.leveledUp) {
-      io.to(article.authorId).emit('gamification:level-up', { level: xpResult.level })
+    if (leveledUpTo !== null) {
+      io.to(article.authorId).emit('gamification:level-up', { level: leveledUpTo })
     }
 
     const authorSockets = await io.in(article.authorId).fetchSockets()
