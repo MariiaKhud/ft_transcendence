@@ -281,7 +281,7 @@ export const Profile = () => {
                             flex-row
                             flex-wrap
                             items-start
-                            justify-start
+                            justify-end
                             gap-2
                             md:w-auto
                             md:flex-col
@@ -300,7 +300,7 @@ export const Profile = () => {
               />
 
               {!isOwnProfile && friendshipState === 'friends' ? (
-                <div className={profile.cvUrl && profile.cvFilename ? 'flex w-[22rem] max-w-full gap-2' : 'flex justify-end'}>
+                <div className={profile.cvUrl && profile.cvFilename ? 'flex w-[22rem] max-w-full justify-end gap-2' : 'flex w-full justify-end md:w-auto'}>
                   {profile.cvUrl && profile.cvFilename ? (
                     <a
                       href={profile.cvUrl}

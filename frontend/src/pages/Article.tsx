@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SubmitEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type SubmitEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
@@ -548,6 +548,12 @@ export const Article = () => {
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
+              onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => {
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                  event.preventDefault()
+                  event.currentTarget.form?.requestSubmit()
+                }
+              }}
               rows={3}
               maxLength={COMMENT_MAX_LENGTH}
               placeholder={t('article.addCommentPlaceholder')}

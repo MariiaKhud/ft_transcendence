@@ -31,18 +31,28 @@ export function ChatWindow({
   const [draft, setDraft] = useState('')
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const refocusAfterSendRef = useRef(false)
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  // Sending temporarily disables the textarea. Restore the caret once the
+  // send completes so another message can be typed immediately.
+  useEffect(() => {
+    if (!sending && refocusAfterSendRef.current) {
+      refocusAfterSendRef.current = false
+      textareaRef.current?.focus()
+    }
+  }, [sending])
+
   function handleSend() {
     const trimmed = draft.trim()
     if (!trimmed || sending || !canSend || trimmed.length > MESSAGE_MAX_LENGTH) return
+    refocusAfterSendRef.current = true
     onSend(trimmed)
     setDraft('')
-    textareaRef.current?.focus()
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
