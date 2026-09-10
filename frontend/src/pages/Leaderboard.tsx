@@ -76,7 +76,65 @@ export const Leaderboard = () => {
         </div>
       ) : (
         <div className="overflow-hidden rounded-2xl border border-white/30 bg-white/50 shadow-xl backdrop-blur-md">
-          <div className="overflow-x-auto">
+          <div className="divide-y divide-slate-200/70 md:hidden">
+            {users.map((user, index) => {
+              const rank = user.rank ?? index + 1
+              const isCurrentUser = hasRestoredSession && currentUser?.id === user.id
+              const avatarUrl = toSafeImageUrl(user.avatarUrl)
+              const displayName = user.displayName ?? user.username
+
+              return (
+                <article
+                  key={user.id}
+                  className={`p-4 ${isCurrentUser ? 'bg-purple-200/100' : 'transition-colors hover:bg-purple-100/70'}`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className={`w-8 shrink-0 text-center text-lg font-bold ${rankClass(rank)}`}
+                      aria-label={t('leaderboard.rankLabel', { rank })}
+                    >
+                      {rank}
+                    </span>
+                    <Link to={`/profile/${user.username}`} className="flex min-w-0 flex-1 items-center gap-3">
+                      <span className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-semibold text-white ${getRankFrameClass(rank)}`}>
+                        {avatarUrl ? (
+                          <img src={avatarUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span aria-hidden="true">{getInitials(user)}</span>
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold text-slate-900">{displayName}</span>
+                        <span className="block truncate text-sm text-slate-500">@{user.username}</span>
+                      </span>
+                      {isCurrentUser ? (
+                        <span className="shrink-0 rounded-full bg-purple-600 px-2 py-1 text-xs font-semibold text-white">
+                          {t('leaderboard.you')}
+                        </span>
+                      ) : null}
+                    </Link>
+                  </div>
+
+                  <div className="mt-3 grid grid-cols-3 gap-2 pl-11 text-center text-xs">
+                    <div className="rounded-lg bg-amber-100 px-2 py-2">
+                      <p className="text-slate-500">{t('leaderboard.level')}</p>
+                      <p className="mt-1 font-semibold text-amber-800">{user.level}</p>
+                    </div>
+                    <div className="rounded-lg bg-white/60 px-2 py-2">
+                      <p className="text-slate-500">{t('leaderboard.likes')}</p>
+                      <p className="mt-1 font-semibold text-slate-700">{user.totalLikes}</p>
+                    </div>
+                    <div className="rounded-lg bg-white/60 px-2 py-2">
+                      <p className="text-slate-500">{t('leaderboard.articles')}</p>
+                      <p className="mt-1 font-semibold text-slate-700">{user.articleCount}</p>
+                    </div>
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full min-w-[680px] table-fixed text-left">
               <caption className="sr-only">{t('leaderboard.title')}</caption>
               <colgroup>
