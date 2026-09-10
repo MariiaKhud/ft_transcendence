@@ -423,11 +423,11 @@
     "badgeLockedLabel": "Nog niet ontgrendeld",
     "badgeDescriptions": {
       "First Post": "Je eerste artikel gepubliceerd.",
-      "Consistent Writer": "10 artikelen gepubliceerd.",
-      "Prolific Author": "50 artikelen gepubliceerd.",
+      "Consistent Writer": "5 artikelen gepubliceerd.",
+      "Prolific Author": "20 artikelen gepubliceerd.",
       "First Like": "Je eerste like ontvangen.",
-      "Rising Voice": "100 likes ontvangen.",
-      "Popular Writer": "1.000 likes ontvangen."
+      "Rising Voice": "10 likes ontvangen.",
+      "Popular Writer": "50 likes ontvangen."
     },
     "badgeNames": {
       "First Post": "Eerste Post",
@@ -439,11 +439,11 @@
     },
     "badgeRequirements": {
       "sparkles": "Publiceer je eerste artikel om deze badge te ontgrendelen.",
-      "pen": "Schrijf 10 artikelen om deze badge te ontgrendelen.",
-      "book-open": "Schrijf 50 artikelen om deze badge te ontgrendelen.",
+      "pen": "Schrijf 5 artikelen om deze badge te ontgrendelen.",
+      "book-open": "Schrijf 20 artikelen om deze badge te ontgrendelen.",
       "heart": "Ontvang 1 like om deze badge te ontgrendelen.",
-      "trending-up": "Ontvang 100 likes om deze badge te ontgrendelen.",
-      "trophy": "Ontvang 1.000 likes om deze badge te ontgrendelen."
+      "trending-up": "Ontvang 10 likes om deze badge te ontgrendelen.",
+      "trophy": "Ontvang 50 likes om deze badge te ontgrendelen."
     },
     "articlesHeading": "Artikelen",
     "articlesShown": "{{count}} weergegeven",

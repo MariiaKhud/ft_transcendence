@@ -70,17 +70,17 @@ export function RemovedCommentsTab({ comments, onRestoreComment }: RemovedCommen
                 key={comment.id}
                 className="rounded-xl border border-red-200 bg-red-50 p-4"
               >
-                <p className="text-slate-800">
+                <p className="break-words text-slate-800">
                   {comment.content}
                 </p>
 
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 break-words text-sm text-slate-600">
                   {t('admin.contentBy', {
                     username: comment.author?.username,
                   })}
                 </p>
 
-                <p className="mt-3 text-sm text-red-700">
+                <p className="mt-3 break-words text-sm text-red-700">
                   {t('admin.removedReason', {
                     reason: comment.removedReason,
                   })}

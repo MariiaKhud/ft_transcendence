@@ -69,17 +69,17 @@ export function RemovedArticlesTab({ articles, onRestoreArticle, }: RemovedArtic
                 key={article.id}
                 className="rounded-xl border border-red-200 bg-red-50 p-4"
               >
-                <h3 className="font-bold text-slate-900">
+                <h3 className="break-words font-bold text-slate-900">
                   {article.title}
                 </h3>
 
-                <p className="mt-1 text-sm text-slate-600">
+                <p className="mt-1 break-words text-sm text-slate-600">
                   {t('admin.contentBy', {
                     username: article.author?.username,
                   })}
                 </p>
 
-                <p className="mt-3 text-sm text-red-700">
+                <p className="mt-3 break-words text-sm text-red-700">
                   {t('admin.removedReason', {
                     reason: article.removedReason,
                   })}
