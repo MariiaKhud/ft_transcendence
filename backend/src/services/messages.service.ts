@@ -39,6 +39,25 @@ export async function sendMessage(senderId: string, receiverId: string, content:
     throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'User not found');
   }
 
+  const friendship = await prisma.friendship.findFirst({
+    where: {
+      status: 'ACCEPTED',
+      OR: [
+        { requesterId: senderId, addresseeId: receiverId },
+        { requesterId: receiverId, addresseeId: senderId },
+      ],
+    },
+    select: { id: true },
+  });
+
+  if (!friendship) {
+    throw new AppError(
+      403,
+      ErrorCode.FRIENDSHIP_NOT_FOUND,
+      'You can only message your friends',
+    );
+  }
+
   const message = await prisma.message.create({
     data: {
       senderId,

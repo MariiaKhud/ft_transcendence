@@ -207,6 +207,25 @@ USER_B_ID="$(query_db "SELECT id FROM users WHERE username='${USERNAME_B}';" | t
 
 color_echo "$BLUE" "User A: $USER_A_ID"
 color_echo "$BLUE" "User B: $USER_B_ID"
+
+# Establish an accepted friendship before testing successful messages.
+color_echo "$CYAN_L" "Create and accept friendship"
+perform_request \
+    "User A sends friend request to User B" \
+    -X POST \
+    "$BASE_URL/api/friends/request/$USER_B_ID" \
+    -b "$COOKIE_A" \
+    -H "Content-Type: application/json"
+check "Friend request returns 201" "$LAST_STATUS" "201"
+
+perform_request \
+    "User B accepts friend request" \
+    -X PATCH \
+    "$BASE_URL/api/friends/request/$USER_A_ID" \
+    -b "$COOKIE_B" \
+    -H "Content-Type: application/json" \
+    -d '{"action":"ACCEPTED"}'
+check "Friend request acceptance returns 200" "$LAST_STATUS" "200"
 echo
 
 ###########################################################
