@@ -19,11 +19,9 @@ export function LevelUpToast() {
     const socket = getSocket()
 
     let dismissTimer: ReturnType<typeof setTimeout>
-    let removeTimer: ReturnType<typeof setTimeout>
 
     const onLevelUp = ({ level: newLevel }: { level: number }) => {
       clearTimeout(dismissTimer)
-      clearTimeout(removeTimer)
 
       setLevel(newLevel)
       setIsVisible(true)
@@ -36,7 +34,6 @@ export function LevelUpToast() {
     return () => {
       socket.off('gamification:level-up', onLevelUp)
       clearTimeout(dismissTimer)
-      clearTimeout(removeTimer)
     }
   }, [])
 

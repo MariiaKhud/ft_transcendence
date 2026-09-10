@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SubmitEvent } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent, type SubmitEvent } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
@@ -548,6 +548,12 @@ export const Article = () => {
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
+              onKeyDown={(event: KeyboardEvent<HTMLTextAreaElement>) => {
+                if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+                  event.preventDefault()
+                  event.currentTarget.form?.requestSubmit()
+                }
+              }}
               rows={3}
               maxLength={COMMENT_MAX_LENGTH}
               placeholder={t('article.addCommentPlaceholder')}
@@ -694,7 +700,7 @@ export const Article = () => {
                             {comment.content}
                           </p>
                           {comment.isRemoved && isStaff && (
-                            <p className="mt-1 text-xs italic text-pink-600">
+                            <p className="mt-1 whitespace-pre-wrap break-words text-xs italic text-pink-600">
                               {comment.removedReason
                                 ? t('article.removedWithReason', { reason: comment.removedReason })
                                 : t('article.removedLabel')}
