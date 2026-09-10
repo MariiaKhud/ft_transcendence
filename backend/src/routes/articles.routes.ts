@@ -351,7 +351,9 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
   io.to(`article:${article.id}`).emit('article:like-updated', { likeCount })
   io.to('feed').emit('article:stats-updated', { articleId: article.id, likeCount })
 
-  // Only award XP/notify on the like transition, not the unlike, and not if the author is already viewing.
+  // Award XP on the like transition and revert it on the unlike, so toggling
+  // like -> unlike -> like repeatedly can't be farmed for free XP. Only
+  // notify on the like transition, and not if the author is already viewing.
   if (liked) {
     const xpResult = await awardXP(article.authorId, XP_REWARD_RECEIVE_LIKE)
     await checkAndAwardBadges(article.authorId)
@@ -372,6 +374,8 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
         refId: article.id,
       })
     }
+  } else {
+    await awardXP(article.authorId, -XP_REWARD_RECEIVE_LIKE)
   }
 
   res.status(200).json({ success: true, data: { liked, likeCount } })

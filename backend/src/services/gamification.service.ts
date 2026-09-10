@@ -1,7 +1,7 @@
 import { prisma } from '../lib/prisma.js'
 import { validateUuid } from '../lib/validation.js'
 import { getLevelFromXP } from '../../../shared/types/gamification.js'
-import type { Prisma } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 
 type Db = typeof prisma | Prisma.TransactionClient
 
@@ -13,6 +13,13 @@ export function calculateLevel(xp: number): number {
 // their level. Pass a transaction client to keep this atomic with other
 // writes (e.g. the article that earned the XP); defaults to a standalone
 // query otherwise. XP never drops below 0.
+//
+// The read-modify-write is done against a row locked with SELECT ... FOR
+// UPDATE so two concurrent awards to the same user (e.g. two near-simultaneous
+// likes) serialize instead of both reading the same starting xp and one
+// clobbering the other's update. FOR UPDATE only holds its lock for the life
+// of a transaction, so when the caller didn't already give us one, we open
+// one here.
 export async function awardXP(userId: string, amount: number, db: Db = prisma) {
   validateUuid(userId, 'userId')
 
@@ -20,21 +27,28 @@ export async function awardXP(userId: string, amount: number, db: Db = prisma) {
     throw new Error('XP amount must be a non-zero integer')
   }
 
-  const user = await db.user.findUniqueOrThrow({
-    where: { id: userId },
-    select: { xp: true, level: true },
-  })
+  const apply = async (tx: Db) => {
+    const [locked] = await tx.$queryRaw<{ xp: number; level: number }[]>(
+      Prisma.sql`SELECT xp, level FROM users WHERE id = ${userId} FOR UPDATE`,
+    )
 
-  const xp = Math.max(0, user.xp + amount)
-  const level = calculateLevel(xp)
+    if (!locked) {
+      throw new Error(`User not found: ${userId}`)
+    }
 
-  const updated = await db.user.update({
-    where: { id: userId },
-    data: { xp, level },
-    select: { id: true, xp: true, level: true },
-  })
+    const xp = Math.max(0, locked.xp + amount)
+    const level = calculateLevel(xp)
 
-  return { ...updated, leveledUp: level > user.level }
+    const updated = await tx.user.update({
+      where: { id: userId },
+      data: { xp, level },
+      select: { id: true, xp: true, level: true },
+    })
+
+    return { ...updated, leveledUp: level > locked.level }
+  }
+
+  return db === prisma ? prisma.$transaction((tx) => apply(tx)) : apply(db)
 }
 
 function getBadgeCondition(badgeName: string, articleCount: number, totalLikes: number): boolean {
