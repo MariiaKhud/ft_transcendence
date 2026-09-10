@@ -146,6 +146,8 @@
     "leaderboard": "Leaderboard",
     "write": "Write",
     "login": "Login",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
     "profile": "Profile",
     "settings": "Edit profile",
     "logout": "Logout",

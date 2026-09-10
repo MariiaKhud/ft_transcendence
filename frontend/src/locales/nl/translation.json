@@ -146,6 +146,8 @@
     "leaderboard": "Ranglijst",
     "write": "Schrijven",
     "login": "Inloggen",
+    "openMenu": "Menu openen",
+    "closeMenu": "Menu sluiten",
     "profile": "Profiel",
     "settings": "Profiel bewerken",
     "logout": "Uitloggen",

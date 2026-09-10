@@ -13,7 +13,11 @@ import { NotificationMessage } from '@/components/user/NotificationMessage'
 import { BellIcon, NotificationsSkeleton} from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
 
-export function NotificationBell() {
+interface NotificationBellProps {
+  navigationOnly?: boolean
+}
+
+export function NotificationBell({ navigationOnly = false }: NotificationBellProps) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -56,11 +60,6 @@ export function NotificationBell() {
     setOpen(false)
   }
 
-  // ── Race condition fix ────────────────────────────────────
-  // If the bell shows a FRIEND_REQUEST notification but the sender
-  // cancelled it, clicking Accept returns 404.
-  // We catch it, show a message, remove the stale notification,
-  // and re-fetch to sync state.
   async function handleAcceptFromBell(notif: Notification) {
     if (!notif.refId) return;
     try {
@@ -105,7 +104,14 @@ export function NotificationBell() {
 
       {/* ── Bell button ─────────────────────────────────── */}
       <button
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          if (navigationOnly) {
+            navigate('/notifications')
+            return
+          }
+
+          setOpen((prev) => !prev)
+        }}
         className="relative
                    p-2
                    text-gray-500
@@ -117,8 +123,8 @@ export function NotificationBell() {
                    focus:ring-2
                    focus:ring-blue-500"
         aria-label={unreadCount > 0 ? t('notification.bellAriaLabelUnread', { count: unreadCount }) : t('notification.title')}
-        aria-expanded={open}
-        aria-haspopup="true"
+        aria-expanded={navigationOnly ? undefined : open}
+        aria-haspopup={navigationOnly ? undefined : 'true'}
       >
         <BellIcon />
         {unreadCount > 0 && (
