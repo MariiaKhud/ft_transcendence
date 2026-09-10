@@ -1,5 +1,5 @@
 import { prisma } from '../lib/prisma.js'
-import { createNotification } from './notifications.service';
+import { createNotification } from './notifications.service.js';
 import { AppError } from '../middleware/error.middleware.js';
 import { ErrorCode } from '../lib/error-codes.js';
 import { validateUuid } from '../lib/validation.js';
