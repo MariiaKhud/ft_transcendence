@@ -694,7 +694,7 @@ export const Article = () => {
                             {comment.content}
                           </p>
                           {comment.isRemoved && isStaff && (
-                            <p className="mt-1 text-xs italic text-pink-600">
+                            <p className="mt-1 whitespace-pre-wrap break-words text-xs italic text-pink-600">
                               {comment.removedReason
                                 ? t('article.removedWithReason', { reason: comment.removedReason })
                                 : t('article.removedLabel')}

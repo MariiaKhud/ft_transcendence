@@ -269,7 +269,7 @@ function NotificationRow({
             </p>
 
             {notif.type === 'CONTENT_REMOVED' && notif.removalReason ? (
-              <p className="mt-2 text-sm text-slate-600">
+              <p className="mt-2 whitespace-pre-wrap break-words text-sm text-slate-600">
                 {t('notification.types.removalReason', { reason: notif.removalReason })}
               </p>
             ) : null}
