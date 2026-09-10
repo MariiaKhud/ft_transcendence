@@ -27,7 +27,9 @@ export function initSocketServer(httpServer: HttpServer) {
   })
 
   // ── Auth middleware — runs before every connection ───────────
-  // ── Rejects unauthenticated sockets
+  // ── No cookie at all: let the socket through as a guest (read-only access
+  // to public rooms, e.g. the feed). A present-but-invalid/expired token is
+  // still rejected outright — mirrors optionalAuthMiddleware's HTTP behavior.
   io.use((socket, next) => {
     try {
       const cookieHeader = socket.handshake.headers.cookie ?? ''
@@ -35,7 +37,7 @@ export function initSocketServer(httpServer: HttpServer) {
       const token = cookies['token'] ?? cookies['auth_token'] ?? ''
 
       if (!token) {
-        return next(new Error('Authentication required'))
+        return next()
       }
 
       const decoded = verifyAuthToken(token)
@@ -50,7 +52,21 @@ export function initSocketServer(httpServer: HttpServer) {
 
   // ── Single connection handler ────────────────────────────────
   io.on('connection', async (socket) => {
-    const userId = socket.data.userId as string
+    const userId = socket.data.userId as string | undefined
+
+    if (!userId) {
+      // Guest connection: only public, read-only feed live-updates are available —
+      // no personal room, online-status, friends, chat, or notification handling.
+      socket.on('feed:join', () => {
+        socket.join('feed')
+      })
+
+      socket.on('feed:leave', () => {
+        socket.leave('feed')
+      })
+
+      return
+    }
 
     // Cancel grace period if user reconnects within 30s
     const existingTimer = offlineTimers.get(userId)
