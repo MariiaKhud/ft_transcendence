@@ -12,6 +12,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    // The frontend is served through nginx in Docker. Vite's HMR socket uses
+    // the root HTTPS URL and reports a browser error when pages enter the
+    // back/forward cache, while HMR is not needed for the evaluation runtime.
+    hmr: false,
     proxy: {
       '/api': {
         target: process.env.VITE_DEV_API_PROXY_TARGET || 'https://localhost:8443',

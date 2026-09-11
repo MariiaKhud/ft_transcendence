@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import { getCurrentUser, hasAuthSessionCookie, loginUser, logoutUser } from '@/api/auth'
 import { useStore } from '@/store/store'
 import { applyPreferredLanguage } from '@/lib/i18n'
@@ -10,6 +10,8 @@ interface UseAuthOptions {
 }
 
 export const useAuth = (options: UseAuthOptions = {}) => {
+  const restoreSessionPromiseRef = useRef<Promise<void> | null>(null)
+
   const currentUser = useStore((state) => {
     return state.auth.currentUser
   })
@@ -70,25 +72,41 @@ export const useAuth = (options: UseAuthOptions = {}) => {
 
   const restoreSession = useCallback(
     async () => {
+      if (restoreSessionPromiseRef.current) {
+        return restoreSessionPromiseRef.current
+      }
+
       // Guests have no readable CSRF session cookie, so avoid an expected 401 request.
       if (!hasAuthSessionCookie()) {
         clearCurrentUser()
         setHasRestoredSession(true)
-        return
+        const guestSessionPromise = Promise.resolve()
+        restoreSessionPromiseRef.current = guestSessionPromise
+        restoreSessionPromiseRef.current = null
+        return guestSessionPromise
       }
 
       setIsLoading(true)
 
-      try {
-        const user = await getCurrentUser()
-        setCurrentUser(user)
-        applyPreferredLanguage(user.preferredLanguage)
-      } catch {
-        clearCurrentUser()
-      } finally {
-        setHasRestoredSession(true)
-        setIsLoading(false)
-      }
+      restoreSessionPromiseRef.current = (async () => {
+        try {
+          const user = await getCurrentUser()
+          if (user) {
+            setCurrentUser(user)
+            applyPreferredLanguage(user.preferredLanguage)
+          } else {
+            clearCurrentUser()
+          }
+        } catch {
+          clearCurrentUser()
+        } finally {
+          setHasRestoredSession(true)
+          setIsLoading(false)
+          restoreSessionPromiseRef.current = null
+        }
+      })()
+
+      return restoreSessionPromiseRef.current
     },
     [clearCurrentUser, setCurrentUser, setHasRestoredSession, setIsLoading]
   )

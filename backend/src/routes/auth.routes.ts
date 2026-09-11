@@ -363,16 +363,31 @@ const logoutHandler = async (req: Request, res: Response) => {
 
 // Get the current logged-in user's public profile.
 const meHandler = async (req: Request, res: Response) => {
-  const token = readAuthTokenFromCookie(req)
+  const token = req.cookies?.auth_token
 
-  const { userId } = verifyAuthToken(token)
+  if (typeof token !== 'string' || token.length === 0) {
+    res.status(200).json({ success: true, data: null })
+    return
+  }
+
+  let userId: string
+  try {
+    userId = verifyAuthToken(token).userId
+  } catch {
+    clearAuthCookies(res)
+    res.status(200).json({ success: true, data: null })
+    return
+  }
+
   const user = await prisma.user.findUnique({
     where: { id: userId },
     select: publicUserSelect,
   })
 
   if (!user) {
-    throw new AppError(401, ErrorCode.INVALID_SESSION, 'Invalid or expired session')
+    clearAuthCookies(res)
+    res.status(200).json({ success: true, data: null })
+    return
   }
 
   res.status(200).json({ success: true, data: user })
