@@ -11,6 +11,21 @@ import { formatLastSeen } from '@/lib/utils'
 import type { Friend, IncomingRequest } from '@/types/friends'
 import { useAuth } from '@/hooks/useAuth'
 import { useTopRanks } from '@/hooks/useTopRanks'
+import { ApiClientError } from '@/api/client'
+
+function isUnavailableFriendRequestError(error: unknown) {
+  if (!(error instanceof ApiClientError) || error.status !== 404) {
+    return false
+  }
+
+  const payload = error.payload
+  return Boolean(
+    payload &&
+      typeof payload === 'object' &&
+      'code' in payload &&
+      payload.code === 'friend_request_not_found',
+  )
+}
 
 // ─── Page ─────────────────────────────────────────────────────
 
@@ -22,6 +37,7 @@ export function Friends() {
   const [loadingFriends, setLoadingFriends] = useState(true)
   const [loadingRequests, setLoadingRequests] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [staleRequestMessage, setStaleRequestMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!currentUser) {
@@ -60,6 +76,12 @@ export function Friends() {
     setRequests((prev) => prev.filter((r) => r.id !== friendshipId))
   }
 
+  function handleUnavailableRequest(friendshipId: string) {
+    setRequests((prev) => prev.filter((r) => r.id !== friendshipId))
+    setStaleRequestMessage(t('notification.types.friendCancelled'))
+    window.dispatchEvent(new Event('notifications:changed'))
+  }
+
   function handleFriendRemoved(friendId: string) {
     setFriends((prev) => prev.filter((f) => f.id !== friendId))
   }
@@ -87,6 +109,19 @@ export function Friends() {
                         text-pink-600
                         backdrop-blur-sm">
           {error}
+        </div>
+      )}
+
+      {staleRequestMessage && (
+        <div className="rounded-2xl
+                        border
+                        border-amber-200/50
+                        bg-amber-50
+                        p-4
+                        text-sm
+                        text-amber-700
+                        backdrop-blur-sm">
+          {staleRequestMessage}
         </div>
       )}
 
@@ -123,6 +158,7 @@ export function Friends() {
                   request={req}
                   onAccepted={() => handleAccepted(req.id)}
                   onDeclined={() => handleDeclined(req.id)}
+                  onUnavailable={() => handleUnavailableRequest(req.id)}
                 />
               ))}
             </ul>
@@ -173,10 +209,12 @@ function RequestCard({
   request,
   onAccepted,
   onDeclined,
+  onUnavailable,
 }: {
   request: IncomingRequest
   onAccepted: () => void
   onDeclined: () => void
+  onUnavailable: () => void
 }) {
   const { t } = useTranslation()
   const topRanks = useTopRanks()
@@ -190,7 +228,11 @@ function RequestCard({
       await respondToFriendRequest(request.requester.id, 'ACCEPTED')
       onAccepted()
       window.dispatchEvent(new Event('notifications:changed'))
-    } catch {
+    } catch (err) {
+      if (isUnavailableFriendRequestError(err)) {
+        onUnavailable()
+        return
+      }
       setError(t('friends.acceptError'))
     } finally {
       setLoading(false)
@@ -204,7 +246,11 @@ function RequestCard({
       await respondToFriendRequest(request.requester.id, 'DECLINED')
       onDeclined()
       window.dispatchEvent(new Event('notifications:changed'))
-    } catch {
+    } catch (err) {
+      if (isUnavailableFriendRequestError(err)) {
+        onUnavailable()
+        return
+      }
       setError(t('friends.declineError'))
     } finally {
       setLoading(false)
@@ -455,18 +501,46 @@ function RequestsSkeleton() {
   return (
     <ul className="space-y-3">
       {[1, 2].map((i) => (
-        <li key={i} className="rounded-2xl border border-white/30 bg-white/40 p-4">
-          <div className="flex items-center justify-between gap-4">
+        <li key={i} className="rounded-2xl
+                               border
+                               border-white/30
+                               bg-white/40
+                               p-4">
+          <div className="flex
+                          items-center
+                          justify-between
+                          gap-4">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-full bg-slate-200 animate-pulse shrink-0" />
+              <div className="h-10
+                              w-10
+                              rounded-full
+                              bg-slate-200
+                              animate-pulse
+                              shrink-0" />
               <div className="space-y-2">
-                <div className="h-4 w-28 rounded bg-slate-200 animate-pulse" />
-                <div className="h-3 w-20 rounded bg-slate-200 animate-pulse" />
+                <div className="h-4
+                                w-28
+                                rounded
+                                bg-slate-200
+                                animate-pulse" />
+                <div className="h-3
+                                w-20
+                                rounded
+                                bg-slate-200
+                                animate-pulse" />
               </div>
             </div>
             <div className="flex gap-2">
-              <div className="h-9 w-20 rounded-full bg-slate-200 animate-pulse" />
-              <div className="h-9 w-20 rounded-full bg-slate-200 animate-pulse" />
+              <div className="h-9
+                              w-20
+                              rounded-full
+                              bg-slate-200
+                              animate-pulse" />
+              <div className="h-9
+                              w-20
+                              rounded-full
+                              bg-slate-200
+                              animate-pulse" />
             </div>
           </div>
         </li>

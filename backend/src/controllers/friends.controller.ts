@@ -52,10 +52,6 @@ export async function respondToFriendRequest(req: Request, res: Response) {
       return sendSuccess(res, 200, { status: 'DECLINED', alreadyDeclined: true });
     }
 
-    if (err instanceof AppError && action === 'ACCEPTED' && err.code === ErrorCode.FRIEND_ALREADY) {
-      return sendSuccess(res, 200, { status: 'ACCEPTED', alreadyAccepted: true });
-    }
-
     return sendError(res, err, 400);
   }
 }

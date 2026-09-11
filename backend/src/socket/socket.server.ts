@@ -10,6 +10,20 @@ export let io: Server
 const offlineTimers = new Map<string, ReturnType<typeof setTimeout>>()
 const GRACE_MS = 30_000  // 30 seconds
 
+async function getFriendIds(userId: string) {
+  const friendships = await prisma.friendship.findMany({
+    where: {
+      status: 'ACCEPTED',
+      OR: [{ requesterId: userId }, { addresseeId: userId }],
+    },
+    select: { requesterId: true, addresseeId: true },
+  })
+
+  return friendships.map(({ requesterId, addresseeId }) =>
+    requesterId === userId ? addresseeId : requesterId
+  )
+}
+
 export function initSocketServer(httpServer: HttpServer) {
   io = new Server(httpServer, {
     cors: {
@@ -89,18 +103,7 @@ export function initSocketServer(httpServer: HttpServer) {
       return
     }
 
-    // Fetch friends once — reused for both online and disconnect events
-    const friends = await prisma.friendship.findMany({
-      where: {
-        status: 'ACCEPTED',
-        OR: [{ requesterId: userId }, { addresseeId: userId }],
-      },
-      select: { requesterId: true, addresseeId: true },
-    })
-
-    const friendIds = friends.map(({ requesterId, addresseeId }) =>
-      requesterId === userId ? addresseeId : requesterId
-    )
+    const friendIds = await getFriendIds(userId)
 
     // Notify friends this user is online
     friendIds.forEach((friendId) => {
@@ -168,7 +171,9 @@ export function initSocketServer(httpServer: HttpServer) {
 
         if (updated.count === 0) return
 
-        friendIds.forEach((friendId) => {
+        const currentFriendIds = await getFriendIds(userId)
+
+        currentFriendIds.forEach((friendId) => {
           io.to(friendId).emit('user:offline', { userId })
         })
       }, GRACE_MS)

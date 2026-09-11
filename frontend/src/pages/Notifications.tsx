@@ -2,12 +2,10 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useNotifications, type Notification } from '@/hooks/useNotifications'
-import { respondToFriendRequest } from '@/api/friends'
 import { Button } from '@/components/ui/button'
-import { CheckIcon, Spinner } from '@/components/ui/icons'
+import { CheckIcon } from '@/components/ui/icons'
 import {
   formatNotificationTime,
-  getNotificationActionState,
   notificationIcon,
 } from '@/lib/notification-display'
 import { navigateToNotification } from '@/lib/profile-navigation'
@@ -23,11 +21,8 @@ export function Notifications() {
     loading,
     markRead,
     markAllRead,
-    removeNotification,
-    refetch,
   } = useNotifications()
 
-  const [actedOn, setActedOn] = useState<Map<string, 'accepted' | 'declined'>>(new Map())
   const [page, setPage] = useState(1)
   const totalPages = Math.max(1, Math.ceil(notifications.length / NOTIFICATIONS_PER_PAGE))
   const currentPage = Math.min(page, totalPages)
@@ -40,46 +35,6 @@ export function Notifications() {
     if (!notif.isRead) await markRead(notif.id)
 
     navigateToNotification(navigate, notif)
-  }
-
-  async function handleAccept(notif: Notification) {
-    if (!notif.refId) return
-    try {
-      await respondToFriendRequest(notif.refId, 'ACCEPTED')
-      if (!notif.isRead) await markRead(notif.id)
-      setActedOn((prev) => new Map(prev).set(notif.id, 'accepted'))
-      window.dispatchEvent(new CustomEvent('friendship:changed', { detail: { userId: notif.refId, state: 'friends' } }))
-    } catch (err: any) {
-      if (err?.status === 404 || err?.error?.includes('not found')) {
-        removeNotification(notif.id)
-        refetch()
-        return
-      }
-
-      if (err?.status === 409) {
-        await refetch()
-      }
-    }
-  }
-
-  async function handleDecline(notif: Notification) {
-    if (!notif.refId) return
-    try {
-      await respondToFriendRequest(notif.refId, 'DECLINED')
-      if (!notif.isRead) await markRead(notif.id)
-      setActedOn((prev) => new Map(prev).set(notif.id, 'declined'))
-      window.dispatchEvent(new CustomEvent('friendship:changed', { detail: { userId: notif.refId, state: 'none' } }))
-    } catch (err: any) {
-      if (err?.status === 404 || err?.statusCode === 404) {
-        removeNotification(notif.id)
-        refetch()
-        return
-      }
-
-      if (err?.status === 409) {
-        await refetch()
-      }
-    }
   }
 
   return (
@@ -127,20 +82,7 @@ export function Notifications() {
               <NotificationRow
                 key={notif.id}
                 notif={notif}
-                actionResult={actedOn.get(notif.id)}
                 onClick={() => void handleClick(notif)}
-                onAccept={
-                  notif.type === 'FRIEND_REQUEST' &&
-                  !getNotificationActionState(notif, actedOn.get(notif.id))
-                    ? () => handleAccept(notif)
-                    : undefined
-                }
-                onDecline={
-                  notif.type === 'FRIEND_REQUEST' &&
-                  !getNotificationActionState(notif, actedOn.get(notif.id))
-                    ? () => handleDecline(notif)
-                    : undefined
-                }
               />
             ))}
           </ul>
@@ -193,43 +135,14 @@ export function Notifications() {
 
 interface NotificationRowProps {
   notif: Notification
-  actionResult?: 'accepted' | 'declined'
   onClick: () => void
-  onAccept?: () => Promise<void>
-  onDecline?: () => Promise<void>
 }
 
 function NotificationRow({
     notif,
-    actionResult,
     onClick,
-    onAccept,
-    onDecline,
   }: NotificationRowProps) {
   const { t } = useTranslation()
-  const [actioning, setActioning] = useState(false)
-  const [actionError, setActionError] = useState<string | null>(null)
-
-  async function handleAction(fn: () => Promise<void>) {
-    setActioning(true)
-    setActionError(null)
-    try {
-      await fn()
-    } catch {
-      setActionError(t('notification.types.friendCancelled'))
-    } finally {
-      setActioning(false)
-    }
-  }
-
-  // Message shown in the row — changes after action
-  const resolvedState = getNotificationActionState(notif, actionResult)
-
-  const icon = resolvedState === 'accepted'
-    ? '🤝'
-    : resolvedState === 'declined'
-      ? '🚫'
-      : notificationIcon(notif.type)
 
   return (
     <li
@@ -255,7 +168,7 @@ function NotificationRow({
         <div className="flex items-start gap-4">
           {/* Icon */}
           <span className="mt-0.5 shrink-0 text-xl" aria-hidden="true">
-            {icon}
+            {notificationIcon(notif.type)}
           </span>
 
           {/* Content */}
@@ -263,7 +176,6 @@ function NotificationRow({
             <p className="text-sm text-slate-800">
               <NotificationMessage
                 notif={notif}
-                actionResult={actionResult}
                 actorClassName="font-semibold"
               />
             </p>
@@ -275,19 +187,13 @@ function NotificationRow({
             ) : null}
 
             {/* Sub-line — hint after accept, or timestamp */}
-            <p className={`mt-0.5 text-xs ${
-              actionResult === 'accepted'
-                ? 'text-teal-500'
-                : 'text-slate-400'
-            }`}>
-              {resolvedState === 'accepted'
-                ? t('notification.types.newFriendHint')
-                : formatNotificationTime(notif.createdAt, t)}
+            <p className="mt-0.5 text-xs text-slate-400">
+              {formatNotificationTime(notif.createdAt, t)}
             </p>
           </div>
 
           {/* Unread dot */}
-          {!notif.isRead && !resolvedState && (
+          {!notif.isRead && (
             <span className="mt-1.5
                              h-2
                              w-2
@@ -298,47 +204,6 @@ function NotificationRow({
         </div>
       </button>
 
-      {/* Accept/Decline for FRIEND_REQUEST */}
-      {notif.type === 'FRIEND_REQUEST' && !resolvedState && (onAccept || onDecline) && (
-        <div className="border-t
-                        border-white/30
-                        px-4
-                        py-3">
-          {actionError ? (
-            <p className="text-xs text-pink-600">{actionError}</p>
-          ) : (
-            <div className="flex items-center gap-2">
-              {onAccept && (
-                <Button
-                  variant="profileSuccess"
-                  size="sm"
-                  disabled={actioning}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    void handleAction(onAccept)
-                  }}
-                >
-                  {actioning ? <Spinner /> : <CheckIcon />}
-                  {t('friendButton.accept')}
-                </Button>
-              )}
-              {onDecline && (
-                <Button
-                  variant="profileSecondary"
-                  size="sm"
-                  disabled={actioning}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    void handleAction(onDecline)
-                  }}
-                >
-                  {t('friendButton.decline')}
-                </Button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
     </li>
   )
 }
