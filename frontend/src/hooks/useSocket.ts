@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { connectSocket, getSocket } from '@/lib/socket'
+import { connectSocket, disconnectSocket, getSocket } from '@/lib/socket'
 import { useAuth } from '@/hooks/useAuth'
 
 export function useSocket() {
@@ -36,18 +36,46 @@ export function useSocket() {
     connectSocket()
 
     let heartbeatTimer: number | undefined
-    if (userId) {
+    const startHeartbeat = () => {
+      if (!userId) return
       const heartbeat = () => {
         if (socket.connected) socket.emit('presence:heartbeat')
       }
-
       heartbeat()
       heartbeatTimer = window.setInterval(heartbeat, 30_000)
     }
+    const stopHeartbeat = () => {
+      if (heartbeatTimer) {
+        window.clearInterval(heartbeatTimer)
+        heartbeatTimer = undefined
+      }
+    }
+
+    startHeartbeat()
+
+    // Chrome force-closes open WebSocket connections when a page is frozen
+    // for the back-forward cache, which logs a spurious connection-failure
+    // error on restore. Disconnect cleanly before that happens and reconnect
+    // if the page is later restored from bfcache.
+    const onPageHide = () => {
+      stopHeartbeat()
+      disconnectSocket()
+    }
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        connectSocket()
+        startHeartbeat()
+      }
+    }
+
+    window.addEventListener('pagehide', onPageHide)
+    window.addEventListener('pageshow', onPageShow)
 
     return () => {
       socket.off('connect_error', onConnectError)
-      if (heartbeatTimer) window.clearInterval(heartbeatTimer)
+      window.removeEventListener('pagehide', onPageHide)
+      window.removeEventListener('pageshow', onPageShow)
+      stopHeartbeat()
     }
   }, [userId, hasRestoredSession])
 }
