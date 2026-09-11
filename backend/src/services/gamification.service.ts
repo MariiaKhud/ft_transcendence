@@ -73,7 +73,7 @@ function getBadgeCondition(badgeName: string, articleCount: number, totalLikes: 
 export async function checkAndAwardBadges(userId: string) {
   validateUuid(userId, 'userId')
 
-  const [articleCount, likesAggregate, allBadges, earnedBadges] = await Promise.all([
+  const [articleCount, likesAggregate, allBadges] = await Promise.all([
     prisma.article.count({
       where: {
         authorId: userId,
@@ -95,43 +95,46 @@ export async function checkAndAwardBadges(userId: string) {
       select: {
         id: true,
         name: true,
-      },
-    }),
-
-    prisma.userBadge.findMany({
-      where: { userId },
-      select: {
-        badgeId: true,
+        xpReward: true,
       },
     }),
   ])
 
   const totalLikes = likesAggregate._sum.likeCount ?? 0
-  const earnedBadgeIds = new Set(
-    earnedBadges.map((badge) => badge.badgeId),
+
+  const eligibleBadges = allBadges.filter((badge) =>
+    getBadgeCondition(badge.name, articleCount, totalLikes),
   )
 
-  const newBadges = allBadges.filter((badge) => {
-    const isEligible = getBadgeCondition(
-      badge.name,
-      articleCount,
-      totalLikes,
-    )
-
-    return isEligible && !earnedBadgeIds.has(badge.id)
-  })
-
-  if (newBadges.length === 0) {
+  if (eligibleBadges.length === 0) {
     return { awardedCount: 0 }
   }
 
-  const result = await prisma.$transaction(async (tx) => {
-    const awarded = await tx.userBadge.createMany({
+  return prisma.$transaction(async (tx) => {
+    // Decide what's actually new while holding the user's row lock: two
+    // concurrent checks (two likes landing together, say) would otherwise both
+    // see the same badge as unearned and pay out its xpReward twice. Holding
+    // the lock also means the unique constraint can't fire, so a duplicate
+    // would be a real bug rather than something to skip over silently.
+    await tx.$queryRaw(Prisma.sql`SELECT id FROM users WHERE id = ${userId} FOR UPDATE`)
+
+    const earnedBadges = await tx.userBadge.findMany({
+      where: { userId },
+      select: { badgeId: true },
+    })
+    const earnedBadgeIds = new Set(earnedBadges.map((badge) => badge.badgeId))
+
+    const newBadges = eligibleBadges.filter((badge) => !earnedBadgeIds.has(badge.id))
+
+    if (newBadges.length === 0) {
+      return { awardedCount: 0 }
+    }
+
+    await tx.userBadge.createMany({
       data: newBadges.map((badge) => ({
         userId,
         badgeId: badge.id,
       })),
-      skipDuplicates: true,
     })
 
     await Promise.all(
@@ -141,16 +144,20 @@ export async function checkAndAwardBadges(userId: string) {
             userId,
             type: 'BADGE',
             message: badge.name,
+            // Points at the earner's own profile, which is where badges are
+            // shown — this is a system notification, so there's no other actor.
             refId: userId,
+            actorId: userId,
           },
         }),
       ),
     )
 
-    return awarded
-  })
+    const xpReward = newBadges.reduce((total, badge) => total + badge.xpReward, 0)
+    if (xpReward > 0) {
+      await awardXP(userId, xpReward, tx)
+    }
 
-  return {
-    awardedCount: result.count,
-  }
+    return { awardedCount: newBadges.length }
+  })
 }

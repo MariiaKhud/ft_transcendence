@@ -25,7 +25,9 @@ export function NotificationMessage({
       ? t('notification.types.friendRequestDeclined')
       : getNotificationText(t, notif)
 
-  if (notif.type === 'CONTENT_REMOVED') return message
+  // Both are about the reader themselves, so they read as whole sentences and
+  // must not get an actor name pinned to the front.
+  if (notif.type === 'CONTENT_REMOVED' || notif.type === 'BADGE') return message
 
   return (
     <>

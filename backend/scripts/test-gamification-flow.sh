@@ -86,10 +86,15 @@ INITIAL_XP="$(query_db "SELECT xp FROM users WHERE id='${USER_A_ID}';" | tr -d '
 INITIAL_LEVEL="$(query_db "SELECT level FROM users WHERE id='${USER_A_ID}';" | tr -d '\n' | xargs)"
 check "Initial XP is 0" "$INITIAL_XP" "0"; check "Initial level is 1" "$INITIAL_LEVEL" "1"
 
+# The "First Post" badge (articleCount >= 1) also pays out its own xpReward,
+# on top of XP_REWARD_CREATE_ARTICLE, the moment the first article lands.
+# Read it from the DB rather than hardcoding it so this can't drift from seed.sql.
+FIRST_POST_XP_REWARD="$(query_db "SELECT xp_reward FROM badges WHERE name='First Post';" | tr -d '\n' | xargs)"
+
 create_article "Gamification test article 1"; ARTICLE_1_ID="$(extract_article_id)"
 XP_AFTER_ONE="$(query_db "SELECT xp FROM users WHERE id='${USER_A_ID}';" | tr -d '\n' | xargs)"
 LEVEL_AFTER_ONE="$(query_db "SELECT level FROM users WHERE id='${USER_A_ID}';" | tr -d '\n' | xargs)"
-check "XP increased after first article" "$XP_AFTER_ONE" "$XP_REWARD_CREATE_ARTICLE"; check "Level remains 1 after first article" "$LEVEL_AFTER_ONE" "1"
+check "XP increased after first article" "$XP_AFTER_ONE" "$((XP_REWARD_CREATE_ARTICLE + FIRST_POST_XP_REWARD))"; check "Level remains 1 after first article" "$LEVEL_AFTER_ONE" "1"
 
 FIRST_POST="$(query_db "SELECT COUNT(*) FROM user_badges ub JOIN badges b ON b.id=ub.badge_id WHERE ub.user_id='${USER_A_ID}' AND b.name='First Post';" | tr -d '\n' | xargs)"
 check "First Post badge is awarded once" "$FIRST_POST" "1"
@@ -97,7 +102,7 @@ check "First Post badge is awarded once" "$FIRST_POST" "1"
 for ((i=2; i<=ARTICLES_FOR_LEVEL_2; i++)); do create_article "Gamification test article $i"; done
 XP_AFTER_LEVEL2="$(query_db "SELECT xp FROM users WHERE id='${USER_A_ID}';" | tr -d '\n' | xargs)"
 LEVEL_AFTER_LEVEL2="$(query_db "SELECT level FROM users WHERE id='${USER_A_ID}';" | tr -d '\n' | xargs)"
-check "XP reaches expected total" "$XP_AFTER_LEVEL2" "$((ARTICLES_FOR_LEVEL_2 * XP_REWARD_CREATE_ARTICLE))"; check "Level becomes 2 at 100 XP" "$LEVEL_AFTER_LEVEL2" "2"
+check "XP reaches expected total" "$XP_AFTER_LEVEL2" "$((ARTICLES_FOR_LEVEL_2 * XP_REWARD_CREATE_ARTICLE + FIRST_POST_XP_REWARD))"; check "Level becomes 2 at 100 XP" "$LEVEL_AFTER_LEVEL2" "2"
 
 for ((i=ARTICLES_FOR_LEVEL_2+1; i<=TOTAL_ARTICLES_FOR_BADGES; i++)); do create_article "Gamification test article $i"; done
 ARTICLE_COUNT="$(query_db "SELECT COUNT(*) FROM articles WHERE author_id='${USER_A_ID}' AND is_removed=false;" | tr -d '\n' | xargs)"

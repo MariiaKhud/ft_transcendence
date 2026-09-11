@@ -108,6 +108,7 @@ export function registerChatHandlers(io: Server, socket: Socket) {
           'MESSAGE',
           'sent you a message',
           senderId,
+          senderId,
         )
 
         io.to(receiverId).emit('notification:new', {

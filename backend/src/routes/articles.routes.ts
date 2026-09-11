@@ -246,7 +246,8 @@ const createCommentHandler = async (req: Request, res: Response) => {
         article.authorId,
         'COMMENT',
         `commented on your article "${article.title}"`,
-        article.id
+        article.id,
+        authorId
       )
 
       // Push the notification in real-time too, instead of waiting for the next poll.
@@ -381,7 +382,7 @@ const toggleLikeHandler = async (req: Request, res: Response) => {
     const authorIsViewing = authorSockets.some((s) => s.data.activeArticleId === article.id)
 
     if (!authorIsViewing) {
-      await createNotification(article.authorId, 'LIKE', `liked your article "${article.title}"`, article.id)
+      await createNotification(article.authorId, 'LIKE', `liked your article "${article.title}"`, article.id, userId)
 
       io.to(article.authorId).emit('notification:new', {
         type: 'LIKE',
