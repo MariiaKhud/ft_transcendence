@@ -110,7 +110,8 @@ export async function respondToFriendRequest(
     },
   });
 
-  // 404 — request doesn't exist at all, or already resolved
+  // Only a pending request can be responded to. This also prevents stale
+  // notifications from turning an already-cancelled request into a success.
   if (!friendship) {
     const exists = await prisma.friendship.findFirst({
       where: {
@@ -121,26 +122,18 @@ export async function respondToFriendRequest(
       },
     });
 
-    if (!exists) {
+    if (exists?.status === 'PENDING') {
       throw new AppError(
-        404,
-        ErrorCode.FRIEND_REQUEST_NOT_FOUND,
-        'Friend request not found'
+        403,
+        ErrorCode.FRIEND_NOT_ADDRESSEE,
+        'You are not the addressee of this request'
       );
     }
 
-    if (exists.status === 'ACCEPTED') {
-      return { status: 'ACCEPTED', alreadyAccepted: true };
-    }
-
-    if (exists.status === 'DECLINED') {
-      return { status: 'DECLINED', alreadyDeclined: true };
-    }
-
     throw new AppError(
-      403,
-      ErrorCode.FRIEND_NOT_ADDRESSEE,
-      'You are not the addressee of this request'
+      404,
+      ErrorCode.FRIEND_REQUEST_NOT_FOUND,
+      'Friend request not found'
     );
   }
 
