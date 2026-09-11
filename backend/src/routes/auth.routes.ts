@@ -267,7 +267,10 @@ const registerHandler = async (req: Request, res: Response) => {
   // Check email and username at the same time.
   const [existingEmailUser, existingUsernameUser] = await Promise.all([
     prisma.user.findUnique({ where: { email }, select: { id: true } }),
-    prisma.user.findUnique({ where: { username }, select: { id: true } }),
+    prisma.user.findFirst({
+      where: { username: { equals: username, mode: 'insensitive' } },
+      select: { id: true },
+    }),
   ])
 
   if (existingEmailUser) {

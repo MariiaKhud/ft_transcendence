@@ -133,7 +133,7 @@ const validateRegisterInput = (body: unknown) => {
   }
 
   const email = normalizeEmail(body.email)
-  const username = body.username.trim()
+  const username = body.username.trim().toLowerCase()
   const password = body.password
 
   validateEmail(email)
