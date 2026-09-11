@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
+import { Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { translateApiError } from '@/lib/api-errors'
-import { useStore } from '@/store/store'
+import { useAuth } from '@/hooks/useAuth'
 import { StatCard } from '@/components/admin/StatCard'
 import { DashboardRefreshButton } from '@/components/admin/DashboardRefreshButton'
 import type { UserRole } from '@shared/types/user'
@@ -32,7 +33,7 @@ type Tab = 'content' | 'removed_articles' | 'removed_comments' | 'users'
 
 export function AdminDashboard() {
   const { t } = useTranslation()
-  const currentUser = useStore((state) => state.auth.currentUser)
+  const { currentUser, hasRestoredSession, isLoading: isAuthLoading } = useAuth({ restoreOnMount: true })
 
   const [activeTab, setActiveTab] = useState<Tab>('content')
   const [allArticles, setAllArticles] = useState<AdminArticle[]>([])
@@ -94,14 +95,18 @@ export function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab, !canAccess])
 
-  if (!currentUser) {
+  if (!hasRestoredSession || isAuthLoading) {
     return (
       <main className="mx-auto max-w-4xl px-4 py-10">
         <p className="rounded-2xl bg-slate-100 p-6 text-slate-700">
-          {t('common.loading')}
+          {t('common.checkingSession')}
         </p>
       </main>
     )
+  }
+
+  if (!currentUser) {
+    return <Navigate to="/login" replace />
   }
 
   if (!canAccess) {
