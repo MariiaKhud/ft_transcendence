@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/hooks/useAuth'
 import { Footer } from '@/components/Footer'
 import { LanguageSwitcher } from '@/components/LanguageSwitcher'
+import { MobileMenu } from '@/components/MobileMenu'
 import { UserSearchBar } from '@/components/user/UserSearchBar'
 import { NotificationBell } from '@/components/user/NotificationBell'
 import { LeaderboardButton } from '@/components/user/LeaderboardButton'
@@ -80,7 +81,8 @@ const App = () => {
           search dropdown below would render under the page content since main
           comes later in DOM order). */}
       <header className="relative z-20 border-b border-white/20 bg-white/10 backdrop-blur-md">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-4 px-6 py-4">
+        {/* Desktop header */}
+        <div className="mx-auto hidden w-full max-w-6xl items-center gap-4 px-6 py-4 md:flex">
           {/* App name link. */}
           <Link to="/" className="flex
                                   shrink-0
@@ -137,10 +139,42 @@ const App = () => {
             ) : null}
           </div>
         </div>
+
+        {/* Mobile header */}
+        <div className="mx-auto
+                        flex w-full
+                        max-w-6xl
+                        items-center
+                        justify-between
+                        gap-4
+                        px-4
+                        py-3
+                        md:hidden">
+          <Link to="/" className="flex shrink-0 items-center gap-2 text-xl font-semibold">
+            <img src="/icons/logo.svg" alt="Codamium" className="h-8 w-8" />
+            <span>Codamium</span>
+          </Link>
+
+          <div className="flex shrink-0 items-center gap-2">
+            <LanguageSwitcher />
+            <MobileMenu
+              currentUser={currentUser}
+              hasRestoredSession={hasRestoredSession}
+              logout={logout}
+            />
+          </div>
+        </div>
       </header>
 
       {/* The router shows the current page here. */}
-      <main className="relative z-10 flex-1 mx-auto w-full max-w-6xl px-6 py-20">
+      <main className="relative
+                       z-10
+                       flex-1
+                       mx-auto
+                       w-full
+                       max-w-6xl
+                       px-6
+                       py-20">
         <Suspense fallback={null}>
           <Outlet />
         </Suspense>

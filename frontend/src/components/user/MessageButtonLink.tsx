@@ -16,8 +16,10 @@ export function MessageButtonLink({ username }: MessageButtonLinkProps) {
       aria-label={t('friends.message')}
       title={t('friends.message')}
     >
-      <Button variant="profile">
-        <MessageIcon />
+      <Button variant="profile" className="w-full min-w-0">
+        <span className="shrink-0">
+          <MessageIcon />
+        </span>
         <span className="hidden sm:inline">{t('friends.message')}</span>
       </Button>
     </Link>
