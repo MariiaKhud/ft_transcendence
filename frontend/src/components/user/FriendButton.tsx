@@ -40,7 +40,7 @@ function FriendButtonError({ error }: { error: FriendButtonErrorState | null }) 
   return (
     <p
       role="status"
-      className="mt-2 w-full max-w-72 rounded-lg border border-amber-200/50 bg-amber-50/80 px-3 py-2 text-xs font-medium leading-snug text-amber-700"
+      className="absolute right-0 top-full z-20 mt-2 w-max max-w-[min(18rem,calc(100vw-2rem))] rounded-lg border border-amber-200/50 bg-amber-50/95 px-3 py-2 text-xs font-medium leading-snug text-amber-700 shadow-sm"
     >
       {error.translationKey ? t(error.translationKey) : error.code ? t(`api.errors.${error.code}`) : error.message}
     </p>
