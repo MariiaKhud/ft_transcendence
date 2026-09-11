@@ -520,6 +520,7 @@
       "confirmRoleChangeBody": "Змінити роль @{{username}} з {{fromRole}} на {{toRole}}?",
       "confirmPromoteAdminWarning": "Адміністратори мають повний доступ до керування всіма користувачами, контентом і налаштуваннями. Надавайте цю роль лише тим, кому довіряєте.",
       "confirmRoleChangeButton": "Змінити роль",
+      "actionFailed": "Дію не вдалося виконати. Спробуйте ще раз.",
       "roles": {
         "USER": "Користувач",
         "MODERATOR": "Модератор",

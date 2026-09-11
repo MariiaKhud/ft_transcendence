@@ -516,6 +516,7 @@
       "confirmRoleChangeBody": "De rol van @{{username}} wijzigen van {{fromRole}} naar {{toRole}}?",
       "confirmPromoteAdminWarning": "Beheerders hebben volledige toegang om alle gebruikers, inhoud en instellingen te beheren. Geef deze rol alleen aan mensen die je vertrouwt.",
       "confirmRoleChangeButton": "Rol wijzigen",
+      "actionFailed": "Actie mislukt. Probeer het opnieuw.",
       "roles": {
         "USER": "Gebruiker",
         "MODERATOR": "Moderator",

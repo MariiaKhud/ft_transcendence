@@ -516,6 +516,7 @@
         "confirmRoleChangeBody": "Change @{{username}}'s role from {{fromRole}} to {{toRole}}?",
         "confirmPromoteAdminWarning": "Admins have full access to manage all users, content, and settings. Only grant this role to people you trust.",
         "confirmRoleChangeButton": "Change role",
+        "actionFailed": "Action failed. Please try again.",
         "roles": {
           "USER": "User",
           "MODERATOR": "Moderator",
