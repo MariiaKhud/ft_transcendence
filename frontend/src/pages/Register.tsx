@@ -4,7 +4,12 @@ import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { StatusMessage } from '@/components/ui/status-message'
 import { registerUser } from '@/api/auth'
-import { translateApiError } from '@/lib/api-errors'
+import { getApiErrorCode, translateApiError } from '@/lib/api-errors'
+
+interface TranslatedError {
+  key?: string
+  fallback?: string
+}
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -17,7 +22,7 @@ const validateUsername = (username: string) => {
 }
 
 export const Register = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   // Move user to login page after success.
   const navigate = useNavigate()
 
@@ -26,22 +31,34 @@ export const Register = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [emailError, setEmailError] = useState('')
-  const [usernameError, setUsernameError] = useState('')
-  const [passwordError, setPasswordError] = useState('')
-  const [confirmPasswordError, setConfirmPasswordError] = useState('')
-  const [formError, setFormError] = useState('')
+  const [emailError, setEmailError] = useState<TranslatedError | null>(null)
+  const [usernameError, setUsernameError] = useState<TranslatedError | null>(null)
+  const [passwordError, setPasswordError] = useState<TranslatedError | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = useState<TranslatedError | null>(null)
+  const [formError, setFormError] = useState<TranslatedError | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
+  const getErrorText = (error: TranslatedError | null) => {
+    if (!error) {
+      return ''
+    }
+
+    if (error.key && i18n.exists(error.key)) {
+      return t(error.key)
+    }
+
+    return error.fallback ?? ''
+  }
+
   // Clear old errors.
   const clearErrors = () => {
-    setEmailError('')
-    setUsernameError('')
-    setPasswordError('')
-    setConfirmPasswordError('')
-    setFormError('')
+    setEmailError(null)
+    setUsernameError(null)
+    setPasswordError(null)
+    setConfirmPasswordError(null)
+    setFormError(null)
   }
 
   // Check fields before submit.
@@ -51,37 +68,37 @@ export const Register = () => {
     const trimmedUsername = username.trim()
 
     if (trimmedEmail.length === 0) {
-      setEmailError(t('auth.errors.emailRequired'))
+      setEmailError({ key: 'auth.errors.emailRequired' })
       isValid = false
     } else if (!validateEmail(trimmedEmail)) {
-      setEmailError(t('auth.errors.emailInvalid'))
+      setEmailError({ key: 'auth.errors.emailInvalid' })
       isValid = false
     }
 
     if (trimmedUsername.length === 0) {
-      setUsernameError(t('register.errors.usernameRequired'))
+      setUsernameError({ key: 'register.errors.usernameRequired' })
       isValid = false
     } else if (!validateUsername(trimmedUsername)) {
-      setUsernameError(t('register.errors.usernameInvalid'))
+      setUsernameError({ key: 'register.errors.usernameInvalid' })
       isValid = false
     }
 
     if (password.length === 0) {
-      setPasswordError(t('auth.errors.passwordRequired'))
+      setPasswordError({ key: 'auth.errors.passwordRequired' })
       isValid = false
     } else if (password.length < 8 || password.length > 72) {
-      setPasswordError(t('register.errors.passwordLength'))
+      setPasswordError({ key: 'register.errors.passwordLength' })
       isValid = false
     } else if (/\s/.test(password)) {
-      setPasswordError(t('register.errors.passwordWhitespace'))
+      setPasswordError({ key: 'register.errors.passwordWhitespace' })
       isValid = false
     }
 
     if (confirmPassword.length === 0) {
-      setConfirmPasswordError(t('register.errors.confirmRequired'))
+      setConfirmPasswordError({ key: 'register.errors.confirmRequired' })
       isValid = false
     } else if (confirmPassword !== password) {
-      setConfirmPasswordError(t('register.errors.passwordMismatch'))
+      setConfirmPasswordError({ key: 'register.errors.passwordMismatch' })
       isValid = false
     }
 
@@ -89,25 +106,49 @@ export const Register = () => {
   }
 
   // Show API error in the right field.
-  const applyApiError = (message: string) => {
+  const applyApiError = (message: string, error?: unknown) => {
+    const code = getApiErrorCode(error)
+
+    if (code && i18n.exists(`api.errors.${code}`)) {
+      const translatedKey = `api.errors.${code}`
+
+      if (code.toLowerCase().includes('email')) {
+        setEmailError({ key: translatedKey })
+        return
+      }
+
+      if (code.toLowerCase().includes('username')) {
+        setUsernameError({ key: translatedKey })
+        return
+      }
+
+      if (code.toLowerCase().includes('password')) {
+        setPasswordError({ key: translatedKey })
+        return
+      }
+
+      setFormError({ key: translatedKey })
+      return
+    }
+
     const lowerMessage = message.toLowerCase()
 
     if (lowerMessage.includes('email')) {
-      setEmailError(message)
+      setEmailError({ fallback: message })
       return
     }
 
     if (lowerMessage.includes('username')) {
-      setUsernameError(message)
+      setUsernameError({ fallback: message })
       return
     }
 
     if (lowerMessage.includes('password')) {
-      setPasswordError(message)
+      setPasswordError({ fallback: message })
       return
     }
 
-    setFormError(message)
+    setFormError({ fallback: message })
   }
 
   // Send register request.
@@ -125,7 +166,7 @@ export const Register = () => {
     // Try register and handle errors.
     try {
       const normalizedEmail = email.trim()
-      const normalizedUsername = username.trim()
+      const normalizedUsername = username.trim().toLowerCase()
 
       setIsSubmitting(true)
       await registerUser({
@@ -138,11 +179,11 @@ export const Register = () => {
       navigate('/login', { replace: true })
     } catch (error) {
       if (error instanceof Error) {
-        applyApiError(translateApiError(error, error.message))
+        applyApiError(translateApiError(error, error.message), error)
         return
       }
 
-      setFormError(t('common.unableToConnect'))
+      setFormError({ key: 'common.unableToConnect' })
     } finally {
       setIsSubmitting(false)
     }
@@ -180,7 +221,7 @@ export const Register = () => {
             placeholder={t('auth.emailPlaceholder')}
           />
           <p className="text-xs text-slate-500">{t('auth.emailHint')}</p>
-          {emailError.length > 0 ? <p className="text-xs font-medium text-pink-600">{emailError}</p> : null}
+          {emailError ? <p className="text-xs font-medium text-pink-600">{getErrorText(emailError)}</p> : null}
         </div>
 
         <div className="space-y-2">
@@ -204,7 +245,7 @@ export const Register = () => {
             <p className="text-xs text-slate-500">{t('register.usernameHint')}</p>
             <p className="text-xs text-slate-400">{t('common.counter', { count: username.length, max: 20 })}</p>
           </div>
-          {usernameError.length > 0 ? <p className="text-xs font-medium text-pink-600">{usernameError}</p> : null}
+          {usernameError ? <p className="text-xs font-medium text-pink-600">{getErrorText(usernameError)}</p> : null}
         </div>
 
         <div className="space-y-2">
@@ -265,7 +306,7 @@ export const Register = () => {
             <p className="text-xs text-slate-500">{t('auth.passwordHelp')}</p>
             <p className="text-xs text-slate-400">{t('common.counter', { count: password.length, max: 72 })}</p>
           </div>
-          {passwordError.length > 0 ? <p className="text-xs font-medium text-pink-600">{passwordError}</p> : null}
+          {passwordError ? <p className="text-xs font-medium text-pink-600">{getErrorText(passwordError)}</p> : null}
         </div>
 
         <div className="space-y-2">
@@ -323,14 +364,14 @@ export const Register = () => {
             </button>
           </div>
           <p className="text-right text-xs text-slate-400">{t('common.counter', { count: confirmPassword.length, max: 72 })}</p>
-          {confirmPasswordError.length > 0 ? (
-            <p className="text-xs font-medium text-pink-600">{confirmPasswordError}</p>
+          {confirmPasswordError ? (
+            <p className="text-xs font-medium text-pink-600">{getErrorText(confirmPasswordError)}</p>
           ) : null}
         </div>
 
-        {formError.length > 0 ? (
+        {formError ? (
           <StatusMessage tone="error">
-            {formError}
+            {getErrorText(formError)}
           </StatusMessage>
         ) : null}
 

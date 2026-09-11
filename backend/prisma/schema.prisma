@@ -243,7 +243,12 @@ model Notification {
   userId                   String             @map("user_id")
   type                     NotificationType
   message                  String
+  // What the notification points at (an article, a friendship counterpart, ...).
+  // Its meaning varies by type, and the frontend navigates with it.
   refId                    String?            @map("ref_id")
+  // Who performed the action, when a person did. Separate from refId because
+  // some types need both (a like points at the article *and* has a liker).
+  actorId                  String?            @map("actor_id")
   isRead                   Boolean            @default(false) @map("is_read")
   createdAt                DateTime           @default(now()) @map("created_at")
 

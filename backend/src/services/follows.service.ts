@@ -44,7 +44,8 @@ export async function followUser(followerId: string, followingId: string) {
     followingId,       // notify the person being followed
     'FOLLOWED',
     'started following you',
-    followerId         // refId = who followed, for building a profile link
+    followerId,        // refId = who followed, for building a profile link
+    followerId         // actorId = who followed, for rendering their name
   );
 
   return follow;

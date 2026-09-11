@@ -8,10 +8,12 @@ export async function createNotification(
   userId: string,
   type: NotificationType,
   message: string,
-  refId?: string
+  refId?: string,
+  actorId?: string
 ) {
   validateUuid(userId, 'userId');
   if (refId) validateUuid(refId, 'refId');
+  if (actorId) validateUuid(actorId, 'actorId');
 
   return prisma.notification.create({
     data: {
@@ -19,6 +21,7 @@ export async function createNotification(
       type,
       message,
       refId: refId ?? null,
+      actorId: actorId ?? null,
     },
   });
 }
@@ -68,12 +71,12 @@ export async function getNotifications(userId: string, unreadOnly: boolean) {
         }
       }
 
-      if (!notification.refId) {
+      if (!notification.actorId) {
         return notification;
       }
 
       const actor = await prisma.user.findUnique({
-        where: { id: notification.refId },
+        where: { id: notification.actorId },
         select: {
           id: true,
           username: true,

@@ -67,7 +67,7 @@ export const deleteMyAccount = async () => {
 
 // Get currently logged-in user from session cookie.
 export const getCurrentUser = async () => {
-  return apiRequestData<AuthUser>('/auth/me', {
+  return apiRequestData<AuthUser | null>('/auth/me', {
     fallbackMessage: 'Unable to restore session',
   })
 }

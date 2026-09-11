@@ -5,6 +5,13 @@ import { useTranslation } from 'react-i18next'
 import { AlertTriangle, ShieldAlert, Trash2 } from 'lucide-react'
 import { UserAvatar } from '@/components/user/UserAvatar'
 import { useTopRanks } from '@/hooks/useTopRanks'
+import { translateApiError } from '@/lib/api-errors'
+
+// Prefers the backend's own reason (e.g. "Cannot demote another
+// administrator") over the generic fallback, while still letting a stable
+// error `code` take priority when one is present.
+const describeActionError = (err: unknown, fallback: string) =>
+  translateApiError(err, err instanceof Error && err.message ? err.message : fallback)
 
 const ROLE_BADGE_STYLES: Record<UserRole, string> = {
   ADMIN: 'bg-purple-100 text-purple-700',
@@ -35,17 +42,45 @@ export function UsersTab({
     user: AdminUser
     role: UserRole
   } | null>(null)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [actionError, setActionError] = useState<string | null>(null)
+
+  const closeDeleteModal = () => {
+    setDeletingUser(null)
+    setActionError(null)
+  }
+
+  const closeRoleChangeModal = () => {
+    setPendingRoleChange(null)
+    setActionError(null)
+  }
 
   const confirmDelete = async () => {
     if (!deletingUser) return
-    await onDeleteUser(deletingUser.id)
-    setDeletingUser(null)
+    setIsSubmitting(true)
+    setActionError(null)
+    try {
+      await onDeleteUser(deletingUser.id)
+      setDeletingUser(null)
+    } catch (err) {
+      setActionError(describeActionError(err, t('admin.usersTab.actionFailed')))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const confirmRoleChange = async () => {
     if (!pendingRoleChange) return
-    await onRoleChange(pendingRoleChange.user.id, pendingRoleChange.role)
-    setPendingRoleChange(null)
+    setIsSubmitting(true)
+    setActionError(null)
+    try {
+      await onRoleChange(pendingRoleChange.user.id, pendingRoleChange.role)
+      setPendingRoleChange(null)
+    } catch (err) {
+      setActionError(describeActionError(err, t('admin.usersTab.actionFailed')))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -103,10 +138,11 @@ export function UsersTab({
                   <div className="flex items-center justify-center gap-2">
                     <select
                       value={user.role}
-                      disabled={isSelf}
+                      disabled={isSelf || user.role === 'ADMIN'}
                       onChange={(event) => {
                         const role = event.target.value as UserRole
                         if (role === user.role) return
+                        setActionError(null)
                         setPendingRoleChange({ user, role })
                       }}
                       className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
@@ -119,7 +155,10 @@ export function UsersTab({
                     <button
                       type="button"
                       disabled={isSelf || user.role === 'ADMIN'}
-                      onClick={() => setDeletingUser(user)}
+                      onClick={() => {
+                        setActionError(null)
+                        setDeletingUser(user)
+                      }}
                       title={t('admin.usersTab.delete')}
                       aria-label={t('admin.usersTab.delete')}
                       className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-300 disabled:hover:bg-transparent"
@@ -157,23 +196,30 @@ export function UsersTab({
                     {t('admin.usersTab.confirmPromoteAdminWarning')}
                   </p>
                 )}
+                {actionError && (
+                  <p className="mt-2 rounded-lg bg-red-50 p-2 text-sm text-red-700">
+                    {actionError}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setPendingRoleChange(null)}
-                className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                onClick={closeRoleChangeModal}
+                disabled={isSubmitting}
+                className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {t('common.cancel')}
               </button>
               <button
                 type="button"
                 onClick={() => void confirmRoleChange()}
-                className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700"
+                disabled={isSubmitting}
+                className="rounded-lg bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {t('admin.usersTab.confirmRoleChangeButton')}
+                {isSubmitting ? t('common.saving') : t('admin.usersTab.confirmRoleChangeButton')}
               </button>
             </div>
           </div>
@@ -196,23 +242,30 @@ export function UsersTab({
                     username: deletingUser.username,
                   })}
                 </p>
+                {actionError && (
+                  <p className="mt-2 rounded-lg bg-red-50 p-2 text-sm text-red-700">
+                    {actionError}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setDeletingUser(null)}
-                className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+                onClick={closeDeleteModal}
+                disabled={isSubmitting}
+                className="rounded-lg px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {t('common.cancel')}
               </button>
               <button
                 type="button"
                 onClick={() => void confirmDelete()}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                disabled={isSubmitting}
+                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {t('admin.usersTab.delete')}
+                {isSubmitting ? t('common.deleting') : t('admin.usersTab.delete')}
               </button>
             </div>
           </div>

@@ -61,6 +61,7 @@ export async function sendFriendRequest(
         addresseeId,
         'FRIEND_REQUEST',
         'sent you a friend request',
+        requesterId,
         requesterId
       );
 
@@ -80,6 +81,7 @@ export async function sendFriendRequest(
     addresseeId,
     'FRIEND_REQUEST',
     'sent you a friend request',
+    requesterId,
     requesterId);
 
   return friendship;
@@ -167,6 +169,7 @@ export async function respondToFriendRequest(
       requesterId,
       'FRIEND_ACCEPTED',
       'accepted your friend request',
+      addresseeId,
       addresseeId
     );
   }

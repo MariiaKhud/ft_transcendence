@@ -247,7 +247,7 @@
       "newFriendHint": "Jullie kunnen nu met elkaar chatten en elkaars activiteit bekijken",
       "nowFriends": "is nu je vriend(in)",
       "message": "heeft je een bericht gestuurd",
-      "badge": "heeft de badge {{badge}} verdiend",
+      "badge": "Je hebt de badge {{badge}} verdiend",
       "comment": "heeft gereageerd op je artikel \"{{title}}\"",
       "like": "vindt je artikel \"{{title}}\" leuk",
       "contentRemovedArticle": "Je artikel \"{{title}}\" is verwijderd door een moderator.",
@@ -516,6 +516,7 @@
       "confirmRoleChangeBody": "De rol van @{{username}} wijzigen van {{fromRole}} naar {{toRole}}?",
       "confirmPromoteAdminWarning": "Beheerders hebben volledige toegang om alle gebruikers, inhoud en instellingen te beheren. Geef deze rol alleen aan mensen die je vertrouwt.",
       "confirmRoleChangeButton": "Rol wijzigen",
+      "actionFailed": "Actie mislukt. Probeer het opnieuw.",
       "roles": {
         "USER": "Gebruiker",
         "MODERATOR": "Moderator",
