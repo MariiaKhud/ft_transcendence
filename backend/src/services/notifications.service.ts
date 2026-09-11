@@ -71,12 +71,19 @@ export async function getNotifications(userId: string, unreadOnly: boolean) {
         }
       }
 
-      if (!notification.actorId) {
+      const actorId = notification.actorId ?? (
+        ['FRIEND_REQUEST', 'FRIEND_ACCEPTED', 'FOLLOWED', 'MESSAGE', 'BADGE']
+          .includes(notification.type)
+          ? notification.refId
+          : null
+      )
+
+      if (!actorId) {
         return notification;
       }
 
       const actor = await prisma.user.findUnique({
-        where: { id: notification.actorId },
+        where: { id: actorId },
         select: {
           id: true,
           username: true,
