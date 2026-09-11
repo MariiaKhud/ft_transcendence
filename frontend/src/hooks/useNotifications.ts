@@ -97,6 +97,7 @@ export function useNotifications() {
     setUnreadCount((prev) => Math.max(0, prev - 1));
     try {
       await markOneAsRead(id);
+      window.dispatchEvent(new Event('notifications:changed'));
     } catch {
       // On failure, re-fetch to restore real state
       fetch();
@@ -109,6 +110,7 @@ export function useNotifications() {
     setUnreadCount(0);
     try {
       await markAllAsRead();
+      window.dispatchEvent(new Event('notifications:changed'));
     } catch {
       fetch();
     }
