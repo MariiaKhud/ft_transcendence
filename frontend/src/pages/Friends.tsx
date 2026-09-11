@@ -351,7 +351,7 @@ function FriendCard({
                    p-4
                    shadow-sm
                    backdrop-blur-sm">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Link
           to={`/profile/${friend.username}`}
           className="flex
@@ -415,15 +415,21 @@ function FriendCard({
         </Link>
 
         <div className="flex
+                        w-full
                         shrink-0
-                        items-center
-                        gap-2">
+                        flex-wrap
+                        items-start
+                        justify-center
+                        gap-2
+                        sm:w-auto
+                        sm:justify-end">
           <MessageButtonLink username={friend.username} />
 
           {/* FriendButton handles remove with hover → "Remove" pattern */}
           <FriendButton
             targetUserId={friend.id}
             initialState="friends"
+            className="!contents"
             onStateChange={(newState) => {
               if (newState === 'none') onRemoved()
             }}

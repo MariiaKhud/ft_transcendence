@@ -29,6 +29,7 @@ export function MobileMenu({ currentUser, hasRestoredSession, logout }: MobileMe
   const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
+  const isStaff = currentUser?.role === 'ADMIN' || currentUser?.role === 'MODERATOR'
 
   useEffect(() => {
     if (!isOpen) return
@@ -172,6 +173,12 @@ export function MobileMenu({ currentUser, hasRestoredSession, logout }: MobileMe
               <Link to="/friends" onClick={closeMenu} className={menuLinkClassName} role="menuitem">
                 {t('profile.friends')}
               </Link>
+
+              {isStaff ? (
+                <Link to="/admin" onClick={closeMenu} className={menuLinkClassName} role="menuitem">
+                  {t('admin.title')}
+                </Link>
+              ) : null}
 
               <div className="my-2 border-t border-slate-200" />
 

@@ -20,7 +20,7 @@ export function MessageButtonLink({ username }: MessageButtonLinkProps) {
         <span className="shrink-0">
           <MessageIcon />
         </span>
-        <span className="hidden sm:inline">{t('friends.message')}</span>
+        <span>{t('friends.message')}</span>
       </Button>
     </Link>
   )

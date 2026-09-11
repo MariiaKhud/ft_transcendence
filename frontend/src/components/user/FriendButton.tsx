@@ -24,6 +24,7 @@ interface FriendButtonProps {
   targetUserId: string;
   initialState: FriendshipState;
   onStateChange?: (newState: FriendshipState) => void
+  className?: string
 }
 
 interface FriendButtonErrorState {
@@ -40,14 +41,28 @@ function FriendButtonError({ error }: { error: FriendButtonErrorState | null }) 
   return (
     <p
       role="status"
-      className="absolute right-0 top-full z-20 mt-2 w-max max-w-[min(18rem,calc(100vw-2rem))] rounded-lg border border-amber-200/50 bg-amber-50/95 px-3 py-2 text-xs font-medium leading-snug text-amber-700 shadow-sm"
+      className="basis-full
+                 w-full
+                 max-w-[200px]
+                 rounded-lg
+                 border
+                 border-amber-200/50
+                 bg-amber-50/95
+                 px-3
+                 py-2
+                 text-center
+                 text-xs
+                 font-medium
+                 leading-snug
+                 text-amber-700
+                 shadow-sm"
     >
       {error.translationKey ? t(error.translationKey) : error.code ? t(`api.errors.${error.code}`) : error.message}
     </p>
   )
 }
 
-export function FriendButton({ targetUserId, initialState, onStateChange }: FriendButtonProps) {
+export function FriendButton({ targetUserId, initialState, onStateChange, className }: FriendButtonProps) {
   const { t } = useTranslation();
   const { currentUser } = useAuth();
   const [state, setState] = useState<FriendshipState>(initialState);
@@ -97,7 +112,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   if (state === 'none') {
     return (
-      <div className="relative flex flex-col items-end gap-1">
+      <div className={`${className ?? ''} relative flex flex-col items-end gap-1`}>
         <Button
           variant="profile"
           onClick={() => handle(() => sendFriendRequest(targetUserId), 'pending_sent')}
@@ -116,7 +131,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   if (state === 'pending_sent') {
     return (
-      <div className="relative flex flex-col items-end gap-1">
+      <div className={`${className ?? ''} relative flex flex-col items-end gap-1`}>
         <Button
           variant="profileSecondary"
           onClick={async () => {
@@ -166,7 +181,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   if (state === 'pending_received') {
     return (
-      <div className="relative flex flex-col items-end gap-1">
+      <div className={`${className ?? ''} relative flex flex-col items-end gap-1`}>
         <div className="flex gap-2">
           <Button
             variant="profileSuccess"
@@ -197,7 +212,7 @@ export function FriendButton({ targetUserId, initialState, onStateChange }: Frie
 
   // state === 'friends'
   return (
-    <div className="relative flex flex-col items-end gap-1">
+    <div className={`${className ?? ''} relative flex flex-col items-end gap-1`}>
       <Button
         variant="profileSecondary"
         onClick={() => handle(() => removeFriend(targetUserId), 'none')}
