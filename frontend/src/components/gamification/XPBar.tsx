@@ -8,7 +8,7 @@ interface XPBarProps {
 }
 
 export const XPBar = ({ level, experiencePoints, className = '' }: XPBarProps) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const { current: xpInCurrentLevel, needed: xpNeeded, percentage } = getProgressToNextLevel(
     experiencePoints,
@@ -42,7 +42,7 @@ export const XPBar = ({ level, experiencePoints, className = '' }: XPBarProps) =
       {/* XP text */}
       <div className="mt-4 flex items-center justify-between text-sm">
         <span className="text-slate-600">
-          {t('profile.xpTotal', { xp: experiencePoints.toLocaleString() })}
+          {t('profile.xpTotal', { xp: experiencePoints.toLocaleString(i18n.language) })}
         </span>
         <span className="text-slate-500">
           {t('profile.toNextLevel', { 

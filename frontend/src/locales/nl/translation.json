@@ -402,6 +402,7 @@
   },
   "profile": {
     "eyebrow": "Profiel",
+    "avatarAlt": "Avatar van {{name}}",
     "loading": "Profiel laden...",
     "unableToLoad": "Kan profiel niet laden",
     "unavailable": "Dit profiel bestaat niet of is momenteel niet beschikbaar.",

@@ -402,6 +402,7 @@
   },
   "profile": {
     "eyebrow": "Profile",
+    "avatarAlt": "{{name}} avatar",
     "loading": "Loading profile...",
     "unableToLoad": "Unable to load profile",
     "unavailable": "This profile does not exist or is currently unavailable.",

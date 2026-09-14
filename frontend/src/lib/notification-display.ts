@@ -1,5 +1,6 @@
 import type { TFunction } from 'i18next'
 import type { Notification } from '@/hooks/useNotifications'
+import { formatLocalizedDate } from '@/lib/date-format'
 
 export type NotificationActionState = 'accepted' | 'declined' | undefined
 
@@ -86,5 +87,5 @@ export function formatNotificationTime(dateStr: string, t: TFunction): string {
   if (diffMins < 60) return t('notification.time.minutesAgo', { count: diffMins })
   if (diffHours < 24) return t('notification.time.hoursAgo', { count: diffHours })
   if (diffDays < 7) return t('notification.time.daysAgo', { count: diffDays })
-  return date.toLocaleDateString()
+  return formatLocalizedDate(dateStr)
 }

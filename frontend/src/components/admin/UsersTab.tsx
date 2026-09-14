@@ -6,6 +6,7 @@ import { AlertTriangle, ShieldAlert, Trash2 } from 'lucide-react'
 import { UserAvatar } from '@/components/user/UserAvatar'
 import { useTopRanks } from '@/hooks/useTopRanks'
 import { translateApiError } from '@/lib/api-errors'
+import { formatLocalizedDate } from '@/lib/date-format'
 
 // Prefers the backend's own reason (e.g. "Cannot demote another
 // administrator") over the generic fallback, while still letting a stable
@@ -131,7 +132,7 @@ export function UsersTab({
                 </td>
 
                 <td className="px-4 py-4 text-center text-sm text-slate-700">
-                  {new Date(user.createdAt).toLocaleDateString()}
+                  {formatLocalizedDate(user.createdAt)}
                 </td>
 
                 <td className="px-4 py-4">

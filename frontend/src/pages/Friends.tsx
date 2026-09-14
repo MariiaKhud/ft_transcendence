@@ -382,12 +382,12 @@ function FriendCard({
               title={
                 friend.isOnline
                   ? t('friends.online')
-                  : t('friends.lastSeen', { time: formatLastSeen(friend.lastSeenAt) })
+                  : t('friends.lastSeen', { time: formatLastSeen(friend.lastSeenAt, t) })
               }
               aria-label={
                 friend.isOnline
                   ? t('friends.online')
-                  : t('friends.lastSeen', { time: formatLastSeen(friend.lastSeenAt) })
+                  : t('friends.lastSeen', { time: formatLastSeen(friend.lastSeenAt, t) })
               }
             />
           </div>

@@ -1,12 +1,17 @@
 import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
+import type { TFunction } from 'i18next'
+import i18n from '@/lib/i18n'
+import { formatLocalizedDate } from '@/lib/date-format'
 
 // Join class names and remove Tailwind conflicts.
 export const cn = (...inputs: ClassValue[]) => {
   return twMerge(clsx(inputs))
 }
 
-export function formatLastSeen(dateStr: string): string {
+// Reuses the notification.time.* keys — same "5m ago"-style phrasing,
+// no reason to duplicate the translations for a second feature.
+export function formatLastSeen(dateStr: string, t: TFunction): string {
   const date = new Date(dateStr)
   const now = new Date()
   const diffMs = now.getTime() - date.getTime()
@@ -14,14 +19,14 @@ export function formatLastSeen(dateStr: string): string {
   const diffHours = Math.floor(diffMins / 60)
   const diffDays = Math.floor(diffHours / 24)
 
-  if (diffMins < 1) return 'just now'
-  if (diffMins < 60) return `${diffMins}m ago`
-  if (diffHours < 24) return `${diffHours}h ago`
-  if (diffDays < 7) return `${diffDays}d ago`
-  return date.toLocaleDateString()
+  if (diffMins < 1) return t('notification.time.justNow')
+  if (diffMins < 60) return t('notification.time.minutesAgo', { count: diffMins })
+  if (diffHours < 24) return t('notification.time.hoursAgo', { count: diffHours })
+  if (diffDays < 7) return t('notification.time.daysAgo', { count: diffDays })
+  return formatLocalizedDate(dateStr)
 }
 
 export function formatMessageTime(dateStr: string): string {
   const date = new Date(dateStr)
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  return date.toLocaleTimeString(i18n.language, { hour: '2-digit', minute: '2-digit' })
 }

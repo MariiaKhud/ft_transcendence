@@ -10,6 +10,7 @@ import { getSocket } from '@/lib/socket'
 import { formatCategoryLabel, getInitials, toSafeImageUrl } from '@/lib/article-display'
 import { useTopRanks } from '@/hooks/useTopRanks'
 import { getRankFrameClass } from '@/lib/rank-frame'
+import { formatLocalizedDate } from '@/lib/date-format'
 import { getApiErrorCode, translateApiError } from '@/lib/api-errors'
 import { getCurrentUser } from '@/api/auth'
 import {
@@ -488,7 +489,7 @@ export const Article = () => {
                   {authorName}
                 </Link>
                 <span className="text-xs text-slate-500">
-                  {new Date(article.createdAt).toLocaleDateString()}
+                  {formatLocalizedDate(article.createdAt)}
                 </span>
               </div>
             </div>
@@ -619,7 +620,7 @@ export const Article = () => {
                           {commentAuthorName}
                         </Link>
                         <span className="text-xs text-slate-500">
-                          {new Date(comment.createdAt).toLocaleDateString()}
+                          {formatLocalizedDate(comment.createdAt)}
                         </span>
 
                         {!comment.isRemoved && !isOwnComment && isStaff && (

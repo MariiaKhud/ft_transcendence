@@ -3,6 +3,7 @@ import type { Article } from '@/api/articles'
 import { formatCategoryLabel, getInitials, stripMarkdown, toSafeImageUrl } from '@/lib/article-display'
 import { useTopRanks } from '@/hooks/useTopRanks'
 import { getRankFrameClass } from '@/lib/rank-frame'
+import { formatLocalizedDate } from '@/lib/date-format'
 
 interface ArticleCardProps {
   article: Article
@@ -52,7 +53,7 @@ export const ArticleCard = ({ article }: ArticleCardProps) => {
             >
               {authorName}
             </Link>
-            <span className="text-xs text-slate-500">· {new Date(article.createdAt).toLocaleDateString()}</span>
+            <span className="text-xs text-slate-500">· {formatLocalizedDate(article.createdAt)}</span>
           </div>
 
           <div className="flex gap-4 text-sm text-slate-600">

@@ -445,3 +445,106 @@ test('applyPreferredLanguage only switches for a supported, different language',
   assert.match(i18nSource, /supportedLanguages\.includes\(preferredLanguage as SupportedLanguage\)/);
   assert.match(i18nSource, /i18n\.language !== preferredLanguage/);
 });
+
+// ─── Regression coverage for the locale-awareness audit ──────────────────
+// `Date#toLocaleDateString`/`toLocaleString` (and `Number#toLocaleString`)
+// silently fall back to the browser's own locale when called with no
+// explicit locale argument, so they ignore an in-app language switch that
+// diverges from the OS/browser language. The tests below guard the fix:
+// every date/number display routes through a helper that passes the active
+// i18next language explicitly.
+
+test('date-format helper resolves dates via the active i18next language, not the browser default', () => {
+  const dateFormatSource = readFileSync(path.join(frontendRoot, 'src/lib/date-format.ts'), 'utf8');
+  assert.match(dateFormatSource, /export const formatLocalizedDate/);
+  assert.match(dateFormatSource, /export const formatLocalizedDateTime/);
+  assert.match(dateFormatSource, /toLocaleDateString\(i18n\.language/);
+  assert.match(dateFormatSource, /toLocaleString\(i18n\.language/);
+});
+
+test('supported language codes are valid Intl locale identifiers', () => {
+  // Guards against a future typo'd/unsupported code being added to
+  // supportedLanguages — an invalid BCP-47 tag throws a RangeError at
+  // render time instead of failing loudly at the config.
+  for (const lang of ['en', 'nl', 'uk']) {
+    assert.doesNotThrow(() => new Date('2026-01-15T10:30:00.000Z').toLocaleDateString(lang));
+    assert.doesNotThrow(() => new Date('2026-01-15T10:30:00.000Z').toLocaleString(lang));
+    assert.doesNotThrow(() =>
+      new Date('2026-01-15T10:30:00.000Z').toLocaleTimeString(lang, { hour: '2-digit', minute: '2-digit' }),
+    );
+    assert.doesNotThrow(() => (1234).toLocaleString(lang));
+  }
+});
+
+test('date-heavy views format dates through the locale-aware helper instead of a bare toLocale*() call', () => {
+  const filesThatMustUseIt = [
+    ['src/components/ArticleCard.tsx', 'formatLocalizedDate'],
+    ['src/pages/Article.tsx', 'formatLocalizedDate'],
+    ['src/components/admin/UsersTab.tsx', 'formatLocalizedDate'],
+    ['src/components/admin/RemovedArticlesTab.tsx', 'formatLocalizedDateTime'],
+    ['src/components/admin/RemovedCommentsTab.tsx', 'formatLocalizedDateTime'],
+    ['src/pages/Profile.tsx', 'formatLocalizedDate'],
+    ['src/lib/notification-display.ts', 'formatLocalizedDate'],
+  ];
+
+  for (const [relativePath, helperName] of filesThatMustUseIt) {
+    const source = readFileSync(path.join(frontendRoot, relativePath), 'utf8');
+    assert.match(
+      source,
+      new RegExp(`import \\{[^}]*\\b${helperName}\\b[^}]*\\} from '@/lib/date-format'`),
+      `${relativePath} does not import ${helperName} from '@/lib/date-format'`,
+    );
+    assert.doesNotMatch(
+      source,
+      /\.toLocaleDateString\(\)|\.toLocaleString\(\)/,
+      `regression: ${relativePath} has a bare toLocale*() call with no locale argument`,
+    );
+  }
+});
+
+test('XPBar formats the XP total using the active i18next language, not the browser default', () => {
+  const source = readFileSync(path.join(frontendRoot, 'src/components/gamification/XPBar.tsx'), 'utf8');
+  assert.match(source, /const \{ t, i18n \} = useTranslation\(\)/);
+  assert.match(source, /experiencePoints\.toLocaleString\(i18n\.language\)/);
+});
+
+test('Profile page avatar alt text goes through i18n instead of a hardcoded "avatar" suffix', () => {
+  const profileSource = readFileSync(path.join(frontendRoot, 'src/pages/Profile.tsx'), 'utf8');
+  assert.match(profileSource, /t\('profile\.avatarAlt',\s*\{\s*name:\s*displayName\s*\}\)/);
+  assert.doesNotMatch(
+    profileSource,
+    /alt=\{`\$\{displayName\} avatar`\}/,
+    'regression: avatar alt text was hardcoded again instead of going through t()',
+  );
+  for (const [lang, bundle] of [['en', en], ['nl', nl], ['uk', uk]]) {
+    assert.ok(bundle.profile?.avatarAlt, `${lang}.profile.avatarAlt is missing`);
+    assert.match(bundle.profile.avatarAlt, /\{\{\s*name\s*\}\}/, `${lang}.profile.avatarAlt must interpolate {{name}}`);
+  }
+});
+
+test('formatLastSeen and formatMessageTime resolve through i18n instead of hardcoded English', () => {
+  const utilsSource = readFileSync(path.join(frontendRoot, 'src/lib/utils.ts'), 'utf8');
+
+  assert.match(utilsSource, /export function formatLastSeen\(dateStr: string, t: TFunction\)/);
+  assert.match(utilsSource, /t\('notification\.time\.justNow'\)/);
+  assert.match(utilsSource, /t\('notification\.time\.minutesAgo',\s*\{\s*count:\s*diffMins\s*\}\)/);
+  assert.match(utilsSource, /t\('notification\.time\.hoursAgo',\s*\{\s*count:\s*diffHours\s*\}\)/);
+  assert.match(utilsSource, /t\('notification\.time\.daysAgo',\s*\{\s*count:\s*diffDays\s*\}\)/);
+  assert.doesNotMatch(utilsSource, /return\s+'just now'/, 'regression: formatLastSeen reverted to a hardcoded English string');
+  assert.doesNotMatch(utilsSource, /`\$\{diff(Mins|Hours|Days)\}[a-z]+ ago`/, 'regression: formatLastSeen reverted to a hardcoded English string');
+
+  assert.match(utilsSource, /toLocaleTimeString\(i18n\.language/, 'formatMessageTime should format the clock time using the active i18next language');
+});
+
+test('Friends page passes t into formatLastSeen so the last-seen label follows the active language', () => {
+  const friendsSource = readFileSync(path.join(frontendRoot, 'src/pages/Friends.tsx'), 'utf8');
+  const callCount = (friendsSource.match(/formatLastSeen\(friend\.lastSeenAt,\s*t\)/g) ?? []).length;
+  assert.equal(callCount, 2, 'expected both the title and aria-label to call formatLastSeen(friend.lastSeenAt, t)');
+});
+
+test('notification.time keys reused by formatLastSeen are actually translated in nl and uk, not left in English', () => {
+  for (const key of ['justNow', 'minutesAgo', 'hoursAgo', 'daysAgo']) {
+    assert.notEqual(nl.notification.time[key], en.notification.time[key], `nl.notification.time.${key} matches the English string`);
+    assert.notEqual(uk.notification.time[key], en.notification.time[key], `uk.notification.time.${key} matches the English string`);
+  }
+});
