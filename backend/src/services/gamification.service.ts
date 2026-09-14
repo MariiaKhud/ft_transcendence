@@ -45,6 +45,18 @@ export async function awardXP(userId: string, amount: number, db: Db = prisma) {
       select: { id: true, xp: true, level: true },
     })
 
+    if (level > locked.level) {
+      await tx.notification.create({
+        data: {
+          userId,
+          type: 'LEVEL_UP',
+          message: String(level),
+          refId: userId,
+          actorId: userId,
+        },
+      })
+    }
+
     return { ...updated, leveledUp: level > locked.level }
   }
 

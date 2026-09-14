@@ -25,7 +25,7 @@ export function NotificationMessage({
       ? t('notification.types.friendRequestDeclined')
       : getNotificationText(t, notif)
 
-  if (notif.type === 'CONTENT_REMOVED' || notif.type === 'BADGE') return message
+  if (notif.type === 'CONTENT_REMOVED' || notif.type === 'BADGE' || notif.type === 'LEVEL_UP') return message
 
   return (
     <>

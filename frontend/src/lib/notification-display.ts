@@ -27,6 +27,7 @@ export function notificationIcon(type: string): string {
     LIKE: '❤️',
     CONTENT_REMOVED: '🚫',
     BADGE: '🏅',
+    LEVEL_UP: '⬆️',
   }
   return icons[type] ?? '🔔'
 }
@@ -58,6 +59,9 @@ export function getNotificationText(t: TFunction, notif: Notification): string {
       const badge = t(`profile.badgeNames.${notif.message}`, { defaultValue: notif.message })
       return t('notification.types.badge', { badge })
     }
+
+    case 'LEVEL_UP':
+      return t('notification.types.levelUp', { level: notif.message })
 
     case 'COMMENT':
     case 'LIKE': {

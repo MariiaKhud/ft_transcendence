@@ -249,6 +249,7 @@
       "nowFriends": "is now your friend",
       "message": "sent you a message",
       "badge": "You earned the {{badge}} badge",
+      "levelUp": "You reached level {{level}}",
       "comment": "commented on your article \"{{title}}\"",
       "like": "liked your article \"{{title}}\"",
       "contentRemovedArticle": "Your article \"{{title}}\" was removed by a moderator.",

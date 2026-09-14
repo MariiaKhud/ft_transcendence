@@ -25,6 +25,7 @@ export function LevelUpToast() {
 
       setLevel(newLevel)
       setIsVisible(true)
+      window.dispatchEvent(new Event('notifications:changed'))
 
       dismissTimer = setTimeout(() => setIsVisible(false), AUTO_DISMISS_MS)
     }

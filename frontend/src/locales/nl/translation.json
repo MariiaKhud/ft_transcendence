@@ -249,6 +249,7 @@
       "nowFriends": "is nu je vriend(in)",
       "message": "heeft je een bericht gestuurd",
       "badge": "Je hebt de badge {{badge}} verdiend",
+      "levelUp": "Je hebt level {{level}} bereikt",
       "comment": "heeft gereageerd op je artikel \"{{title}}\"",
       "like": "vindt je artikel \"{{title}}\" leuk",
       "contentRemovedArticle": "Je artikel \"{{title}}\" is verwijderd door een moderator.",
