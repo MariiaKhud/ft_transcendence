@@ -7,6 +7,7 @@ import { Prisma } from '@prisma/client'
 import type { Request, Response } from 'express'
 import multer from 'multer'
 import { promises as fs } from 'fs'
+import path from 'node:path'
 import { prisma } from '../lib/prisma.js'
 import { AppError, handleAsyncErrors } from '../middleware/error.middleware.js'
 import { ErrorCode } from '../lib/error-codes.js'
@@ -29,6 +30,7 @@ import {
   generateCvFilename,
   USER_SEARCH_RESULTS_LIMIT,
   validateCvMimetype,
+  getProtectedCvUrl,
 } from './users.route-helpers.js'
 import type { EditableProfile } from './users.route-helpers.js'
 import { updateOnlineStatus, getUserById } from '../controllers/users.controller.js';
@@ -252,6 +254,33 @@ const getProfileArticlesHandler = async (req: Request, res: Response) => {
   res.status(200).json({ success: true, data: user.articles })
 }
 
+const downloadCvHandler = async (req: Request, res: Response) => {
+  const userId = !req.params.username
+    ? req.user?.userId
+    : undefined
+
+  const user = userId
+    ? await prisma.user.findUnique({
+        where: { id: userId },
+        select: { cvUrl: true, cvFilename: true },
+      })
+    : await prisma.user.findFirst({
+        where: { username: { equals: validateUsernameParam(req.params.username), mode: 'insensitive' } },
+        select: { cvUrl: true, cvFilename: true },
+      })
+
+  if (!user || !user.cvUrl || !user.cvFilename) {
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'CV not found')
+  }
+
+  const storedFilename = path.basename(user.cvUrl)
+  if (!user.cvUrl.startsWith('/uploads/') || storedFilename !== user.cvUrl.slice('/uploads/'.length)) {
+    throw new AppError(404, ErrorCode.USER_NOT_FOUND, 'CV not found')
+  }
+
+  res.download(path.join(getUploadsDir(), storedFilename), user.cvFilename)
+}
+
 const editMyProfileHandler = async (req: Request, res: Response) => {
   if (!req.user?.userId) {
     throw new AppError(401, ErrorCode.AUTH_REQUIRED, 'Authentication required')
@@ -286,7 +315,10 @@ const editMyProfileHandler = async (req: Request, res: Response) => {
     select: editableProfileSelect,
   })
 
-  res.status(200).json({ success: true, data: updatedUser })
+  res.status(200).json({
+    success: true,
+    data: { ...updatedUser, cvUrl: updatedUser.cvUrl ? getProtectedCvUrl() : null },
+  })
 }
 
 const uploadAvatarHandler = async (req: FileRequest, res: Response) => {
@@ -395,7 +427,10 @@ const uploadCvHandler = async (req: FileRequest, res: Response) => {
       select: editableProfileSelect,
     })
 
-    res.status(200).json({ success: true, data: updatedUser })
+    res.status(200).json({
+      success: true,
+      data: { ...updatedUser, cvUrl: updatedUser.cvUrl ? getProtectedCvUrl() : null },
+    })
   } catch (error) {
     await deleteOldCv(`/uploads/${filename}`)
     throw error
@@ -472,6 +507,7 @@ const deleteMyAccountHandler = async (req: Request, res: Response) => {
 }
 
 router.post('/me/avatar', authMiddleware, upload.single('avatar'), handleMulterError, handleAsyncErrors(uploadAvatarHandler))
+router.get('/me/cv', authMiddleware, handleAsyncErrors(downloadCvHandler))
 router.delete('/me/avatar', authMiddleware, handleAsyncErrors(deleteMyAvatarHandler))
 router.post('/me/cv', authMiddleware, uploadCv.single('cv'), handleMulterError, handleAsyncErrors(uploadCvHandler))
 router.delete('/me/cv', authMiddleware, handleAsyncErrors(deleteMyCvHandler))
@@ -480,6 +516,7 @@ router.patch('/me', authMiddleware, handleAsyncErrors(editMyProfileHandler))
 // Must be registered before '/:username' so a search request isn't swallowed by the username route.
 router.get('/search', handleAsyncErrors(searchUsersHandler))
 router.get('/leaderboard', handleAsyncErrors(getLeaderboardHandler))
+router.get('/:username/cv', authMiddleware, handleAsyncErrors(downloadCvHandler))
 router.get('/:username', handleAsyncErrors(getPublicProfileHandler))
 router.get('/:username/articles', handleAsyncErrors(getProfileArticlesHandler))
 router.patch('/me/online', authMiddleware, updateOnlineStatus)

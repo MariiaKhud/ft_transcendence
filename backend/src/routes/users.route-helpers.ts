@@ -93,6 +93,12 @@ export interface EditableProfile {
   updatedAt: Date
 }
 
+export const getProtectedCvUrl = (username?: string): string => {
+  return username
+    ? `/api/users/${encodeURIComponent(username)}/cv`
+    : '/api/users/me/cv'
+}
+
 interface PublicProfileUserRecord {
   id: string
   username: string
@@ -308,7 +314,7 @@ export const mapUserToPublicProfile = (user: PublicProfileUserRecord): PublicPro
     displayName: user.displayName,
     username: user.username,
     avatarUrl: user.avatarUrl,
-    cvUrl: user.cvUrl,
+    cvUrl: user.cvUrl ? getProtectedCvUrl(user.username) : null,
     cvFilename: user.cvFilename,
     bio: user.bio,
     isOnline: user.isOnline,

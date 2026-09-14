@@ -117,11 +117,21 @@ app.use(passport.initialize())
 // Static Files
 // ─────────────────────────────────────────────
 
-// Serve uploaded avatars at /uploads/<filename>.
+// Serve uploaded avatars at /uploads/<filename>. CVs use authenticated routes
+// and must not be reachable through this public static mount.
 const uploadsDir = process.env.UPLOAD_PATH
   ? path.resolve(process.env.UPLOAD_PATH)
   : path.resolve(__dirname, '../../uploads')
-app.use('/uploads', express.static(uploadsDir))
+const publicAvatarFiles = express.static(uploadsDir)
+app.use('/uploads', (req, res, next) => {
+  const extension = path.extname(req.path).toLowerCase()
+  if (!['.jpg', '.jpeg', '.png', '.webp'].includes(extension)) {
+    next()
+    return
+  }
+
+  publicAvatarFiles(req, res, next)
+})
 
 // ─────────────────────────────────────────────
 // Health Check

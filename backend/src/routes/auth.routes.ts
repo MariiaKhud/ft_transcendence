@@ -27,6 +27,7 @@ import {
   validateRegisterInput,
 } from './auth.routes-helpers.js'
 import { forceOffline } from '../socket/socket.server.js'
+import { getProtectedCvUrl } from './users.route-helpers.js'
 
 // Router for all auth endpoints.
 const router = Router()
@@ -333,7 +334,10 @@ const loginHandler = async (req: Request, res: Response) => {
 
   // Remove password hash before sending user data.
   const { passwordHash: _passwordHash, ...publicUser } = user
-  res.status(200).json({ success: true, data: publicUser })
+  res.status(200).json({
+    success: true,
+    data: { ...publicUser, cvUrl: publicUser.cvUrl ? getProtectedCvUrl() : null },
+  })
 }
 
 // Log out by clearing cookies after CSRF check.
@@ -390,7 +394,10 @@ const meHandler = async (req: Request, res: Response) => {
     return
   }
 
-  res.status(200).json({ success: true, data: user })
+  res.status(200).json({
+    success: true,
+    data: { ...user, cvUrl: user.cvUrl ? getProtectedCvUrl() : null },
+  })
 }
 
 // OAuth login flow handlers. Passport handles the provider redirect and callback.
