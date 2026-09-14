@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import type { AdminComment } from '@/types/admin'
 import { useTranslation } from 'react-i18next'
 import { Search, X } from 'lucide-react'
+import { formatLocalizedDateTime } from '@/lib/date-format'
 
 type RemovedCommentsTabProps = {
   comments: AdminComment[]
@@ -89,7 +90,7 @@ export function RemovedCommentsTab({ comments, onRestoreComment }: RemovedCommen
                 <p className="mt-1 text-xs text-slate-500">
                   {t('admin.removedAt', {
                     date: comment.removedAt
-                      ? new Date(comment.removedAt).toLocaleString()
+                      ? formatLocalizedDateTime(comment.removedAt)
                       : t('admin.unknownDate'),
                   })}
                 </p>

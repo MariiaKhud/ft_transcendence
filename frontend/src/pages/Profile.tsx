@@ -16,6 +16,7 @@ import { BadgeList } from '@/components/gamification/BadgeList'
 import { StatusMessage } from '@/components/ui/status-message'
 import { useTopRanks } from '@/hooks/useTopRanks'
 import { getRankFrameClass } from '@/lib/rank-frame'
+import { formatLocalizedDate } from '@/lib/date-format'
 
 // Show readable date like "Jun 25, 2026".
 const formatDate = (isoDate: string, unknownDateLabel: string) => {
@@ -25,7 +26,7 @@ const formatDate = (isoDate: string, unknownDateLabel: string) => {
     return unknownDateLabel
   }
 
-  return date.toLocaleDateString(undefined, {
+  return formatLocalizedDate(isoDate, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -262,7 +263,7 @@ export const Profile = () => {
             {/* Avatar image or initials if no image. */}
             <div className={`flex h-20 w-20 flex-shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-white/50 bg-gradient-to-br from-purple-500 to-pink-500 text-2xl font-bold text-white shadow-lg ${getRankFrameClass(topRanks.get(profile.id))}`}>
               {avatarUrl ? (
-                <img src={avatarUrl} alt={`${displayName} avatar`} className="h-full w-full object-cover" />
+                <img src={avatarUrl} alt={t('profile.avatarAlt', { name: displayName })} className="h-full w-full object-cover" />
               ) : (
                 <span>{getInitials(profile)}</span>
               )}

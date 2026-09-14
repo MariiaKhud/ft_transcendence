@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import type { AdminArticle } from '@/types/admin'
 import { useTranslation } from 'react-i18next'
 import { Search, X } from 'lucide-react'
+import { formatLocalizedDateTime } from '@/lib/date-format'
 
 type RemovedArticlesTabProps = {
   articles: AdminArticle[]
@@ -88,7 +89,7 @@ export function RemovedArticlesTab({ articles, onRestoreArticle, }: RemovedArtic
                 <p className="mt-1 text-xs text-slate-500">
                 {t('admin.removedAt', {
                     date: article.removedAt
-                      ? new Date(article.removedAt).toLocaleString()
+                      ? formatLocalizedDateTime(article.removedAt)
                       : t('admin.unknownDate'),
                   })}
                 </p>
