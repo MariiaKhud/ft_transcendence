@@ -21,6 +21,7 @@ export function notificationIcon(type: string): string {
     FRIEND_REQUEST: '👋',
     FRIEND_ACCEPTED: '🤝',
     FOLLOWED: '➕',
+    ARTICLE_CREATED: '📝',
     COMMENT: '💬',
     MESSAGE: '💬',
     LIKE: '❤️',
@@ -34,6 +35,11 @@ export function getNotificationText(t: TFunction, notif: Notification): string {
   switch (notif.type) {
     case 'FOLLOWED':
       return t('notification.types.followed')
+
+    case 'ARTICLE_CREATED': {
+      const title = notif.message.match(/"([^"]*)"/)?.[1] ?? ''
+      return t('notification.types.articleCreated', { title })
+    }
 
     case 'FRIEND_REQUEST':
       return notif.message === 'friend request declined'

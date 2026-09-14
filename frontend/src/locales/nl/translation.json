@@ -240,6 +240,7 @@
     },
     "types": {
       "followed": "is je nu aan het volgen",
+      "articleCreated": "heeft een nieuw artikel gepubliceerd: \"{{title}}\"",
       "friendRequest": "heeft je een vriendschapsverzoek gestuurd",
       "friendRequestDeclined": "vriendschapsverzoek afgewezen",
       "friendAccepted": "heeft je vriendschapsverzoek geaccepteerd",

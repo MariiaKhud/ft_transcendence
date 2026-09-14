@@ -65,6 +65,22 @@ const createArticleHandler = async (req: Request, res: Response) => {
   // After article + XP are committed, check and award badges.
   await checkAndAwardBadges(authorId)
 
+  const followers = await prisma.follow.findMany({
+    where: { followingId: authorId },
+    select: { followerId: true },
+  })
+
+  await Promise.all(followers.map(async ({ followerId }) => {
+    const message = `published a new article "${article.title}"`
+    await createNotification(followerId, 'ARTICLE_CREATED', message, article.id, authorId)
+    io.to(followerId).emit('notification:new', {
+      type: 'ARTICLE_CREATED',
+      message,
+      refId: article.id,
+      actorId: authorId,
+    })
+  }))
+
   if (xpResult.leveledUp) {
     io.to(authorId).emit('gamification:level-up', { level: xpResult.level })
   }

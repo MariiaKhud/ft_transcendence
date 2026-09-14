@@ -240,6 +240,7 @@
     },
     "types": {
       "followed": "started following you",
+      "articleCreated": "published a new article \"{{title}}\"",
       "friendRequest": "sent you a friend request",
       "friendRequestDeclined": "friend request declined",
       "friendAccepted": "accepted your friend request",

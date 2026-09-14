@@ -21,6 +21,10 @@ export function navigateToNotification(
       goToProfile(navigate, notif.actor?.username)
       break
 
+    case 'ARTICLE_CREATED':
+      if (notif.refId) navigate(`/articles/${notif.refId}`)
+      break
+
     case 'MESSAGE':
       if (notif.actor?.username) {
         navigate(`/chat/${encodeURIComponent(notif.actor.username)}`)

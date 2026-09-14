@@ -242,6 +242,7 @@
     },
     "types": {
       "followed": "почав(-ла) стежити за вами",
+      "articleCreated": "опублікував(-ла) нову статтю «{{title}}»",
       "friendRequest": "надіслав(-ла) вам запит у друзі",
       "friendRequestDeclined": "запит у друзі відхилено",
       "friendAccepted": "прийняв(-ла) ваш запит у друзі",
