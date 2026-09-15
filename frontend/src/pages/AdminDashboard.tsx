@@ -28,6 +28,7 @@ import { UsersTab } from '@/components/admin/UsersTab'
 import { RemovedArticlesTab } from '@/components/admin/RemovedArticlesTab'
 import { RemovedCommentsTab } from '@/components/admin/RemovedCommentsTab'
 import { ContentTab } from '@/components/admin/ContentTab'
+import { TabButton } from '@/components/admin/TabButton'
 
 type Tab = 'content' | 'removed_articles' | 'removed_comments' | 'users'
 
@@ -188,7 +189,7 @@ export function AdminDashboard() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6">
+    <main className="mx-auto w-full max-w-4xl space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-slate-900">
             {t('admin.title')}
@@ -243,55 +244,31 @@ export function AdminDashboard() {
           </div>
         )}
 
-      <div className="mt-6 flex gap-2 border-b border-slate-200">
-        <button
-          type="button"
+      <div className="mt-6 flex flex-wrap gap-2 border-b border-slate-200">
+        <TabButton
+          label={t('admin.content')}
+          isActive={activeTab === 'content'}
           onClick={() => setActiveTab('content')}
-          className={`rounded-t-xl px-4 py-3 text-sm font-semibold ${
-            activeTab === 'content'
-              ? 'bg-purple-600 text-white'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          {t('admin.content')}
-        </button>
+        />
 
-        <button
-          type="button"
+        <TabButton
+          label={t('admin.removedArticles')}
+          isActive={activeTab === 'removed_articles'}
           onClick={() => setActiveTab('removed_articles')}
-          className={`rounded-t-xl px-4 py-3 text-sm font-semibold ${
-            activeTab === 'removed_articles'
-              ? 'bg-purple-600 text-white'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          {t('admin.removedArticles')} 
-        </button>
+        />
 
-        <button
-        type="button"
+        <TabButton
+          label={t('admin.removedComments')}
+          isActive={activeTab === 'removed_comments'}
           onClick={() => setActiveTab('removed_comments')}
-          className={`rounded-t-xl px-4 py-3 text-sm font-semibold ${
-            activeTab === 'removed_comments'
-              ? 'bg-purple-600 text-white'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          {t('admin.removedComments')} 
-        </button>
+        />
 
         {isAdmin && (
-        <button
-          type="button"
-          onClick={() => setActiveTab('users')}
-          className={`rounded-t-xl px-4 py-3 text-sm font-semibold ${
-            activeTab === 'users'
-              ? 'bg-purple-600 text-white'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          {t('admin.users')}
-        </button> 
+          <TabButton
+            label={t('admin.users')}
+            isActive={activeTab === 'users'}
+            onClick={() => setActiveTab('users')}
+          />
         )}
       </div>
 

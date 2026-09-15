@@ -93,7 +93,7 @@ export function UsersTab({
             <th className="px-4 py-3 text-center">{t('admin.usersTab.role')}</th>
             <th className="px-4 py-3 text-center">{t('admin.usersTab.articles')}</th>
             <th className="px-4 py-3 text-center">{t('admin.usersTab.created')}</th>
-            <th className="px-4 py-3 text-center">{t('admin.usersTab.action')}</th>
+            <th className="sticky right-0 z-10 bg-slate-50 px-4 py-3 text-center">{t('admin.usersTab.action')}</th>
           </tr>
         </thead>
 
@@ -101,7 +101,7 @@ export function UsersTab({
           {users.map((user) => {
             const isSelf = user.id === currentUserId
             return (
-              <tr key={user.id} className="transition-colors hover:bg-purple-50/40">
+              <tr key={user.id} className="group transition-colors hover:bg-purple-50/40">
                 <td className="px-4 py-4">
                   <div className="flex items-center gap-3">
                     <UserAvatar avatarUrl={user.avatarUrl} username={user.username} size="small" rank={topRanks.get(user.id)} />
@@ -135,7 +135,7 @@ export function UsersTab({
                   {formatLocalizedDate(user.createdAt)}
                 </td>
 
-                <td className="px-4 py-4">
+                <td className="sticky right-0 z-10 border-l border-slate-100 bg-white px-4 py-4 transition-colors group-hover:bg-purple-50/40">
                   <div className="flex items-center justify-center gap-2">
                     <select
                       value={user.role}
@@ -146,7 +146,7 @@ export function UsersTab({
                         setActionError(null)
                         setPendingRoleChange({ user, role })
                       }}
-                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       <option value="USER">{t('admin.usersTab.roles.USER')}</option>
                       <option value="MODERATOR">{t('admin.usersTab.roles.MODERATOR')}</option>
@@ -162,9 +162,9 @@ export function UsersTab({
                       }}
                       title={t('admin.usersTab.delete')}
                       aria-label={t('admin.usersTab.delete')}
-                      className="rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-300 disabled:hover:bg-transparent"
+                      className="shrink-0 rounded-lg border border-red-200 p-2 text-red-600 hover:bg-red-50 disabled:cursor-not-allowed disabled:border-slate-200 disabled:text-slate-300 disabled:hover:bg-transparent"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4 shrink-0" />
                     </button>
                   </div>
                 </td>
@@ -264,7 +264,7 @@ export function UsersTab({
                 type="button"
                 onClick={() => void confirmDelete()}
                 disabled={isSubmitting}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="min-w-[110px] whitespace-nowrap rounded-lg bg-red-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isSubmitting ? t('common.deleting') : t('admin.usersTab.delete')}
               </button>
