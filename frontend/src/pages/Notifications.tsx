@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useNotifications, type Notification } from '@/hooks/useNotifications'
 import { Button } from '@/components/ui/button'
+import { PaginationButton } from '@/components/ui/pagination-button'
 import { CheckIcon } from '@/components/ui/icons'
 import {
   formatNotificationTime,
@@ -94,35 +95,23 @@ export function Notifications() {
                             items-center
                             justify-center
                             gap-2">
-              <button
+              <PaginationButton
                 onClick={() => setPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="rounded-lg
-                           bg-purple-600
-                           px-4
-                           py-2
-                           text-white
-                           hover:bg-purple-700
-                           disabled:bg-slate-300"
               >
                 {t('common.previous')}
-              </button>
+              </PaginationButton>
+
               <span className="font-medium text-slate-700">
                 {t('common.pageOf', { page: currentPage, totalPages })}
               </span>
-              <button
+
+              <PaginationButton
                 onClick={() => setPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="rounded-lg
-                           bg-purple-600
-                           px-4
-                           py-2
-                           text-white
-                           hover:bg-purple-700
-                           disabled:bg-slate-300"
               >
                 {t('common.next')}
-              </button>
+              </PaginationButton>
             </div>
           )}
         </>

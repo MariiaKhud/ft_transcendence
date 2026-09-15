@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type ChangeEvent, type SubmitEvent } from 
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { GlassPanel } from '@/components/ui/glass-panel'
 import { StatusMessage } from '@/components/ui/status-message'
 import { deleteMyAccount } from '@/api/auth'
 import { deleteMyAvatar, deleteMyCv, updateMyProfile, uploadMyAvatar, uploadMyCv } from '@/api/users'
@@ -372,10 +373,10 @@ export const EditProfile = () => {
   if (!hasRestoredSession || isLoading) {
     return (
       <section className="mx-auto w-full max-w-md space-y-8">
-        <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
+        <GlassPanel>
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('editProfile.title')}</p>
           <p className="mt-3 text-slate-700">{t('common.checkingSession')}</p>
-        </div>
+        </GlassPanel>
       </section>
     )
   }
@@ -395,7 +396,7 @@ export const EditProfile = () => {
       </div>
 
       {/* ── Avatar block: preview, pick file, upload, remove ── */}
-      <div className="space-y-6 rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
+      <GlassPanel className="space-y-6">
         <h2 className="text-xl font-bold text-slate-900">{t('editProfile.avatarHeading')}</h2>
 
         {/* Avatar preview */}
@@ -485,9 +486,9 @@ export const EditProfile = () => {
             {avatarSuccess}
           </StatusMessage>
         ) : null}
-      </div>
+      </GlassPanel>
 
-      <div className="space-y-6 rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
+      <GlassPanel className="space-y-6">
         <h2 className="text-xl font-bold text-slate-900">{t('editProfile.cvHeading')}</h2>
 
         <div className="min-w-0 space-y-1">
@@ -549,7 +550,7 @@ export const EditProfile = () => {
         </div>
         {cvError.length > 0 ? <StatusMessage tone="error">{cvError}</StatusMessage> : null}
         {cvSuccess.length > 0 ? <StatusMessage tone="success">{cvSuccess}</StatusMessage> : null}
-      </div>
+      </GlassPanel>
 
       {/* ── Profile details block: displayName and bio ── */}
       <form

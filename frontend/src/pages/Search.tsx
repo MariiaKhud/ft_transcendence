@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArticleCard } from '@/components/ArticleCard'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
+import { PaginationButton } from '@/components/ui/pagination-button'
 import { getSocket } from '@/lib/socket'
 import { getArticles, type Article, type ArticlesResponse } from '@/api/articles'
 import { translateApiError } from '@/lib/api-errors'
@@ -332,23 +333,23 @@ export const Search = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-2">
-              <button
+              <PaginationButton
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:bg-slate-300"
               >
                 {t('common.previous')}
-              </button>
+              </PaginationButton>
+
               <span className="font-medium text-slate-700">
                 {t('common.pageOf', { page, totalPages })}
               </span>
-              <button
+
+              <PaginationButton
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="rounded-lg bg-purple-600 px-4 py-2 text-white hover:bg-purple-700 disabled:bg-slate-300"
               >
                 {t('common.next')}
-              </button>
+              </PaginationButton>
             </div>
           )}
         </>

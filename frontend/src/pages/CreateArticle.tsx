@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
+import { GlassPanel } from '@/components/ui/glass-panel'
 import { createArticle } from '@/api/articles'
 import { useAuth } from '@/hooks/useAuth'
 
@@ -25,9 +26,9 @@ export const CreateArticle = () => {
   if (!hasRestoredSession || isLoading) {
     return (
       <section className="mx-auto w-full max-w-3xl space-y-8">
-        <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
+        <GlassPanel>
           <p className="text-slate-700">{t('common.checkingSession')}</p>
-        </div>
+        </GlassPanel>
       </section>
     )
   }
@@ -43,9 +44,9 @@ export const CreateArticle = () => {
         <p className="text-slate-600">{t('createArticle.subtitle')}</p>
       </div>
 
-      <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
+      <GlassPanel>
         <ArticleForm submitLabel={t('createArticle.publish')} isSubmitting={isSubmitting} onSubmit={handleSubmit} />
-      </div>
+      </GlassPanel>
     </section>
   )
 }

@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { FilterPills } from '@/components/ui/filter-pills'
+import { GlassPanel } from '@/components/ui/glass-panel'
+import { PaginationButton } from '@/components/ui/pagination-button'
 import { ArticleCard } from '@/components/ArticleCard'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { useStore } from '@/store/store'
@@ -174,51 +177,31 @@ export const Home = () => {
           {/* Sort */}
           <div>
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('common.sortBy')}</span>
-            <div className="flex flex-wrap gap-2">
-              {SORT_OPTIONS.map((value) => (
-                <button
-                  key={value}
-                  type="button"
-                  onClick={() => setSort(value)}
-                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-                    sort === value
-                      ? 'border-purple-600 bg-purple-600 text-white'
-                      : 'border-slate-300 bg-white text-slate-700 hover:border-purple-300 hover:bg-purple-50'
-                  }`}
-                >
-                  {t(`common.${SORT_LABEL_KEYS[value]}`)}
-                </button>
-              ))}
-            </div>
+            <FilterPills
+              options={SORT_OPTIONS}
+              value={sort}
+              onChange={setSort}
+              getLabel={(value) => t(`common.${SORT_LABEL_KEYS[value]}`)}
+            />
           </div>
 
           {/* Category pills */}
           <div>
             <span className="mb-2 block text-sm font-medium text-slate-700">{t('common.category')}</span>
-            <div className="flex flex-wrap gap-2">
-              {CATEGORY_VALUES.map((value) => (
-                <button
-                  key={value || 'all'}
-                  type="button"
-                  onClick={() => setCategory(value)}
-                  className={`rounded-full border px-4 py-1.5 text-sm font-medium transition-colors ${
-                    category === value
-                      ? 'border-purple-600 bg-purple-600 text-white'
-                      : 'border-slate-300 bg-white text-slate-700 hover:border-purple-300 hover:bg-purple-50'
-                  }`}
-                >
-                  {t(`common.categories.${value || 'ALL'}`)}
-                </button>
-              ))}
-            </div>
+            <FilterPills
+              options={CATEGORY_VALUES}
+              value={category}
+              onChange={setCategory}
+              getLabel={(value) => t(`common.categories.${value || 'ALL'}`)}
+            />
           </div>
         </div>
 
         {/* Articles list */}
         {loading ? (
-          <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md text-center">
+          <GlassPanel className="text-center">
             <p className="text-slate-700">{t('home.loadingArticles')}</p>
-          </div>
+          </GlassPanel>
         ) : error ? (
           <div className="rounded-2xl border border-red-300/30 bg-red-50/40 p-8 shadow-xl backdrop-blur-md">
             <p className="text-red-700">{error}</p>
@@ -230,9 +213,9 @@ export const Home = () => {
             </button>
           </div>
         ) : articles.length === 0 ? (
-          <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md text-center">
+          <GlassPanel className="text-center">
             <p className="text-slate-700">{t('home.noArticles')}</p>
-          </div>
+          </GlassPanel>
         ) : (
           <>
             <div className="space-y-4">
@@ -244,23 +227,23 @@ export const Home = () => {
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-8">
-                <button
+                <PaginationButton
                   onClick={() => setPage(Math.max(1, page - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 rounded-lg bg-purple-600 text-white disabled:bg-slate-300 hover:bg-purple-700"
                 >
                   {t('common.previous')}
-                </button>
+                </PaginationButton>
+
                 <span className="text-slate-700 font-medium">
                   {t('common.pageOf', { page, totalPages })}
                 </span>
-                <button
+
+                <PaginationButton
                   onClick={() => setPage(Math.min(totalPages, page + 1))}
                   disabled={page === totalPages}
-                  className="px-4 py-2 rounded-lg bg-purple-600 text-white disabled:bg-slate-300 hover:bg-purple-700"
                 >
                   {t('common.next')}
-                </button>
+                </PaginationButton>
               </div>
             )}
           </>

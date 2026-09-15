@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import ReactMarkdown from 'react-markdown'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
+import { GlassPanel } from '@/components/ui/glass-panel'
 import { PencilIcon, Spinner, TrashIcon } from '@/components/ui/icons'
 import { ArticleForm, type ArticleFormValues } from '@/components/ArticleForm'
 import { useStore } from '@/store/store'
@@ -318,6 +319,10 @@ export const Article = () => {
       // message without an avoidable 403 hitting the console.
       try {
         const freshUser = await getCurrentUser()
+        if (!freshUser) {
+          setCommentActionErrors((prev) => ({ ...prev, [comment.id]: { code: 'comment_delete_forbidden' } }))
+          return
+        }
         setCurrentUser(freshUser)
         if (freshUser.role !== 'MODERATOR' && freshUser.role !== 'ADMIN') {
           setCommentActionErrors((prev) => ({ ...prev, [comment.id]: { code: 'comment_delete_forbidden' } }))
@@ -406,9 +411,9 @@ export const Article = () => {
   if (loading) {
     return (
       <div className="mx-auto w-full max-w-4xl">
-        <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md text-center">
+        <GlassPanel className="text-center">
           <p className="text-slate-700">{t('article.loading')}</p>
-        </div>
+        </GlassPanel>
       </div>
     )
   }
@@ -431,7 +436,7 @@ export const Article = () => {
 
   return (
     <article className="mx-auto w-full max-w-4xl space-y-6">
-      <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
+      <GlassPanel>
         {!isEditing && (
           <div className="flex items-start justify-between gap-4">
             <span className="shrink-0 rounded bg-purple-100 px-2 py-1 text-xs font-medium text-purple-700">
@@ -538,10 +543,10 @@ export const Article = () => {
             </div>
           </>
         )}
-      </div>
+      </GlassPanel>
 
       {/* Comments section */}
-      <div className="rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
+      <GlassPanel>
         <h2 className="text-xl font-bold text-slate-900">{t('article.comments', { count: article.commentsCount })}</h2>
 
         {currentUser ? (
@@ -718,7 +723,7 @@ export const Article = () => {
             })
           )}
         </div>
-      </div>
+      </GlassPanel>
     </article>
   )
 }
