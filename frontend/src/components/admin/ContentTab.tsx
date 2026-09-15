@@ -57,7 +57,16 @@ export function ContentTab({ articles, onRemoveArticle }: ContentTabProps) {
         {t('admin.allContent')}
       </h2>
 
-      <div className="mt-4 flex flex-wrap items-end gap-4 rounded-2xl border border-slate-200 bg-slate-50/60 p-4">
+      <div className="mt-4
+                      flex
+                      flex-wrap
+                      items-end
+                      gap-4
+                      rounded-2xl
+                      border
+                      border-slate-200
+                      bg-slate-50/60
+                      p-4">
         <div className="min-w-[180px]">
           <label htmlFor="content-category-filter" className="mb-1 block text-sm font-medium text-slate-700">
             {t('admin.filterCategoryLabel')}
