@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { ArticleCard } from '@/components/ArticleCard'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { PaginationButton } from '@/components/ui/pagination-button'
+import { PageEyebrow } from '@/components/ui/page-eyebrow'
 import { getSocket } from '@/lib/socket'
 import { getArticles, type Article, type ArticlesResponse } from '@/api/articles'
 import { translateApiError } from '@/lib/api-errors'
@@ -176,7 +177,7 @@ export const Search = () => {
   return (
     <div className="mx-auto w-full max-w-4xl space-y-8">
       <div className="space-y-2 text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('search.eyebrow')}</p>
+        <PageEyebrow>{t('search.eyebrow')}</PageEyebrow>
         <h1 className="text-3xl font-bold tracking-tight text-slate-900">{t('search.title')}</h1>
         <p className="text-slate-600">{t('search.subtitle')}</p>
       </div>

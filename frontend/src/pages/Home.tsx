@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { FilterPills } from '@/components/ui/filter-pills'
 import { GlassPanel } from '@/components/ui/glass-panel'
 import { PaginationButton } from '@/components/ui/pagination-button'
+import { PageEyebrow } from '@/components/ui/page-eyebrow'
 import { ArticleCard } from '@/components/ArticleCard'
 import { useDebouncedValue } from '@/hooks/useDebouncedValue'
 import { useStore } from '@/store/store'
@@ -127,7 +128,7 @@ export const Home = () => {
       {/* Hero headline */}
       <section className="grid gap-8 text-center">
         <div className="mx-auto space-y-4">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('home.eyebrow')}</p>
+          <PageEyebrow>{t('home.eyebrow')}</PageEyebrow>
           <h1 className="text-5xl font-bold tracking-tight text-slate-900 sm:text-6xl">
             {t('home.headline')}
           </h1>
@@ -140,7 +141,18 @@ export const Home = () => {
 
         {!user && (
           <div className="flex justify-center">
-            <Button asChild className="rounded-full bg-gradient-to-r from-purple-600 to-pink-600 px-8 py-3 text-base font-semibold shadow-lg hover:shadow-xl hover:scale-105 transition-all">
+            <Button asChild className="rounded-full
+                                       bg-gradient-to-r
+                                       from-purple-600
+                                       to-pink-600
+                                       px-8
+                                       py-3
+                                       text-base
+                                       font-semibold
+                                       shadow-lg
+                                       hover:shadow-xl
+                                       hover:scale-105
+                                       transition-all">
               <Link to="/login">{t('home.getStarted')}</Link>
             </Button>
           </div>
@@ -150,12 +162,20 @@ export const Home = () => {
       {/* Global feed */}
       <section id="global-feed" className="mx-auto w-full max-w-4xl scroll-mt-24 space-y-8">
         <div className="space-y-2 text-center">
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('home.feedEyebrow')}</p>
+          <PageEyebrow>{t('home.feedEyebrow')}</PageEyebrow>
           <h2 className="text-3xl font-bold tracking-tight text-slate-900">{t('home.latestArticles')}</h2>
         </div>
 
         {/* Filters */}
-        <div className="rounded-2xl border border-white/30 bg-white/40 p-6 shadow-xl backdrop-blur-md space-y-4">
+        <div className="rounded-2xl
+                        border
+                        border-white/30
+                        bg-white/40
+                        p-6
+                        shadow-xl
+                        backdrop-blur-md
+                        space-y-4">
+
           {/* Search */}
           <div className="flex flex-col gap-3 sm:flex-row">
             <input
@@ -164,11 +184,36 @@ export const Home = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               maxLength={SEARCH_MAX_LENGTH}
-              className="w-full flex-1 rounded-lg border border-slate-300 px-4 py-2 text-slate-900 placeholder-slate-500 focus:border-purple-500 focus:outline-none"
+              className="w-full
+                         flex-1
+                         rounded-lg
+                         border
+                         border-slate-300
+                         px-4
+                         py-2
+                         text-slate-900
+                         placeholder-slate-500
+                         focus:border-purple-500
+                         focus:outline-none"
             />
             <Link
               to="/search"
-              className="inline-flex shrink-0 items-center justify-center rounded-lg border border-purple-200 bg-white/70 px-4 py-2 text-sm font-medium text-purple-700 transition-all hover:border-purple-300 hover:bg-white"
+              className="inline-flex
+                         shrink-0
+                         items-center
+                         justify-center
+                         rounded-lg
+                         border
+                         border-purple-200
+                         bg-white/70
+                         px-4
+                         py-2
+                         text-sm
+                         font-medium
+                         text-purple-700
+                         transition-all
+                         hover:border-purple-300
+                         hover:bg-white"
             >
               {t('home.advancedSearch')}
             </Link>
@@ -203,11 +248,23 @@ export const Home = () => {
             <p className="text-slate-700">{t('home.loadingArticles')}</p>
           </GlassPanel>
         ) : error ? (
-          <div className="rounded-2xl border border-red-300/30 bg-red-50/40 p-8 shadow-xl backdrop-blur-md">
+          <div className="rounded-2xl
+                          border
+                          border-red-300/30
+                          bg-red-50/40
+                          p-8
+                          shadow-xl
+                          backdrop-blur-md">
             <p className="text-red-700">{error}</p>
             <button
               onClick={() => fetchArticles()}
-              className="mt-4 rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
+              className="mt-4
+                         rounded-lg
+                         bg-red-600
+                         px-4
+                         py-2
+                         text-white
+                         hover:bg-red-700"
             >
               {t('common.retry')}
             </button>

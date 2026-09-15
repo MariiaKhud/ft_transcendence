@@ -14,6 +14,7 @@ import { getFriendshipStatus } from '../api/friends';
 import { XPBar } from '@/components/gamification/XPBar'
 import { BadgeList } from '@/components/gamification/BadgeList'
 import { StatusMessage } from '@/components/ui/status-message'
+import { PageEyebrow } from '@/components/ui/page-eyebrow'
 import { useTopRanks } from '@/hooks/useTopRanks'
 import { getRankFrameClass } from '@/lib/rank-frame'
 import { formatLocalizedDate } from '@/lib/date-format'
@@ -219,7 +220,7 @@ export const Profile = () => {
   if (isLoadingProfile) {
     return (
       <section className="mx-auto w-full max-w-5xl rounded-2xl border border-white/30 bg-white/40 p-8 shadow-xl backdrop-blur-md">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('profile.eyebrow')}</p>
+        <PageEyebrow>{t('profile.eyebrow')}</PageEyebrow>
         <p className="mt-4 text-slate-700">{t('profile.loading')}</p>
       </section>
     )
@@ -229,7 +230,7 @@ export const Profile = () => {
   if (isMissingUsername) {
     return (
       <section className="mx-auto w-full max-w-5xl rounded-2xl border border-red-200/50 bg-purple-50 p-8 shadow-xl backdrop-blur-md">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('profile.eyebrow')}</p>
+        <PageEyebrow>{t('profile.eyebrow')}</PageEyebrow>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{t('profile.unableToLoad')}</h1>
         <p className="mt-2 text-slate-700">{t('profile.usernameMissing')}</p>
       </section>
@@ -239,7 +240,7 @@ export const Profile = () => {
   if (resolvedProfileError || !profile) {
     return (
       <section className="mx-auto w-full max-w-5xl rounded-2xl border border-red-200/50 bg-purple-50 p-8 shadow-xl backdrop-blur-md">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('profile.eyebrow')}</p>
+        <PageEyebrow>{t('profile.eyebrow')}</PageEyebrow>
         <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-900">{t('profile.unableToLoad')}</h1>
         <p className="mt-2 text-slate-700">{resolvedProfileError || t('profile.unavailable')}</p>
       </section>
@@ -270,7 +271,7 @@ export const Profile = () => {
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('profile.eyebrow')}</p>
+              <PageEyebrow>{t('profile.eyebrow')}</PageEyebrow>
               <h1 className="mt-1 break-words text-2xl font-bold tracking-tight text-slate-900 md:text-4xl">{displayName}</h1>
               <p className="break-words text-slate-600">@{profile.username}</p>
             </div>

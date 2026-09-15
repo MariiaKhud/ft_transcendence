@@ -3,6 +3,7 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { GlassPanel } from '@/components/ui/glass-panel'
+import { PageEyebrow } from '@/components/ui/page-eyebrow'
 import { StatusMessage } from '@/components/ui/status-message'
 import { deleteMyAccount } from '@/api/auth'
 import { deleteMyAvatar, deleteMyCv, updateMyProfile, uploadMyAvatar, uploadMyCv } from '@/api/users'
@@ -374,7 +375,7 @@ export const EditProfile = () => {
     return (
       <section className="mx-auto w-full max-w-md space-y-8">
         <GlassPanel>
-          <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">{t('editProfile.title')}</p>
+          <PageEyebrow>{t('editProfile.title')}</PageEyebrow>
           <p className="mt-3 text-slate-700">{t('common.checkingSession')}</p>
         </GlassPanel>
       </section>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { getLeaderboard } from '@/api/leaderboard'
+import { PageEyebrow } from '@/components/ui/page-eyebrow'
 import { translateApiError } from '@/lib/api-errors'
 import { getInitials, toSafeImageUrl } from '@/lib/article-display'
 import { useAuth } from '@/hooks/useAuth'
@@ -44,9 +45,9 @@ export const Leaderboard = () => {
   return (
     <section className="mx-auto w-full max-w-5xl space-y-8">
       <header className="text-center">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-purple-600">
+        <PageEyebrow>
           {t('leaderboard.eyebrow')}
-        </p>
+        </PageEyebrow>
         <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
           {t('leaderboard.title')}
         </h1>

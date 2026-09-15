@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type SubmitEvent, type ReactNode } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { Button } from '@/components/ui/button'
@@ -95,7 +95,7 @@ export const Login = () => {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const { login, isLoading } = useAuth()
+  const { currentUser, hasRestoredSession, login, isLoading } = useAuth({ restoreOnMount: true })
 
   // Form values and errors.
   const [email, setEmail] = useState('')
@@ -294,6 +294,10 @@ export const Login = () => {
   const handleOAuthLogin = (provider: string) => {
     setOAuthLoadingProvider(provider)
     window.location.href = `/api/auth/oauth/${encodeURIComponent(provider)}`
+  }
+
+  if (hasRestoredSession && currentUser) {
+    return <Navigate to="/" replace />
   }
 
   return (
