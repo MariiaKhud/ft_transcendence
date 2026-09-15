@@ -189,7 +189,7 @@ export function AdminDashboard() {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6">
+    <main className="mx-auto w-full max-w-4xl space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold text-slate-900">
             {t('admin.title')}
@@ -244,7 +244,7 @@ export function AdminDashboard() {
           </div>
         )}
 
-      <div className="mt-6 flex gap-2 border-b border-slate-200">
+      <div className="mt-6 flex flex-wrap gap-2 border-b border-slate-200">
         <TabButton
           label={t('admin.content')}
           isActive={activeTab === 'content'}
