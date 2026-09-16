@@ -73,6 +73,14 @@ const changeUserRoleHandler = async (req: Request, res: Response) => {
     return
   }
 
+  if (req.user?.userId === id) {
+    res.status(400).json({
+      success: false,
+      error: 'Cannot change your own role',
+    })
+    return
+  }
+
   const targetUser = await prisma.user.findUnique({
     where: { id },
     select: {
