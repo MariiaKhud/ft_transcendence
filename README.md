@@ -568,7 +568,7 @@ We use frameworks on both sides of the application:
 
 ### Major — WebSockets (2pt) ⭐⭐
 
-**Owner: tkremnov**
+**Owner: tkremnov, tiyang**
 
 The application uses Socket.IO for real-time communication.
 Implemented real-time functionality includes:
@@ -578,7 +578,10 @@ Implemented real-time functionality includes:
 - broadcasting events to relevant users
 - multiple simultaneous connections
 - graceful handling of temporary disconnections
+- real-time article comment and like updates
 The backend maintains user socket connections and uses a 30-second grace period before marking a disconnected user as offline. This prevents short network interruptions or browser reconnects from immediately changing the user's status.
+
+Clients viewing an article join a dedicated `article:{id}` room (`article:join`/`article:leave`) so new comments, comment edits/deletes, and like-count changes are pushed to everyone viewing that article without a refetch; a separate `feed` room pushes live like/comment count updates to article cards on the global feed.
 
 ### Major — Allow users to interact with other users (2pt) ⭐⭐
 
@@ -833,7 +836,7 @@ The application includes three gamification mechanisms:
 
 ### Tingting Yang (tiyang)
 
-**Features built:** Articles (create, edit, delete), global feed, advanced search, comments, likes.
+**Features built:** Articles (create, edit, delete), global feed, advanced search, comments, likes, localisation.
 
 **Specific contributions:**
 - Implemented the full article lifecycle including Markdown rendering with heading level shift
@@ -843,7 +846,7 @@ The application includes three gamification mechanisms:
 - Implemented the optimistic UI for likes with revert-on-error
 - Added i18n for three languages with account-level persistence and backend error code translation
 
-**Challenges faced:** [FILL IN — e.g. "Real-time comment deduplication — when the socket event and HTTP response both arrive, the comment appeared twice. Fixed with a commentIdsRef set that tracks which comment IDs are already in state."]
+**Challenges faced:** Like-toggle race condition (concurrent double-click / two tabs) — articles.routes.ts toggleLikeHandler. Two near-simultaneous toggle requests from the same user can both pass the "does a like exist?" check before either writes, so the DB throws P2002 (duplicate insert) or P2025 (delete of an already-deleted row) on the loser. Instead of surfacing that as a 500, the handler catches those two Prisma codes and re-reads current state, resolving idempotently to whatever the winning request actually produced — the client never sees an error for a like that already landed.
 
 ---
 
