@@ -33,7 +33,7 @@
 - `make`
 - `mkcert` (for local HTTPS certificate generation)
   - macOS: `brew install mkcert`
-  - Ubuntu: `sudo apt install libnss3-tools && brew install mkcert` or build from source
+  - Ubuntu: install `libnss3-tools` and `mkcert` using the instructions for your distribution, or build `mkcert` from source
 
 ### 1. Clone the repository
 
@@ -92,6 +92,8 @@ OAUTH_ERROR_REDIRECT=https://localhost:8443/login
 
 > Any provider with incomplete credentials (only ID, no secret) is automatically disabled at runtime. You can leave all OAuth variables as placeholders to skip OAuth entirely for local testing.
 
+> The evaluation Docker Compose configuration uses the Docker PostgreSQL service internally at `postgres:5432`. The backend connection URL is defined by the Compose configuration, so `DATABASE_URL` in `.env` is informational unless the Compose file is changed to use it.
+
 ### 3. Start the project
 
 ```bash
@@ -100,7 +102,7 @@ make start
 
 `make start` will:
 1. Generate a local HTTPS certificate via `mkcert`
-2. Build and start all Docker containers (postgres, backend, frontend, nginx)
+2. Build and start the four Docker Compose services (postgres, backend, frontend, nginx)
 3. Wait for the backend to become healthy
 4. Run Prisma migrations
 5. Seed the database with test data
@@ -131,15 +133,36 @@ https://localhost:8443
 ### Available make commands
 
 ```bash
-make start         # generate HTTPS cert, start services, run migrations, seed database
-make up            # build and start all services
-make down          # stop all services
-make clean         # stop all services and remove all volumes
-make logs          # stream logs from all services
-make migrate       # run Prisma migrations inside the backend container
-make seed          # seed the database with test data
-make test-all      # run all automated test suites
-make test-realtime # run Socket.IO real-time integration tests
+make help                    # show all available commands
+
+make up                     # build and start development services
+make dev-start              # start development services in the background
+make start                  # start the evaluation stack, apply migrations, and seed the database
+                            # (also generates the local HTTPS certificate when needed)
+make eval-up                # start evaluation services without migrations or seeding
+make eval-down              # stop evaluation services
+make eval-migrate           # apply production migrations
+make eval-seed              # seed the evaluation database
+make down                   # stop development services
+make clean                  # stop services and remove volumes
+make logs                   # stream logs from all development services
+make migrate                # run Prisma development migrations
+make seed                   # seed the development database
+make setup-local-cert       # generate the local HTTPS certificate
+
+make test-backend           # run backend flow tests
+make test-frontend          # run frontend smoke tests
+make test-browser-compat    # run browser compatibility tests
+make test-i18n              # run internationalization tests
+make test-friends           # run friends integration tests
+make test-follows           # run follows integration tests
+make test-messages          # run messages integration tests
+make test-gamification      # run gamification integration tests
+make test-articles          # run article backend and frontend tests
+make test-articles-backend  # run article backend tests
+make test-articles-frontend # run article frontend tests
+make test-realtime          # run Socket.IO real-time tests
+make test-all               # run all test suites
 ```
 
 ### OAuth provider setup (if testing OAuth)
@@ -177,16 +200,18 @@ Register callback URLs in each provider's developer console:
 
 ### AI usage
 
-AI assistants were used throughout this project for:
+AI tools were used as a support tool during the development of the project, mainly to reduce repetitive tasks and help with research and problem solving.
 
-- **Architecture decisions** — discussing vertical slice team structure, WebSocket grace period design, and notification delivery strategy
-- **Code review and debugging** — identifying bugs in socket.server.ts (duplicate connection handler), TypeScript type errors, and race conditions in the FriendButton component
-- **Validation audit** — systematic review of all form validation across frontend and backend
-- **Boilerplate generation** — initial scaffold for route handlers, service functions, and React components, which was then reviewed, adapted, and integrated by the team
-- **README structure** — organizing the required sections and content
-- **Test script development** — shell-based integration test scripts for the friends and notifications APIs
+AI was used for:
 
-All AI-generated code was reviewed, tested, and understood by the team member who integrated it. No AI-generated code was merged without review.
+- understanding technical concepts and documentation
+- discussing architecture and possible implementation approaches
+- debugging and investigating errors
+- reviewing and improving code and documentation
+- generating test ideas and edge cases
+- helping with project planning and README documentation
+
+AI was not used as a replacement for understanding or peer review. Generated suggestions and code were reviewed, tested, adapted to the project, and discussed with teammates when needed. The team only kept solutions that we understood and could explain.
 
 ---
 
@@ -291,8 +316,8 @@ Build order was agreed at the start:
 | Technology | Version | Purpose |
 |------------|---------|---------|
 | React      | 19 | UI framework |
-| TypeScript | 5 | Type safety |
-| Vite       | 6 | Build tool and dev server |
+| TypeScript | 6 | Type safety |
+| Vite       | 7 | Build tool and dev server |
 | Tailwind CSS | 4 | Utility-first styling |
 | shadcn/ui  | — | Accessible UI primitives |
 | React Router | 7 | Client-side routing |
@@ -347,7 +372,7 @@ PostgreSQL handles relational data (users → articles → comments → likes, f
 Socket.IO adds automatic reconnection, room-based broadcasting, and a fallback to HTTP long-polling. The room abstraction (`io.to(userId).emit(...)`) made per-user message delivery and article-room broadcasting simple to implement correctly without custom infrastructure.
 
 **Docker Compose**
-Single `make start` command starts all five services (postgres, backend, frontend, nginx, cert generation) in the correct order with health checks. This guarantees reproducible behavior between developer machines and during evaluation.
+Single `make start` command builds and starts the four Docker Compose services (postgres, backend, frontend, nginx) and generates the local HTTPS certificate. Health checks and service dependencies ensure the stack starts in the correct order. This provides reproducible behavior between developer machines and during evaluation.
 
 ---
 
@@ -363,12 +388,21 @@ users
 ├── passwordHash
 ├── displayName
 ├── avatarUrl
+├── cvUrl, cvFilename
 ├── bio
 ├── role (USER | MODERATOR | ADMIN)
 ├── preferredLanguage
 ├── xp, level
 ├── isOnline, lastSeenAt
 └── createdAt, updatedAt
+
+oauth_accounts  [for OAuth provider linking]
+├── id (UUID, PK)
+├── provider
+├── providerId
+├── userId → users.id
+├── emailAtLinkTime
+└── UNIQUE(provider, providerId)
 
 articles
 ├── id (UUID, PK)
@@ -420,6 +454,7 @@ notifications
 ├── type (enum: FOLLOWED, FRIEND_REQUEST, FRIEND_ACCEPTED, COMMENT, LIKE, CONTENT_REMOVED, MESSAGE, BADGE, LEVEL_UP, ARTICLE_CREATED)
 ├── message
 ├── refId  [optional: articleId or userId for navigation]
+├── actorId  [optional: user ID of the actor who caused the event]
 ├── isRead
 └── createdAt
 
@@ -437,22 +472,19 @@ user_badges
 ├── earnedAt
 └── UNIQUE(userId, badgeId)
 
-oauth_accounts  [for OAuth provider linking]
-├── id (UUID, PK)
-├── userId → users.id
-├── provider (github | google | 42)
-├── providerAccountId
-└── UNIQUE(provider, providerAccountId)
 ```
 
 ### Key relationships
 
-- One user → many articles, comments, likes, notifications, badges
+- One user → many articles, comments, likes, notifications, badges, and OAuth accounts
+- Users and badges have a many-to-many relationship through `user_badges`
+- A notification belongs to a recipient through `userId`; `actorId` is an optional user ID and is not a database foreign-key relation
 - Articles and comments use soft-delete (`isRemoved`) for moderation audit trail
+- Deleting a user cascades to their articles, comments, likes, follows, friendships, messages, notifications, badges, OAuth accounts, and related records
 - Friendships are one row per pair, direction-aware (requester ≠ addressee), with explicit status
 - Follows are one-directional (Twitter model); friendships are mutual (Facebook model)
 - `article_likes.likeCount` is a cached counter on the article row — updated in a DB transaction alongside the like row insert/delete for fast feed queries
-- `oauth_accounts` allows a user to link multiple OAuth providers to one local account
+- `oauth_accounts` allows a user to link multiple OAuth providers to one local account; each provider account can be linked only once
 
 ---
 
