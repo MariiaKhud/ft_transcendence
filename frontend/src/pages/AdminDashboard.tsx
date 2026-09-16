@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { translateApiError } from '@/lib/api-errors'
+import { ApiClientError } from '@/api/client'
 import { useAuth } from '@/hooks/useAuth'
 import { StatCard } from '@/components/admin/StatCard'
 import { DashboardRefreshButton } from '@/components/admin/DashboardRefreshButton'
@@ -34,7 +35,7 @@ type Tab = 'content' | 'removed_articles' | 'removed_comments' | 'users'
 
 export function AdminDashboard() {
   const { t } = useTranslation()
-  const { currentUser, hasRestoredSession, isLoading: isAuthLoading } = useAuth({ restoreOnMount: true })
+  const { currentUser, hasRestoredSession, isLoading: isAuthLoading, restoreSession } = useAuth({ restoreOnMount: true })
 
   const [activeTab, setActiveTab] = useState<Tab>('content')
   const [allArticles, setAllArticles] = useState<AdminArticle[]>([])
@@ -69,6 +70,13 @@ export function AdminDashboard() {
       if (isAdmin)
         setUsers(userData)
     } catch (err) {
+      // Access can be revoked mid-session (role change, deletion) since the backend
+      // now enforces the live role on every request. Re-sync currentUser from
+      // /auth/me so isAdmin/isModerator/canAccess reflect it without a manual reload.
+      if (err instanceof ApiClientError && (err.status === 401 || err.status === 403)) {
+        void restoreSession()
+      }
+
       setError(
         translateApiError(err, t('admin.loadError')),
       )

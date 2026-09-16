@@ -7,6 +7,7 @@ import { handleAsyncErrors } from '../middleware/error.middleware.js'
 import * as notificationsService from '../services/notifications.service.js'
 import { NotificationType } from '@prisma/client'
 import { validateUuid } from '../lib/validation.js'
+import { revokeAllSessionsForUser } from '../lib/auth.utils.js'
 import { deleteOldAvatar, deleteOldCv } from './users.route-helpers.js'
 import { REMOVE_REASON_MAX_LENGTH } from './comments.route-helpers.js'
 import { ErrorCode } from '../lib/error-codes.js'
@@ -120,6 +121,10 @@ const changeUserRoleHandler = async (req: Request, res: Response) => {
     },
   })
 
+  // Force the target user's existing sessions to re-authenticate so the role
+  // change takes effect immediately, instead of only after they log out or
+  // their token expires.
+  revokeAllSessionsForUser(id)
 
   res.status(200).json({
     success: true,
@@ -189,6 +194,9 @@ const deleteUserHandler = async (req: Request, res: Response) => {
 
   await deleteOldAvatar(targetUser.avatarUrl)
   await deleteOldCv(targetUser.cvUrl)
+
+  // The account is gone, but its JWT can outlive it — force any active session to stop working.
+  revokeAllSessionsForUser(id)
 
   res.status(200).json({
     success: true,

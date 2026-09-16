@@ -348,7 +348,7 @@ const logoutHandler = async (req: Request, res: Response) => {
     const decoded = verifyAuthToken(token)
     validateCsrfToken(req, decoded.csrfToken)
     userId = decoded.userId
-    revokeAuthTokenJti(decoded.jti)
+    revokeAuthTokenJti(decoded.jti, decoded.userId)
   } catch (error) {
     if (!(error instanceof AppError)) {
       throw error

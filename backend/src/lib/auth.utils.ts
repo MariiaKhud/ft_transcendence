@@ -35,9 +35,32 @@ const getJwtSecret = () => {
 // In-memory set of revoked JWT IDs (jti) for logged-out tokens. This is a simple way to invalidate tokens without a database, but it won't persist across server restarts.
 const revokedJtis = new Set<string>()
 
+// In-memory index of each user's currently-issued jtis, so an admin action (role
+// change, account deletion) can force out that user's active sessions immediately
+// instead of waiting for the 7-day token expiry. Same persistence caveat as above.
+const activeJtisByUser = new Map<string, Set<string>>()
+
+const trackJti = (userId: string, jti: string) => {
+  const jtis = activeJtisByUser.get(userId) ?? new Set<string>()
+  jtis.add(jti)
+  activeJtisByUser.set(userId, jtis)
+}
+
+const untrackJti = (userId: string, jti: string) => {
+  const jtis = activeJtisByUser.get(userId)
+  if (!jtis) return
+  jtis.delete(jti)
+  if (jtis.size === 0) {
+    activeJtisByUser.delete(userId)
+  }
+}
+
 // Revoke a JWT ID (jti) so that the token is no longer valid.
-export const revokeAuthTokenJti = (jti: string) => {
+export const revokeAuthTokenJti = (jti: string, userId?: string) => {
   revokedJtis.add(jti)
+  if (userId) {
+    untrackJti(userId, jti)
+  }
 }
 
 export const revokeAuthToken = (token: string) => {
@@ -45,16 +68,28 @@ export const revokeAuthToken = (token: string) => {
 	// Decode the token without verifying it, to get the jti for revocation.
     const decoded = jwt.decode(token)
     if (isRecord(decoded) && typeof decoded.jti === 'string') {
-      revokeAuthTokenJti(decoded.jti)
+      const userId = typeof decoded.userId === 'string' ? decoded.userId : undefined
+      revokeAuthTokenJti(decoded.jti, userId)
     }
   } catch {
     // Ignore malformed tokens during logout cleanup.
   }
 }
 
+// Revoke every session currently tracked for a user. Used when an admin changes
+// that user's role or deletes their account, so the change takes effect on their
+// next request instead of only after they log out or the token expires.
+export const revokeAllSessionsForUser = (userId: string) => {
+  const jtis = activeJtisByUser.get(userId)
+  if (!jtis) return
+  jtis.forEach((jti) => revokedJtis.add(jti))
+  activeJtisByUser.delete(userId)
+}
+
 // Create token with user id, role, CSRF token, and unique revocation id.
 export const signAuthToken = (userId: string, role: AuthRole, csrfToken: string) => {
   const jti = randomUUID()
+  trackJti(userId, jti)
   return jwt.sign({ userId, role, csrfToken, jti }, getJwtSecret(), { expiresIn: '7d' })
 }
 
