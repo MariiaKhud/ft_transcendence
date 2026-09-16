@@ -1,4 +1,4 @@
-.PHONY: help up start eval-up eval-down down clean logs migrate seed setup-local-cert \
+.PHONY: help up dev-start start eval-up eval-down down clean logs migrate seed setup-local-cert \
 		test-backend test-frontend test-browser-compat test-i18n \
 		test-friends test-follows test-messages test-gamification \
 		test-articles test-articles-backend test-articles-frontend \
@@ -13,10 +13,11 @@ RESET := \033[0m
 help:
 	@printf "  $(CYAN)     * * * * * AVAILABLE COMMANDS: * * * * *\n$(RESET)"
 	@printf "  $(GREEN)make up$(RESET)                     - Start all services with Docker\n"
-	@printf "  $(GREEN)make start$(RESET)                  - Generate HTTPS cert, start services, and seed database\n"
-	@printf "  $(GREEN)make eval-up$(RESET)               - Start the production evaluation stack\n"
+	@printf "  $(GREEN)make dev-start$(RESET)             - Start development services with hot reload\n"
+	@printf "  $(GREEN)make start$(RESET)                  - Start production evaluation services and seed database\n"
+	@printf "  $(GREEN)make eval-up$(RESET)               - Start the production evaluation stack without seeding\n"
 	@printf "  $(GREEN)make eval-down$(RESET)             - Stop the production evaluation stack\n"
-	@printf "  $(GREEN)make down$(RESET)                   - Stop all services\n"
+	@printf "  $(GREEN)make down$(RESET)                   - Stop development services\n"
 	@printf "  $(GREEN)make clean$(RESET)                  - Stop services and remove volumes\n"
 	@printf "  $(GREEN)make logs$(RESET)                   - Show live logs from all services\n"
 	@printf "  $(GREEN)make migrate$(RESET)                - Run Prisma migrations\n"
@@ -42,14 +43,16 @@ up:
 	docker compose up --build
 	@printf "$(YELLOW)Docker Compose finished.$(RESET)\n"
 
-start: setup-local-cert
+dev-start: setup-local-cert
 	docker compose up -d --build --wait
+	@printf "$(GREEN)Development app is ready at https://localhost:8443$(RESET)\n"
+
+start: eval-up
 	$(MAKE) seed
-	@printf "$(GREEN)App is ready at https://localhost:8443$(RESET)\n"
+	@printf "$(GREEN)Production evaluation app is ready at https://localhost:8443$(RESET)\n"
 
 eval-up: setup-local-cert
 	docker compose -f docker-compose.yml -f docker-compose.eval.yml up -d --build --wait
-	@printf "$(GREEN)Production evaluation stack is ready at https://localhost:8443$(RESET)\n"
 
 eval-down:
 	docker compose -f docker-compose.yml -f docker-compose.eval.yml down
