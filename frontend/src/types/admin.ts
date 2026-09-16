@@ -6,7 +6,7 @@ export type AdminUser = {
   displayName: string | null
   avatarUrl: string | null
   role: UserRole
-  createdAt: Date
+  createdAt: string
   articleCount: number
 }
 
@@ -17,9 +17,9 @@ export type AdminArticle = {
   likeCount: number
   isRemoved: boolean
   removedReason: string | null
-  removedAt: Date | null
-  createdAt: Date
-  updatedAt: Date
+  removedAt: string | null
+  createdAt: string
+  updatedAt: string
   commentsCount: number
   author: {
     id: string
@@ -34,8 +34,8 @@ export type AdminComment = {
   content: string
   isRemoved: boolean
   removedReason: string | null
-  removedAt: Date | null
-  createdAt: Date
+  removedAt: string | null
+  createdAt: string
   author: {
     id: string
     username: string

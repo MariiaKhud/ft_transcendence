@@ -6,6 +6,7 @@ COOKIE_JAR="$(mktemp)"
 EMPTY_COOKIE_JAR="$(mktemp)"
 COOKIE_JAR2="$(mktemp)"
 COOKIE_JAR_MOD="$(mktemp)"
+COOKIE_JAR_ADMIN="$(mktemp)"
 RUN_ID="$(date +%s | tail -c 5)"
 USERNAME="auth_${RUN_ID}"
 EMAIL="auth.${RUN_ID}@example.com"
@@ -16,8 +17,9 @@ DISPLAY_NAME="Auth Test User"
 OAUTH_LINK_EMAIL="oauth.link.${RUN_ID}@example.com"
 OAUTH_LINK_USERNAME="oauth_link_${RUN_ID}"
 OAUTH_LINK_PROVIDER_ID="oauth-link-${RUN_ID}"
-ROLE_MOD_PATH="${ROLE_MOD_PATH:-}"
-ROLE_ADMIN_PATH="${ROLE_ADMIN_PATH:-}"
+ROLE_MOD_PATH="${ROLE_MOD_PATH:-/api/admin/articles}"
+ROLE_ADMIN_PATH="${ROLE_ADMIN_PATH:-/api/admin/users}"
+NONEXISTENT_UUID="00000000-0000-0000-0000-000000000000"
 
 LAST_STATUS=""
 LAST_BODY=""
@@ -40,6 +42,7 @@ cleanup() {
   rm -f "$EMPTY_COOKIE_JAR"
   rm -f "$COOKIE_JAR2"
   rm -f "$COOKIE_JAR_MOD"
+  rm -f "$COOKIE_JAR_ADMIN"
   rm -f "${OAUTH_COOKIE_JAR:-}"
 
   if command -v docker >/dev/null 2>&1 && [[ -f "../docker-compose.yml" ]]; then
@@ -128,6 +131,11 @@ perform_request "Register" -X POST "${BASE_URL}/api/auth/register" \
   -d "{\"email\":\"${EMAIL}\",\"username\":\"${USERNAME}\",\"password\":\"${PASSWORD}\",\"displayName\":\"${DISPLAY_NAME}\"}"
 assert_status "201" "Register"
 assert_body_contains '"success":true' "Register"
+PRIMARY_USER_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
+if [[ -z "$PRIMARY_USER_ID" ]]; then
+  color_echo "$RED" "Register: failed to extract user id"
+  exit 1
+fi
 
 color_echo "$BLUE" "2. Logging in and saving cookies"
 perform_request "Login" -c "$COOKIE_JAR" -X POST "${BASE_URL}/api/auth/login" \
@@ -149,9 +157,10 @@ assert_body_contains '"success":true' "Me"
 assert_body_contains '"role":"USER"' "Me"
 assert_body_not_contains '"passwordHash"' "Me"
 
-color_echo "$BLUE" "4. /me must fail without auth cookie"
+color_echo "$BLUE" "4. /me without auth cookie returns success with null data"
 perform_request "Me (unauthenticated)" -b "$EMPTY_COOKIE_JAR" "${BASE_URL}/api/auth/me"
-assert_status "401" "Me (unauthenticated)"
+assert_status "200" "Me (unauthenticated)"
+assert_body_contains '"data":null' "Me (unauthenticated)"
 
 color_echo "$BLUE" "5. Logout without CSRF header (gracefully handled)"
 perform_request "Logout (no csrf)" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/auth/logout"
@@ -438,19 +447,23 @@ color_echo "$BLUE" "31a. POST /api/users/me/cv — upload and replace a TXT CV"
 perform_request "Upload CV TXT" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/users/me/cv" -F "cv=@${TEST_CV_TXT};type=text/plain"
 assert_status "200" "Upload CV TXT"
 assert_body_contains '"cvFilename":"'"$(basename "$TEST_CV_TXT")"'"' "Upload CV TXT"
+assert_body_contains '"cvUrl":"/api/users/me/cv"' "Upload CV TXT"
 perform_request "Replace CV" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/users/me/cv" -F "cv=@${TEST_CV_REPLACEMENT};type=text/plain"
 assert_status "200" "Replace CV"
 assert_body_contains '"cvFilename":"'"$(basename "$TEST_CV_REPLACEMENT")"'"' "Replace CV"
-CV_URL="$(echo "$LAST_BODY" | grep -o '"cvUrl":"/uploads/[^"]*' | head -1 | cut -d'"' -f4)"
+assert_body_contains '"cvUrl":"/api/users/me/cv"' "Replace CV"
+CV_URL="/api/users/${USERNAME}/cv"
 
 color_echo "$BLUE" "31b. GET /api/users/:username — expose CV download metadata and file"
 perform_request "Public profile with CV" "${BASE_URL}/api/users/${USERNAME}"
 assert_status "200" "Public profile with CV"
 assert_body_contains '"cvUrl":"'"${CV_URL}"'"' "Public profile with CV"
 assert_body_contains '"cvFilename":"'"$(basename "$TEST_CV_REPLACEMENT")"'"' "Public profile with CV"
-perform_request "Download CV file" "${BASE_URL}${CV_URL}"
+perform_request "Download CV file" -b "$COOKIE_JAR" "${BASE_URL}${CV_URL}"
 assert_status "200" "Download CV file"
 assert_body_contains 'Replacement CV' "Download CV file"
+perform_request "Download CV file (no auth)" -b "$EMPTY_COOKIE_JAR" "${BASE_URL}${CV_URL}"
+assert_status "401" "Download CV file (no auth)"
 
 color_echo "$BLUE" "31c. POST /api/users/me/cv — reject invalid, oversized, and unauthenticated uploads"
 perform_request "Upload invalid CV" -b "$COOKIE_JAR" -X POST "${BASE_URL}/api/users/me/cv" -F "cv=@${TEST_CV_INVALID};type=image/jpeg"
@@ -486,38 +499,271 @@ assert_status "400" "Get profile (invalid username)"
 rm -f "$TEST_IMAGE_PNG" "$TEST_IMAGE_JPG" "$TEST_IMAGE_OVERSIZED" "$TEST_CV_TXT" "$TEST_CV_REPLACEMENT" "$TEST_CV_INVALID" "$TEST_CV_OVERSIZED"
 
 # ============================================================================
-# Articles, comments, likes, and article search are covered by
+# Article/comment CRUD, likes, and article search are covered by
 # scripts/test-articles-flow.sh — run that script separately for coverage
 # of /api/articles, /api/articles/:id/comments, /api/articles/:id/like,
-# and /api/comments/:id.
+# and /api/comments/:id. Below, a second user creates one article and one
+# comment purely as fixtures for the ADMIN/MODERATOR moderation routes.
+# ============================================================================
+
+color_echo "$BLUE" "34. Registering secondary test user for admin/moderator target actions"
+perform_request "Register (secondary)" -X POST "${BASE_URL}/api/auth/register" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${EMAIL2}\",\"username\":\"${USERNAME2}\",\"password\":\"${PASSWORD}\",\"displayName\":\"Auth Test User 2\"}"
+assert_status "201" "Register (secondary)"
+TEST_USER2_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
+if [[ -z "$TEST_USER2_ID" ]]; then
+  color_echo "$RED" "Register (secondary): failed to extract user id"
+  exit 1
+fi
+
+color_echo "$BLUE" "35. Logging in as secondary test user"
+perform_request "Login (secondary)" -c "$COOKIE_JAR2" -X POST "${BASE_URL}/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"${EMAIL2}\",\"password\":\"${PASSWORD}\"}"
+assert_status "200" "Login (secondary)"
+
+color_echo "$BLUE" "36. Secondary user creates a test article for moderation"
+ARTICLE_CONTENT="This article exists purely to give the automated backend flow test suite something realistic to remove and restore while exercising the moderator content moderation routes end to end."
+perform_request "Create article" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles" \
+  -H "Content-Type: application/json" \
+  -d "{\"title\":\"Moderation Test Article ${RUN_ID}\",\"content\":\"${ARTICLE_CONTENT}\",\"category\":\"PROGRAMMING\"}"
+assert_status "201" "Create article"
+TEST_ARTICLE_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
+if [[ -z "$TEST_ARTICLE_ID" ]]; then
+  color_echo "$RED" "Create article: failed to extract article id"
+  exit 1
+fi
+
+color_echo "$BLUE" "37. Secondary user creates a test comment for moderation"
+perform_request "Create comment" -b "$COOKIE_JAR2" -X POST "${BASE_URL}/api/articles/${TEST_ARTICLE_ID}/comments" \
+  -H "Content-Type: application/json" \
+  -d '{"content":"Test comment for the moderator content moderation routes."}'
+assert_status "201" "Create comment"
+TEST_COMMENT_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*"' | head -1 | cut -d'"' -f4)"
+if [[ -z "$TEST_COMMENT_ID" ]]; then
+  color_echo "$RED" "Create comment: failed to extract comment id"
+  exit 1
+fi
+
+# ============================================================================
+# MODERATOR routes (backend/src/routes/admin.routes.ts): GET /api/admin/articles,
+# PATCH /api/admin/articles/:id/remove, PATCH /api/admin/articles/:id/restore,
+# GET /api/admin/comments, PATCH /api/admin/comments/:id/remove,
+# PATCH /api/admin/comments/:id/restore.
 # ============================================================================
 if [[ -n "$ROLE_MOD_PATH" ]]; then
-  color_echo "$BLUE" "34. Role guard check for MODERATOR path (${ROLE_MOD_PATH})"
+  color_echo "$BLUE" "38. Role guard check for MODERATOR path (${ROLE_MOD_PATH})"
   perform_request "Role MOD test" -b "$COOKIE_JAR" "${BASE_URL}${ROLE_MOD_PATH}"
 
+  ROLE_MOD_PATH_EXISTS="1"
   if [[ "$LAST_STATUS" == "403" ]]; then
     color_echo "$GREEN" "Role MOD test: correctly blocked USER with HTTP 403"
   elif [[ "$LAST_STATUS" == "404" ]]; then
     color_echo "$YELLOW" "Role MOD test skipped: path not found (${ROLE_MOD_PATH})"
+    ROLE_MOD_PATH_EXISTS="0"
   else
     color_echo "$RED" "Role MOD test: expected HTTP 403 (or 404 if route missing), got HTTP ${LAST_STATUS}"
     exit 1
+  fi
+
+  if [[ "$ROLE_MOD_PATH_EXISTS" == "1" ]]; then
+    color_echo "$BLUE" "38a. Role guard check for MODERATOR path — unauthenticated request"
+    perform_request "Role MOD test (no auth)" -b "$EMPTY_COOKIE_JAR" "${BASE_URL}${ROLE_MOD_PATH}"
+    assert_status "401" "Role MOD test (no auth)"
+
+    if command -v docker >/dev/null 2>&1 && [[ -f "../docker-compose.yml" ]]; then
+      color_echo "$BLUE" "38b. Promoting primary test user to MODERATOR"
+      docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"UPDATE users SET role='MODERATOR' WHERE email='${EMAIL}';\"" >/dev/null 2>&1
+
+      perform_request "Login as MODERATOR" -c "$COOKIE_JAR_MOD" -X POST "${BASE_URL}/api/auth/login" \
+        -H "Content-Type: application/json" \
+        -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASSWORD}\"}"
+      assert_status "200" "Login as MODERATOR"
+      assert_body_contains '"role":"MODERATOR"' "Login as MODERATOR"
+
+      color_echo "$BLUE" "39. GET /api/admin/articles as MODERATOR"
+      perform_request "Admin: list articles" -b "$COOKIE_JAR_MOD" "${BASE_URL}/api/admin/articles"
+      assert_status "200" "Admin: list articles"
+      assert_body_contains "\"id\":\"${TEST_ARTICLE_ID}\"" "Admin: list articles"
+
+      color_echo "$BLUE" "40. PATCH /api/admin/articles/:id/remove — auth and validation checks"
+      perform_request "Remove article (no auth)" -b "$EMPTY_COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/articles/${TEST_ARTICLE_ID}/remove" \
+        -H "Content-Type: application/json" -d '{"removedReason":"Spam"}'
+      assert_status "401" "Remove article (no auth)"
+      perform_request "Remove article (as USER)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/articles/${TEST_ARTICLE_ID}/remove" \
+        -H "Content-Type: application/json" -d '{"removedReason":"Spam"}'
+      assert_status "403" "Remove article (as USER)"
+      perform_request "Remove article (missing reason)" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/articles/${TEST_ARTICLE_ID}/remove" \
+        -H "Content-Type: application/json" -d '{}'
+      assert_status "400" "Remove article (missing reason)"
+      REMOVE_REASON_TOO_LONG="$(printf 'x%.0s' {1..501})"
+      perform_request "Remove article (reason too long)" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/articles/${TEST_ARTICLE_ID}/remove" \
+        -H "Content-Type: application/json" -d "{\"removedReason\":\"${REMOVE_REASON_TOO_LONG}\"}"
+      assert_status "400" "Remove article (reason too long)"
+      perform_request "Remove article (not found)" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/articles/${NONEXISTENT_UUID}/remove" \
+        -H "Content-Type: application/json" -d '{"removedReason":"Spam"}'
+      assert_status "404" "Remove article (not found)"
+
+      color_echo "$BLUE" "41. PATCH /api/admin/articles/:id/remove — success"
+      perform_request "Remove article" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/articles/${TEST_ARTICLE_ID}/remove" \
+        -H "Content-Type: application/json" -d '{"removedReason":"Violates community guidelines"}'
+      assert_status "200" "Remove article"
+      assert_body_contains '"isRemoved":true' "Remove article"
+      assert_body_contains '"removedReason":"Violates community guidelines"' "Remove article"
+
+      color_echo "$BLUE" "42. PATCH /api/admin/articles/:id/restore — auth checks and success"
+      perform_request "Restore article (no auth)" -b "$EMPTY_COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/articles/${TEST_ARTICLE_ID}/restore"
+      assert_status "401" "Restore article (no auth)"
+      perform_request "Restore article (as USER)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/articles/${TEST_ARTICLE_ID}/restore"
+      assert_status "403" "Restore article (as USER)"
+      perform_request "Restore article (not found)" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/articles/${NONEXISTENT_UUID}/restore"
+      assert_status "404" "Restore article (not found)"
+      perform_request "Restore article" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/articles/${TEST_ARTICLE_ID}/restore"
+      assert_status "200" "Restore article"
+      assert_body_contains '"isRemoved":false' "Restore article"
+
+      color_echo "$BLUE" "43. PATCH /api/admin/comments/:id/remove — auth, validation checks, and success"
+      perform_request "Remove comment (no auth)" -b "$EMPTY_COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/comments/${TEST_COMMENT_ID}/remove" \
+        -H "Content-Type: application/json" -d '{"removedReason":"Spam"}'
+      assert_status "401" "Remove comment (no auth)"
+      perform_request "Remove comment (as USER)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/comments/${TEST_COMMENT_ID}/remove" \
+        -H "Content-Type: application/json" -d '{"removedReason":"Spam"}'
+      assert_status "403" "Remove comment (as USER)"
+      perform_request "Remove comment (missing reason)" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/comments/${TEST_COMMENT_ID}/remove" \
+        -H "Content-Type: application/json" -d '{}'
+      assert_status "400" "Remove comment (missing reason)"
+      perform_request "Remove comment (not found)" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/comments/${NONEXISTENT_UUID}/remove" \
+        -H "Content-Type: application/json" -d '{"removedReason":"Spam"}'
+      assert_status "404" "Remove comment (not found)"
+      perform_request "Remove comment" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/comments/${TEST_COMMENT_ID}/remove" \
+        -H "Content-Type: application/json" -d '{"removedReason":"Off-topic"}'
+      assert_status "200" "Remove comment"
+      assert_body_contains '"isRemoved":true' "Remove comment"
+
+      color_echo "$BLUE" "44. GET /api/admin/comments — lists removed comments"
+      perform_request "Admin: list removed comments (no auth)" -b "$EMPTY_COOKIE_JAR" "${BASE_URL}/api/admin/comments"
+      assert_status "401" "Admin: list removed comments (no auth)"
+      perform_request "Admin: list removed comments (as USER)" -b "$COOKIE_JAR" "${BASE_URL}/api/admin/comments"
+      assert_status "403" "Admin: list removed comments (as USER)"
+      perform_request "Admin: list removed comments" -b "$COOKIE_JAR_MOD" "${BASE_URL}/api/admin/comments"
+      assert_status "200" "Admin: list removed comments"
+      assert_body_contains "\"id\":\"${TEST_COMMENT_ID}\"" "Admin: list removed comments"
+
+      color_echo "$BLUE" "45. PATCH /api/admin/comments/:id/restore — auth checks and success"
+      perform_request "Restore comment (no auth)" -b "$EMPTY_COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/comments/${TEST_COMMENT_ID}/restore"
+      assert_status "401" "Restore comment (no auth)"
+      perform_request "Restore comment (as USER)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/comments/${TEST_COMMENT_ID}/restore"
+      assert_status "403" "Restore comment (as USER)"
+      perform_request "Restore comment (not found)" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/comments/${NONEXISTENT_UUID}/restore"
+      assert_status "404" "Restore comment (not found)"
+      perform_request "Restore comment" -b "$COOKIE_JAR_MOD" -X PATCH "${BASE_URL}/api/admin/comments/${TEST_COMMENT_ID}/restore"
+      assert_status "200" "Restore comment"
+      assert_body_contains '"isRemoved":false' "Restore comment"
+
+      docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"UPDATE users SET role='USER' WHERE email='${EMAIL}';\"" >/dev/null 2>&1
+    else
+      color_echo "$YELLOW" "38b-45. MODERATOR-authenticated route tests skipped (docker unavailable)"
+    fi
   fi
 else
   color_echo "$YELLOW" "Role MOD test skipped. Set ROLE_MOD_PATH (example: /api/admin/moderation)"
 fi
 
+# ============================================================================
+# ADMIN routes (backend/src/routes/admin.routes.ts): GET /api/admin/users,
+# PATCH /api/admin/users/:id/role, DELETE /api/admin/users/:id.
+# ============================================================================
 if [[ -n "$ROLE_ADMIN_PATH" ]]; then
-  color_echo "$BLUE" "35. Role guard check for ADMIN path (${ROLE_ADMIN_PATH})"
+  color_echo "$BLUE" "46. Role guard check for ADMIN path (${ROLE_ADMIN_PATH})"
   perform_request "Role ADMIN test" -b "$COOKIE_JAR" "${BASE_URL}${ROLE_ADMIN_PATH}"
 
+  ROLE_ADMIN_PATH_EXISTS="1"
   if [[ "$LAST_STATUS" == "403" ]]; then
     color_echo "$GREEN" "Role ADMIN test: correctly blocked USER with HTTP 403"
   elif [[ "$LAST_STATUS" == "404" ]]; then
     color_echo "$YELLOW" "Role ADMIN test skipped: path not found (${ROLE_ADMIN_PATH})"
+    ROLE_ADMIN_PATH_EXISTS="0"
   else
     color_echo "$RED" "Role ADMIN test: expected HTTP 403 (or 404 if route missing), got HTTP ${LAST_STATUS}"
     exit 1
+  fi
+
+  if [[ "$ROLE_ADMIN_PATH_EXISTS" == "1" ]]; then
+    color_echo "$BLUE" "46a. Role guard check for ADMIN path — unauthenticated request"
+    perform_request "Role ADMIN test (no auth)" -b "$EMPTY_COOKIE_JAR" "${BASE_URL}${ROLE_ADMIN_PATH}"
+    assert_status "401" "Role ADMIN test (no auth)"
+
+    if command -v docker >/dev/null 2>&1 && [[ -f "../docker-compose.yml" ]]; then
+      color_echo "$BLUE" "46b. Promoting primary test user to ADMIN"
+      docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"UPDATE users SET role='ADMIN' WHERE email='${EMAIL}';\"" >/dev/null 2>&1
+
+      perform_request "Login as ADMIN" -c "$COOKIE_JAR_ADMIN" -X POST "${BASE_URL}/api/auth/login" \
+        -H "Content-Type: application/json" \
+        -d "{\"email\":\"${EMAIL}\",\"password\":\"${PASSWORD}\"}"
+      assert_status "200" "Login as ADMIN"
+      assert_body_contains '"role":"ADMIN"' "Login as ADMIN"
+
+      color_echo "$BLUE" "47. GET /api/admin/users as ADMIN"
+      perform_request "Admin: list users" -b "$COOKIE_JAR_ADMIN" "${BASE_URL}/api/admin/users"
+      assert_status "200" "Admin: list users"
+      assert_body_contains "\"id\":\"${TEST_USER2_ID}\"" "Admin: list users"
+
+      color_echo "$BLUE" "48. PATCH /api/admin/users/:id/role — auth and validation checks"
+      perform_request "Change role (no auth)" -b "$EMPTY_COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/users/${TEST_USER2_ID}/role" \
+        -H "Content-Type: application/json" -d '{"role":"MODERATOR"}'
+      assert_status "401" "Change role (no auth)"
+      perform_request "Change role (as USER)" -b "$COOKIE_JAR" -X PATCH "${BASE_URL}/api/admin/users/${TEST_USER2_ID}/role" \
+        -H "Content-Type: application/json" -d '{"role":"MODERATOR"}'
+      assert_status "403" "Change role (as USER)"
+      perform_request "Change role (invalid value)" -b "$COOKIE_JAR_ADMIN" -X PATCH "${BASE_URL}/api/admin/users/${TEST_USER2_ID}/role" \
+        -H "Content-Type: application/json" -d '{"role":"SUPERUSER"}'
+      assert_status "400" "Change role (invalid value)"
+      perform_request "Change role (target not found)" -b "$COOKIE_JAR_ADMIN" -X PATCH "${BASE_URL}/api/admin/users/${NONEXISTENT_UUID}/role" \
+        -H "Content-Type: application/json" -d '{"role":"MODERATOR"}'
+      assert_status "404" "Change role (target not found)"
+
+      color_echo "$BLUE" "49. PATCH /api/admin/users/:id/role — promote USER2 to MODERATOR"
+      perform_request "Change role (promote to MODERATOR)" -b "$COOKIE_JAR_ADMIN" -X PATCH "${BASE_URL}/api/admin/users/${TEST_USER2_ID}/role" \
+        -H "Content-Type: application/json" -d '{"role":"MODERATOR"}'
+      assert_status "200" "Change role (promote to MODERATOR)"
+      assert_body_contains '"role":"MODERATOR"' "Change role (promote to MODERATOR)"
+
+      color_echo "$BLUE" "50. DELETE /api/admin/users/:id — auth checks, self-delete guard, not-found"
+      perform_request "Delete user (no auth)" -b "$EMPTY_COOKIE_JAR" -X DELETE "${BASE_URL}/api/admin/users/${TEST_USER2_ID}"
+      assert_status "401" "Delete user (no auth)"
+      perform_request "Delete user (as USER)" -b "$COOKIE_JAR" -X DELETE "${BASE_URL}/api/admin/users/${TEST_USER2_ID}"
+      assert_status "403" "Delete user (as USER)"
+      perform_request "Delete self" -b "$COOKIE_JAR_ADMIN" -X DELETE "${BASE_URL}/api/admin/users/${PRIMARY_USER_ID}"
+      assert_status "400" "Delete self"
+      perform_request "Delete user (not found)" -b "$COOKIE_JAR_ADMIN" -X DELETE "${BASE_URL}/api/admin/users/${NONEXISTENT_UUID}"
+      assert_status "404" "Delete user (not found)"
+
+      color_echo "$BLUE" "51. Demote/delete protections for administrators"
+      perform_request "Change role (promote USER2 to ADMIN)" -b "$COOKIE_JAR_ADMIN" -X PATCH "${BASE_URL}/api/admin/users/${TEST_USER2_ID}/role" \
+        -H "Content-Type: application/json" -d '{"role":"ADMIN"}'
+      assert_status "200" "Change role (promote USER2 to ADMIN)"
+      perform_request "Change role (demote another admin)" -b "$COOKIE_JAR_ADMIN" -X PATCH "${BASE_URL}/api/admin/users/${TEST_USER2_ID}/role" \
+        -H "Content-Type: application/json" -d '{"role":"USER"}'
+      assert_status "403" "Change role (demote another admin)"
+      perform_request "Delete user (another admin)" -b "$COOKIE_JAR_ADMIN" -X DELETE "${BASE_URL}/api/admin/users/${TEST_USER2_ID}"
+      assert_status "403" "Delete user (another admin)"
+
+      # changeUserRoleHandler refuses to demote an ADMIN by design (see admin.routes.ts),
+      # so revert USER2 to USER directly to give the delete-success test below a deletable target.
+      docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"UPDATE users SET role='USER' WHERE email='${EMAIL2}';\"" >/dev/null 2>&1
+
+      color_echo "$BLUE" "52. DELETE /api/admin/users/:id — success"
+      perform_request "Delete user" -b "$COOKIE_JAR_ADMIN" -X DELETE "${BASE_URL}/api/admin/users/${TEST_USER2_ID}"
+      assert_status "200" "Delete user"
+      assert_body_contains "\"id\":\"${TEST_USER2_ID}\"" "Delete user"
+      perform_request "Get deleted user's profile" "${BASE_URL}/api/users/${USERNAME2}"
+      assert_status "404" "Get deleted user's profile"
+
+      docker compose exec -T postgres sh -lc "psql -U \"\${POSTGRES_USER:-transcendence}\" -d \"\${POSTGRES_DB:-transcendence}\" -c \"UPDATE users SET role='USER' WHERE email='${EMAIL}';\"" >/dev/null 2>&1
+    else
+      color_echo "$YELLOW" "46b-52. ADMIN-authenticated route tests skipped (docker unavailable)"
+    fi
   fi
 else
   color_echo "$YELLOW" "Role ADMIN test skipped. Set ROLE_ADMIN_PATH (example: /api/admin/users)"
