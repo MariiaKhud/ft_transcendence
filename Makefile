@@ -1,4 +1,4 @@
-.PHONY: help up start down clean logs migrate seed setup-local-cert \
+.PHONY: help up start eval-up eval-down down clean logs migrate seed setup-local-cert \
 		test-backend test-frontend test-browser-compat test-i18n \
 		test-friends test-follows test-messages test-gamification \
 		test-articles test-articles-backend test-articles-frontend \
@@ -14,6 +14,8 @@ help:
 	@printf "  $(CYAN)     * * * * * AVAILABLE COMMANDS: * * * * *\n$(RESET)"
 	@printf "  $(GREEN)make up$(RESET)                     - Start all services with Docker\n"
 	@printf "  $(GREEN)make start$(RESET)                  - Generate HTTPS cert, start services, and seed database\n"
+	@printf "  $(GREEN)make eval-up$(RESET)               - Start the production evaluation stack\n"
+	@printf "  $(GREEN)make eval-down$(RESET)             - Stop the production evaluation stack\n"
 	@printf "  $(GREEN)make down$(RESET)                   - Stop all services\n"
 	@printf "  $(GREEN)make clean$(RESET)                  - Stop services and remove volumes\n"
 	@printf "  $(GREEN)make logs$(RESET)                   - Show live logs from all services\n"
@@ -44,6 +46,13 @@ start: setup-local-cert
 	docker compose up -d --build --wait
 	$(MAKE) seed
 	@printf "$(GREEN)App is ready at https://localhost:8443$(RESET)\n"
+
+eval-up: setup-local-cert
+	docker compose -f docker-compose.yml -f docker-compose.eval.yml up -d --build --wait
+	@printf "$(GREEN)Production evaluation stack is ready at https://localhost:8443$(RESET)\n"
+
+eval-down:
+	docker compose -f docker-compose.yml -f docker-compose.eval.yml down
 
 down:
 	docker compose down

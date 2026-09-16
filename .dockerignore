@@ -3,7 +3,6 @@
 .git
 .gitignore
 *.md
-frontend
 nginx
 backend/.env
 backend/.env.*
