@@ -425,7 +425,7 @@ perform_request \
         "action":"ACCEPTED"
     }'
 
-check "Second accept returns 200 (already friends)" "$LAST_STATUS" "200"
+check "Second accept returns 404 (request no longer pending)" "$LAST_STATUS" "404"
 echo
 
 # Invalid action
