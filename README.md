@@ -873,7 +873,7 @@ The application includes three gamification mechanisms:
 - Set up the PWA manifest, service worker, and offline fallback
 - Tested and fixed browser compatibility across Chrome, Edge, and Safari
 
-**Challenges faced:** [FILL IN — e.g. "The badge award system needed to be idempotent — awarding the same badge twice should silently skip rather than error. Used Prisma's `skipDuplicates: true` on the `userBadge.createMany()` call combined with the `@@unique([userId, badgeId])` constraint on the table."]
+**Challenges faced:** The badge award system needed to be idempotent — concurrent triggers (e.g. two likes landing on an article at the same moment) could otherwise see the same badge as unearned twice and pay out its XP reward twice. Solved by locking the user's row with `SELECT ... FOR UPDATE` inside the transaction, then checking already-earned badges in memory before inserting the new ones with `userBadge.createMany()`. The `@@unique([userId, badgeId])` constraint on the table is kept as a backstop, not the primary guard — since the row lock already serializes concurrent checks, the constraint firing would indicate a real bug rather than an expected race to skip over silently.
 
 ---
 
