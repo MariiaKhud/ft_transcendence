@@ -1,267 +1,41 @@
-# ft_transcendence
+*This project has been created as part of the 42 curriculum by makhudon, tiyang, tkremnov and lperekhr.*
 
-> A Medium-style publishing platform built with React, Express, and PostgreSQL.
+# # Codamium — ft_transcendence
 
-## Project Overview
+**A Medium-style publishing platform built with React, Express, and PostgreSQL.**
 
-**ft_transcendence** is a team project where users can:
-- Publish and read articles
-- Comment and like articles
-- Add friends and follow authors
-- Chat with friends
-- Earn badges and climb the leaderboard
-- Use an admin dashboard for moderation
+---
 
-## Tech Stack
+## Description
 
-| Component | Technology                              |
-|-----------|-----------------------------------------|
-| Frontend  | React + TypeScript + Tailwind CSS       |
-| Backend   | Node.js + Express + TypeScript          |
-| Database  | PostgreSQL + Prisma ORM                 |
-| Server    | Docker + Docker Compose + Nginx (HTTPS) |
+**Codamium** is a full-stack social publishing platform where users can write and read articles, interact through comments and likes, connect with friends, and chat in real time. The platform includes a gamification system with badges and a leaderboard, a moderation dashboard for admins and moderators, and supports three languages.
 
-## Recent Updates
+**Key features:**
 
-- Frontend API layer now uses a shared fetch wrapper in `frontend/src/api/client.ts` with:
-	- `credentials: include` by default
-	- typed `ApiResponse<T>` parsing
-	- typed errors via `ApiClientError`
-- Frontend feed/search/article flows now include:
-	- article list, article detail, publish, edit, delete
-	- comments create/edit/delete
-	- article likes
-	- follow and friend actions on profile pages
-- Self-service account deletion is available from profile settings with confirmation, cascade cleanup, avatar-file cleanup, cleared auth cookies, and a localized post-deletion confirmation on Login.
-- Backend Prisma packages updated to:
-	- `prisma@7.9.1`
-	- `@prisma/client@7.9.1`
-- OAuth 2.0 (GitHub, Google, 42) is now fully integrated with:
-	- dynamic enabled-provider discovery (`GET /api/auth/oauth/providers`)
-	- secure state-cookie validation in callback flow
-	- OAuth account linking via `oauth_accounts`
-	- frontend error mapping for evaluator-visible failure modes
-- Internationalization (i18n) is now fully integrated with:
-	- English, Dutch, and Ukrainian translations covering all application UI
-	- a navbar language switcher with immediate, no-reload switching
-	- account-level persistence (`User.preferredLanguage`) synced across devices, with `localStorage`/browser-detection fallback for guests
-	- backend API errors carrying a stable `code` field the frontend translates, instead of raw English error text
+- Publish, edit, and browse Markdown articles with categories and search
+- Comment on and like articles in real time
+- Friend system with requests, online status, and real-time chat via WebSockets
+- Follow authors and receive in-app notifications
+- Earn badges, XP, and climb the global leaderboard
+- Admin and moderator dashboard for content moderation and role management
+- OAuth 2.0 login via GitHub, Google, and 42
+- Internationalization in English, Dutch, and Ukrainian
+- Installable as a Progressive Web App (PWA) with offline fallback
 
-## OAuth 2.0 Minor Module (Implemented)
+---
 
-This project implements the OAuth 2.0 remote authentication minor module with:
-
-- GitHub
-- Google
-- 42
-
-### OAuth Endpoints
-
-Base path: `/api/auth`
-
-- `GET /api/auth/oauth/providers`
-  - Returns enabled providers from backend config.
-- `GET /api/auth/oauth/:provider`
-  - Starts provider OAuth flow and sets short-lived `oauth_state` cookie.
-- `GET /api/auth/oauth/:provider/callback`
-  - Validates state, resolves or links user, sets auth cookies, then redirects.
-
-### Required Provider Console Settings
-
-Use exact callback URLs below (no trailing slash changes):
-
-| Provider | App Type           | Callback URL                                            | Required Scope     |
-|----------|--------------------|---------------------------------------------------------|--------------------|
-| GitHub   | OAuth App          | `https://localhost:8443/api/auth/oauth/github/callback` | `user:email`       |
-| Google   | OAuth Client (Web) | `https://localhost:8443/api/auth/oauth/google/callback` | `profile`, `email` |
-| 42       | OAuth App          | `https://localhost:8443/api/auth/oauth/42/callback`     | `public`           |
-
-Production callback pattern:
-
-- `https://<your-domain>/api/auth/oauth/github/callback`
-- `https://<your-domain>/api/auth/oauth/google/callback`
-- `https://<your-domain>/api/auth/oauth/42/callback`
-
-### Environment Variables (OAuth)
-
-Set in root `.env` (or backend env equivalent):
-
-```env
-OAUTH_GOOGLE_CLIENT_ID=replace-with-google-client-id
-OAUTH_GOOGLE_CLIENT_SECRET=replace-with-google-client-secret
-OAUTH_GOOGLE_CALLBACK_URL=https://localhost:8443/api/auth/oauth/google/callback
-
-# If you are not enabling GitHub yet, comment out all 3 GitHub lines.
-OAUTH_GITHUB_CLIENT_ID=replace-with-github-client-id
-OAUTH_GITHUB_CLIENT_SECRET=replace-with-github-client-secret
-OAUTH_GITHUB_CALLBACK_URL=https://localhost:8443/api/auth/oauth/github/callback
-
-OAUTH_42_CLIENT_ID=replace-with-42-client-id
-OAUTH_42_CLIENT_SECRET=replace-with-42-client-secret
-OAUTH_42_CALLBACK_URL=https://localhost:8443/api/auth/oauth/42/callback
-
-OAUTH_SUCCESS_REDIRECT=https://localhost:8443/
-OAUTH_ERROR_REDIRECT=https://localhost:8443/login
-```
-
-Important:
-
-- Any partially configured provider (for example only ID without secret) is treated as invalid.
-- For GitHub, either fill all 3 GitHub variables or comment all 3.
-- Keep client secrets only in local env files, never in Git.
-
-### OAuth Setup Steps
-
-1. Copy env template and fill OAuth credentials.
-2. Start the app with `make start`.
-3. Verify enabled providers:
-
-```bash
-curl -k https://localhost:8443/api/auth/oauth/providers
-```
-
-Expected response (example):
-
-```json
-{"success":true,"data":["42","github","google"]}
-```
-
-4. Open login page and confirm provider buttons are enabled.
-5. Complete OAuth with one provider and confirm you are redirected to `/` as authenticated user.
-
-### Login Flow (Evaluator-Facing Behavior)
-
-1. Frontend calls `/api/auth/oauth/providers` and renders only configured providers.
-2. User clicks provider button on `/login`.
-3. Backend creates `oauth_state` and redirects to provider consent page.
-4. Provider redirects to callback URL.
-5. Backend validates state, resolves or links local account, sets `auth_token` + `csrf_token` cookies.
-6. Backend redirects to success URL (`/`) or login with compact error code (`/login?code=...`).
-
-### Known Limitations
-
-- Local HTTPS uses self-signed certs; browser warning is expected in development.
-- OAuth depends on exact callback URL matching in provider console.
-- External provider outages or consent screen restrictions can block login.
-- First callback with fake/expired authorization code can return token-exchange errors (expected in negative tests).
-
-### Evaluator Validation Steps (Module Evidence)
-
-Use these exact checks during evaluation.
-
-1. Provider discovery:
-
-```bash
-curl -k -i https://localhost:8443/api/auth/oauth/providers
-```
-
-Expect `200` and enabled providers in JSON.
-
-2. Start OAuth flow for one enabled provider:
-
-```bash
-curl -k -i -c /tmp/oauth.cookies https://localhost:8443/api/auth/oauth/github
-```
-
-Expect `302` and a provider `Location` redirect.
-
-3. Denied consent path:
-
-- Deny consent on provider page.
-- Expect redirect to `/login?code=oauth_provider_denied`.
-
-4. Tampered state path:
-
-- Start OAuth to set `oauth_state` cookie.
-- Call callback with mismatched `state` and fake code.
-- Expect redirect to `/login?code=oauth_state_invalid`.
-
-5. Reused callback state path:
-
-- Use same valid state twice in callback calls.
-- Expect second callback redirect to `/login?code=oauth_state_missing`.
-
-6. Existing-account linking behavior:
-
-- Use OAuth profile with verified email that already exists locally.
-- Expect successful login to the existing local user (not duplicate user creation).
-
-7. Run automated evidence scripts:
-
-```bash
-bash backend/scripts/test-backend-flow.sh
-bash frontend/scripts/test-frontend-flow.sh
-```
-
-Both scripts contain OAuth edge-case assertions for denied consent, tampered state, and reused callback state.
-
-Service-level OAuth documentation:
-
-- Backend OAuth API and evidence: `backend/README.md`
-- Frontend OAuth UX and evidence: `frontend/README.md`
-
-## Internationalization (i18n) Minor Module (Implemented)
-
-This project implements the "Support for multiple languages" minor module with:
-
-- English (`en`) — default / fallback
-- Dutch (`nl`) — Nederlands
-- Ukrainian (`uk`) — Українська, including correct CLDR plural forms (one/few/many/other)
-
-### Language Switcher
-
-- A button group in the navbar, reachable from every page, guest or logged in.
-- Switching language updates all visible text immediately — no reload.
-- The choice is cached to `localStorage` (`i18nextLng`), so it survives a refresh.
-- For logged-in users, the choice also syncs to the account (`User.preferredLanguage`, via `PATCH /api/users/me`), so it carries across devices/browsers and is re-applied automatically on the next login or session restore.
-- Guests, and accounts with no saved preference, fall back to browser language detection, then English.
-
-### Translation Coverage
-
-- All application UI chrome: navigation, forms, buttons, validation messages, empty states, and the Privacy Policy / Terms of Service pages.
-- Backend API error responses include a stable, machine-readable `code` field (e.g. `user_not_found`, `validation_password_length`) alongside the English `error` text. The frontend translates the `code`, so API-originated errors — not just client-side validation — respect the active language.
-- User-generated content (article titles/bodies, comments, display names) is intentionally left untranslated, as is the platform's brand name — only application UI chrome is translated.
-- The moderator/admin dashboard is fully translated across all three languages, same as the rest of the app.
-- Dates, relative timestamps ("5m ago"), and number formatting (e.g. XP totals) follow the active in-app language via `Intl`, not just the browser's own locale.
-
-### Evaluator Validation Steps (Module Evidence)
-
-1. Open the app and use the language switcher in the navbar to switch between English / Nederlands / Українська. Confirm visible text changes immediately (no reload) across the home feed, login/register forms, search, and the Privacy Policy / Terms of Service pages.
-2. Refresh the page after switching. Confirm the chosen language persists.
-3. Register or log in, switch language while logged in, then check that the preference was saved to the account. A browser login doesn't give you a cookie jar `curl` can reuse, so log in via `curl` too (same account, separate session):
-
-```bash
-curl -k -s -c /tmp/i18n.cookies -X POST https://localhost:8443/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"<your-test-email>","password":"<your-test-password>"}' > /dev/null
-
-curl -k -s -b /tmp/i18n.cookies https://localhost:8443/api/auth/me
-```
-
-Expect the `preferredLanguage` field in the response to match your last selection. Logging in again (or from a different browser with the same account) re-applies it automatically.
-
-4. Trigger a validation error in Dutch or Ukrainian — for example submit the login form empty, or register with a username that is already taken — and confirm the error message is translated, not English.
-5. Run the automated i18n test suite:
-
-```bash
-cd frontend && node --test scripts/i18n.test.mjs
-```
-
-Covers: key parity across all three language bundles, correct Ukrainian plural forms, translated Privacy Policy/Terms of Service content, and that every backend error `code` has a matching translation in all three languages.
-
-### Known Limitations
-
-- Dutch and Ukrainian translations (including the legal pages) were produced by the development team without a native-speaker or legal review pass; content and structure are complete and consistent across all three languages, but wording has not been professionally reviewed.
-
-Full design decisions, architecture, translation-key conventions, and manual test steps: [I18N.md](I18N.md).
-
-## Setup Instructions
+## Instructions
 
 ### Prerequisites
-- Git
-- Docker Engine + Docker Compose
 
-### 1. Clone
+- Git
+- Docker Engine (v24+) and Docker Compose (v2+)
+- `make`
+- `mkcert` (for local HTTPS certificate generation)
+  - macOS: `brew install mkcert`
+  - Ubuntu: `sudo apt install libnss3-tools && brew install mkcert` or build from source
+
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/MariiaKhud/ft_transcendence.git
@@ -274,29 +48,49 @@ cd ft_transcendence
 cp .env.example .env
 ```
 
-Then edit `.env`.
-
-Important for Docker: use `postgres` as DB host, not `localhost`.
+Edit `.env` and fill in the required values. Minimum required:
 
 ```env
+# Database — use 'postgres' as host when running in Docker, not localhost
 DATABASE_URL=postgresql://transcendence:transcendence@postgres:5432/transcendence
+POSTGRES_DB=transcendence
+POSTGRES_USER=transcendence
+POSTGRES_PASSWORD=transcendence
+
+# Auth
 JWT_SECRET=change-this-to-a-long-random-secret
+
+# Ports
 BACKEND_PORT=3000
 FRONTEND_PORT=5173
+NGINX_HTTP_PORT=8080
+NGINX_HTTPS_PORT=8443
+
+# Environment
 NODE_ENV=development
 UPLOAD_PATH=./uploads
-OAUTH_GOOGLE_CLIENT_ID=replace-with-google-client-id
-OAUTH_GOOGLE_CLIENT_SECRET=replace-with-google-client-secret
-OAUTH_GOOGLE_CALLBACK_URL=https://localhost:8443/api/auth/oauth/google/callback
+
+# OAuth — fill in or leave empty to disable a provider
+# GitHub
 OAUTH_GITHUB_CLIENT_ID=replace-with-github-client-id
 OAUTH_GITHUB_CLIENT_SECRET=replace-with-github-client-secret
 OAUTH_GITHUB_CALLBACK_URL=https://localhost:8443/api/auth/oauth/github/callback
+
+# Google
+OAUTH_GOOGLE_CLIENT_ID=replace-with-google-client-id
+OAUTH_GOOGLE_CLIENT_SECRET=replace-with-google-client-secret
+OAUTH_GOOGLE_CALLBACK_URL=https://localhost:8443/api/auth/oauth/google/callback
+
+# 42
 OAUTH_42_CLIENT_ID=replace-with-42-client-id
 OAUTH_42_CLIENT_SECRET=replace-with-42-client-secret
 OAUTH_42_CALLBACK_URL=https://localhost:8443/api/auth/oauth/42/callback
+
 OAUTH_SUCCESS_REDIRECT=https://localhost:8443/
 OAUTH_ERROR_REDIRECT=https://localhost:8443/login
 ```
+
+> Any provider with incomplete credentials (only ID, no secret) is automatically disabled at runtime. You can leave all OAuth variables as placeholders to skip OAuth entirely for local testing.
 
 ### 3. Start the project
 
@@ -304,107 +98,446 @@ OAUTH_ERROR_REDIRECT=https://localhost:8443/login
 make start
 ```
 
-`make start` generates the local HTTPS certificate, starts the containers, waits
-for the backend, and seeds the database. If your browser still warns about the
-certificate, trust the CA from `~/.mkcert/rootCA.pem` in your browser or OS
-certificate store.
+`make start` will:
+1. Generate a local HTTPS certificate via `mkcert`
+2. Build and start all Docker containers (postgres, backend, frontend, nginx)
+3. Wait for the backend to become healthy
+4. Run Prisma migrations
+5. Seed the database with test data
+
+If your browser warns about the certificate, trust the CA certificate:
+
+```bash
+# The CA path is printed by mkcert during setup, typically:
+~/.local/share/mkcert/rootCA.pem   # Linux
+~/Library/Application Support/mkcert/rootCA.pem  # macOS
+```
 
 ### 4. Open the app
 
-- https://localhost:8443
+```
+https://localhost:8443
+```
 
-## Browser Compatibility
+### Test accounts (seeded)
 
-Tested browsers in this environment:
+| Email | Password | Role |
+|---|---|---|
+| alice@example.com | password123 | User |
+| bob@example.com | password123 | User |
+| carol@example.com | password123 | Moderator |
+| admin@example.com | password123 | Admin |
 
-- Google Chrome
-- Microsoft Edge
-- Chromium
-
-Current compatibility status:
-
-- Critical user flows were verified against the local app URL at `https://localhost:8443`.
-- Login/registration, feed/article browsing, profile/avatar editing, chat/messaging, and follows/notifications were re-tested successfully in Microsoft Edge and Chromium.
-- Moderator moderation behavior was verified through the automated backend flow.
-
-Known limitations:
-
-- `https://localhost:8443` can still show a certificate warning until the local mkcert CA is trusted in the OS or browser certificate store.
-- Firefox was not available in this environment and was not part of the verified browser matrix.
-- Dedicated admin endpoint-path checks depend on local environment configuration (`ROLE_ADMIN_PATH`) and were not fully exercised here.
-
-## Available Commands
+### Available make commands
 
 ```bash
-make start         # generate HTTPS cert, start services, and seed database
-make up            # build and run all services in the foreground
+make start         # generate HTTPS cert, start services, run migrations, seed database
+make up            # build and start all services
 make down          # stop all services
-make clean         # stop all services and remove volumes
-make logs          # stream logs
-make migrate       # run prisma migrations in backend container
-make seed          # seed database in backend container
-make test-realtime # run Socket.IO realtime integration tests
-make test-all      # run every automated test suite
+make clean         # stop all services and remove all volumes
+make logs          # stream logs from all services
+make migrate       # run Prisma migrations inside the backend container
+make seed          # seed the database with test data
+make test-all      # run all automated test suites
+make test-realtime # run Socket.IO real-time integration tests
 ```
 
-## Test Commands
+### OAuth provider setup (if testing OAuth)
 
-Backend flow tests:
+Register callback URLs in each provider's developer console:
 
-```bash
-cd backend
-npm run test:backend
+| Provider | Console | Callback URL |
+|---|---|---|
+| GitHub | github.com/settings/developers | `https://localhost:8443/api/auth/oauth/github/callback` |
+| Google | console.cloud.google.com | `https://localhost:8443/api/auth/oauth/google/callback` |
+| 42 | profile.intra.42.fr/oauth/applications | `https://localhost:8443/api/auth/oauth/42/callback` |
+
+---
+
+## Resources
+
+### Documentation used
+
+- [React documentation](https://react.dev)
+- [TypeScript documentation](https://www.typescriptlang.org/docs/)
+- [Tailwind CSS documentation](https://tailwindcss.com/docs)
+- [Express.js documentation](https://expressjs.com)
+- [Prisma documentation](https://www.prisma.io/docs)
+- [PostgreSQL documentation](https://www.postgresql.org/docs/)
+- [Socket.IO documentation](https://socket.io/docs/)
+- [Vite documentation](https://vitejs.dev/guide/)
+- [Docker Compose documentation](https://docs.docker.com/compose/)
+- [i18next documentation](https://www.i18next.com)
+- [JWT specification (RFC 7519)](https://datatracker.ietf.org/doc/html/rfc7519)
+- [WCAG 2.1 guidelines](https://www.w3.org/TR/WCAG21/)
+- [MDN Web Docs — Web APIs, HTML, CSS](https://developer.mozilla.org)
+- [OAuth 2.0 specification (RFC 6749)](https://datatracker.ietf.org/doc/html/rfc6749)
+- [PWA documentation (web.dev)](https://web.dev/progressive-web-apps/)
+- [i18n architecture](I18N.md)
+
+### AI usage
+
+AI assistants were used throughout this project for:
+
+- **Architecture decisions** — discussing vertical slice team structure, WebSocket grace period design, and notification delivery strategy
+- **Code review and debugging** — identifying bugs in socket.server.ts (duplicate connection handler), TypeScript type errors, and race conditions in the FriendButton component
+- **Validation audit** — systematic review of all form validation across frontend and backend
+- **Boilerplate generation** — initial scaffold for route handlers, service functions, and React components, which was then reviewed, adapted, and integrated by the team
+- **README structure** — organizing the required sections and content
+- **Test script development** — shell-based integration test scripts for the friends and notifications APIs
+
+All AI-generated code was reviewed, tested, and understood by the team member who integrated it. No AI-generated code was merged without review.
+
+---
+
+## Team Information
+
+| Login | Name | Role |
+|-------|------|------|
+| makhudon | Mariia Khudonohova | Product Owner (PO), Developer |
+| tiyang   | Tingting Yang      | Technical Lead / Architect, Developer |
+| tkremnov | Tanya Kremnova     | Technical Lead / Architect, Developer |
+| lperekhr | Lidiia Perekhrest  | Project Manager (PM) / Scrum Master, Developer |
+
+### Mariia Khudonohova — Product Owner, Developer
+**Feature slice: Auth + User foundation**
+
+As Product Owner, Mariia defined the project scope, prioritized the feature backlog, and made final decisions on product direction. As a developer, she built the authentication foundation that the entire project depends on.
+
+Responsibilities:
+- Product vision, feature prioritization, and backlog ownership
+- Authentication system (register, login, logout, JWT in HttpOnly cookies, CSRF protection)
+- OAuth 2.0 integration (GitHub, Google, 42) with account linking
+- User profiles, avatar upload and management
+- Privacy Policy and Terms of Service pages
+- Docker Compose setup and nginx HTTPS configuration
+- Project setup and shared type system (/shared/types/)
+
+### Tingting Yang — Technical Lead / Architect, Developer
+**Feature slice: Articles + Feed**
+
+As one of two Technical Leads, Tingting co-owned the overall system architecture, reviewed cross-team technical decisions, and set standards for API design and code quality. As a developer, she built the core content system.
+
+Responsibilities:
+- Co-ownership of system architecture and technical standards
+- API design patterns and code review
+- Article CRUD (create, edit, delete, publish)
+- Global feed with pagination
+- Category filtering and advanced search
+- Comments (create, edit, delete, soft-remove)
+- Article likes with optimistic UI
+- Real-time comment and like updates via Socket.IO
+- Internationalization (i18n) — English, Dutch, Ukrainian
+
+### Tanya Kremnova — Technical Lead / Architect, Developer
+**Feature slice: Social Layer**
+
+As one of two Technical Leads, Tanya co-owned the system architecture with a focus on real-time infrastructure and the WebSocket layer. As a developer, she built all social and communication features.
+
+Responsibilities:
+- Co-ownership of system architecture, real-time infrastructure design
+- WebSocket architecture (Socket.IO setup, room strategy, grace period logic)
+- Friends system (send, accept, decline, cancel, remove requests)
+- Follow/unfollow system
+- Real-time chat with WebSockets (Socket.IO)
+- In-app notification system (bell, dropdown, notifications page)
+- Online/offline status with 30-second grace period
+
+### Lidiia Perekhrest — Project Manager (PM) / Scrum Master, Developer
+**Feature slice: Gamification + Admin**
+
+As Project Manager and Scrum Master, Lidiia organized the team's workflow, facilitated weekly syncs, tracked progress in Jira, and ensured the project stayed on schedule. As a developer, she built the gamification system and admin tooling.
+
+Responsibilities:
+- Sprint planning, Jira board management, and progress tracking
+- Facilitating weekly team syncs and removing blockers
+- Badge system (earn, display, award on triggers)
+- XP and level system with level-up toast
+- Global leaderboard
+- Admin and moderator dashboard
+- Content moderation (soft-remove articles and comments with reason)
+- Role management
+- Progressive Web App (PWA) setup and service worker
+- Browser compatibility testing
+
+---
+
+## Project Management
+
+### Work organization
+
+The team used **vertical slice architecture**: each developer owned one complete feature area end-to-end, from database schema through API routes to React components. This allowed parallel development with minimal blocking between team members.
+
+Build order was agreed at the start:
+1. Auth + project setup (unblocks everything)
+2. Articles + feed (core content)
+3. Social layer (friends, chat, notifications)
+4. Gamification + admin dashboard
+
+### Tools
+
+| Purpose | Tool |
+|---------|------|
+| Task tracking | Jira (tickets, story points) |
+| Version control | Git + GitHub |
+| Communication | Slack (daily text, voice calls) |
+
+---
+
+## Technical Stack
+
+### Frontend
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| React      | 19 | UI framework |
+| TypeScript | 5 | Type safety |
+| Vite       | 6 | Build tool and dev server |
+| Tailwind CSS | 4 | Utility-first styling |
+| shadcn/ui  | — | Accessible UI primitives |
+| React Router | 7 | Client-side routing |
+| Socket.IO client | 4 | Real-time communication |
+| i18next    | — | Internationalization |
+| React Markdown | — | Markdown rendering |
+| Zustand    | — | Global state management |
+
+### Backend
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Node.js    | 20 | Runtime |
+| Express    | 4 | HTTP framework |
+| TypeScript | 5 | Type safety |
+| Socket.IO  | 4 | WebSocket server |
+| Prisma     | 7 | ORM and migrations |
+| bcryptjs   | — | Password hashing |
+| jsonwebtoken | — | JWT signing and verification |
+| Passport.js | — | OAuth 2.0 strategy handling |
+| Multer     | — | File upload middleware |
+| cookie-parser | — | Cookie handling |
+
+### Database
+
+| Technology | Purpose |
+|------------|---------|
+| PostgreSQL 16 | Primary database |
+| Prisma ORM | Schema, migrations, typed queries |
+
+### Infrastructure
+
+| Technology | Purpose |
+|------------|---------|
+| Docker + Docker Compose | Container orchestration |
+| nginx | Reverse proxy, HTTPS termination, static file serving |
+| mkcert | Local HTTPS certificate generation |
+| GitHub Actions | CI pipeline |
+
+### Justification for major choices
+
+**TypeScript full-stack (React + Node.js)**
+The team had no prior web experience (background in C/C++). Using TypeScript on both sides meant learning one language instead of two. A shared `/shared/types/` folder lets both sides import the same interfaces, so API contract mismatches are caught at compile time rather than at runtime.
+
+**Prisma over raw SQL or SQLAlchemy**
+Prisma's `schema.prisma` file is the single source of truth for the database structure. Migrations are one command. The generated client is fully typed — Prisma prevents SQL injection by design and makes complex queries readable. For a team new to web development, this was significantly safer and faster than writing raw SQL.
+
+**PostgreSQL over SQLite or MongoDB**
+PostgreSQL handles relational data (users → articles → comments → likes, friendship pairs, notification foreign keys) better than a document store. It's the industry standard for production web applications and integrates natively with Prisma.
+
+**Socket.IO over raw WebSockets**
+Socket.IO adds automatic reconnection, room-based broadcasting, and a fallback to HTTP long-polling. The room abstraction (`io.to(userId).emit(...)`) made per-user message delivery and article-room broadcasting simple to implement correctly without custom infrastructure.
+
+**Docker Compose**
+Single `make start` command starts all five services (postgres, backend, frontend, nginx, cert generation) in the correct order with health checks. This guarantees reproducible behavior between developer machines and during evaluation.
+
+---
+
+## Database Schema
+
+### Tables and relationships
+
+```
+users
+├── id (UUID, PK)
+├── email (unique)
+├── username (unique)
+├── passwordHash
+├── displayName
+├── avatarUrl
+├── bio
+├── role (USER | MODERATOR | ADMIN)
+├── preferredLanguage
+├── xp, level
+├── isOnline, lastSeenAt
+└── createdAt, updatedAt
+
+articles
+├── id (UUID, PK)
+├── authorId → users.id
+├── title, content (Markdown)
+├── category (enum)
+├── likeCount (cached counter)
+├── isRemoved, removedReason, removedAt
+└── createdAt, updatedAt
+
+comments
+├── id (UUID, PK)
+├── articleId → articles.id
+├── authorId → users.id
+├── content
+├── isRemoved, removedReason, removedAt
+└── createdAt, updatedAt
+
+article_likes
+├── id (UUID, PK)
+├── userId → users.id
+├── articleId → articles.id
+└── UNIQUE(userId, articleId)
+
+follows  [one-directional]
+├── id (UUID, PK)
+├── followerId → users.id
+├── followingId → users.id
+└── UNIQUE(followerId, followingId)
+
+friendships  [mutual, with status]
+├── id (UUID, PK)
+├── requesterId → users.id
+├── addresseeId → users.id
+├── status (PENDING | ACCEPTED | DECLINED)
+└── UNIQUE(requesterId, addresseeId)
+
+messages
+├── id (UUID, PK)
+├── senderId → users.id
+├── receiverId → users.id
+├── content
+├── isRead
+└── createdAt
+
+notifications
+├── id (UUID, PK)
+├── userId → users.id  [recipient]
+├── type (enum: FOLLOWED, FRIEND_REQUEST, FRIEND_ACCEPTED, COMMENT, LIKE, CONTENT_REMOVED, MESSAGE, BADGE, LEVEL_UP, ARTICLE_CREATED)
+├── message
+├── refId  [optional: articleId or userId for navigation]
+├── isRead
+└── createdAt
+
+badges
+├── id (UUID, PK)
+├── name (unique)
+├── description
+├── icon
+└── xpReward
+
+user_badges
+├── id (UUID, PK)
+├── userId → users.id
+├── badgeId → badges.id
+├── earnedAt
+└── UNIQUE(userId, badgeId)
+
+oauth_accounts  [for OAuth provider linking]
+├── id (UUID, PK)
+├── userId → users.id
+├── provider (github | google | 42)
+├── providerAccountId
+└── UNIQUE(provider, providerAccountId)
 ```
 
-Frontend smoke tests:
+### Key relationships
 
-```bash
-cd frontend
-npm run test:frontend
-```
+- One user → many articles, comments, likes, notifications, badges
+- Articles and comments use soft-delete (`isRemoved`) for moderation audit trail
+- Friendships are one row per pair, direction-aware (requester ≠ addressee), with explicit status
+- Follows are one-directional (Twitter model); friendships are mutual (Facebook model)
+- `article_likes.likeCount` is a cached counter on the article row — updated in a DB transaction alongside the like row insert/delete for fast feed queries
+- `oauth_accounts` allows a user to link multiple OAuth providers to one local account
 
-Socket.IO realtime tests (chat, live comment/like updates, and notifications):
+---
 
-```bash
-make test-realtime
-```
+## Features List
 
-## Project Structure
+### Auth and user management
+*(Mariia Khudonohova)*
 
-```text
-ft_transcendence/
-├── frontend/           # React app
-├── backend/            # Express API
-├── shared/types/       # Shared TypeScript types
-├── nginx/              # Reverse proxy config
-├── uploads/            # User avatar storage
-└── docker-compose.yml  # Docker orchestration
-```
+| Feature | Description |
+|---|---|
+| Register | Email + username + password, bcrypt hashed, full validation |
+| Login | Email + password, JWT in HttpOnly cookie, CSRF protection |
+| Logout | Clears cookies, disconnects WebSocket immediately (no grace period) |
+| Session restore | `GET /api/auth/me` on app load restores session without re-login |
+| OAuth login | GitHub, Google, 42 — with account linking for existing email users |
+| Profile page | Avatar, bio, stats (articles, followers, following), badges, level |
+| Avatar upload | JPG/PNG/WebP, max 2MB, UUID filename, old file deleted on replace |
+| Edit profile | Display name, bio, preferred language |
+| Account deletion | Cascade deletes all user content, removes avatar file, clears session |
+| Privacy Policy | Static page with real content |
+| Terms of Service | Static page with real content |
 
-## Team
+### Articles and feed
+*(Tingting Yang)*
 
-| Person   | Role                 | Features                                |
-|----------|----------------------|-----------------------------------------|
-| Person 1 | Auth & Users         | Sign up, login, profiles, avatars       |
-| Person 2 | Articles & Feed      | Articles, comments, likes, search       |
-| Person 3 | Social Layer         | Friends, chat, notifications, follows   |
-| Person 4 | Gamification & Admin | Badges, leaderboard, moderation         |
+| Feature | Description |
+|---|---|
+| Create article | Title (max 120), Markdown content (min 100 non-whitespace chars), category |
+| Edit article | Author-only, same validation as create |
+| Delete article | Author hard-deletes, moderator/admin soft-removes with reason |
+| Global feed | Paginated article list, newest by default |
+| Article page | Full Markdown render with heading level shift, author info, like button |
+| Comments | Create, edit, delete own — real-time via Socket.IO |
+| Likes | Toggle like/unlike, optimistic UI, real-time count update |
+| Advanced search | Filter by title, author, content, category, date range; sort by newest/oldest/most liked |
+| Internationalization | English, Dutch, Ukrainian with account-level persistence |
 
------------------------
+### Social layer
+*(Tanya Kremnova)*
+
+| Feature | Description |
+|---|---|
+| Friend requests | Send, accept, decline, cancel — full state machine |
+| Friends list | Accepted friends with online indicator (real-time via WebSocket) |
+| Follow system | One-directional follow/unfollow, follower/following counts on profile |
+| Real-time chat | 1-to-1 messages via Socket.IO, history persisted in DB |
+| Notifications | Bell with unread count, dropdown, full notifications page with pagination |
+| Notification types | Friend request, friend accepted, follow, comment, like, content removed, message, badge, level up, article published |
+| Online status | WebSocket connect/disconnect with 30-second grace period, instant on logout |
+
+### Gamification and admin
+*(Lidiia Perekhrest)*
+
+| Feature | Description |
+|---|---|
+| Badges | First Post, Consistent Writer, Prolific Author, First Like, Rising Voice, Popular Writer |
+| XP system | Earned on article publish, like received, badge earned, etc. |
+| Level system | Calculated from XP, shown on profile and leaderboard |
+| Level-up toast | Real-time visual feedback when user levels up |
+| Leaderboard | Global ranking by total likes received |
+| Admin dashboard | Removed content audit, user list, role management |
+| Moderator dashboard | Soft-remove articles and comments with reason |
+| PWA | Installable, service worker, offline fallback page |
+| Browser compatibility | Tested on Chrome, Edge, Safari |
+
+---
+
 # Modules
 
 ## Web
 
-### Major — Frontend and backend frameworks
-**Status: ✅ Covered**  
+### Major — Frontend and backend frameworks (2pt) ⭐⭐
+
+**Owner: All team members**
+
 We use frameworks on both sides of the application:
 - **Frontend:** React + TypeScript
 - **Backend:** Express + TypeScript
 - **Database:** PostgreSQL
 - **ORM:** Prisma
 
-### Major — WebSockets
-**Status: ✅ Covered**  
+### Major — WebSockets (2pt) ⭐⭐
+
+**Owner: tkremnov**
+
 The application uses Socket.IO for real-time communication.
 Implemented real-time functionality includes:
 - real-time chat messages
@@ -415,8 +548,10 @@ Implemented real-time functionality includes:
 - graceful handling of temporary disconnections
 The backend maintains user socket connections and uses a 30-second grace period before marking a disconnected user as offline. This prevents short network interruptions or browser reconnects from immediately changing the user's status.
 
-### Major — Allow users to interact with other users
-**Status: ✅ Covered**  
+### Major — Allow users to interact with other users (2pt) ⭐⭐
+
+**Owner: tkremnov, makhudon and lperekhr**
+
 The application provides all three required interaction systems.
 
 **Chat**
@@ -441,8 +576,10 @@ The application provides all three required interaction systems.
 - view their friends
 - see friends' online status
 
-### Minor — ORM
-**Status: ✅ Covered**  
+### Minor — ORM (1pt) ⭐
+
+**Owner: makhudon**
+
 The application uses Prisma ORM (Object Relational Mapper) with PostgreSQL.  
 Prisma provides:
 - database schema
@@ -451,8 +588,10 @@ Prisma provides:
 - typed database queries
 - relations between entities
 
-### Minor — Complete notification system
-**Status: ✅ Covered**  
+### Minor — Complete notification system (1pt) ⭐
+
+**Owner: tkremnov**
+
 The platform provides notification system covering the main social, content, messaging, moderation, and gamification events.  
 Notifications use a combination of database persistence, Socket.IO real-time delivery, polling, and browser events. Critical high-frequency events such as messages, comments, likes, and new articles are delivered through Socket.IO, while other persisted notification types are synchronized through polling. This provides both real-time feedback and reliable persistence across page reloads and reconnections.
 
@@ -473,8 +612,10 @@ Notifications use a combination of database persistence, Socket.IO real-time del
 | Badge earned                    | ✅        | BADGE notification type |
 | Level up                        | ✅        | Real-time visual event + notification message |
 
-### Minor —  Progressive Web App
-**Status: ✅ Covered**  
+### Minor —  Progressive Web App (1pt) ⭐
+
+**Owner: lperekhr**
+
 The application is implemented as a Progressive Web App (PWA) with installability and offline fallback support.
 
 The PWA provides:
@@ -500,8 +641,10 @@ The service worker caches the offline fallback page. When the network connection
 
 Server-dependent functionality, including API requests and real-time communication, requires an active network connection.
 
-### Minor — Custom-made design system
-**Status: ✅ Covered**  
+### Minor — Custom-made design system (1pt) ⭐
+
+**Owner: All team members**
+
 We developed a reusable React-based design system with shared components, typography, colors, interactive states and iconography.  
 Project has a custom visual identity including:
 - custom color palette
@@ -517,13 +660,13 @@ Project has a custom visual identity including:
 - badges
 - level/XP UI
 
-### Minor — Advanced search with filters, sorting and pagination
-**Status: ✅ Covered**  
+### Minor — Advanced search with filters, sorting and pagination (1pt) ⭐
+
+**Owner: tiyang**
+
 The platform provides a dedicated advanced article search with server-side filtering, sorting, and pagination.  
 
 #### Search and filters
-
-Users can search articles by:
 
 - Title
 - Author
@@ -533,14 +676,13 @@ Users can search articles by:
 
 #### Sorting
 
-Search results can be sorted by:
-
 - Newest
 - Oldest
 - Most liked
 
-### Minor — File upload and management
-**Status: ✅ Covered**  
+### Minor — File upload and management (1pt) ⭐
+
+**Owner: makhudon**
 
 | Requirement                     | Status    | Evidence           |
 | ------------------------------- | :-------: | ------------------ |
@@ -556,16 +698,20 @@ Search results can be sorted by:
 
 ## Accessibility and Internationalization
 
-### Minor — Multiple languages
-**Status: ✅ Covered**  
+### Minor — Multiple languages (1pt) ⭐
+
+**Owner: tiyang**
+
 The application supports three languages:
 - English
 - Nederlands
 - Українська
 The language switcher allows the user to change the application language.
 
-### Minor — Support for additional browsers
-**Status: ✅ Covered**  
+### Minor — Support for additional browsers (1pt) ⭐
+
+**Owner: makhudon and lperekhr**
+
 The application was tested for browser compatibility across multiple browsers:
 
 | Browser | Platform | Result |
@@ -576,8 +722,10 @@ The application was tested for browser compatibility across multiple browsers:
 
 ## User Management
 
-### Major — User management and authentication
-**Status: ✅ Covered**  
+### Major — User management and authentication (2pt) ⭐⭐
+
+**Owner: makhudon**
+
 The application provides:
 - user registration
 - user login
@@ -590,8 +738,10 @@ The application provides:
 - online/offline status
 - public user profiles
 
-### Major — Advanced permissions system
-**Status: ✅ Covered**  
+### Major — Advanced permissions system (2pt) ⭐⭐
+
+**Owner: lperekhr**
+
 The application implements three hierarchical roles: USER, MODERATOR and ADMIN. Authentication and role-based authorization are enforced server-side through dedicated middleware. Permissions are applied to protected API routes according to role level. Moderators and administrators can moderate articles and comments, while only administrators can manage users and assign roles. The frontend also adapts the available administration interface to the authenticated user's role.  
 
 | Requirement                     | Status    | Evidence           |
@@ -609,23 +759,102 @@ The application implements three hierarchical roles: USER, MODERATOR and ADMIN. 
 | An administrator cannot demote and delete another administrator | ✅        | `if (targetUser.role === 'ADMIN' && role !== 'ADMIN')` |
 | An admin cannot delete their own account | ✅        | `if (req.user?.userId === id)` |
 
-### Minor — Remote authentication
-**Status: ✅ Covered**  
+### Minor — Remote authentication (1pt) ⭐
+
+**Owner: makhudon**
+
 The application implements remote authentication using OAuth 2.0 with the following providers:
 
 - Google
 - GitHub
 - 42
 
-### Minor — Gamification system
-**Status: ✅ Covered**  
+### Minor — Gamification system (1pt) ⭐
+
+**Owner: lperekhr**
+
 The application includes three gamification mechanisms:  
 
 **1. Badges** — Users can earn and display badges.  
 **2. Leaderboard** — Users can compare their progress and ranking.  
 **3. XP / Level system** — Users earn XP and progress through levels, with a `LevelUpToast` providing immediate feedback on level-up.
 
------------------------
+---
+
+## Individual Contributions
+
+### Mariia Khudonohova (makhudon)
+
+**Features built:** Auth system, OAuth 2.0, user profiles, avatar upload, account deletion, Docker setup, nginx HTTPS, CI pipeline, shared type system, Privacy Policy and Terms of Service.
+
+**Specific contributions:**
+- Designed and implemented the JWT + CSRF cookie auth pattern used across the entire project
+- Built the OAuth 2.0 flow with state validation, account linking, and all three providers
+- Set up the Docker Compose orchestration including nginx with HTTPS and mkcert integration
+- Created the GitHub Actions CI workflow covering typecheck, lint, and integration tests
+- Established the `/shared/types/` contract between frontend and backend
+- Built the avatar upload pipeline with MIME validation, UUID naming, and old-file cleanup
+
+**Challenges faced:** OAuth account linking edge cases — when a user registers with email X, then tries to OAuth with a provider that has email X, we needed to detect and link rather than create a duplicate. Solved by checking verified provider email against existing accounts in `resolveOAuthUser()`.
+
+---
+
+### Tingting Yang (tiyang)
+
+**Features built:** Articles (create, edit, delete), global feed, advanced search, comments, likes.
+
+**Specific contributions:**
+- Implemented the full article lifecycle including Markdown rendering with heading level shift
+- Built the global feed with pagination, category filters, and sort options
+- Implemented real-time comment and like updates using Socket.IO article rooms
+- Built the advanced search with multiple concurrent filters, all validated server-side
+- Implemented the optimistic UI for likes with revert-on-error
+- Added i18n for three languages with account-level persistence and backend error code translation
+
+**Challenges faced:** [FILL IN — e.g. "Real-time comment deduplication — when the socket event and HTTP response both arrive, the comment appeared twice. Fixed with a commentIdsRef set that tracks which comment IDs are already in state."]
+
+---
+
+### Tanya Kremnova (tkremnov)
+
+**Features built:** Friends system, follow system, real-time chat, notifications, online status, internationalization.
+
+**Specific contributions:**
+- Implemented the full friends state machine (PENDING → ACCEPTED/DECLINED) with race condition handling
+- Built the WebSocket-based chat with message history, read receipts, and auto-scroll
+- Designed and built the notification system covering all event types with real-time delivery
+- Implemented online status with 30-second grace period and instant logout via `forceOffline()`
+- Wrote the shell-based integration test scripts for friends and notifications APIs
+
+**Challenges faced:** The FriendButton race condition — User A cancels a request at the same moment User B accepts it. The 404 from the cancel endpoint was being displayed as an error instead of transitioning to "friends" state. Fixed by calling `getFriendshipStatus()` on any 404 from cancel to determine the actual state rather than guessing.
+
+---
+
+### Lidiia Perekhrest (lperekhr)
+
+**Features built:** Badge system, XP/level system, leaderboard, admin and moderator dashboard, PWA, browser compatibility.
+
+**Specific contributions:**
+- Implemented the gamification engine including XP award triggers, level calculation, and badge condition checks
+- Built the admin dashboard with removed content audit, user management, and role assignment
+- Implemented moderator soft-remove with reason, visible to staff in the comment/article view
+- Set up the PWA manifest, service worker, and offline fallback
+- Tested and fixed browser compatibility across Chrome, Edge, and Safari
+
+**Challenges faced:** [FILL IN — e.g. "The badge award system needed to be idempotent — awarding the same badge twice should silently skip rather than error. Used Prisma's `skipDuplicates: true` on the `userBadge.createMany()` call combined with the `@@unique([userId, badgeId])` constraint on the table."]
+
+---
+
+## Known Limitations
+
+- Local HTTPS uses a self-signed certificate. Browsers will show a security warning until you trust the mkcert CA certificate in your OS or browser certificate store.
+- OAuth depends on exact callback URL matching in each provider's developer console. Wrong URLs produce `oauth_redirect_uri_mismatch` errors.
+- Chat currently supports 1-to-1 messages only. Group chat is not implemented.
+- The notifications polling interval is 30 seconds as a fallback for missed socket events. Most notifications arrive instantly via WebSocket push.
+- Dutch translations were produced by the development team without a native-speaker review pass. Content is complete and consistent across all three languages.
+- Firefox was not available in the test environment and was not part of the verified browser matrix.
+
+---
 
 ## Service Map (Docker)
 
@@ -636,21 +865,3 @@ The application includes three gamification mechanisms:
 | frontend    | 5173          | 5173                |
 | nginx http  | 80            | 8080                |
 | nginx https | 443           | 8443                |
-
-## Troubleshooting (Quick)
-
-- Port conflicts: change host ports in `.env` (`BACKEND_PORT`, `FRONTEND_PORT`, `NGINX_HTTP_PORT`, `NGINX_HTTPS_PORT`).
-- TLS warning in browser: expected with local self-signed certs.
-- DB connection errors: verify `DATABASE_URL` uses host `postgres` (not `localhost`) when running in Docker.
-
-Rebuild cleanly:
-
-```bash
-make clean
-make start
-```
-
-## Getting Help
-
-- Backend API docs: [backend/README.md](backend/README.md)
-- Frontend docs: [frontend/README.md](frontend/README.md)
