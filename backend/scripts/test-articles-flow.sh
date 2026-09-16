@@ -17,6 +17,7 @@ COOKIE_JAR2="$(mktemp)"
 COOKIE_JAR_MOD="$(mktemp)"
 RUN_ID="$(date +%s | tail -c 5)"
 USERNAME="articles_${RUN_ID}"
+USERNAME_UPPER="$(printf '%s' "$USERNAME" | tr '[:lower:]' '[:upper:]')"
 EMAIL="articles.${RUN_ID}@example.com"
 USERNAME2="articles2_${RUN_ID}"
 EMAIL2="articles2.${RUN_ID}@example.com"
@@ -41,6 +42,24 @@ color_echo() {
   local color="$1"
   shift
   printf "%b%s%b\n" "$color" "$*" "$RESET"
+}
+
+# Portable relative-date helpers — macOS ships BSD date (`-v-1d`), while
+# Linux/CI ships GNU date (`-d 'yesterday'`); detect which one we have.
+yesterday_date() {
+  if date -v-1d +%Y-%m-%d >/dev/null 2>&1; then
+    date -u -v-1d +%Y-%m-%d
+  else
+    date -u -d 'yesterday' +%Y-%m-%d
+  fi
+}
+
+tomorrow_date() {
+  if date -v-1d +%Y-%m-%d >/dev/null 2>&1; then
+    date -u -v+1d +%Y-%m-%d
+  else
+    date -u -d 'tomorrow' +%Y-%m-%d
+  fi
 }
 
 cleanup() {
@@ -262,11 +281,13 @@ assert_body_contains '"commentsCount":0' "Create article"
 ARTICLE_ID="$(echo "$LAST_BODY" | grep -o '"id":"[^"]*' | head -1 | sed 's/"id":"//')"
 color_echo "$BLUE" "   Created article ID: ${ARTICLE_ID}"
 
-# Test 16: POST /api/articles — XP awarded after publish (author gains 25 XP)
-color_echo "$BLUE" "16. POST /api/articles — author XP increases by 25 after publish"
+# Test 16: POST /api/articles — XP awarded after publish (author gains 25 XP for the
+# article, plus 10 XP from the "First Post" badge, which fires on every account's
+# first published article — see getBadgeCondition() in gamification.service.ts)
+color_echo "$BLUE" "16. POST /api/articles — author XP increases by 35 after first publish (25 article + 10 First Post badge)"
 perform_request "Check XP after publish" -b "$COOKIE_JAR" "${BASE_URL}/api/auth/me"
 assert_status "200" "Check XP after publish"
-assert_body_contains '"xp":25' "Check XP after publish"
+assert_body_contains '"xp":35' "Check XP after publish"
 
 # Test 17: GET /api/articles/:id — authenticated user gets isLikedByCurrentUser: false
 color_echo "$BLUE" "17. GET /api/articles/:id — authenticated user, not yet liked"
@@ -323,7 +344,7 @@ assert_body_contains '"title":"My Test Article"' "Search by author username"
 
 # Test 24: GET /api/articles — author username search is case-insensitive (ILIKE)
 color_echo "$BLUE" "24. GET /api/articles — author username search is case-insensitive"
-perform_request "Search by author username (uppercased)" "${BASE_URL}/api/articles?search=${USERNAME^^}"
+perform_request "Search by author username (uppercased)" "${BASE_URL}/api/articles?search=${USERNAME_UPPER}"
 assert_status "200" "Search by author username (uppercased)"
 assert_body_contains '"title":"My Test Article"' "Search by author username (uppercased)"
 
@@ -364,7 +385,7 @@ assert_body_contains '"title":"My Test Article"' "Search by title field"
 
 # Test 29: GET /api/articles — author field matches (case-insensitive)
 color_echo "$BLUE" "29. GET /api/articles — author field matches (case-insensitive)"
-perform_request "Search by author field" "${BASE_URL}/api/articles?author=${USERNAME^^}"
+perform_request "Search by author field" "${BASE_URL}/api/articles?author=${USERNAME_UPPER}"
 assert_status "200" "Search by author field"
 assert_body_contains '"title":"My Test Article"' "Search by author field"
 
@@ -388,15 +409,15 @@ assert_body_not_contains '"title":"My Test Article"' "Title + author fields (no 
 
 # Test 33: GET /api/articles — posted date range includes the just-created article
 color_echo "$BLUE" "33. GET /api/articles — posted date range includes today's article"
-POSTED_FROM="$(date -u -d 'yesterday' +%Y-%m-%d)"
-POSTED_TO="$(date -u -d 'tomorrow' +%Y-%m-%d)"
+POSTED_FROM="$(yesterday_date)"
+POSTED_TO="$(tomorrow_date)"
 perform_request "Posted date range (match)" "${BASE_URL}/api/articles?author=${USERNAME}&postedFrom=${POSTED_FROM}&postedTo=${POSTED_TO}"
 assert_status "200" "Posted date range (match)"
 assert_body_contains '"title":"My Test Article"' "Posted date range (match)"
 
 # Test 34: GET /api/articles — posted date range excludes the article when postedTo is in the past
 color_echo "$BLUE" "34. GET /api/articles — posted date range excludes when postedTo is in the past"
-PAST_DATE="$(date -u -d 'yesterday' +%Y-%m-%d)"
+PAST_DATE="$(yesterday_date)"
 perform_request "Posted date range (excluded)" "${BASE_URL}/api/articles?author=${USERNAME}&postedTo=${PAST_DATE}"
 assert_status "200" "Posted date range (excluded)"
 assert_body_not_contains '"title":"My Test Article"' "Posted date range (excluded)"
