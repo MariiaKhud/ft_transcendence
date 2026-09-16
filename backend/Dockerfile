@@ -25,6 +25,10 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
+# TypeScript keeps the repository root in the output path because shared types
+# live beside backend/. Keep npm run start pointed at a stable entrypoint.
+RUN ln -s app/src/main.js dist/main.js
+
 # Add startup script that auto-runs migrations before booting the server
 COPY backend/docker-entrypoint.sh /docker-entrypoint.sh
 RUN chmod +x /docker-entrypoint.sh

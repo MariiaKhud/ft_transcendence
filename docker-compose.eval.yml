@@ -1,0 +1,34 @@
+services:
+  postgres:
+    ports: !override []
+
+  backend:
+    environment:
+      NODE_ENV: production
+      CHOKIDAR_USEPOLLING: "false"
+    entrypoint: []
+    command: ["npm", "run", "start"]
+    ports: !override []
+    volumes: !override
+      - uploads_data:/app/uploads
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile.eval
+    environment:
+      NODE_ENV: production
+      CHOKIDAR_USEPOLLING: "false"
+      VITE_API_BASE_URL: /api
+    ports: !override []
+    volumes: !override []
+
+  nginx:
+    ports: !override
+      - "${NGINX_HTTPS_PORT:-8443}:443"
+    volumes: !override
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - uploads_data:/var/www/uploads
+
+volumes:
+  uploads_data:

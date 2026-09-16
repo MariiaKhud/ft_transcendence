@@ -18,12 +18,3 @@ createRoot(rootEl).render(
     </I18nextProvider>
   </StrictMode>,
 )
-
-// Register the PWA service worker after the page has loaded.
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error) => {
-      console.error('Service worker registration failed:', error)
-    })
-  })
-}
