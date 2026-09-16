@@ -389,94 +389,242 @@ ft_transcendence/
 | Person 3 | Social Layer         | Friends, chat, notifications, follows   |
 | Person 4 | Gamification & Admin | Badges, leaderboard, moderation         |
 
-## Features
+-----------------------
+# Modules
 
-### Completed ✓
-- **User authentication** (JWT + HttpOnly cookies)
-- **Session restore on refresh** (frontend restores user via `/api/auth/me`)
-- **Profile management** (displayName, bio, avatar upload/delete/preview, CV upload/delete)
-- **CV document upload and download** (TXT, PDF, DOC, DOCX; validation, replacement cleanup, and public profile download)
-- **Public profiles** (read-only user profiles with stats)
-- **Edit profile form** (displayName, bio, avatar upload/delete, field validation)
-- **Self-service account deletion** (confirmation, cascade cleanup, session clearing)
-- **Logout redirect UX** (logout from profile/edit pages redirects to login)
-- **Password requirement hints** (short helper text in login/register forms)
-- **Global articles feed** (paginated, searchable, filterable by category, sortable)
-- **Article publishing and detail pages** (create, view, edit, delete)
-- **Comments and likes** (create/edit/delete comments, toggle likes)
-- **Follow and friend actions** (profile follow/unfollow, friend request flows)
-- **Direct messaging** (persistent conversations with real-time message delivery)
-- **Notification center** (real-time notification bell, read state, and paginated notification page)
-- **Gamification** (persistent XP, levels, badges, and leaderboard)
-- **Admin dashboard and API** (user role management, user deletion, and article/comment moderation)
-- **Real-time updates** (Socket.IO for chat, online status, notifications, comments, likes, and feed statistics)
-- **Progressive Web App** (install manifest, service worker, and offline navigation fallback)
-- **Privacy Policy page** (static content, linked from footer, guest accessible)
-- **Terms of Service page** (acceptable use, content ownership, moderation policy, guest accessible)
-- **Minimal footer links** (Privacy Policy, Terms of Service, GitHub repo)
-- **Internationalization** (English, Dutch, Ukrainian — full UI coverage including the admin dashboard, navbar language switcher, account-level persistence, translated API error codes)
+## Web
 
-### In Progress
-- Complete notification coverage for every creation, update, and deletion action is not yet claimable.
+### Major — Frontend and backend frameworks
+**Status: ✅ Covered**  
+We use frameworks on both sides of the application:
+- **Frontend:** React + TypeScript
+- **Backend:** Express + TypeScript
+- **Database:** PostgreSQL
+- **ORM:** Prisma
 
-## Modules Checklist (Evaluation)
+### Major — WebSockets
+**Status: ✅ Covered**  
+The application uses Socket.IO for real-time communication.
+Implemented real-time functionality includes:
+- real-time chat messages
+- online/offline presence
+- connection and disconnection handling
+- broadcasting events to relevant users
+- multiple simultaneous connections
+- graceful handling of temporary disconnections
+The backend maintains user socket connections and uses a 30-second grace period before marking a disconnected user as offline. This prevents short network interruptions or browser reconnects from immediately changing the user's status.
 
-This section tracks only modules that are implemented and currently claimable.
+### Major — Allow users to interact with other users
+**Status: ✅ Covered**  
+The application provides all three required interaction systems.
 
-### Claimed Modules
+**Chat**
+- open conversations with other users
+- send messages
+- receive messages in real time
+- view conversation history
 
-| Category                               | Module                                                                | Type  | Points |
-|----------------------------------------|-----------------------------------------------------------------------|-------|--------|
-| Web                                    | Use a framework for both frontend and backend                         | Major | 2      |
-| Web                                    | Use an ORM for the database                                           | Minor | 1      |
-| Web                                    | Advanced search functionality (filters, sorting, pagination)          | Minor | 1      |
-| Web                                    | Allow users to interact with other users (chat + profile + friends)   | Major | 2      |
-| User Management                        | Standard user management and authentication                           | Major | 2      |
-| User Management                        | OAuth 2.0 remote authentication (GitHub, Google, 42)                  | Minor | 1      |
-| Web                                    | Real-time features using WebSockets                                   | Major | 2      |
-| Gaming and User Experience             | Gamification system (XP, levels, badges, leaderboard)                 | Minor | 1      |
-| Web                                    | Progressive Web App with offline support and installability           | Minor | 1      |
-| Web                                    | Custom-made design system with reusable components                    | Minor | 1      |
-| Web                                    | File upload and management system (images and CV documents)           | Minor | 1      |
-| Accessibility and Internationalization | Support for multiple languages (English, Dutch, Ukrainian)            | Minor | 1      |
-| Accessibility and Internationalization | Support for additional browsers (Microsoft Edge, Chromium)            | Minor | 1      |
-| User Management                        | Advanced permissions system (view/edit/delete users, roles)          | Major | 2      |
+**Profiles**
+- view their own profile
+- view other users' profiles
+- see profile information
+- see avatar, bio, statistics and badges
+- see online/offline status
 
-**Claimed subtotal: 19 points**
+**Friends**
+- send friend requests
+- accept friend requests
+- decline friend requests
+- cancel outgoing requests
+- remove friends
+- view their friends
+- see friends' online status
 
-Evidence used for this checklist:
-- Email/password authentication with hashed passwords, session cookies, and `/api/auth/me`
-- OAuth 2.0 remote authentication with Google/GitHub/42
-- OAuth callback state validation and error-code redirects
-- Account linking via `oauth_accounts` with verified-email resolution
-- Profile system (public profile page, edit profile, avatar upload/remove)
-- Friends system (send/accept/decline/remove + status checks)
-- Online status backend flow (`/api/users/me/online`, friend records include `isOnline` and `lastSeenAt`)
-- Real-time Socket.IO connections with authenticated users, online/offline events, chat messages, notifications, and article/feed updates
-- Persistent gamification: XP, level calculation, badges, and leaderboard data stored in PostgreSQL
-- PWA manifest, application icons, service-worker registration, and an offline navigation fallback
-- File uploads: avatar images plus TXT, PDF, DOC, and DOCX CV documents with frontend/backend type and size validation, replacement cleanup, deletion, and profile download
-- Custom design system with reusable components: Button, icon set, ArticleCard, ArticleForm, UserAvatar, UserMenu, UserSearchBar, FriendButton, FollowButton, NotificationBell, MessageButtonLink, XPBar, BadgeList, and admin dashboard components
-- Shared visual language: Tailwind CSS, purple/fuchsia/emerald status palette, reusable button variants, typography, spacing, borders, and icon components
-- Backend integration scripts for friends/messages/follows flows
-- Manual compatibility checks in Microsoft Edge and Chromium for core authentication, content, profile, social, and responsive UI flows
-- i18n: 3 complete languages (English, Dutch, Ukrainian) across all shipped UI, navbar language switcher, `localStorage` + account-level (`preferredLanguage`) persistence, translated backend API error codes
-- Automated i18n regression suite (`frontend/scripts/i18n.test.mjs`) plus a live multi-language, multi-page QA pass (see Internationalization section above)
-- Advanced permissions: admin can view all users, change roles (USER/MODERATOR/ADMIN), and delete a user's account (cascades articles/likes, cleans up avatar/CV files); different dashboard views/actions for ADMIN vs MODERATOR
+### Minor — ORM
+**Status: ✅ Covered**  
+The application uses Prisma ORM (Object Relational Mapper) with PostgreSQL.  
+Prisma provides:
+- database schema
+- migrations
+- generated client
+- typed database queries
+- relations between entities
 
-### Additional Modules Not Yet Claimed
+### Minor — Complete notification system
+**Status: ✅ Covered**  
+The platform provides notification system covering the main social, content, messaging, moderation, and gamification events.  
+Notifications use a combination of database persistence, Socket.IO real-time delivery, polling, and browser events. Critical high-frequency events such as messages, comments, likes, and new articles are delivered through Socket.IO, while other persisted notification types are synchronized through polling. This provides both real-time feedback and reliable persistence across page reloads and reconnections.
 
-| Category                               | Module                                                          | Type  | Points | Current Status                            |
-|----------------------------------------|-----------------------------------------------------------------|-------|--------|-------------------------------------------|
-| Web                                    | Complete notification system (create/update/delete actions)     | Minor | 1      | Partial: coverage is not complete         |
+**Coverage**
+| Notification event              | Status    | Evidence           |
+| ------------------------------- | :-------: | ------------------ |
+| Friend request created          | ✅        | friends.service.ts |
+| Friend request accepted         | ✅        | friends.service.ts |
+| Follow                          | ✅        | follows.service.ts |
+| Unfollow                        | —         | No notification needed |
+| Friend removed                  | —         | No notification needed |
+| Article published               | ✅        | Followers receive ARTICLE_CREATED |
+| Article liked                   | ✅        | Article author receives LIKE |
+| Article commented               | ✅        | Article author receives COMMENT |
+| Article removed by moderator    | ✅        | Author receives CONTENT_REMOVED |
+| Comment removed by moderator    | ✅        | Comment author receives CONTENT_REMOVED |
+| Private message                 | ✅        | Socket handler creates MESSAGE |
+| Badge earned                    | ✅        | BADGE notification type |
+| Level up                        | ✅        | Real-time visual event + notification message |
 
-### Point Summary
+### Minor —  Progressive Web App
+**Status: ✅ Covered**  
+The application is implemented as a Progressive Web App (PWA) with installability and offline fallback support.
 
-- Mandatory target: **14 points**
-- Currently claimed: **19 points**
-- Above the mandatory target by: **5 points**
+The PWA provides:
+- web app manifest with application metadata and icons
+- standalone display mode
+- service worker registration
+- installability as a standalone application
+- cached offline fallback page
+- offline navigation fallback when the network is unavailable
 
-> Important: We only claim modules during evaluation when all required criteria in the subject are fully met and demonstrable.
+### Demonstration
+
+**Installability**
+
+The application can be installed from Chrome using the browser's PWA install control. After installation, the application can be opened as a standalone app without the normal browser navigation interface.
+
+**Offline support**
+
+The service worker caches the offline fallback page. When the network connection is disabled, navigation requests are handled by the service worker and the application displays the cached offline page:
+
+> You are offline  
+> Please reconnect to the internet and try again.
+
+Server-dependent functionality, including API requests and real-time communication, requires an active network connection.
+
+### Minor — Custom-made design system
+**Status: ✅ Covered**  
+We developed a reusable React-based design system with shared components, typography, colors, interactive states and iconography.  
+Project has a custom visual identity including:
+- custom color palette
+- typography
+- icons
+- reusable React components
+- reusable user/profile components
+- buttons and UI controls
+- notification UI
+- navigation components
+- dropdowns
+- cards
+- badges
+- level/XP UI
+
+### Minor — Advanced search with filters, sorting and pagination
+**Status: ✅ Covered**  
+The platform provides a dedicated advanced article search with server-side filtering, sorting, and pagination.  
+
+#### Search and filters
+
+Users can search articles by:
+
+- Title
+- Author
+- Content
+- Category
+- Publication date range
+
+#### Sorting
+
+Search results can be sorted by:
+
+- Newest
+- Oldest
+- Most liked
+
+### Minor — File upload and management
+**Status: ✅ Covered**  
+
+| Requirement                     | Status    | Evidence           |
+| ------------------------------- | :-------: | ------------------ |
+| Multiple file types             | ✅        | Avatar: JPG/PNG/WebP; CV: TXT/PDF/DOC/DOCX |
+| Client-side validation          | ✅        | `EditProfile.tsx` checks MIME type and file size before upload |
+| Server-side validation          | ✅        | Multer size limits + `validateAvatarMimetype()` / `validateCvMimetype()` |
+| Authentication / upload/delete authorization          | ✅        | Upload/delete routes use `authMiddleware` and operate on `req.user.userId` |
+| Secure filenames/storage        | ✅        | UUID filenames, controlled upload directory, allowed extensions derived from MIME |
+| Preview                         | ✅        | Avatar uses `URL.createObjectURL()` and displays the selected image |
+| Delete                          | ✅        | Both avatar and CV have DELETE endpoints and remove the physical file |
+| Upload progress                 | ✅        | Implemented loading state `isUploadingAvatar` / `isUploadingCv` |
+| Protected file access           | ✅        | Profile and auth responses return protected URLs |
+
+## Accessibility and Internationalization
+
+### Minor — Multiple languages
+**Status: ✅ Covered**  
+The application supports three languages:
+- English
+- Nederlands
+- Українська
+The language switcher allows the user to change the application language.
+
+### Minor — Support for additional browsers
+**Status: ✅ Covered**  
+The application was tested for browser compatibility across multiple browsers:
+
+| Browser | Platform | Result |
+|---|---|---|
+| Chrome | Ubuntu | ✅ Passed |
+| Microsoft Edge | Ubuntu | ✅ Passed |
+| Safari | macOS | ✅ Passed |
+
+## User Management
+
+### Major — User management and authentication
+**Status: ✅ Covered**  
+The application provides:
+- user registration
+- user login
+- authentication
+- logout
+- profile editing
+- avatar upload
+- default avatar handling
+- friend management
+- online/offline status
+- public user profiles
+
+### Major — Advanced permissions system
+**Status: ✅ Covered**  
+The application implements three hierarchical roles: USER, MODERATOR and ADMIN. Authentication and role-based authorization are enforced server-side through dedicated middleware. Permissions are applied to protected API routes according to role level. Moderators and administrators can moderate articles and comments, while only administrators can manage users and assign roles. The frontend also adapts the available administration interface to the authenticated user's role.  
+
+| Requirement                     | Status    | Evidence           |
+| ------------------------------- | :-------: | ------------------ |
+| Multiple roles                  | ✅        | USER, MODERATOR, ADMIN |
+| Authentication before protected actions | ✅        | authMiddleware |
+| Role-based authorization        | ✅        | `requireRole(...)` |
+| Different permissions per role  | ✅        | Admin and moderator routes differ |
+| Admin user/role management      | ✅        | Admin can manage users and roles |
+| Moderator content moderation    | ✅        | Moderator can remove/restore articles/comments |
+| Backend enforcement             | ✅        | Permissions are checked server-side, not only in React |
+| Frontend role-aware UI          | ✅        | Dashboard and Users tab depend on role |
+| Protection against normal users calling admin APIs | ✅        | `requireRole` should reject them |
+| Protection against moderator accessing admin-only APIs | ✅        | Admin user-management routes require `ADMIN` |
+| An administrator cannot demote and delete another administrator | ✅        | `if (targetUser.role === 'ADMIN' && role !== 'ADMIN')` |
+| An admin cannot delete their own account | ✅        | `if (req.user?.userId === id)` |
+
+### Minor — Remote authentication
+**Status: ✅ Covered**  
+The application implements remote authentication using OAuth 2.0 with the following providers:
+
+- Google
+- GitHub
+- 42
+
+### Minor — Gamification system
+**Status: ✅ Covered**  
+The application includes three gamification mechanisms:  
+
+**1. Badges** — Users can earn and display badges.  
+**2. Leaderboard** — Users can compare their progress and ranking.  
+**3. XP / Level system** — Users earn XP and progress through levels, with a `LevelUpToast` providing immediate feedback on level-up.
+
+-----------------------
 
 ## Service Map (Docker)
 
