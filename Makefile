@@ -1,4 +1,4 @@
-.PHONY: help up dev-start start eval-up eval-down down clean logs migrate seed setup-local-cert \
+.PHONY: help up dev-start start eval-up eval-down eval-migrate eval-seed down clean logs migrate seed setup-local-cert \
 		test-backend test-frontend test-browser-compat test-i18n \
 		test-friends test-follows test-messages test-gamification \
 		test-articles test-articles-backend test-articles-frontend \
@@ -13,10 +13,12 @@ RESET := \033[0m
 help:
 	@printf "  $(CYAN)     * * * * * AVAILABLE COMMANDS: * * * * *\n$(RESET)"
 	@printf "  $(GREEN)make up$(RESET)                     - Start all services with Docker\n"
-	@printf "  $(GREEN)make dev-start$(RESET)             - Start development services with hot reload\n"
+	@printf "  $(GREEN)make dev-start$(RESET)              - Start development services with hot reload\n"
 	@printf "  $(GREEN)make start$(RESET)                  - Start production evaluation services and seed database\n"
-	@printf "  $(GREEN)make eval-up$(RESET)               - Start the production evaluation stack without seeding\n"
-	@printf "  $(GREEN)make eval-down$(RESET)             - Stop the production evaluation stack\n"
+	@printf "  $(GREEN)make eval-up$(RESET)                - Start the production evaluation stack without seeding\n"
+	@printf "  $(GREEN)make eval-down$(RESET)              - Stop the production evaluation stack\n"
+	@printf "  $(GREEN)make eval-migrate$(RESET)           - Apply production migrations\n"
+	@printf "  $(GREEN)make eval-seed$(RESET)              - Seed the production database\n"
 	@printf "  $(GREEN)make down$(RESET)                   - Stop development services\n"
 	@printf "  $(GREEN)make clean$(RESET)                  - Stop services and remove volumes\n"
 	@printf "  $(GREEN)make logs$(RESET)                   - Show live logs from all services\n"
@@ -48,7 +50,8 @@ dev-start: setup-local-cert
 	@printf "$(GREEN)Development app is ready at https://localhost:8443$(RESET)\n"
 
 start: eval-up
-	$(MAKE) seed
+	$(MAKE) eval-migrate
+	$(MAKE) eval-seed
 	@printf "$(GREEN)Production evaluation app is ready at https://localhost:8443$(RESET)\n"
 
 eval-up: setup-local-cert
@@ -56,6 +59,12 @@ eval-up: setup-local-cert
 
 eval-down:
 	docker compose -f docker-compose.yml -f docker-compose.eval.yml down
+
+eval-migrate:
+	docker compose -f docker-compose.yml -f docker-compose.eval.yml exec backend npx prisma migrate deploy
+
+eval-seed:
+	docker compose -f docker-compose.yml -f docker-compose.eval.yml exec backend npx prisma db seed
 
 down:
 	docker compose down
