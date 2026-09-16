@@ -222,6 +222,7 @@ This project implements the "Support for multiple languages" minor module with:
 - Backend API error responses include a stable, machine-readable `code` field (e.g. `user_not_found`, `validation_password_length`) alongside the English `error` text. The frontend translates the `code`, so API-originated errors — not just client-side validation — respect the active language.
 - User-generated content (article titles/bodies, comments, display names) is intentionally left untranslated, as is the platform's brand name — only application UI chrome is translated.
 - The moderator/admin dashboard is fully translated across all three languages, same as the rest of the app.
+- Dates, relative timestamps ("5m ago"), and number formatting (e.g. XP totals) follow the active in-app language via `Intl`, not just the browser's own locale.
 
 ### Evaluator Validation Steps (Module Evidence)
 

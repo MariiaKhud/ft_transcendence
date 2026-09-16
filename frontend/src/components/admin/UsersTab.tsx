@@ -57,7 +57,7 @@ export function UsersTab({
   }
 
   const confirmDelete = async () => {
-    if (!deletingUser) return
+    if (!deletingUser || isSubmitting) return
     setIsSubmitting(true)
     setActionError(null)
     try {
@@ -71,7 +71,7 @@ export function UsersTab({
   }
 
   const confirmRoleChange = async () => {
-    if (!pendingRoleChange) return
+    if (!pendingRoleChange || isSubmitting) return
     setIsSubmitting(true)
     setActionError(null)
     try {
@@ -89,11 +89,11 @@ export function UsersTab({
       <table className="w-full min-w-[680px] text-left">
         <thead className="border-b border-slate-200 bg-slate-50/80 text-xs font-semibold uppercase tracking-wide text-slate-500">
           <tr>
-            <th className="px-4 py-3 text-center">{t('admin.usersTab.user')}</th>
+            <th className="max-w-[180px] bg-slate-50 px-4 py-3 text-center sm:sticky sm:left-0 sm:z-10">{t('admin.usersTab.user')}</th>
             <th className="px-4 py-3 text-center">{t('admin.usersTab.role')}</th>
             <th className="px-4 py-3 text-center">{t('admin.usersTab.articles')}</th>
             <th className="px-4 py-3 text-center">{t('admin.usersTab.created')}</th>
-            <th className="sticky right-0 z-10 bg-slate-50 px-4 py-3 text-center">{t('admin.usersTab.action')}</th>
+            <th className="max-w-[190px] bg-slate-50 px-4 py-3 text-center sm:sticky sm:right-0 sm:z-10">{t('admin.usersTab.action')}</th>
           </tr>
         </thead>
 
@@ -101,20 +101,20 @@ export function UsersTab({
           {users.map((user) => {
             const isSelf = user.id === currentUserId
             return (
-              <tr key={user.id} className="group transition-colors hover:bg-purple-50/40">
-                <td className="px-4 py-4">
+              <tr key={user.id} className="group transition-colors hover:bg-purple-50">
+                <td className="max-w-[180px] border-r border-slate-100 bg-white px-4 py-4 transition-colors group-hover:bg-purple-50 sm:sticky sm:left-0 sm:z-10">
                   <div className="flex items-center gap-3">
                     <UserAvatar avatarUrl={user.avatarUrl} username={user.username} size="small" rank={topRanks.get(user.id)} />
-                    <div>
-                      <p className="flex items-center gap-2 font-semibold text-slate-900">
-                        {user.displayName ?? user.username}
+                    <div className="min-w-0">
+                      <p className="flex items-center gap-2 truncate font-semibold text-slate-900">
+                        <span className="truncate">{user.displayName ?? user.username}</span>
                         {isSelf && (
-                          <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700">
+                          <span className="shrink-0 rounded-full bg-purple-100 px-2 py-0.5 text-xs font-semibold text-purple-700">
                             {t('admin.usersTab.you')}
                           </span>
                         )}
                       </p>
-                      <p className="text-sm text-slate-500">@{user.username}</p>
+                      <p className="truncate text-sm text-slate-500">@{user.username}</p>
                     </div>
                   </div>
                 </td>
@@ -135,7 +135,7 @@ export function UsersTab({
                   {formatLocalizedDate(user.createdAt)}
                 </td>
 
-                <td className="sticky right-0 z-10 border-l border-slate-100 bg-white px-4 py-4 transition-colors group-hover:bg-purple-50/40">
+                <td className="max-w-[190px] border-l border-slate-100 bg-white px-4 py-4 transition-colors group-hover:bg-purple-50 sm:sticky sm:right-0 sm:z-10">
                   <div className="flex items-center justify-center gap-2">
                     <select
                       value={user.role}
@@ -144,6 +144,7 @@ export function UsersTab({
                         const role = event.target.value as UserRole
                         if (role === user.role) return
                         setActionError(null)
+                        setDeletingUser(null)
                         setPendingRoleChange({ user, role })
                       }}
                       className="min-w-0 flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
@@ -158,6 +159,7 @@ export function UsersTab({
                       disabled={isSelf || user.role === 'ADMIN'}
                       onClick={() => {
                         setActionError(null)
+                        setPendingRoleChange(null)
                         setDeletingUser(user)
                       }}
                       title={t('admin.usersTab.delete')}
@@ -175,7 +177,7 @@ export function UsersTab({
       </table>
 
       {pendingRoleChange && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-2xl bg-white p-6">
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-full bg-purple-100 text-purple-600">
@@ -228,7 +230,7 @@ export function UsersTab({
       )}
 
       {deletingUser && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="w-full max-w-md rounded-2xl bg-white p-6">
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-9 w-9 flex-none items-center justify-center rounded-full bg-red-100 text-red-600">
