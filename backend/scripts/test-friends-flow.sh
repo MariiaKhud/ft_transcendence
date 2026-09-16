@@ -962,7 +962,7 @@ FROM notifications
 WHERE user_id='${USER_B_ID}';
 " | tr -d '\n' | xargs)"
 
-RESPONSE_COUNT="$(echo "$ALL_NOTIFICATIONS_BODY" | jq '.data.notifications | length')"
+RESPONSE_COUNT="$(echo "$ALL_NOTIFICATIONS_BODY" | grep -o '"isRead":' | wc -l | tr -d ' ')"
 
 check "Notification count matches DB" "$RESPONSE_COUNT" "$DB_COUNT"
 echo
