@@ -39,7 +39,7 @@ const main = async () => {
   await prisma.article.deleteMany()
   await prisma.user.deleteMany()
 
-  const passwordHash = await bcrypt.hash('password123', 10)
+  const passwordHash = await bcrypt.hash('Password123', 10)
 
   // Create users
   const alice = await prisma.user.create({

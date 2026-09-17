@@ -125,10 +125,10 @@ https://localhost:8443
 
 | Email | Password | Role |
 |---|---|---|
-| alice@example.com | password123 | User |
-| bob@example.com | password123 | User |
-| carol@example.com | password123 | Moderator |
-| admin@example.com | password123 | Admin |
+| alice@example.com | Password123 | User |
+| bob@example.com | Ppassword123 | User |
+| carol@example.com | Ppassword123 | Moderator |
+| admin@example.com | Password123 | Admin |
 
 ### Available make commands
 
@@ -197,6 +197,13 @@ Register callback URLs in each provider's developer console:
 - [OAuth 2.0 specification (RFC 6749)](https://datatracker.ietf.org/doc/html/rfc6749)
 - [PWA documentation (web.dev)](https://web.dev/progressive-web-apps/)
 - [i18n architecture](I18N.md)
+
+### Video
+
+- [Every React Concept Explained in 12 Minutes](https://www.youtube.com/watch?v=wIyHSOugGGw)
+- [TypeScript vs JavaScript in 2026 - Difference EXPLAINED](https://www.youtube.com/watch?v=HCXPJmtV47I)
+- [WebSockets Explained Under 10 Minutes](https://www.youtube.com/watch?v=dd8cCt9wMh8)
+- [A Beginner's Guide to WebSockets](https://www.youtube.com/watch?v=8ARodQ4Wlf4&t=1529s)
 
 ### AI usage
 
