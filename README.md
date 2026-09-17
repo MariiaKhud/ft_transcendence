@@ -126,8 +126,8 @@ https://localhost:8443
 | Email | Password | Role |
 |---|---|---|
 | alice@example.com | Password123 | User |
-| bob@example.com | Ppassword123 | User |
-| carol@example.com | Ppassword123 | Moderator |
+| bob@example.com | Password123 | User |
+| carol@example.com | Password123 | Moderator |
 | admin@example.com | Password123 | Admin |
 
 ### Available make commands
