@@ -67,6 +67,7 @@
       "validation_password_required": "Wachtwoord is verplicht.",
       "validation_password_length": "Wachtwoord moet tussen 8 en 72 tekens bevatten.",
       "validation_password_whitespace": "Wachtwoord mag geen spaties bevatten.",
+      "validation_password_strength": "Wachtwoord moet kleine letters, hoofdletters en een cijfer bevatten.",
       "validation_register_fields_required": "E-mailadres, gebruikersnaam en wachtwoord zijn verplicht.",
       "validation_login_fields_required": "E-mailadres en wachtwoord zijn verplicht.",
       "validation_invalid_uuid": "Die identifier is ongeldig.",
@@ -315,7 +316,7 @@
     "emailHint": "Geldig e-mailformaat vereist (bijv. gebruiker@voorbeeld.com)",
     "passwordLabel": "Wachtwoord",
     "passwordPlaceholder": "Voer uw wachtwoord in",
-    "passwordHelp": "8-72 tekens, gebruik kleine letters, hoofdletters en cijfers",
+    "passwordHelp": "8-72 tekens, kleine letters, hoofdletters en cijfers",
     "showPassword": "Wachtwoord tonen",
     "hidePassword": "Wachtwoord verbergen",
     "errors": {
@@ -369,6 +370,7 @@
       "usernameInvalid": "Gebruikersnaam moet 3-20 tekens bevatten en alleen letters, cijfers of _",
       "passwordLength": "Wachtwoord moet tussen 8 en 72 tekens bevatten",
       "passwordWhitespace": "Wachtwoord mag geen spaties bevatten",
+      "passwordStrength": "Wachtwoord moet kleine letters, hoofdletters en een cijfer bevatten",
       "confirmRequired": "Bevestig uw wachtwoord",
       "passwordMismatch": "Wachtwoorden komen niet overeen"
     }

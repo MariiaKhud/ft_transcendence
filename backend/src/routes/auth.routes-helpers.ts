@@ -46,6 +46,14 @@ const validatePasswordLength = (password: string) => {
   if (/\s/.test(password)) {
     throw new AppError(400, ErrorCode.VALIDATION_PASSWORD_WHITESPACE, 'Validation failed: password cannot contain spaces')
   }
+
+  if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+    throw new AppError(
+      400,
+      ErrorCode.VALIDATION_PASSWORD_STRENGTH,
+      'Validation failed: password must contain lowercase and uppercase letters and a digit'
+    )
+  }
 }
 
 // Read auth token from cookie or fail.
