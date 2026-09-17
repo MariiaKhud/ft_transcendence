@@ -1,6 +1,6 @@
 *This project has been created as part of the 42 curriculum by makhudon, tiyang, tkremnov and lperekhr.*
 
-# # Codamium — ft_transcendence
+# Codamium — ft_transcendence
 
 **A Medium-style publishing platform built with React, Express, and PostgreSQL.**
 
@@ -360,136 +360,60 @@ Build order was agreed at the start:
 | Docker + Docker Compose | Container orchestration |
 | nginx | Reverse proxy, HTTPS termination, static file serving |
 | mkcert | Local HTTPS certificate generation |
-| GitHub Actions | CI pipeline |
 
 ### Justification for major choices
 
-**TypeScript full-stack (React + Node.js)**
+**TypeScript full-stack (React + Node.js)**  
 The team had no prior web experience (background in C/C++). Using TypeScript on both sides meant learning one language instead of two. A shared `/shared/types/` folder lets both sides import the same interfaces, so API contract mismatches are caught at compile time rather than at runtime.
 
-**Prisma over raw SQL or SQLAlchemy**
+**Prisma over raw SQL or SQLAlchemy**  
 Prisma's `schema.prisma` file is the single source of truth for the database structure. Migrations are one command. The generated client is fully typed — Prisma prevents SQL injection by design and makes complex queries readable. For a team new to web development, this was significantly safer and faster than writing raw SQL.
 
-**PostgreSQL over SQLite or MongoDB**
+**PostgreSQL over SQLite or MongoDB**  
 PostgreSQL handles relational data (users → articles → comments → likes, friendship pairs, notification foreign keys) better than a document store. It's the industry standard for production web applications and integrates natively with Prisma.
 
-**Socket.IO over raw WebSockets**
+**Socket.IO over raw WebSockets**  
 Socket.IO adds automatic reconnection, room-based broadcasting, and a fallback to HTTP long-polling. The room abstraction (`io.to(userId).emit(...)`) made per-user message delivery and article-room broadcasting simple to implement correctly without custom infrastructure.
 
-**Docker Compose**
+**Docker Compose**  
 Single `make start` command builds and starts the four Docker Compose services (postgres, backend, frontend, nginx) and generates the local HTTPS certificate. Health checks and service dependencies ensure the stack starts in the correct order. This provides reproducible behavior between developer machines and during evaluation.
 
 ---
 
 ## Database Schema
 
-### Tables and relationships
+### Tables and Relationships
 
-```
-users
-├── id (UUID, PK)
-├── email (unique)
-├── username (unique)
-├── passwordHash
-├── displayName
-├── avatarUrl
-├── cvUrl, cvFilename
-├── bio
-├── role (USER | MODERATOR | ADMIN)
-├── preferredLanguage
-├── xp, level
-├── isOnline, lastSeenAt
-└── createdAt, updatedAt
+The PostgreSQL database contains these tables:
 
-oauth_accounts  [for OAuth provider linking]
-├── id (UUID, PK)
-├── provider
-├── providerId
-├── userId → users.id
-├── emailAtLinkTime
-└── UNIQUE(provider, providerId)
+- `users` — user accounts, profiles, roles, preferred language, XP, levels, online status, and optional CV file reference
+- `oauth_accounts` — OAuth provider accounts linked to users (GitHub, Google, 42)
+- `articles` — published articles owned by users, with soft-removal support
+- `comments` — comments written by users on articles, with soft-removal support
+- `article_likes` — user-to-article likes (unique per user per article)
+- `follows` — one-directional user follows
+- `friendships` — friendship requests and accepted friendships with explicit status
+- `messages` — private messages between users with read state
+- `notifications` — user notifications with optional actor and reference fields
+- `badges` — available gamification badges with XP reward values
+- `user_badges` — badges earned by users (unique per user per badge)
 
-articles
-├── id (UUID, PK)
-├── authorId → users.id
-├── title, content (Markdown)
-├── category (enum)
-├── likeCount (cached counter)
-├── isRemoved, removedReason, removedAt
-└── createdAt, updatedAt
+`Role`, `Category`, `NotificationType`, and `FriendStatus` are PostgreSQL enum types, not tables.
 
-comments
-├── id (UUID, PK)
-├── articleId → articles.id
-├── authorId → users.id
-├── content
-├── isRemoved, removedReason, removedAt
-└── createdAt, updatedAt
+`NotificationType` values: `FOLLOWED`, `ARTICLE_CREATED`, `COMMENT`, `LIKE`, `MESSAGE`, `CONTENT_REMOVED`, `FRIEND_REQUEST`, `FRIEND_ACCEPTED`, `BADGE`, `LEVEL_UP`.
 
-article_likes
-├── id (UUID, PK)
-├── userId → users.id
-├── articleId → articles.id
-└── UNIQUE(userId, articleId)
+### Key Relationships
 
-follows  [one-directional]
-├── id (UUID, PK)
-├── followerId → users.id
-├── followingId → users.id
-└── UNIQUE(followerId, followingId)
-
-friendships  [mutual, with status]
-├── id (UUID, PK)
-├── requesterId → users.id
-├── addresseeId → users.id
-├── status (PENDING | ACCEPTED | DECLINED)
-└── UNIQUE(requesterId, addresseeId)
-
-messages
-├── id (UUID, PK)
-├── senderId → users.id
-├── receiverId → users.id
-├── content
-├── isRead
-└── createdAt
-
-notifications
-├── id (UUID, PK)
-├── userId → users.id  [recipient]
-├── type (enum: FOLLOWED, FRIEND_REQUEST, FRIEND_ACCEPTED, COMMENT, LIKE, CONTENT_REMOVED, MESSAGE, BADGE, LEVEL_UP, ARTICLE_CREATED)
-├── message
-├── refId  [optional: articleId or userId for navigation]
-├── actorId  [optional: user ID of the actor who caused the event]
-├── isRead
-└── createdAt
-
-badges
-├── id (UUID, PK)
-├── name (unique)
-├── description
-├── icon
-└── xpReward
-
-user_badges
-├── id (UUID, PK)
-├── userId → users.id
-├── badgeId → badges.id
-├── earnedAt
-└── UNIQUE(userId, badgeId)
-
-```
-
-### Key relationships
-
-- One user → many articles, comments, likes, notifications, badges, and OAuth accounts
-- Users and badges have a many-to-many relationship through `user_badges`
-- A notification belongs to a recipient through `userId`; `actorId` is an optional user ID and is not a database foreign-key relation
-- Articles and comments use soft-delete (`isRemoved`) for moderation audit trail
-- Deleting a user cascades to their articles, comments, likes, follows, friendships, messages, notifications, badges, OAuth accounts, and related records
-- Friendships are one row per pair, direction-aware (requester ≠ addressee), with explicit status
-- Follows are one-directional (Twitter model); friendships are mutual (Facebook model)
-- `article_likes.likeCount` is a cached counter on the article row — updated in a DB transaction alongside the like row insert/delete for fast feed queries
-- `oauth_accounts` allows a user to link multiple OAuth providers to one local account; each provider account can be linked only once
+- One `User` can create many `Article` records.
+- One `User` can write many `Comment` records; each comment belongs to one article.
+- Users and articles have a many-to-many relationship through `ArticleLike`.
+- Users can follow other users through `Follow` (one-directional, unique per pair).
+- `Friendship` connects two users through requester and addressee relationships, with a `FriendStatus` of `PENDING`, `ACCEPTED`, or `DECLINED`.
+- Users can send and receive many `Message` records, each with an `isRead` flag.
+- One user can have many `Notification` records. `Notification.actorId` identifies who performed the action; `Notification.refId` identifies what the notification points at (an article, a user, etc.). Both are optional, and their meaning depends on the notification type. Neither carries a Prisma foreign-key relation.
+- Users and badges have a many-to-many relationship through `UserBadge`.
+- One user can link multiple `OAuthAccount` records (one per provider).
+- Dependent records use cascade deletion when their related user or article is deleted.
 
 ---
 
@@ -749,7 +673,7 @@ The platform provides a dedicated advanced article search with server-side filte
 The application supports three languages:
 - English
 - Nederlands
-- Українська
+- Українська  
 The language switcher allows the user to change the application language.
 
 ### Minor — Support for additional browsers (1pt) ⭐
@@ -834,14 +758,13 @@ The application includes three gamification mechanisms:
 
 ### Mariia Khudonohova (makhudon)
 
-**Features built:** Auth system, OAuth 2.0, user profiles with unique URLs, avatar and CV management, password validation, account deletion, localized user flows, anonymous visitor access control, responsive browser-compatible interfaces, footer with static links, Docker setup, nginx HTTPS, CI pipeline, shared type system, Privacy Policy and Terms of Service.
+**Features built:** Auth system, OAuth 2.0, user profiles with unique URLs, avatar and CV management, password validation, account deletion, localized user flows, anonymous visitor access control, responsive browser-compatible interfaces, footer with static links, Docker setup, nginx HTTPS, shared type system, Privacy Policy and Terms of Service.
 
 **Specific contributions:**
 - Designed and implemented the JWT + CSRF cookie auth pattern used across the entire project
 - Built the OAuth 2.0 flow with state validation, account linking, and all three providers
 - Added unique username-based profile URLs so users with the same display name remain distinguishable
 - Set up the Docker Compose orchestration including nginx with HTTPS and mkcert integration
-- Created the GitHub Actions CI workflow covering typecheck, lint, and integration tests
 - Established the `/shared/types/` contract between frontend and backend
 - Built the avatar upload pipeline with MIME validation, UUID naming, and old-file cleanup
 - Built the CV upload and protected download flow with file-type and size validation
@@ -906,7 +829,7 @@ The application includes three gamification mechanisms:
 - OAuth depends on exact callback URL matching in each provider's developer console. Wrong URLs produce `oauth_redirect_uri_mismatch` errors.
 - Chat currently supports 1-to-1 messages only. Group chat is not implemented.
 - The notifications polling interval is 30 seconds as a fallback for missed socket events. Most notifications arrive instantly via WebSocket push.
-- Dutch translations were produced by the development team without a native-speaker review pass. Content is complete and consistent across all three languages.
+- Dutch translations were produced by the development team without a native-speaker review pass.
 - Firefox was not available in the test environment and was not part of the verified browser matrix.
 
 ---
