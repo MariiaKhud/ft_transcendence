@@ -92,6 +92,9 @@ export const Register = () => {
     } else if (/\s/.test(password)) {
       setPasswordError({ key: 'register.errors.passwordWhitespace' })
       isValid = false
+    } else if (!/[a-z]/.test(password) || !/[A-Z]/.test(password) || !/[0-9]/.test(password)) {
+      setPasswordError({ key: 'register.errors.passwordStrength' })
+      isValid = false
     }
 
     if (confirmPassword.length === 0) {
