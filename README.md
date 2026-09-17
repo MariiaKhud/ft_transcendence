@@ -233,8 +233,13 @@ Responsibilities:
 - Product vision, feature prioritization, and backlog ownership
 - Authentication system (register, login, logout, JWT in HttpOnly cookies, CSRF protection)
 - OAuth 2.0 integration (GitHub, Google, 42) with account linking
-- User profiles, avatar upload and management
+- User profiles with unique username-based URLs, avatar upload and management
+- CV document upload, validation, protected storage, and profile download
+- Password validation and JWT logout invalidation
+- Protected-page access control for anonymous visitors
+- Responsive layouts and browser compatibility across supported browsers
 - Privacy Policy and Terms of Service pages
+- Footer with static navigation and legal links
 - Docker Compose setup and nginx HTTPS configuration
 - Project setup and shared type system (/shared/types/)
 
@@ -496,16 +501,20 @@ user_badges
 | Feature | Description |
 |---|---|
 | Register | Email + username + password, bcrypt hashed, full validation |
+| Password validation | Validates password content, including whitespace-only input |
 | Login | Email + password, JWT in HttpOnly cookie, CSRF protection |
-| Logout | Clears cookies, disconnects WebSocket immediately (no grace period) |
+| Logout | Clears cookies, invalidates the JWT, and disconnects WebSocket immediately |
 | Session restore | `GET /api/auth/me` on app load restores session without re-login |
 | OAuth login | GitHub, Google, 42 — with account linking for existing email users |
 | Profile page | Avatar, bio, stats (articles, followers, following), badges, level |
+| Profile URL | Unique username-based URLs distinguish users with the same display name |
 | Avatar upload | JPG/PNG/WebP, max 2MB, UUID filename, old file deleted on replace |
 | Edit profile | Display name, bio, preferred language |
+| CV upload and download | Validated TXT/PDF/DOC/DOCX upload with protected profile download |
 | Account deletion | Cascade deletes all user content, removes avatar file, clears session |
 | Privacy Policy | Static page with real content |
 | Terms of Service | Static page with real content |
+| Footer | Static navigation and legal links |
 
 ### Articles and feed
 *(Tingting Yang)*
@@ -728,8 +737,8 @@ The platform provides a dedicated advanced article search with server-side filte
 | Secure filenames/storage        | ✅        | UUID filenames, controlled upload directory, allowed extensions derived from MIME |
 | Preview                         | ✅        | Avatar uses `URL.createObjectURL()` and displays the selected image |
 | Delete                          | ✅        | Both avatar and CV have DELETE endpoints and remove the physical file |
-| Upload progress                 | ✅        | Implemented loading state `isUploadingAvatar` / `isUploadingCv` |
-| Protected file access           | ✅        | Profile and auth responses return protected URLs |
+| Upload state                    | ✅        | Implemented loading states `isUploadingAvatar` / `isUploadingCv` |
+| File access control             | ✅        | CV downloads require authentication; avatar URLs are served by the uploads endpoint |
 
 ## Accessibility and Internationalization
 
@@ -764,11 +773,16 @@ The application was tested for browser compatibility across multiple browsers:
 The application provides:
 - user registration
 - user login
-- authentication
-- logout
+- authentication with JWT in HttpOnly cookies and CSRF protection
+- OAuth login with GitHub, Google, and 42
+- session restoration after page load
+- password validation
+- logout with JWT invalidation
 - profile editing
-- avatar upload
-- default avatar handling
+- unique username-based profile URLs
+- avatar upload, replacement, deletion, and default avatar handling
+- CV upload and protected download
+- account deletion with related data cleanup
 - friend management
 - online/offline status
 - public user profiles
@@ -820,17 +834,23 @@ The application includes three gamification mechanisms:
 
 ### Mariia Khudonohova (makhudon)
 
-**Features built:** Auth system, OAuth 2.0, user profiles, avatar upload, account deletion, Docker setup, nginx HTTPS, CI pipeline, shared type system, Privacy Policy and Terms of Service.
+**Features built:** Auth system, OAuth 2.0, user profiles with unique URLs, avatar and CV management, password validation, account deletion, localized user flows, anonymous visitor access control, responsive browser-compatible interfaces, footer with static links, Docker setup, nginx HTTPS, CI pipeline, shared type system, Privacy Policy and Terms of Service.
 
 **Specific contributions:**
 - Designed and implemented the JWT + CSRF cookie auth pattern used across the entire project
 - Built the OAuth 2.0 flow with state validation, account linking, and all three providers
+- Added unique username-based profile URLs so users with the same display name remain distinguishable
 - Set up the Docker Compose orchestration including nginx with HTTPS and mkcert integration
 - Created the GitHub Actions CI workflow covering typecheck, lint, and integration tests
 - Established the `/shared/types/` contract between frontend and backend
 - Built the avatar upload pipeline with MIME validation, UUID naming, and old-file cleanup
+- Built the CV upload and protected download flow with file-type and size validation
+- Implemented JWT logout invalidation and password validation, including whitespace-only passwords
+- Implemented localized Ukrainian and Dutch messages for friendship and profile flows
+- Implemented protected-route access control for anonymous visitors and responsive browser-compatible interfaces
+- Built the footer with static navigation and legal links
 
-**Challenges faced:** OAuth account linking edge cases — when a user registers with email X, then tries to OAuth with a provider that has email X, we needed to detect and link rather than create a duplicate. Solved by checking verified provider email against existing accounts in `resolveOAuthUser()`.
+**OAuth account linking:** Linked verified OAuth provider emails to existing user accounts and created new accounts for providers without an existing matching user.
 
 ---
 
