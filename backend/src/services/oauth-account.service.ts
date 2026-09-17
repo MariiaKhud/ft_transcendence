@@ -1,9 +1,11 @@
 import bcrypt from 'bcryptjs'
 import { randomBytes } from 'crypto'
+import { promises as fs } from 'fs'
 import { prisma } from '../lib/prisma.js'
 import { AppError } from '../middleware/error.middleware.js'
 import { ErrorCode } from '../lib/error-codes.js'
 import { publicUserSelect } from '../routes/auth.routes-helpers.js'
+import { generateAvatarFilename, getUploadsDir } from '../routes/users.route-helpers.js'
 import type { NormalizedOAuthUser } from '../auth/oauth.passport.js'
 
 type PublicUser = {
@@ -78,6 +80,36 @@ const generatePasswordHash = async () => {
   return bcrypt.hash(randomBytes(32).toString('hex'), 10)
 }
 
+const downloadOAuthAvatar = async (avatarUrl: string | null) => {
+  if (!avatarUrl || !/^https?:\/\//i.test(avatarUrl)) {
+    return null
+  }
+
+  try {
+    const response = await fetch(avatarUrl, { signal: AbortSignal.timeout(5000) })
+    if (!response.ok) {
+      return null
+    }
+
+    const contentType = response.headers.get('content-type')?.split(';')[0].trim().toLowerCase()
+    if (!contentType || !['image/jpeg', 'image/png', 'image/webp'].includes(contentType)) {
+      return null
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer())
+    if (buffer.length === 0 || buffer.length > 2 * 1024 * 1024) {
+      return null
+    }
+
+    const filename = generateAvatarFilename(contentType)
+    await fs.mkdir(getUploadsDir(), { recursive: true })
+    await fs.writeFile(`${getUploadsDir()}/${filename}`, buffer)
+    return `/uploads/${filename}`
+  } catch {
+    return null
+  }
+}
+
 const createUniqueUsername = async (provider: NormalizedOAuthUser) => {
   for (let attempt = 0; attempt < 10; attempt += 1) {
     const suffix = attempt === 0 ? '' : `_${attempt}`
@@ -106,6 +138,7 @@ export const resolveOAuthUser = async (profile: NormalizedOAuthUser) => {
   }
 
   const normalizedEmail = normalizeEmail(profile.email)
+  const localAvatarUrl = await downloadOAuthAvatar(profile.avatarUrl)
 
   try {
     return await prisma.$transaction(async (tx) => {
@@ -125,6 +158,14 @@ export const resolveOAuthUser = async (profile: NormalizedOAuthUser) => {
       })
 
       if (linkedAccount?.user) {
+        if (profile.avatarUrl && !linkedAccount.user.avatarUrl?.startsWith('/uploads/')) {
+          return tx.user.update({
+            where: { id: linkedAccount.user.id },
+            data: { avatarUrl: localAvatarUrl },
+            select: publicUserSelect,
+          })
+        }
+
         return linkedAccount.user
       }
 
@@ -159,6 +200,14 @@ export const resolveOAuthUser = async (profile: NormalizedOAuthUser) => {
             throw new AppError(409, ErrorCode.OAUTH_ACCOUNT_ALREADY_LINKED, 'OAuth account is already linked to another user')
           }
 
+          if (profile.avatarUrl && !existingUser.avatarUrl?.startsWith('/uploads/')) {
+            return tx.user.update({
+              where: { id: existingUser.id },
+              data: { avatarUrl: localAvatarUrl },
+              select: publicUserSelect,
+            })
+          }
+
           return existingUser
         }
       }
@@ -176,7 +225,7 @@ export const resolveOAuthUser = async (profile: NormalizedOAuthUser) => {
           username,
           passwordHash,
           displayName,
-          avatarUrl: profile.avatarUrl ?? undefined,
+          avatarUrl: localAvatarUrl ?? undefined,
         },
         select: publicUserSelect,
       })
