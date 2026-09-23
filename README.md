@@ -44,32 +44,20 @@ cd ft_transcendence
 
 ### 2. Configure environment
 
+Do the below in project root, /backend and /frontend:
+
 ```bash
 cp .env.example .env
 ```
 
-Edit `.env` and fill in the required values. Minimum required:
+Edit `.env` and fill in the required values: 
 
-```env
-# Database — use 'postgres' as host when running in Docker, not localhost
-DATABASE_URL=postgresql://transcendence:transcendence@postgres:5432/transcendence
-POSTGRES_DB=transcendence
-POSTGRES_USER=transcendence
-POSTGRES_PASSWORD=transcendence
+For the .env file at /frontend, you are good to go;
 
-# Auth
-JWT_SECRET=change-this-to-a-long-random-secret
+For the .env file at /backend and root, replace the following block with your actual callback links and secrets
+(the below contains placeholders)
 
-# Ports
-BACKEND_PORT=3000
-FRONTEND_PORT=5173
-NGINX_HTTP_PORT=8080
-NGINX_HTTPS_PORT=8443
-
-# Environment
-NODE_ENV=development
-UPLOAD_PATH=./uploads
-
+```
 # OAuth — fill in or leave empty to disable a provider
 # GitHub
 OAUTH_GITHUB_CLIENT_ID=replace-with-github-client-id
@@ -129,11 +117,12 @@ https://localhost:8443
 | bob@example.com | Password123 | User |
 | carol@example.com | Password123 | Moderator |
 | admin@example.com | Password123 | Admin |
+| mainuser@example.com | Password123 | User |
 
 ### Available make commands
 
 ```bash
-make help                    # show all available commands
+make help                   # show all available commands
 
 make up                     # build and start development services
 make dev-start              # start development services in the background
